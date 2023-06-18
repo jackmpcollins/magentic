@@ -12,6 +12,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">=3.8"
 openai = ">=0.27"
+pydantic = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
