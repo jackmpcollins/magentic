@@ -16,3 +16,4 @@ pydantic = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
+pytest = "*"
