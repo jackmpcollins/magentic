@@ -1,7 +1,13 @@
 """Tests for PromptFunction."""
 
 from pydantic import BaseModel
-from agentic.prompt_function import AnyFunctionSchema, BaseModelFunctionSchema, prompt
+from agentic.function_call import FunctionCall
+from agentic.prompt_function import (
+    AnyFunctionSchema,
+    BaseModelFunctionSchema,
+    FunctionCallFunctionSchema,
+    prompt,
+)
 
 
 def test_any_function_schema():
@@ -47,6 +53,30 @@ def test_base_model_function_schema():
     )
 
 
+def test_base_model_function_schema():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    function_schema = FunctionCallFunctionSchema(plus)
+
+    assert function_schema.name == "plus"
+    assert function_schema.dict() == {
+        "name": "plus",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                # TODO: Remove "title" keys from schema
+                "a": {"title": "A", "type": "integer"},
+                "b": {"title": "B", "type": "integer"},
+            },
+            "required": ["a", "b"],
+        },
+    }
+    output = function_schema.parse('{"a": 1, "b": 2}')
+    assert isinstance(output, FunctionCall)
+    assert output() == 3
+
+
 def test_decorator_return_str():
     @prompt()
     def get_capital(country: str) -> str:
@@ -70,3 +100,17 @@ def test_decorator_return_bool_str():
 
     assert answer_question("What is the capital of Ireland?") == "Dublin"
     assert answer_question("Dublin is the capital of Ireland: True or False?") is True
+
+
+def test_decorator_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    @prompt(functions=[plus])
+    def sum_populations(country_one: str, country_two: str) -> FunctionCall[int]:
+        """Sum the populations of {country_one} and {country_two}."""
+
+    output = sum_populations("Ireland", "UK")
+    assert isinstance(output, FunctionCall)
+    func_result = output()
+    assert isinstance(func_result, int)
