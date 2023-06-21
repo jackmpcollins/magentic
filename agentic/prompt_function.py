@@ -75,11 +75,11 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         return Output[self._return_type].parse_raw(arguments).value
 
 
-TBaseModel = TypeVar("TBaseModel", bound=BaseModel)
+BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
 
-class BaseModelFunctionSchema(BaseFunctionSchema[TBaseModel], Generic[TBaseModel]):
-    def __init__(self, model: Type[TBaseModel]):
+class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT]):
+    def __init__(self, model: Type[BaseModelT]):
         self._model = model
 
     @property
@@ -93,7 +93,7 @@ class BaseModelFunctionSchema(BaseFunctionSchema[TBaseModel], Generic[TBaseModel
         model_schema.pop("description", None)
         return model_schema
 
-    def parse(self, arguments: str) -> TBaseModel:
+    def parse(self, arguments: str) -> BaseModelT:
         return self._model.parse_raw(arguments)
 
 
