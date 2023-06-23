@@ -128,6 +128,11 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         return FunctionCall(self._func, **args)
 
 
+def is_union_type(type_: type) -> bool:
+    type_ = get_origin(type_) or type_
+    return type_ is Union or type_ is types.UnionType
+
+
 class PromptFunction:
     def __init__(
         self,
@@ -143,33 +148,31 @@ class PromptFunction:
         self._template = template
         self._functions = functions or []
 
-    def __call__(self, *args, **kwargs):
-        bound_args = self._signature.bind(*args, **kwargs)
-        bound_args.apply_defaults()
-
-        return_origin = get_origin(self._signature.return_annotation)
-        if return_origin is Union or return_origin is types.UnionType:
-            return_types = get_args(self._signature.return_annotation)
-        else:
-            return_types = [self._signature.return_annotation]
-
-        function_schemas: list[BaseFunctionSchema] = []
+        self._return_types = (
+            get_args(self._signature.return_annotation)
+            if is_union_type(self._signature.return_annotation)
+            else [self._signature.return_annotation]
+        )
+        self._function_schemas: list[BaseFunctionSchema] = []
         for function in self._functions:
-            # TODO: Check every function matches the FunctionCall types in the signature
-            function_schemas.append(FunctionCallFunctionSchema(function))
-        for return_type in return_types:
+            self._function_schemas.append(FunctionCallFunctionSchema(function))
+        for return_type in self._return_types:
             # TODO: Skip str here. Use message for str type rather than function call
             if issubclass(get_origin(return_type) or return_type, FunctionCall):
                 continue
             if issubclass(get_origin(return_type) or return_type, BaseModel):
-                function_schemas.append(BaseModelFunctionSchema(return_type))
+                self._function_schemas.append(BaseModelFunctionSchema(return_type))
             else:
-                function_schemas.append(AnyFunctionSchema(return_type))
+                self._function_schemas.append(AnyFunctionSchema(return_type))
 
-        function_schema_by_name = {
+        self._function_schema_by_name = {
             function_schema.name: function_schema
-            for function_schema in function_schemas
+            for function_schema in self._function_schemas
         }
+
+    def __call__(self, *args, **kwargs):
+        bound_args = self._signature.bind(*args, **kwargs)
+        bound_args.apply_defaults()
 
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo-0613",
@@ -179,12 +182,14 @@ class PromptFunction:
                     "content": self._template.format(**bound_args.arguments),
                 },
             ],
-            functions=[function_schema.dict() for function_schema in function_schemas],
+            functions=[
+                function_schema.dict() for function_schema in self._function_schemas
+            ],
             temperature=0,
         )
         response_message = response["choices"][0]["message"]
         function_name: str = response_message["function_call"]["name"]
-        function_schema = function_schema_by_name[function_name]
+        function_schema = self._function_schema_by_name[function_name]
         return function_schema.parse(response_message["function_call"]["arguments"])
 
 
