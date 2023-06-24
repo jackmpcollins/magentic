@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from copy import deepcopy
-from functools import wraps
+from functools import update_wrapper
 from inspect import Parameter, Signature
 import inspect
 import types
@@ -8,6 +8,7 @@ from typing import (
     Any,
     Callable,
     Generic,
+    ParamSpec,
     Sequence,
     TypeVar,
     Union,
@@ -135,11 +136,15 @@ def is_union_type(type_: type) -> bool:
     return type_ is Union or type_ is types.UnionType
 
 
-class PromptFunction:
+P = ParamSpec("P")
+R = TypeVar("R")
+
+
+class PromptFunction(Generic[P, R]):
     def __init__(
         self,
         parameters: Sequence[Parameter],
-        return_type: type,
+        return_type: type[R],
         template: str,
         functions: list[Callable] | None = None,
     ):
@@ -172,7 +177,7 @@ class PromptFunction:
             for function_schema in self._function_schemas
         }
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         bound_args = self._signature.bind(*args, **kwargs)
         bound_args.apply_defaults()
 
@@ -196,18 +201,17 @@ class PromptFunction:
 
 
 def prompt(functions: list[Callable] | None = None):
-    def decorator(func):
+    def decorator(func: Callable[P, R]) -> Callable[P, R]:
         if func.__doc__ is None:
             raise ValueError("Function must have a docstring")
 
         func_signature = Signature.from_callable(func)
-        return wraps(func)(
-            PromptFunction(
-                parameters=list(func_signature.parameters.values()),
-                return_type=func_signature.return_annotation,
-                template=func.__doc__,
-                functions=functions,
-            )
+        prompt_function = PromptFunction[P, R](
+            parameters=list(func_signature.parameters.values()),
+            return_type=func_signature.return_annotation,
+            template=func.__doc__,
+            functions=functions,
         )
+        return update_wrapper(prompt_function, func)
 
     return decorator
