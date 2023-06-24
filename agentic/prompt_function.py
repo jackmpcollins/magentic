@@ -1,9 +1,8 @@
+import inspect
+import types
 from abc import ABC, abstractmethod
 from copy import deepcopy
 from functools import update_wrapper
-from inspect import Parameter, Signature
-import inspect
-import types
 from typing import (
     Any,
     Callable,
@@ -21,7 +20,6 @@ from pydantic import BaseModel, validate_arguments
 from pydantic.generics import GenericModel
 
 from agentic.function_call import FunctionCall
-
 
 T = TypeVar("T")
 
@@ -143,12 +141,12 @@ R = TypeVar("R")
 class PromptFunction(Generic[P, R]):
     def __init__(
         self,
-        parameters: Sequence[Parameter],
+        parameters: Sequence[inspect.Parameter],
         return_type: type[R],
         template: str,
         functions: list[Callable[..., Any]] | None = None,
     ):
-        self._signature = Signature(
+        self._signature = inspect.Signature(
             parameters=parameters,
             return_annotation=return_type,
         )
@@ -213,7 +211,7 @@ def prompt(
         if func.__doc__ is None:
             raise ValueError("Function must have a docstring")
 
-        func_signature = Signature.from_callable(func)
+        func_signature = inspect.Signature.from_callable(func)
         prompt_function = PromptFunction[P, R](
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
