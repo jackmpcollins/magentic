@@ -9,7 +9,6 @@ from typing import (
     Callable,
     Generic,
     Sequence,
-    Type,
     TypeVar,
     Union,
     get_args,
@@ -57,8 +56,10 @@ class BaseFunctionSchema(ABC, Generic[T]):
 
 
 class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
-    def __init__(self, return_type: Type[T]):
+    def __init__(self, return_type: type[T]):
         self._return_type = return_type
+        # https://github.com/python/mypy/issues/14458
+        self._model = Output[return_type]  # type: ignore[valid-type]
 
     @property
     def name(self) -> str:
@@ -66,20 +67,20 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
 
     @property
     def parameters(self) -> dict[str, Any]:
-        model_schema = Output[self._return_type].schema().copy()
+        model_schema = self._model.schema().copy()
         model_schema.pop("title", None)
         model_schema.pop("description", None)
         return model_schema
 
     def parse(self, arguments: str) -> T:
-        return Output[self._return_type].parse_raw(arguments).value
+        return self._model.parse_raw(arguments).value
 
 
 BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
 
 class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT]):
-    def __init__(self, model: Type[BaseModelT]):
+    def __init__(self, model: type[BaseModelT]):
         self._model = model
 
     @property
@@ -100,7 +101,8 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
 class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]):
     def __init__(self, func: Callable[..., T]):
         self._func = func
-        self._model = validate_arguments(self._func).model
+        # https://github.com/python/mypy/issues/2087
+        self._model: BaseModel = validate_arguments(self._func).model  # type: ignore[attr-defined]
         self._func_parameters = inspect.signature(self._func).parameters.keys()
 
     @property
@@ -137,7 +139,7 @@ class PromptFunction:
     def __init__(
         self,
         parameters: Sequence[Parameter],
-        return_type: Type,
+        return_type: type,
         template: str,
         functions: list[Callable] | None = None,
     ):
@@ -195,6 +197,9 @@ class PromptFunction:
 
 def prompt(functions: list[Callable] | None = None):
     def decorator(func):
+        if func.__doc__ is None:
+            raise ValueError("Function must have a docstring")
+
         func_signature = Signature.from_callable(func)
         return wraps(func)(
             PromptFunction(
