@@ -10,7 +10,7 @@ authors = ["Jack Collins"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = ">=3.8"
+python = ">=3.10"
 openai = ">=0.27"
 pydantic = "*"
 
