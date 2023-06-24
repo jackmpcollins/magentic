@@ -16,5 +16,6 @@ pydantic = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
+mypy = "*"
 pytest = "*"
 pytest-clarity = "*"
