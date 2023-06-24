@@ -3,7 +3,10 @@ requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.mypy]
+check_untyped_defs = true
 disable_error_code = ["empty-body"]
+disallow_untyped_defs = false
+strict = true
 
 [tool.poetry]
 name = "agentic"

@@ -146,7 +146,7 @@ class PromptFunction(Generic[P, R]):
         parameters: Sequence[Parameter],
         return_type: type[R],
         template: str,
-        functions: list[Callable] | None = None,
+        functions: list[Callable[..., Any]] | None = None,
     ):
         self._signature = Signature(
             parameters=parameters,
@@ -160,15 +160,21 @@ class PromptFunction(Generic[P, R]):
             if is_union_type(self._signature.return_annotation)
             else [self._signature.return_annotation]
         )
-        self._function_schemas: list[BaseFunctionSchema] = []
+        self._function_schemas: list[BaseFunctionSchema[R]] = []
         for function in self._functions:
-            self._function_schemas.append(FunctionCallFunctionSchema(function))
+            function_call_function_schema = FunctionCallFunctionSchema(function)
+            # TODO: Make type anotations validate that `FunctionCall[<function return type>]` is included in `R`
+            # TODO: This would type narrow `function_call_function_schema` to match `BaseFunctionSchema[R]`
+            self._function_schemas.append(function_call_function_schema)  # type: ignore[arg-type]
         for return_type in self._return_types:
             # TODO: Skip str here. Use message for str type rather than function call
-            if issubclass(get_origin(return_type) or return_type, FunctionCall):
+            return_type_origin = get_origin(return_type) or return_type
+            if issubclass(return_type_origin, FunctionCall):
                 continue
-            if issubclass(get_origin(return_type) or return_type, BaseModel):
-                self._function_schemas.append(BaseModelFunctionSchema(return_type))
+            if issubclass(return_type_origin, BaseModel):
+                self._function_schemas.append(
+                    BaseModelFunctionSchema(return_type_origin)
+                )
             else:
                 self._function_schemas.append(AnyFunctionSchema(return_type))
 
@@ -181,7 +187,7 @@ class PromptFunction(Generic[P, R]):
         bound_args = self._signature.bind(*args, **kwargs)
         bound_args.apply_defaults()
 
-        response = openai.ChatCompletion.create(
+        response: dict[str, Any] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
             model="gpt-3.5-turbo-0613",
             messages=[
                 {
@@ -200,7 +206,9 @@ class PromptFunction(Generic[P, R]):
         return function_schema.parse(response_message["function_call"]["arguments"])
 
 
-def prompt(functions: list[Callable] | None = None):
+def prompt(
+    functions: list[Callable[..., Any]] | None = None,
+) -> Callable[[Callable[P, R]], Callable[P, R]]:
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         if func.__doc__ is None:
             raise ValueError("Function must have a docstring")
