@@ -29,3 +29,6 @@ isort = "*"
 mypy = "*"
 pytest = "*"
 pytest-clarity = "*"
+
+[tool.ruff]
+line-length = 120

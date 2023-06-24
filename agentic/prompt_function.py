@@ -131,7 +131,7 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
 
 def is_union_type(type_: type) -> bool:
     type_ = get_origin(type_) or type_
-    return type_ is Union or type_ is types.UnionType
+    return type_ is Union or type_ is types.UnionType  # noqa: E721
 
 
 P = ParamSpec("P")
