@@ -1,149 +1,25 @@
 import inspect
-import types
-from abc import ABC, abstractmethod
-from copy import deepcopy
 from functools import update_wrapper
-from typing import (
-    Any,
-    Callable,
-    Generic,
-    ParamSpec,
-    Sequence,
-    TypeVar,
-    Union,
-    get_args,
-    get_origin,
-)
-
-import openai
-from pydantic import BaseModel, validate_arguments
-from pydantic.generics import GenericModel
+from typing import Any, Callable, Generic, ParamSpec, Sequence, TypeVar
 
 from agentic.function_call import FunctionCall
-
-T = TypeVar("T")
-
-
-class Output(GenericModel, Generic[T]):
-    value: T
-
-
-class BaseFunctionSchema(ABC, Generic[T]):
-    @property
-    @abstractmethod
-    def name(self) -> str:
-        pass
-
-    @property
-    def description(self) -> str | None:
-        return None
-
-    @property
-    @abstractmethod
-    def parameters(self) -> dict[str, Any]:
-        pass
-
-    def dict(self) -> dict[str, Any]:
-        schema = {"name": self.name, "parameters": self.parameters}
-        if self.description:
-            schema["description"] = self.description
-        return schema
-
-    @abstractmethod
-    def parse(self, arguments: str) -> T:
-        pass
-
-
-class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
-    def __init__(self, return_type: type[T]):
-        self._return_type = return_type
-        # https://github.com/python/mypy/issues/14458
-        self._model = Output[return_type]  # type: ignore[valid-type]
-
-    @property
-    def name(self) -> str:
-        return f"return_{self._return_type.__name__.lower()}"
-
-    @property
-    def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.schema().copy()
-        model_schema.pop("title", None)
-        model_schema.pop("description", None)
-        return model_schema
-
-    def parse(self, arguments: str) -> T:
-        return self._model.parse_raw(arguments).value
-
-
-BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
-
-
-class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT]):
-    def __init__(self, model: type[BaseModelT]):
-        self._model = model
-
-    @property
-    def name(self) -> str:
-        return f"return_{self._model.__name__.lower()}"
-
-    @property
-    def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.schema().copy()
-        model_schema.pop("title", None)
-        model_schema.pop("description", None)
-        return model_schema
-
-    def parse(self, arguments: str) -> BaseModelT:
-        return self._model.parse_raw(arguments)
-
-
-class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]):
-    def __init__(self, func: Callable[..., T]):
-        self._func = func
-        # https://github.com/python/mypy/issues/2087
-        self._model: BaseModel = validate_arguments(self._func).model  # type: ignore[attr-defined]
-        self._func_parameters = inspect.signature(self._func).parameters.keys()
-
-    @property
-    def name(self) -> str:
-        return self._func.__name__
-
-    @property
-    def description(self) -> str | None:
-        return self._func.__doc__
-
-    @property
-    def parameters(self) -> dict[str, Any]:
-        schema = deepcopy(self._model.schema())
-        schema.pop("additionalProperties", None)
-        schema.pop("title", None)
-        # Pydantic adds extra parameters to the schema for the function
-        # https://docs.pydantic.dev/latest/usage/validation_decorator/#model-fields-and-reserved-arguments
-        schema["properties"] = {
-            k: v for k, v in schema["properties"].items() if k in self._func_parameters
-        }
-        return schema
-
-    def parse(self, arguments: str) -> FunctionCall[T]:
-        args = self._model.parse_raw(arguments).dict(include=self._func_parameters)
-        return FunctionCall(self._func, **args)
-
-
-def is_union_type(type_: type) -> bool:
-    type_ = get_origin(type_) or type_
-    return type_ is Union or type_ is types.UnionType  # noqa: E721
-
+from agentic.openai_chat_model import OpenaiChatModel, UserMessage
+from agentic.typing import is_origin_subclass, split_union_type
 
 P = ParamSpec("P")
+# TODO: Make `R` type Union of all possible return types except FunctionCall ?
+# Then `R | FunctionCall[FuncR]` will separate FunctionCall from other return types.
+# Can then use `FuncR` to make typechecker check `functions` argument to `prompt`
+# `Not` type would solve this - https://github.com/python/typing/issues/801
 R = TypeVar("R")
 
 
 class PromptFunction(Generic[P, R]):
     def __init__(
         self,
+        template: str,
         parameters: Sequence[inspect.Parameter],
         return_type: type[R],
-        template: str,
         functions: list[Callable[..., Any]] | None = None,
     ):
         self._signature = inspect.Signature(
@@ -153,55 +29,29 @@ class PromptFunction(Generic[P, R]):
         self._template = template
         self._functions = functions or []
 
-        self._return_types = (
-            get_args(self._signature.return_annotation)
-            if is_union_type(self._signature.return_annotation)
-            else [self._signature.return_annotation]
-        )
-        self._function_schemas: list[BaseFunctionSchema[R]] = []
-        for function in self._functions:
-            function_call_function_schema = FunctionCallFunctionSchema(function)
-            # TODO: Make type anotations validate that `FunctionCall[<function return type>]` is included in `R`
-            # TODO: This would type narrow `function_call_function_schema` to match `BaseFunctionSchema[R]`
-            self._function_schemas.append(function_call_function_schema)  # type: ignore[arg-type]
-        for return_type in self._return_types:
-            # TODO: Skip str here. Use message for str type rather than function call
-            return_type_origin = get_origin(return_type) or return_type
-            if issubclass(return_type_origin, FunctionCall):
-                continue
-            if issubclass(return_type_origin, BaseModel):
-                self._function_schemas.append(
-                    BaseModelFunctionSchema(return_type_origin)
-                )
-            else:
-                self._function_schemas.append(AnyFunctionSchema(return_type))
+        self._return_types = [
+            return_type
+            for return_type in split_union_type(return_type)
+            if not is_origin_subclass(return_type, FunctionCall)
+        ]
 
-        self._function_schema_by_name = {
-            function_schema.name: function_schema
-            for function_schema in self._function_schemas
-        }
+        self._model = OpenaiChatModel()
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         bound_args = self._signature.bind(*args, **kwargs)
         bound_args.apply_defaults()
-
-        response: dict[str, Any] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
-            model="gpt-3.5-turbo-0613",
+        return self._model.complete(  # type: ignore[return-value]
             messages=[
-                {
-                    "role": "user",
-                    "content": self._template.format(**bound_args.arguments),
-                },
+                UserMessage(content=self._template.format(**bound_args.arguments))
             ],
-            functions=[
-                function_schema.dict() for function_schema in self._function_schemas
-            ],
-            temperature=0,
+            functions=self._functions,
+            output_types=self._return_types,
         )
-        response_message = response["choices"][0]["message"]
-        function_name: str = response_message["function_call"]["name"]
-        function_schema = self._function_schema_by_name[function_name]
-        return function_schema.parse(response_message["function_call"]["arguments"])
+
+    def format(self, *args: P.args, **kwargs: P.kwargs) -> str:
+        bound_args = self._signature.bind(*args, **kwargs)
+        bound_args.apply_defaults()
+        return self._template.format(**bound_args.arguments)
 
 
 def prompt(
