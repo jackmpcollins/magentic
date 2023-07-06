@@ -133,8 +133,9 @@ FuncR = TypeVar("FuncR")
 
 
 class OpenaiChatModel:
-    def __init__(self, model: str = "gpt-3.5-turbo-0613"):
+    def __init__(self, model: str = "gpt-3.5-turbo-0613", temperature: float = 0):
         self._model = model
+        self._temperature = temperature
 
     def complete(
         self,
@@ -172,7 +173,7 @@ class OpenaiChatModel:
         response: dict[str, Any] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
             model=self._model,
             messages=[message.dict() for message in messages],
-            temperature=0,
+            temperature=self._temperature,
             **function_args,
         )
         response_message = response["choices"][0]["message"]
