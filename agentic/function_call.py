@@ -1,4 +1,5 @@
-from typing import Callable, Generic, ParamSpec, TypeVar
+import inspect
+from typing import Any, Callable, Generic, ParamSpec, TypeVar
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -12,3 +13,9 @@ class FunctionCall(Generic[T]):
 
     def __call__(self) -> T:
         return self._func(*self._args, **self._kwargs)
+
+    @property
+    def arguments(self) -> dict[str, Any]:
+        signature = inspect.signature(self._func)
+        bound_args = signature.bind(*self._args, **self._kwargs)
+        return bound_args.arguments.copy()

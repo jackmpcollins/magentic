@@ -2,8 +2,8 @@ import inspect
 from functools import update_wrapper
 from typing import Any, Callable, Generic, ParamSpec, Sequence, TypeVar
 
+from agentic.chat_model.openai_chat_model import OpenaiChatModel, UserMessage
 from agentic.function_call import FunctionCall
-from agentic.openai_chat_model import OpenaiChatModel, UserMessage
 from agentic.typing import is_origin_subclass, split_union_type
 
 P = ParamSpec("P")
@@ -40,13 +40,14 @@ class PromptFunction(Generic[P, R]):
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         bound_args = self._signature.bind(*args, **kwargs)
         bound_args.apply_defaults()
-        return self._model.complete(  # type: ignore[return-value]
+        message = self._model.complete(
             messages=[
                 UserMessage(content=self._template.format(**bound_args.arguments))
             ],
             functions=self._functions,
             output_types=self._return_types,
         )
+        return message.value
 
     @property
     def functions(self) -> list[Callable[..., Any]]:
