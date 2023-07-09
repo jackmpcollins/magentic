@@ -2,6 +2,7 @@ import inspect
 import json
 from abc import ABC, abstractmethod
 from copy import deepcopy
+from enum import Enum
 from typing import Any, Callable, Generic, Iterable, TypeVar
 
 import openai
@@ -145,11 +146,11 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         args = self._model.parse_raw(arguments).dict(include=self._func_parameters)
         return FunctionCall(self._func, **args)
 
+    # TODO: Rename to `parse_args` and delete `parse`
     def parse_to_message(self, arguments: str) -> FunctionCallMessage[T]:
-        return FunctionCallMessage(
-            function_name=self.name, function_call=self.parse(arguments)
-        )
+        return FunctionCallMessage(self.parse(arguments))
 
+    # TODO: Serialize to `{name: ..., arguments: ...}` dict
     def serialize_args(self, value: FunctionCall[T]) -> str:
         return json.dumps(value.arguments)
 
@@ -162,18 +163,32 @@ def function_schema_for_type(type_: type[T]) -> BaseFunctionSchema[T]:
     return AnyFunctionSchema(type_)
 
 
-def message_to_openai_message(message: Message) -> dict[str, Any]:
+class OpenaiMessageRole(Enum):
+    ASSISTANT = "assistant"
+    FUNCTION = "function"
+    SYSTEM = "system"
+    USER = "user"
+
+
+def message_to_openai_message(message: Message[Any]) -> dict[str, Any]:
     """Convert a `Message` to an OpenAI message dict."""
     if isinstance(message, UserMessage):
-        return {"role": message.role.value, "content": message.content}
+        return {"role": OpenaiMessageRole.USER.value, "content": message.content}
 
     if isinstance(message, AssistantMessage):
         if isinstance(message.content, str):
-            return {"role": message.role.value, "content": message.content}
+            return {
+                "role": OpenaiMessageRole.ASSISTANT.value,
+                "content": message.content,
+            }
 
-        function_schema = function_schema_for_type(type(message.content))
+        if isinstance(message.content, FunctionCall):
+            function_schema = FunctionCallFunctionSchema(message.content.func)
+        else:
+            function_schema = function_schema_for_type(type(message.content))
+
         return {
-            "role": message.role.value,
+            "role": OpenaiMessageRole.ASSISTANT.value,
             "content": None,
             "function_call": {
                 "name": function_schema.name,
@@ -181,22 +196,11 @@ def message_to_openai_message(message: Message) -> dict[str, Any]:
             },
         }
 
-    # TODO: Make this subclass of `AssistantMessage`? Use `FunctionCallFunctionSchema` to serialize?
-    if isinstance(message, FunctionCallMessage):
-        return {
-            "role": message.role.value,
-            "content": None,  # "content" is a required field
-            "function_call": {
-                "name": message.function_name,
-                "arguments": json.dumps(message.function_call.arguments),
-            },
-        }
-
     if isinstance(message, FunctionResultMessage):
         return {
-            "role": message.role.value,
-            "name": message.function_name,
-            "content": json.dumps(message.function_result),
+            "role": OpenaiMessageRole.FUNCTION.value,
+            "name": FunctionCallFunctionSchema(message.content.func).name,
+            "content": json.dumps(message.content),
         }
 
     raise NotImplementedError(type(message))

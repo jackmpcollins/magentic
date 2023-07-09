@@ -47,7 +47,7 @@ class PromptFunction(Generic[P, R]):
             functions=self._functions,
             output_types=self._return_types,
         )
-        return message.value
+        return message.content
 
     @property
     def functions(self) -> list[Callable[..., Any]]:

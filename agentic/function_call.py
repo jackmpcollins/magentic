@@ -15,6 +15,10 @@ class FunctionCall(Generic[T]):
         return self._func(*self._args, **self._kwargs)
 
     @property
+    def func(self):
+        return self._func
+
+    @property
     def arguments(self) -> dict[str, Any]:
         signature = inspect.signature(self._func)
         bound_args = signature.bind(*self._args, **self._kwargs)
