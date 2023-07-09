@@ -190,7 +190,7 @@ def message_to_openai_message(message: Message[Any]) -> dict[str, Any]:
     if isinstance(message, FunctionResultMessage):
         return {
             "role": OpenaiMessageRole.FUNCTION.value,
-            "name": FunctionCallFunctionSchema(message.content.func).name,
+            "name": FunctionCallFunctionSchema(message.function_call.func).name,
             "content": json.dumps(message.content),
         }
 
