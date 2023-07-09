@@ -25,7 +25,7 @@ def test_any_function_schema():
             "required": ["value"],
         },
     }
-    assert function_schema.parse('{"value": "Dublin"}') == "Dublin"
+    assert function_schema.parse_args('{"value": "Dublin"}') == "Dublin"
 
 
 def test_base_model_function_schema():
@@ -48,7 +48,7 @@ def test_base_model_function_schema():
             "required": ["name", "age"],
         },
     }
-    assert function_schema.parse('{"name": "Alice", "age": 99}') == User(
+    assert function_schema.parse_args('{"name": "Alice", "age": 99}') == User(
         name="Alice", age=99
     )
 
@@ -72,7 +72,7 @@ def test_function_call_function_schema():
             "required": ["a", "b"],
         },
     }
-    output = function_schema.parse('{"a": 1, "b": 2}')
+    output = function_schema.parse_args('{"a": 1, "b": 2}')
     assert isinstance(output, FunctionCall)
     assert output() == 3
 
@@ -99,6 +99,6 @@ def test_function_call_function_schema_with_annotated():
             "required": ["a", "b"],
         },
     }
-    output = function_schema.parse('{"a": 1, "b": 2}')
+    output = function_schema.parse_args('{"a": 1, "b": 2}')
     assert isinstance(output, FunctionCall)
     assert output() == 3

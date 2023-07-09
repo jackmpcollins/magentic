@@ -48,12 +48,11 @@ class BaseFunctionSchema(ABC, Generic[T]):
         return schema
 
     @abstractmethod
-    def parse(self, arguments: str) -> T:
+    def parse_args(self, arguments: str) -> T:
         ...
 
-    @abstractmethod
-    def parse_to_message(self, arguments: str) -> AssistantMessage[T]:
-        ...
+    def parse_args_to_message(self, arguments: str) -> AssistantMessage[T]:
+        return AssistantMessage(self.parse_args(arguments))
 
     @abstractmethod
     def serialize_args(self, value: T) -> str:
@@ -77,11 +76,8 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         model_schema.pop("description", None)
         return model_schema
 
-    def parse(self, arguments: str) -> T:
+    def parse_args(self, arguments: str) -> T:
         return self._model.parse_raw(arguments).value
-
-    def parse_to_message(self, arguments: str) -> AssistantMessage[T]:
-        return AssistantMessage(self.parse(arguments))
 
     def serialize_args(self, value: T) -> str:
         return self._model(value=value).json()
@@ -105,11 +101,8 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
         model_schema.pop("description", None)
         return model_schema
 
-    def parse(self, arguments: str) -> BaseModelT:
+    def parse_args(self, arguments: str) -> BaseModelT:
         return self._model.parse_raw(arguments)
-
-    def parse_to_message(self, arguments: str) -> AssistantMessage[BaseModelT]:
-        return AssistantMessage(self.parse(arguments))
 
     def serialize_args(self, value: BaseModelT) -> str:
         return value.json()
@@ -142,15 +135,13 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         }
         return schema
 
-    def parse(self, arguments: str) -> FunctionCall[T]:
+    def parse_args(self, arguments: str) -> FunctionCall[T]:
         args = self._model.parse_raw(arguments).dict(include=self._func_parameters)
         return FunctionCall(self._func, **args)
 
-    # TODO: Rename to `parse_args` and delete `parse`
-    def parse_to_message(self, arguments: str) -> FunctionCallMessage[T]:
-        return FunctionCallMessage(self.parse(arguments))
+    def parse_args_to_message(self, arguments: str) -> FunctionCallMessage[T]:
+        return FunctionCallMessage(self.parse_args(arguments))
 
-    # TODO: Serialize to `{name: ..., arguments: ...}` dict
     def serialize_args(self, value: FunctionCall[T]) -> str:
         return json.dumps(value.arguments)
 
@@ -259,12 +250,15 @@ class OpenaiChatModel:
             }
             function_name = response_message["function_call"]["name"]
             function_schema = function_schema_by_name[function_name]
-            message = function_schema.parse_to_message(
+            message = function_schema.parse_args_to_message(
                 response_message["function_call"]["arguments"]
             )
             return message
 
         if not includes_str_output_type:
-            raise ValueError("String was returned by model but not expected.")
+            raise ValueError(
+                "String was returned by model but not expected."
+                " You may need to update your prompt to encourage the model to return a specific type."
+            )
 
         return AssistantMessage(response_message["content"])  # type: ignore[return-value]
