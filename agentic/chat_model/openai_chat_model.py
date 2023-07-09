@@ -208,11 +208,14 @@ class OpenaiChatModel:
 
     def complete(
         self,
-        messages: list[Message],
-        functions: list[Callable[..., FuncR]] | None = None,
-        output_types: Iterable[type[R]] = (str,),  # type: ignore[assignment]
+        messages: Iterable[Message],
+        functions: Iterable[Callable[..., FuncR]] | None = None,
+        output_types: Iterable[type[R | str]] | None = None,
     ) -> FunctionCallMessage[FuncR] | AssistantMessage[R]:
         """Request an LLM message."""
+        if output_types is None:
+            output_types = [str]
+
         function_schemas: list[
             FunctionCallFunctionSchema[FuncR] | BaseFunctionSchema[R]
         ] = []
@@ -261,4 +264,4 @@ class OpenaiChatModel:
                 " You may need to update your prompt to encourage the model to return a specific type."
             )
 
-        return AssistantMessage(response_message["content"])  # type: ignore[return-value]
+        return AssistantMessage(response_message["content"])
