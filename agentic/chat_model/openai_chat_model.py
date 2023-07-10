@@ -7,7 +7,6 @@ from typing import Any, Callable, Generic, Iterable, TypeVar
 
 import openai
 from pydantic import BaseModel, validate_arguments
-from pydantic.generics import GenericModel
 
 from agentic.chat_model.base import (
     AssistantMessage,
@@ -22,7 +21,7 @@ from agentic.typing import is_origin_subclass
 T = TypeVar("T")
 
 
-class Output(GenericModel, Generic[T]):
+class Output(BaseModel, Generic[T]):
     value: T
 
 

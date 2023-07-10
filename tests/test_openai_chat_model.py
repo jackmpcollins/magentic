@@ -28,6 +28,34 @@ def test_any_function_schema():
     assert function_schema.parse_args('{"value": "Dublin"}') == "Dublin"
 
 
+def test_any_function_schema_parse_union():
+    function_schema = AnyFunctionSchema(list[str | int | bool])
+
+    assert function_schema.name == "return_list"
+    assert function_schema.parameters == {
+        "type": "object",
+        "properties": {
+            "value": {
+                "title": "Value",
+                "type": "array",
+                "items": {
+                    "anyOf": [
+                        {"type": "string"},
+                        {"type": "integer"},
+                        {"type": "boolean"},
+                    ]
+                },
+            }
+        },
+        "required": ["value"],
+    }
+    assert function_schema.parse_args('{"value": ["hello", 42, true]}') == [
+        "hello",
+        42,
+        True,
+    ]
+
+
 def test_base_model_function_schema():
     class User(BaseModel):
         name: str
