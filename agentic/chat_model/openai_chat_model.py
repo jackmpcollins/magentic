@@ -111,7 +111,7 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
     def __init__(self, func: Callable[..., T]):
         self._func = func
         # https://github.com/python/mypy/issues/2087
-        self._model: BaseModel = validate_arguments(self._func).model  # type: ignore[attr-defined]
+        self._model: BaseModel = validate_arguments(self._func).model  # type: ignore[operator]
         self._func_parameters = inspect.signature(self._func).parameters.keys()
 
     @property
