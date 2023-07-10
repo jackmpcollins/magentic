@@ -1,6 +1,9 @@
+import pytest
+
 from agentic.prompt_chain import prompt_chain
 
 
+@pytest.mark.openai
 def test_prompt_chain():
     def get_current_weather(location, unit="fahrenheit"):
         """Get the current weather in a given location"""

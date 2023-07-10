@@ -30,5 +30,10 @@ mypy = "*"
 pytest = "*"
 pytest-clarity = "*"
 
+[tool.pytest.ini_options]
+markers = [
+    "openai: Tests that query the OpenAI API"
+]
+
 [tool.ruff]
 line-length = 120

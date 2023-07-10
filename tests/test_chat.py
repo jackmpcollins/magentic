@@ -1,3 +1,5 @@
+import pytest
+
 from agentic.chat import Chat
 from agentic.chat_model.base import AssistantMessage, UserMessage
 from agentic.prompt_function import prompt
@@ -25,6 +27,7 @@ def test_chat_add_message():
     assert chat2.messages == [UserMessage(content="Hello")]
 
 
+@pytest.mark.openai
 def test_chat_submit():
     chat1 = Chat(
         messages=[UserMessage(content="Hello")],
