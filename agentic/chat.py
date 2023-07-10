@@ -33,7 +33,7 @@ class Chat:
             messages=[UserMessage(content=prompt.format(*args, **kwargs))],
             functions=prompt.functions,
             output_types=prompt.return_types,
-            model=prompt._model,
+            model=prompt.model,
         )
 
     @property

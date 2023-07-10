@@ -22,6 +22,7 @@ class PromptFunction(Generic[P, R]):
         parameters: Sequence[inspect.Parameter],
         return_type: type[R],
         functions: list[Callable[..., Any]] | None = None,
+        model: OpenaiChatModel | None = None,
     ):
         self._signature = inspect.Signature(
             parameters=parameters,
@@ -29,14 +30,13 @@ class PromptFunction(Generic[P, R]):
         )
         self._template = template
         self._functions = functions or []
+        self._model = model or OpenaiChatModel()
 
         self._return_types = [
             return_type
             for return_type in split_union_type(return_type)
             if not is_origin_subclass(return_type, FunctionCall)
         ]
-
-        self._model = OpenaiChatModel()
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         bound_args = self._signature.bind(*args, **kwargs)
@@ -55,6 +55,10 @@ class PromptFunction(Generic[P, R]):
         return self._functions.copy()
 
     @property
+    def model(self) -> OpenaiChatModel:
+        return self._model
+
+    @property
     def return_types(self) -> list[type[R]]:
         return self._return_types.copy()
 
@@ -67,6 +71,7 @@ class PromptFunction(Generic[P, R]):
 def prompt(
     template: str | None = None,
     functions: list[Callable[..., Any]] | None = None,
+    model: OpenaiChatModel | None = None,
 ) -> Callable[[Callable[P, R]], PromptFunction[P, R]]:
     def decorator(func: Callable[P, R]) -> PromptFunction[P, R]:
         if (_template := template or inspect.getdoc(func)) is None:
@@ -80,6 +85,7 @@ def prompt(
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
             functions=functions,
+            model=model,
         )
         return update_wrapper(prompt_function, func)
 

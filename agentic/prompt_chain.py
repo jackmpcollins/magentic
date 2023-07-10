@@ -4,6 +4,7 @@ from typing import Any, Callable, ParamSpec, TypeVar
 
 from agentic.chat import Chat
 from agentic.chat_model.base import FunctionCallMessage
+from agentic.chat_model.openai_chat_model import OpenaiChatModel
 from agentic.prompt_function import PromptFunction
 
 P = ParamSpec("P")
@@ -13,6 +14,7 @@ R = TypeVar("R")
 def prompt_chain(
     template: str | None = None,
     functions: list[Callable[..., Any]] | None = None,
+    model: OpenaiChatModel | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Converts a Python function to an LLM query, auto-resolving function calls."""
 
@@ -28,6 +30,7 @@ def prompt_chain(
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
             functions=functions,
+            model=model,
         )
 
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
