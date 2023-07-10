@@ -8,7 +8,7 @@ pip install ? TODO
 
 ## Concepts
 
-The `@prompt()` decorator makes it easy python function into a query to an LLM.
+The `@prompt()` decorator makes it easy to convert a python function into a query to an LLM.
 
 ```python
 from agentic import prompt
