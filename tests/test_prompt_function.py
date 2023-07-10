@@ -3,6 +3,7 @@
 from inspect import getdoc
 
 import pytest
+from pydantic import BaseModel
 
 from agentic.function_call import FunctionCall
 from agentic.prompt_function import PromptFunction, prompt
@@ -52,7 +53,33 @@ def test_decorator_return_bool_str():
 
 
 @pytest.mark.openai
-def test_decorator_function_call():
+def test_decorator_return_pydantic_model():
+    class CapitalCity(BaseModel):
+        capital: str
+        country: str
+
+    @prompt(template="What is the capital of {country}?")
+    def get_capital(country: str) -> CapitalCity:
+        ...
+
+    assert get_capital("Ireland") == CapitalCity(capital="Dublin", country="Ireland")
+
+
+@pytest.mark.openai
+def test_decorator_input_pydantic_model():
+    class CapitalCity(BaseModel):
+        capital: str
+        country: str
+
+    @prompt(template="Is this capital-country pair correct? {pair}")
+    def check_capital(pair: CapitalCity) -> bool:
+        ...
+
+    assert check_capital(CapitalCity(capital="Dublin", country="Ireland"))
+
+
+@pytest.mark.openai
+def test_decorator_return_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
