@@ -2,7 +2,8 @@ import inspect
 from functools import update_wrapper
 from typing import Any, Callable, Generic, ParamSpec, Sequence, TypeVar
 
-from agentic.chat_model.openai_chat_model import OpenaiChatModel, UserMessage
+from agentic.chat_model.base import UserMessage
+from agentic.chat_model.openai_chat_model import OpenaiChatModel
 from agentic.function_call import FunctionCall
 from agentic.typing import is_origin_subclass, split_union_type
 
@@ -47,7 +48,7 @@ class PromptFunction(Generic[P, R]):
             functions=self._functions,
             output_types=self._return_types,
         )
-        return message.content
+        return message.content  # type: ignore[return-value]
 
     @property
     def functions(self) -> list[Callable[..., Any]]:
@@ -66,8 +67,8 @@ class PromptFunction(Generic[P, R]):
 def prompt(
     template: str | None = None,
     functions: list[Callable[..., Any]] | None = None,
-) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    def decorator(func: Callable[P, R]) -> Callable[P, R]:
+) -> Callable[[Callable[P, R]], PromptFunction[P, R]]:
+    def decorator(func: Callable[P, R]) -> PromptFunction[P, R]:
         if (_template := template or inspect.getdoc(func)) is None:
             raise ValueError(
                 "`template` argument must be provided if function has no docstring"

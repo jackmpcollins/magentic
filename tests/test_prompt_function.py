@@ -4,7 +4,7 @@
 from inspect import getdoc
 
 from agentic.function_call import FunctionCall
-from agentic.prompt_function import prompt
+from agentic.prompt_function import PromptFunction, prompt
 
 
 def test_decorator_return_str():
@@ -23,6 +23,7 @@ def test_decorator_template_with_docstring():
         ...
 
     assert get_capital("Ireland") == "Dublin"
+    assert isinstance(get_capital, PromptFunction)
     assert getdoc(get_capital) == "This is the docstring."
 
 

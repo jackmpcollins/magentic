@@ -35,7 +35,7 @@ def prompt_chain(
             while isinstance(chat.messages[-1], FunctionCallMessage):
                 function_result_message = chat.messages[-1].get_result()
                 chat = chat.add_message(function_result_message).submit()
-            return chat.messages[-1].content
+            return chat.messages[-1].content  # type: ignore[no-any-return]
 
         return update_wrapper(wrapper, func)
 

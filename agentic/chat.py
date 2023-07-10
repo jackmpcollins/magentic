@@ -1,6 +1,6 @@
 from typing import Any, Callable, Iterable, ParamSpec, TypeVar
 
-from agentic.chat_model.base import Message, UserMessage
+from agentic.chat_model.base import AssistantMessage, Message, UserMessage
 from agentic.chat_model.openai_chat_model import OpenaiChatModel
 from agentic.prompt_function import PromptFunction
 
@@ -11,7 +11,7 @@ Self = TypeVar("Self", bound="Chat")
 class Chat:
     def __init__(
         self,
-        messages: list[Message] | None = None,
+        messages: list[Message[Any]] | None = None,
         functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[Any]] | None = None,
         model: OpenaiChatModel | None = None,
@@ -37,10 +37,10 @@ class Chat:
         )
 
     @property
-    def messages(self) -> list[Message]:
+    def messages(self) -> list[Message[Any]]:
         return self._messages.copy()
 
-    def add_message(self: Self, message: Message) -> Self:
+    def add_message(self: Self, message: Message[Any]) -> Self:
         return type(self)(
             messages=[*self._messages, message],
             functions=self._functions,
@@ -53,7 +53,7 @@ class Chat:
 
     def submit(self: Self) -> Self:
         """Request an LLM message."""
-        output_message = self._model.complete(
+        output_message: AssistantMessage[Any] = self._model.complete(
             messages=self._messages,
             functions=self._functions,
             output_types=self._output_types,

@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 
 from agentic.function_call import FunctionCall
 
@@ -30,7 +30,7 @@ class AssistantMessage(Message[T], Generic[T]):
     ...
 
 
-Self = TypeVar("Self", bound="FunctionResultMessage")
+Self = TypeVar("Self", bound="FunctionResultMessage[Any]")
 
 
 class FunctionResultMessage(Message[T], Generic[T]):

@@ -149,7 +149,7 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
 def function_schema_for_type(type_: type[T]) -> BaseFunctionSchema[T]:
     """Create a FunctionSchema for the given type."""
     if is_origin_subclass(type_, BaseModel):
-        return BaseModelFunctionSchema(type_)
+        return BaseModelFunctionSchema(type_)  # type: ignore[return-value]
 
     return AnyFunctionSchema(type_)
 
@@ -173,6 +173,7 @@ def message_to_openai_message(message: Message[Any]) -> dict[str, Any]:
                 "content": message.content,
             }
 
+        function_schema: BaseFunctionSchema[Any]
         if isinstance(message.content, FunctionCall):
             function_schema = FunctionCallFunctionSchema(message.content.func)
         else:
@@ -208,7 +209,7 @@ class OpenaiChatModel:
 
     def complete(
         self,
-        messages: Iterable[Message],
+        messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
     ) -> FunctionCallMessage[FuncR] | AssistantMessage[R]:
