@@ -9,8 +9,13 @@ class Message(Generic[T]):
     def __init__(self, content: T):
         self._content = content
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return type(self) is type(other) and self.content == other.content
+
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.content!r})"
+        return f"{type(self).__name__}({self.content!r})"
 
     @property
     def content(self) -> T:

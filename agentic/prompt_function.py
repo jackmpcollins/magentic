@@ -53,6 +53,10 @@ class PromptFunction(Generic[P, R]):
     def functions(self) -> list[Callable[..., Any]]:
         return self._functions.copy()
 
+    @property
+    def return_types(self) -> list[type[R]]:
+        return self._return_types.copy()
+
     def format(self, *args: P.args, **kwargs: P.kwargs) -> str:
         bound_args = self._signature.bind(*args, **kwargs)
         bound_args.apply_defaults()
