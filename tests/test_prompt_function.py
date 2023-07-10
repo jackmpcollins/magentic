@@ -1,6 +1,8 @@
 """Tests for PromptFunction."""
 
 
+from inspect import getdoc
+
 from agentic.function_call import FunctionCall
 from agentic.prompt_function import prompt
 
@@ -12,6 +14,16 @@ def test_decorator_return_str():
         ...
 
     assert get_capital("Ireland") == "Dublin"
+
+
+def test_decorator_template_with_docstring():
+    @prompt(template="What is the capital of {country}? Name only. No punctuation.")
+    def get_capital(country: str) -> str:
+        """This is the docstring."""
+        ...
+
+    assert get_capital("Ireland") == "Dublin"
+    assert getdoc(get_capital) == "This is the docstring."
 
 
 def test_decorator_return_bool():

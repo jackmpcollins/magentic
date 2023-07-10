@@ -64,17 +64,20 @@ class PromptFunction(Generic[P, R]):
 
 
 def prompt(
+    template: str | None = None,
     functions: list[Callable[..., Any]] | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
-        if func.__doc__ is None:
-            raise ValueError("Function must have a docstring")
+        if (_template := template or inspect.getdoc(func)) is None:
+            raise ValueError(
+                "`template` argument must be provided if function has no docstring"
+            )
 
-        func_signature = inspect.Signature.from_callable(func)
+        func_signature = inspect.signature(func)
         prompt_function = PromptFunction[P, R](
+            template=_template,
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
-            template=func.__doc__,
             functions=functions,
         )
         return update_wrapper(prompt_function, func)

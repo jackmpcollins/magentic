@@ -121,7 +121,7 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
 
     @property
     def description(self) -> str | None:
-        return self._func.__doc__
+        return inspect.getdoc(self._func)
 
     @property
     def parameters(self) -> dict[str, Any]:
