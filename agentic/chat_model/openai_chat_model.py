@@ -70,16 +70,16 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
 
     @property
     def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.schema().copy()
+        model_schema = self._model.model_json_schema().copy()
         model_schema.pop("title", None)
         model_schema.pop("description", None)
         return model_schema
 
     def parse_args(self, arguments: str) -> T:
-        return self._model.parse_raw(arguments).value
+        return self._model.model_validate_json(arguments).value
 
     def serialize_args(self, value: T) -> str:
-        return self._model(value=value).json()
+        return self._model(value=value).model_dump_json()
 
 
 BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
@@ -95,16 +95,16 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
 
     @property
     def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.schema().copy()
+        model_schema = self._model.model_json_schema().copy()
         model_schema.pop("title", None)
         model_schema.pop("description", None)
         return model_schema
 
     def parse_args(self, arguments: str) -> BaseModelT:
-        return self._model.parse_raw(arguments)
+        return self._model.model_validate_json(arguments)
 
     def serialize_args(self, value: BaseModelT) -> str:
-        return value.json()
+        return value.model_dump_json()
 
 
 class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]):
@@ -124,7 +124,7 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
 
     @property
     def parameters(self) -> dict[str, Any]:
-        schema = deepcopy(self._model.schema())
+        schema = deepcopy(self._model.model_json_schema())
         schema.pop("additionalProperties", None)
         schema.pop("title", None)
         # Pydantic adds extra parameters to the schema for the function
@@ -135,7 +135,9 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         return schema
 
     def parse_args(self, arguments: str) -> FunctionCall[T]:
-        args = self._model.parse_raw(arguments).dict(include=self._func_parameters)
+        args = self._model.model_validate_json(arguments).model_dump(
+            include=set(self._func_parameters)
+        )
         return FunctionCall(self._func, **args)
 
     def parse_args_to_message(self, arguments: str) -> FunctionCallMessage[T]:
