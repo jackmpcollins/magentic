@@ -17,9 +17,11 @@ The `@prompt()` decorator makes it easy to convert a python function into a quer
 ```python
 from magentic import prompt
 
+
 @prompt("What is a good name for a company that makes {product}?")
 def get_company_name(product: str) -> str:
     ...  # No code required!
+
 
 get_company_name(product="colorful socks")
 # 'Colorful Threads'
@@ -31,15 +33,18 @@ The decorator will respect the return annotation of the function. This can be an
 from magentic import prompt
 from pydantic import BaseModel
 
+
 class Superhero(BaseModel):
     name: str
     age: int
     power: str
     enemies: list[str]
 
+
 @prompt("Create a Superhero named {name}.")
 def create_superhero(name: str) -> Superhero:
     ...
+
 
 create_superhero("Garden Man")
 # Superhero(name='Garden Man', age=30, power='Control over plants', enemies=['Pollution Man', 'Concrete Woman'])
@@ -56,6 +61,7 @@ from magentic import prompt, FunctionCall
 def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]):
     """Turn the oven on with the provided settings."""
     print(f"Preheating to {temperature} F with mode {mode}")
+
 
 @prompt(
     template="Prepare the oven so I can make {food}",
@@ -78,6 +84,7 @@ To resolve `FunctionCall` objects automatically, you can use the `@prompt_chain`
 ```python
 from magentic import prompt_chain
 
+
 def get_current_weather(location, unit="fahrenheit"):
     """Get the current weather in a given location"""
     return {
@@ -87,12 +94,14 @@ def get_current_weather(location, unit="fahrenheit"):
         "forecast": ["sunny", "windy"],
     }
 
+
 @prompt_chain(
     template="What's the weather like in {city}?",
     functions=[get_current_weather],
 )
 def describe_weather(city: str) -> str:
     ...
+
 
 describe_weather("Boston")
 # 'The current weather in Boston is 72°F and it is sunny and windy.'
