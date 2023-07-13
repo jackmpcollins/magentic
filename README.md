@@ -3,7 +3,11 @@
 ## Installation
 
 ```sh
-pip install ? TODO
+pip install magentic
+```
+
+```sh
+poetry add magentic
 ```
 
 ## Concepts
@@ -15,9 +19,9 @@ from magentic import prompt
 
 @prompt("What is a good name for a company that makes {product}?")
 def get_company_name(product: str) -> str:
-    ...
+    ...  # No code required!
 
-get_company_name("colorful socks")
+get_company_name(product="colorful socks")
 # 'Colorful Threads'
 ```
 
@@ -51,7 +55,7 @@ from magentic import prompt, FunctionCall
 
 def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]):
     """Turn the oven on with the provided settings."""
-    return f"Preheating to {temperature} F with mode {mode}"
+    print(f"Preheating to {temperature} F with mode {mode}")
 
 @prompt(
     template="Prepare the oven so I can make {food}",
