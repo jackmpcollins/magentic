@@ -176,7 +176,7 @@ def message_to_openai_message(message: Message[Any]) -> dict[str, Any]:
 
         function_schema: BaseFunctionSchema[Any]
         if isinstance(message.content, FunctionCall):
-            function_schema = FunctionCallFunctionSchema(message.content.func)
+            function_schema = FunctionCallFunctionSchema(message.content.function)
         else:
             function_schema = function_schema_for_type(type(message.content))
 
@@ -192,7 +192,7 @@ def message_to_openai_message(message: Message[Any]) -> dict[str, Any]:
     if isinstance(message, FunctionResultMessage):
         return {
             "role": OpenaiMessageRole.FUNCTION.value,
-            "name": FunctionCallFunctionSchema(message.function_call.func).name,
+            "name": FunctionCallFunctionSchema(message.function_call.function).name,
             "content": json.dumps(message.content),
         }
 

@@ -72,9 +72,7 @@ def configure_oven(food: str) -> FunctionCall[str]:
 
 
 output = configure_oven("cookies!")
-# output: FunctionCall[str]
-output.arguments
-# {'temperature': 350, 'mode': 'bake'}
+# FunctionCall(<function activate_oven at 0x1105a6200>, temperature=350, mode='bake')
 output()
 # 'Preheating to 350 F with mode bake'
 ```
