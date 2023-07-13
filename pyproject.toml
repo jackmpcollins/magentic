@@ -37,3 +37,6 @@ markers = [
 
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.extend-per-file-ignores]
+"__init__.py" = ["F401"]
