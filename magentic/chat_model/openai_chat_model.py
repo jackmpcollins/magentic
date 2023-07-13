@@ -262,8 +262,8 @@ class OpenaiChatModel:
 
         if not includes_str_output_type:
             raise ValueError(
-                "String was returned by model but not expected."
-                " You may need to update your prompt to encourage the model to return a specific type."
+                "String was returned by model but not expected. You may need to update"
+                " your prompt to encourage the model to return a specific type."
             )
 
         return AssistantMessage(response_message["content"])

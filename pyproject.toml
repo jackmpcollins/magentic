@@ -2,6 +2,9 @@
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
+[tool.black]
+preview = true
+
 [tool.isort]
 profile = "black"
 
