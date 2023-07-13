@@ -1,8 +1,8 @@
 import pytest
 
-from agentic.chat import Chat
-from agentic.chat_model.base import AssistantMessage, UserMessage
-from agentic.prompt_function import prompt
+from magentic.chat import Chat
+from magentic.chat_model.base import AssistantMessage, UserMessage
+from magentic.prompt_function import prompt
 
 
 def test_chat_from_prompt():

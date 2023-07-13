@@ -2,12 +2,12 @@ from typing import Annotated
 
 from pydantic import BaseModel, Field
 
-from agentic.chat_model.openai_chat_model import (
+from magentic.chat_model.openai_chat_model import (
     AnyFunctionSchema,
     BaseModelFunctionSchema,
     FunctionCallFunctionSchema,
 )
-from agentic.function_call import FunctionCall
+from magentic.function_call import FunctionCall
 
 
 def test_any_function_schema():

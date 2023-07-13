@@ -2,10 +2,10 @@ import inspect
 from functools import update_wrapper
 from typing import Any, Callable, ParamSpec, TypeVar
 
-from agentic.chat import Chat
-from agentic.chat_model.base import FunctionCallMessage
-from agentic.chat_model.openai_chat_model import OpenaiChatModel
-from agentic.prompt_function import PromptFunction
+from magentic.chat import Chat
+from magentic.chat_model.base import FunctionCallMessage
+from magentic.chat_model.openai_chat_model import OpenaiChatModel
+from magentic.prompt_function import PromptFunction
 
 P = ParamSpec("P")
 R = TypeVar("R")

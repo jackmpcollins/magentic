@@ -1,6 +1,6 @@
 import pytest
 
-from agentic.prompt_chain import prompt_chain
+from magentic.prompt_chain import prompt_chain
 
 
 @pytest.mark.openai

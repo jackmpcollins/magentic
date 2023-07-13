@@ -5,8 +5,8 @@ from inspect import getdoc
 import pytest
 from pydantic import BaseModel
 
-from agentic.function_call import FunctionCall
-from agentic.prompt_function import PromptFunction, prompt
+from magentic.function_call import FunctionCall
+from magentic.prompt_function import PromptFunction, prompt
 
 
 @pytest.mark.openai

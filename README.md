@@ -1,4 +1,4 @@
-# agentic
+# magentic
 
 ## Installation
 
@@ -11,7 +11,7 @@ pip install ? TODO
 The `@prompt()` decorator makes it easy to convert a python function into a query to an LLM.
 
 ```python
-from agentic import prompt
+from magentic import prompt
 
 @prompt("What is a good name for a company that makes {product}?")
 def get_company_name(product: str) -> str:
@@ -24,7 +24,7 @@ get_company_name("colorful socks")
 The decorator will respect the return annotation of the function. This can be any builtin python type, a `pydantic` model, or a `FunctionCall`.
 
 ```python
-from agentic import prompt
+from magentic import prompt
 from pydantic import BaseModel
 
 class Superhero(BaseModel):
@@ -46,7 +46,7 @@ A `PromptFunction` can also decide to call functions, in this case returning `Fu
 ```python
 from typing import Literal
 
-from agentic import prompt, FunctionCall
+from magentic import prompt, FunctionCall
 
 
 def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]):
@@ -72,7 +72,7 @@ output()
 To resolve `FunctionCall` objects automatically, you can use the `@prompt_chain` decorator. This will automatically resolve function calls and pass the results back to the model to continue until the final answer is reached.
 
 ```python
-from agentic import prompt_chain
+from magentic import prompt_chain
 
 def get_current_weather(location, unit="fahrenheit"):
     """Get the current weather in a given location"""

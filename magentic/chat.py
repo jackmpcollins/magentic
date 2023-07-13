@@ -1,8 +1,8 @@
 from typing import Any, Callable, Iterable, ParamSpec, TypeVar
 
-from agentic.chat_model.base import AssistantMessage, Message, UserMessage
-from agentic.chat_model.openai_chat_model import OpenaiChatModel
-from agentic.prompt_function import PromptFunction
+from magentic.chat_model.base import AssistantMessage, Message, UserMessage
+from magentic.chat_model.openai_chat_model import OpenaiChatModel
+from magentic.prompt_function import PromptFunction
 
 P = ParamSpec("P")
 Self = TypeVar("Self", bound="Chat")

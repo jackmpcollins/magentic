@@ -12,7 +12,7 @@ disallow_untyped_defs = false
 strict = true
 
 [tool.poetry]
-name = "agentic"
+name = "magentic"
 version = "0.1.0"
 description = "Integrate LLMs as Python functions"
 authors = ["Jack Collins"]

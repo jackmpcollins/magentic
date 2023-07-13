@@ -2,10 +2,10 @@ import inspect
 from functools import update_wrapper
 from typing import Any, Callable, Generic, ParamSpec, Sequence, TypeVar
 
-from agentic.chat_model.base import UserMessage
-from agentic.chat_model.openai_chat_model import OpenaiChatModel
-from agentic.function_call import FunctionCall
-from agentic.typing import is_origin_subclass, split_union_type
+from magentic.chat_model.base import UserMessage
+from magentic.chat_model.openai_chat_model import OpenaiChatModel
+from magentic.function_call import FunctionCall
+from magentic.typing import is_origin_subclass, split_union_type
 
 P = ParamSpec("P")
 # TODO: Make `R` type Union of all possible return types except FunctionCall ?

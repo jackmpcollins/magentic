@@ -1,6 +1,6 @@
 from typing import Any, Generic, TypeVar
 
-from agentic.function_call import FunctionCall
+from magentic.function_call import FunctionCall
 
 T = TypeVar("T")
 

@@ -8,15 +8,15 @@ from typing import Any, Callable, Generic, Iterable, TypeVar
 import openai
 from pydantic import BaseModel, validate_arguments
 
-from agentic.chat_model.base import (
+from magentic.chat_model.base import (
     AssistantMessage,
     FunctionCallMessage,
     FunctionResultMessage,
     Message,
     UserMessage,
 )
-from agentic.function_call import FunctionCall
-from agentic.typing import is_origin_subclass
+from magentic.function_call import FunctionCall
+from magentic.typing import is_origin_subclass
 
 T = TypeVar("T")
 
