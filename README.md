@@ -110,6 +110,12 @@ describe_weather("Boston")
 # 'The current weather in Boston is 72°F and it is sunny and windy.'
 ```
 
+### Additional Features
+
+- The docstring of the decorated function will be used as the prompt template if the `template` argument is not provided to `@prompt`/`@prompt_chain`.
+- The `Annotated` type annotation can be used to provide descriptions and other metadata for function parameters. See [the `pydantic` documentation on using `Field` to describe function arguments](https://docs.pydantic.dev/latest/usage/validation_decorator/#using-field-to-describe-function-arguments).
+- The `@prompt` and `@prompt_chain` decorators also accept a `model` argument. You can pass an instance of `OpenaiChatModel` (from `magentic.chat_model.openai_chat_model`) to use GPT4 or configure a different temperature.
+
 ## Type Checking
 
 Many type checkers will raise warnings or errors for functions with the `prompt` decorator due to the function having no body or return value. There are several ways to deal with these.
