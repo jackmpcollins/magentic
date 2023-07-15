@@ -6,13 +6,15 @@
 pip install magentic
 ```
 
+or using poetry
+
 ```sh
 poetry add magentic
 ```
 
 ## Concepts
 
-The `@prompt()` decorator makes it easy to convert a python function into a query to an LLM.
+The `@prompt` decorator allows you to define a template prompt for a Large Language Model (LLM) as a Python function.
 
 ```python
 from magentic import prompt
@@ -27,7 +29,7 @@ get_company_name(product="colorful socks")
 # 'Colorful Threads'
 ```
 
-The decorator will respect the return annotation of the function. This can be any builtin python type, a `pydantic` model, or a `FunctionCall`.
+The decorator will respect the return type annotation of the function. This can be [any type supported by `pydantic`](https://docs.pydantic.dev/latest/usage/types/types/) including a `pydantic` model.
 
 ```python
 from magentic import prompt
@@ -50,7 +52,7 @@ create_superhero("Garden Man")
 # Superhero(name='Garden Man', age=30, power='Control over plants', enemies=['Pollution Man', 'Concrete Woman'])
 ```
 
-A `PromptFunction` can also decide to call functions, in this case returning `FunctionCall` objects which can be called to retrieve the result.
+An LLM can also decide to call functions. In this case the `@prompt`-decorated function returns a `FunctionCall` object which can be called to execute the function using the arguments provided by the LLM.
 
 ```python
 from typing import Literal
@@ -77,7 +79,7 @@ output()
 # 'Preheating to 350 F with mode bake'
 ```
 
-To resolve `FunctionCall` objects automatically, you can use the `@prompt_chain` decorator. This will automatically resolve function calls and pass the results back to the model to continue until the final answer is reached.
+Sometimes the LLM requires making one or more function calls to generate a final answer. The `@prompt_chain` decorator will resolve `FunctionCall` objects automatically and pass the results back to the LLM to continue until the final answer is reached. In the following example, the LLM calls the `get_current_weather` function and then uses the result to formulate its final answer.
 
 ```python
 from magentic import prompt_chain
@@ -85,6 +87,7 @@ from magentic import prompt_chain
 
 def get_current_weather(location, unit="fahrenheit"):
     """Get the current weather in a given location"""
+    # Pretend to query an API
     return {
         "location": location,
         "temperature": "72",
