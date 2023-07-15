@@ -16,7 +16,7 @@ Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variab
 
 ## Concepts
 
-The `@prompt` decorator allows you to define a template prompt for a Large Language Model (LLM) as a Python function.
+The `@prompt` decorator allows you to define a template for a Large Language Model (LLM) prompt as a Python function.
 
 ```python
 from magentic import prompt
@@ -31,7 +31,7 @@ get_company_name(product="colorful socks")
 # 'Colorful Threads'
 ```
 
-The decorator will respect the return type annotation of the function. This can be [any type supported by `pydantic`](https://docs.pydantic.dev/latest/usage/types/types/) including a `pydantic` model.
+The `@prompt` decorator will respect the return type annotation of the decorated function. This can be [any type supported by pydantic](https://docs.pydantic.dev/latest/usage/types/types/) including a `pydantic` model.
 
 ```python
 from magentic import prompt
@@ -81,7 +81,9 @@ output()
 # 'Preheating to 350 F with mode bake'
 ```
 
-Sometimes the LLM requires making one or more function calls to generate a final answer. The `@prompt_chain` decorator will resolve `FunctionCall` objects automatically and pass the results back to the LLM to continue until the final answer is reached. In the following example, the LLM calls the `get_current_weather` function and then uses the result to formulate its final answer.
+Sometimes the LLM requires making one or more function calls to generate a final answer. The `@prompt_chain` decorator will resolve `FunctionCall` objects automatically and pass the output back to the LLM to continue until the final answer is reached.
+
+In the following example the LLM first calls the `get_current_weather` function, then uses the result to formulate its final answer.
 
 ```python
 from magentic import prompt_chain
@@ -110,10 +112,12 @@ describe_weather("Boston")
 # 'The current weather in Boston is 72°F and it is sunny and windy.'
 ```
 
+LLM-powered functions created using `@prompt` and `@prompt_chain` can be supplied as `functions` to other `@prompt`/`@prompt_chain` decorators, just like regular python functions. This enables increasingly complex LLM-powered functionality, while allowing individual components to be tested and improved in isolation.
+
 ### Additional Features
 
 - The docstring of the decorated function will be used as the prompt template if the `template` argument is not provided to `@prompt`/`@prompt_chain`.
-- The `Annotated` type annotation can be used to provide descriptions and other metadata for function parameters. See [the `pydantic` documentation on using `Field` to describe function arguments](https://docs.pydantic.dev/latest/usage/validation_decorator/#using-field-to-describe-function-arguments).
+- The `Annotated` type annotation can be used to provide descriptions and other metadata for function parameters. See [the pydantic documentation on using `Field` to describe function arguments](https://docs.pydantic.dev/latest/usage/validation_decorator/#using-field-to-describe-function-arguments).
 - The `@prompt` and `@prompt_chain` decorators also accept a `model` argument. You can pass an instance of `OpenaiChatModel` (from `magentic.chat_model.openai_chat_model`) to use GPT4 or configure a different temperature.
 
 ## Type Checking
