@@ -62,9 +62,9 @@ from typing import Literal
 from magentic import prompt, FunctionCall
 
 
-def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]):
+def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]) -> str:
     """Turn the oven on with the provided settings."""
-    print(f"Preheating to {temperature} F with mode {mode}")
+    return f"Preheating to {temperature} F with mode {mode}"
 
 
 @prompt(
