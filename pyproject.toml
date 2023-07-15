@@ -17,9 +17,11 @@ strict = true
 [tool.poetry]
 name = "magentic"
 version = "0.1.0"
-description = "Integrate LLMs as Python functions"
+description = "Seamlessly integrate LLMs as Python functions"
+license = "MIT"
 authors = ["Jack Collins"]
 readme = "README.md"
+repository = "https://github.com/jackmpcollins/magentic"
 
 [tool.poetry.dependencies]
 python = ">=3.10"

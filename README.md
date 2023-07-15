@@ -14,7 +14,7 @@ poetry add magentic
 
 Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variable or using `openai.api_key = "sk-..."`. See the [OpenAI Python library documentation](https://github.com/openai/openai-python#usage) for more information.
 
-## Concepts
+## Usage
 
 The `@prompt` decorator allows you to define a template for a Large Language Model (LLM) prompt as a Python function.
 
