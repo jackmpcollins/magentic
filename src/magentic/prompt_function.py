@@ -33,9 +33,9 @@ class PromptFunction(Generic[P, R]):
         self._model = model or OpenaiChatModel()
 
         self._return_types = [
-            return_type
-            for return_type in split_union_type(return_type)
-            if not is_origin_subclass(return_type, FunctionCall)
+            type_
+            for type_ in split_union_type(return_type)
+            if not is_origin_subclass(type_, FunctionCall)
         ]
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
