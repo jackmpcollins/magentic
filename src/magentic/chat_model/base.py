@@ -1,4 +1,4 @@
-from typing import Any, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from magentic.function_call import FunctionCall
 
@@ -30,9 +30,6 @@ class AssistantMessage(Message[T], Generic[T]):
     ...
 
 
-Self = TypeVar("Self", bound="FunctionResultMessage[Any]")
-
-
 class FunctionResultMessage(Message[T], Generic[T]):
     def __init__(self, content: T, function_call: FunctionCall[T]):
         super().__init__(content)
@@ -46,7 +43,9 @@ class FunctionResultMessage(Message[T], Generic[T]):
         return self._function_call
 
     @classmethod
-    def from_function_call(cls: type[Self], function_call: FunctionCall[T]) -> Self:
+    def from_function_call(
+        cls, function_call: FunctionCall[T]
+    ) -> "FunctionResultMessage[T]":
         return cls(
             content=function_call(),
             function_call=function_call,
