@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Callable, Generic, Iterable, TypeVar
 
 import openai
-from pydantic import BaseModel, create_model
+from pydantic import BaseModel, TypeAdapter, create_model
 
 from magentic.chat_model.base import (
     AssistantMessage,
@@ -81,6 +81,28 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         return self._model(value=value).model_dump_json()
 
 
+class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
+    def __init__(self, output_type: type[T]):
+        self._output_type = output_type
+        self._type_adapter: TypeAdapter[T] = TypeAdapter(output_type)
+
+    @property
+    def name(self) -> str:
+        return f"return_{name_type(self._output_type)}"
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        model_schema = self._type_adapter.json_schema().copy()
+        model_schema["properties"] = model_schema.get("properties", {})
+        return model_schema
+
+    def parse_args(self, arguments: str) -> T:
+        return self._type_adapter.validate_json(arguments)
+
+    def serialize_args(self, value: T) -> str:
+        return json.dumps(value)
+
+
 BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
 
@@ -148,6 +170,9 @@ def function_schema_for_type(type_: type[T]) -> BaseFunctionSchema[T]:
     """Create a FunctionSchema for the given type."""
     if is_origin_subclass(type_, BaseModel):
         return BaseModelFunctionSchema(type_)  # type: ignore[return-value]
+
+    if is_origin_subclass(type_, dict):
+        return DictFunctionSchema(type_)  # type: ignore[arg-type]
 
     return AnyFunctionSchema(type_)
 

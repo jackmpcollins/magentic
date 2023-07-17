@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 import pytest
 from pydantic import BaseModel, Field
@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from magentic.chat_model.openai_chat_model import (
     AnyFunctionSchema,
     BaseModelFunctionSchema,
+    DictFunctionSchema,
     FunctionCallFunctionSchema,
 )
 from magentic.function_call import FunctionCall
@@ -104,6 +105,23 @@ from magentic.function_call import FunctionCall
                 },
             },
         ),
+        (
+            dict[str, int],
+            {
+                "name": "return_dict_of_str_to_int",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "type": "object",
+                            "additionalProperties": {"type": "integer"},
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
     ],
 )
 def test_any_function_schema(type_, json_schema):
@@ -124,6 +142,92 @@ def test_any_function_schema(type_, json_schema):
 )
 def test_any_function_schema_parse_args(type_, args_str, output):
     assert AnyFunctionSchema(type_).parse_args(args_str) == output
+
+
+class User(BaseModel):
+    name: str
+    age: int
+
+
+@pytest.mark.parametrize(
+    ["type_", "json_schema"],
+    [
+        (
+            dict,
+            {
+                "name": "return_dict",
+                "parameters": {
+                    "properties": {},
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            dict[str, Any],
+            {
+                "name": "return_dict_of_str_to_any",
+                "parameters": {
+                    "properties": {},
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            dict[str, int],
+            {
+                "name": "return_dict_of_str_to_int",
+                "parameters": {
+                    "additionalProperties": {"type": "integer"},
+                    "properties": {},
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            dict[str, User],
+            {
+                "name": "return_dict_of_str_to_user",
+                "parameters": {
+                    "$defs": {
+                        "User": {
+                            "properties": {
+                                "name": {"title": "Name", "type": "string"},
+                                "age": {"title": "Age", "type": "integer"},
+                            },
+                            "required": ["name", "age"],
+                            "title": "User",
+                            "type": "object",
+                        }
+                    },
+                    "additionalProperties": {"$ref": "#/$defs/User"},
+                    "properties": {},
+                    "type": "object",
+                },
+            },
+        ),
+    ],
+)
+def test_dict_function_schema(type_, json_schema):
+    function_schema = DictFunctionSchema(type_)
+    assert function_schema.dict() == json_schema
+
+
+@pytest.mark.parametrize(
+    ["type_", "args_str", "output"],
+    [
+        (dict, '{"name": "Alice"}', {"name": "Alice"}),
+        (dict[str, Any], '{"name": "Alice"}', {"name": "Alice"}),
+        (dict[str, str], '{"name": "Alice"}', {"name": "Alice"}),
+        (dict[str, int], '{"age": 99}', {"age": 99}),
+        (
+            dict[str, User],
+            '{"alice": {"name": "Alice", "age": 99}}',
+            {"alice": User(name="Alice", age=99)},
+        ),
+    ],
+)
+def test_dict_function_schema_parse_args(type_, args_str, output):
+    assert DictFunctionSchema(type_).parse_args(args_str) == output
 
 
 def test_base_model_function_schema():

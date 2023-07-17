@@ -53,6 +53,20 @@ def test_decorator_return_bool_str():
 
 
 @pytest.mark.openai
+def test_decorator_return_dict():
+    @prompt("Return a mapping of the 5 tallest mountains to their height in metres")
+    def get_tallest_mountains() -> dict[str, int]:
+        ...
+
+    height_by_mountain = get_tallest_mountains()
+    assert isinstance(height_by_mountain, dict)
+    assert len(height_by_mountain) == 5
+    name, height = next(iter(height_by_mountain.items()))
+    assert isinstance(name, str)
+    assert isinstance(height, int)
+
+
+@pytest.mark.openai
 def test_decorator_return_pydantic_model():
     class CapitalCity(BaseModel):
         capital: str
