@@ -1,5 +1,14 @@
 import types
-from typing import Mapping, Sequence, TypeGuard, TypeVar, Union, get_args, get_origin
+from typing import (
+    Any,
+    Mapping,
+    Sequence,
+    TypeGuard,
+    TypeVar,
+    Union,
+    get_args,
+    get_origin,
+)
 
 
 def is_union_type(type_: type) -> bool:
@@ -20,6 +29,8 @@ def is_origin_subclass(
     type_: type, cls_or_tuple: TypeT | tuple[TypeT, ...]
 ) -> TypeGuard[TypeT]:
     """Check if the unsubscripted type is a subclass of the given class(es)."""
+    if type_ is Any:
+        return False
     return issubclass(get_origin(type_) or type_, cls_or_tuple)
 
 

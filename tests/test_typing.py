@@ -1,6 +1,9 @@
+from types import NoneType
+from typing import Any
+
 import pytest
 
-from magentic.typing import name_type, split_union_type
+from magentic.typing import is_origin_subclass, name_type, split_union_type
 
 
 @pytest.mark.parametrize(
@@ -13,6 +16,21 @@ from magentic.typing import name_type, split_union_type
 )
 def test_split_union_type(type_, expected_types):
     assert [t.__name__ for t in split_union_type(type_)] == expected_types
+
+
+@pytest.mark.parametrize(
+    ["type_", "cls_or_tuple", "expected_result"],
+    [
+        (str, str, True),
+        (str, int, False),
+        (str, (str, int), True),
+        (dict, dict, True),
+        (NoneType, dict, False),
+        (Any, dict, False),
+    ],
+)
+def test_is_origin_subclass(type_, cls_or_tuple, expected_result):
+    assert is_origin_subclass(type_, cls_or_tuple) == expected_result
 
 
 @pytest.mark.parametrize(
