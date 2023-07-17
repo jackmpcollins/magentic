@@ -15,7 +15,7 @@ from magentic.chat_model.base import (
     UserMessage,
 )
 from magentic.function_call import FunctionCall
-from magentic.typing import is_origin_subclass
+from magentic.typing import is_origin_subclass, name_type
 
 T = TypeVar("T")
 
@@ -65,7 +65,7 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
 
     @property
     def name(self) -> str:
-        return f"return_{self._output_type.__name__.lower()}"
+        return f"return_{name_type(self._output_type)}"
 
     @property
     def parameters(self) -> dict[str, Any]:

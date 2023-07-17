@@ -1,5 +1,6 @@
 from typing import Annotated
 
+import pytest
 from pydantic import BaseModel, Field
 
 from magentic.chat_model.openai_chat_model import (
@@ -10,50 +11,119 @@ from magentic.chat_model.openai_chat_model import (
 from magentic.function_call import FunctionCall
 
 
-def test_any_function_schema():
-    function_schema = AnyFunctionSchema(str)
-
-    assert function_schema.name == "return_str"
-    assert function_schema.dict() == {
-        "name": "return_str",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                # TODO: Remove "title" keys from schema
-                "value": {"title": "Value", "type": "string"},
-            },
-            "required": ["value"],
-        },
-    }
-    assert function_schema.parse_args('{"value": "Dublin"}') == "Dublin"
-
-
-def test_any_function_schema_parse_union():
-    function_schema = AnyFunctionSchema(list[str | int | bool])
-
-    assert function_schema.name == "return_list"
-    assert function_schema.parameters == {
-        "type": "object",
-        "properties": {
-            "value": {
-                "title": "Value",
-                "type": "array",
-                "items": {
-                    "anyOf": [
-                        {"type": "string"},
-                        {"type": "integer"},
-                        {"type": "boolean"},
-                    ]
+@pytest.mark.parametrize(
+    ["type_", "json_schema"],
+    [
+        (
+            str,
+            {
+                "name": "return_str",
+                "parameters": {
+                    "properties": {"value": {"title": "Value", "type": "string"}},
+                    "required": ["value"],
+                    "type": "object",
                 },
-            }
-        },
-        "required": ["value"],
-    }
-    assert function_schema.parse_args('{"value": ["hello", 42, true]}') == [
-        "hello",
-        42,
-        True,
-    ]
+            },
+        ),
+        (
+            int,
+            {
+                "name": "return_int",
+                "parameters": {
+                    "properties": {"value": {"title": "Value", "type": "integer"}},
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            bool | str,
+            {
+                "name": "return_bool_or_str",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "anyOf": [{"type": "boolean"}, {"type": "string"}],
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            list[str],
+            {
+                "name": "return_list_of_str",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "type": "array",
+                            "items": {"type": "string"},
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            list[str | int],
+            {
+                "name": "return_list_of_str_or_int",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "type": "array",
+                            "items": {
+                                "anyOf": [{"type": "string"}, {"type": "integer"}]
+                            },
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            str | None,
+            {
+                "name": "return_str_or_null",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "anyOf": [{"type": "string"}, {"type": "null"}],
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+    ],
+)
+def test_any_function_schema(type_, json_schema):
+    function_schema = AnyFunctionSchema(type_)
+    assert function_schema.dict() == json_schema
+
+
+@pytest.mark.parametrize(
+    ["type_", "args_str", "output"],
+    [
+        (str, '{"value": "Dublin"}', "Dublin"),
+        (int, '{"value": 42}', 42),
+        (bool | str, '{"value": true}', True),
+        (bool | str, '{"value": "Dublin"}', "Dublin"),
+        (list[str], '{"value": ["Dublin", "London"]}', ["Dublin", "London"]),
+        (list[str | int], '{"value": ["Dublin", 42]}', ["Dublin", 42]),
+    ],
+)
+def test_any_function_schema_parse_args(type_, args_str, output):
+    assert AnyFunctionSchema(type_).parse_args(args_str) == output
 
 
 def test_base_model_function_schema():
