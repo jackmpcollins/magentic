@@ -1,12 +1,11 @@
 import inspect
 import json
 from abc import ABC, abstractmethod
-from copy import deepcopy
 from enum import Enum
 from typing import Any, Callable, Generic, Iterable, TypeVar
 
 import openai
-from pydantic import BaseModel, validate_arguments
+from pydantic import BaseModel, create_model
 
 from magentic.chat_model.base import (
     AssistantMessage,
@@ -19,10 +18,6 @@ from magentic.function_call import FunctionCall
 from magentic.typing import is_origin_subclass
 
 T = TypeVar("T")
-
-
-class Output(BaseModel, Generic[T]):
-    value: T
 
 
 class BaseFunctionSchema(ABC, Generic[T]):
@@ -56,6 +51,10 @@ class BaseFunctionSchema(ABC, Generic[T]):
     @abstractmethod
     def serialize_args(self, value: T) -> str:
         ...
+
+
+class Output(BaseModel, Generic[T]):
+    value: T
 
 
 class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
@@ -110,9 +109,15 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
 class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]):
     def __init__(self, func: Callable[..., T]):
         self._func = func
-        # https://github.com/python/mypy/issues/2087
-        self._model: BaseModel = validate_arguments(self._func).model  # type: ignore[operator]
-        self._func_parameters = inspect.signature(self._func).parameters.keys()
+        # https://github.com/pydantic/pydantic/issues/3585#issuecomment-1002745763
+        fields: dict[str, Any] = {
+            param.name: (
+                param.annotation,
+                (param.default if param.default != inspect._empty else ...),
+            )
+            for param in inspect.signature(func).parameters.values()
+        }
+        self._model = create_model("FuncModel", **fields)
 
     @property
     def name(self) -> str:
@@ -124,20 +129,12 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
 
     @property
     def parameters(self) -> dict[str, Any]:
-        schema = deepcopy(self._model.model_json_schema())
-        schema.pop("additionalProperties", None)
+        schema: dict[str, Any] = self._model.model_json_schema().copy()
         schema.pop("title", None)
-        # Pydantic adds extra parameters to the schema for the function
-        # https://docs.pydantic.dev/latest/usage/validation_decorator/#model-fields-and-reserved-arguments
-        schema["properties"] = {
-            k: v for k, v in schema["properties"].items() if k in self._func_parameters
-        }
         return schema
 
     def parse_args(self, arguments: str) -> FunctionCall[T]:
-        args = self._model.model_validate_json(arguments).model_dump(
-            include=set(self._func_parameters)
-        )
+        args = self._model.model_validate_json(arguments).model_dump()
         return FunctionCall(self._func, **args)
 
     def parse_args_to_message(self, arguments: str) -> FunctionCallMessage[T]:
@@ -225,9 +222,8 @@ class OpenaiChatModel:
             function_schemas.append(FunctionCallFunctionSchema(function))
         for output_type in output_types:
             if issubclass(output_type, str):
-                pass
-            else:
-                function_schemas.append(function_schema_for_type(output_type))
+                continue
+            function_schemas.append(function_schema_for_type(output_type))
 
         includes_str_output_type = any(issubclass(cls, str) for cls in output_types)
 
