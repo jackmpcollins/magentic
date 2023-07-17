@@ -112,7 +112,7 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         # https://github.com/pydantic/pydantic/issues/3585#issuecomment-1002745763
         fields: dict[str, Any] = {
             param.name: (
-                param.annotation,
+                (param.annotation if param.annotation != inspect._empty else Any),
                 (param.default if param.default != inspect._empty else ...),
             )
             for param in inspect.signature(func).parameters.values()
