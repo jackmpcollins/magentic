@@ -240,15 +240,11 @@ class OpenaiChatModel:
         if output_types is None:
             output_types = [str]
 
-        function_schemas: list[
-            FunctionCallFunctionSchema[FuncR] | BaseFunctionSchema[R]
-        ] = []
-        for function in functions or []:
-            function_schemas.append(FunctionCallFunctionSchema(function))
-        for output_type in output_types:
-            if issubclass(output_type, str):
-                continue
-            function_schemas.append(function_schema_for_type(output_type))
+        function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
+            function_schema_for_type(type_)
+            for type_ in output_types
+            if not issubclass(type_, str)
+        ]
 
         includes_str_output_type = any(issubclass(cls, str) for cls in output_types)
 
