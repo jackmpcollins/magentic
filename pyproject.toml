@@ -36,6 +36,9 @@ pytest = "*"
 pytest-clarity = "*"
 pytest-cov = "*"
 
+[tool.poetry.group.examples.dependencies]
+jupyter = "*"
+
 [tool.pytest.ini_options]
 addopts = "--cov=magentic"
 markers = [
