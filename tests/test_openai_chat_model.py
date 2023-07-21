@@ -394,3 +394,39 @@ def test_function_call_function_schema_with_default_value():
     output = function_schema.parse_args('{"a": 1}')
     assert isinstance(output, FunctionCall)
     assert output() == 4
+
+
+function_call_function_schema_args_test_cases = [
+    (plus, '{"a": 1, "b": 2}', FunctionCall(plus, a=1, b=2)),
+    (
+        plus_no_type_hints,
+        '{"a": 1, "b": 2}',
+        FunctionCall(plus_no_type_hints, a=1, b=2),
+    ),
+    (plus_default_value, '{"a": 1}', FunctionCall(plus_default_value, a=1)),
+    (
+        plus_with_annotated,
+        '{"a": 1, "b": 2}',
+        FunctionCall(plus_with_annotated, a=1, b=2),
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ["function", "args_str", "expected_args"],
+    function_call_function_schema_args_test_cases,
+)
+def test_function_call_function_schema_parse_args(function, args_str, expected_args):
+    parsed_args = FunctionCallFunctionSchema(function).parse_args(args_str)
+    assert parsed_args == expected_args
+
+
+@pytest.mark.parametrize(
+    ["function", "expected_args_str", "args"],
+    function_call_function_schema_args_test_cases,
+)
+def test_function_call_function_schema_serialize_args(
+    function, expected_args_str, args
+):
+    serialized_args = FunctionCallFunctionSchema(function).serialize_args(args)
+    assert json.loads(serialized_args) == json.loads(expected_args_str)

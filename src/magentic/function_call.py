@@ -14,6 +14,16 @@ class FunctionCall(Generic[T]):
     def __call__(self) -> T:
         return self._function(*self._args, **self._kwargs)
 
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return (
+            type(self) is type(other)
+            and self._function == other._function
+            and self._args == other._args
+            and self._kwargs == other._kwargs
+        )
+
     def __repr__(self) -> str:
         args_kwargs_repr = ", ".join(
             [

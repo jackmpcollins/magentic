@@ -156,7 +156,7 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         return schema
 
     def parse_args(self, arguments: str) -> FunctionCall[T]:
-        args = self._model.model_validate_json(arguments).model_dump()
+        args = self._model.model_validate_json(arguments).model_dump(exclude_unset=True)
         return FunctionCall(self._func, **args)
 
     def parse_args_to_message(self, arguments: str) -> FunctionCallMessage[T]:
