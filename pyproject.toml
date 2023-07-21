@@ -34,8 +34,10 @@ isort = "*"
 mypy = "*"
 pytest = "*"
 pytest-clarity = "*"
+pytest-cov = "*"
 
 [tool.pytest.ini_options]
+addopts = "--cov=magentic"
 markers = [
     "openai: Tests that query the OpenAI API"
 ]
