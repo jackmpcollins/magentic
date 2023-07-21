@@ -40,7 +40,7 @@ pytest-cov = "*"
 jupyter = "*"
 
 [tool.pytest.ini_options]
-addopts = "--cov=magentic"
+addopts = "--cov=magentic --cov-report=term-missing"
 markers = [
     "openai: Tests that query the OpenAI API"
 ]
