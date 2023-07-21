@@ -100,7 +100,7 @@ class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         return self._type_adapter.validate_json(arguments)
 
     def serialize_args(self, value: T) -> str:
-        return json.dumps(value)
+        return self._type_adapter.dump_json(value).decode()
 
 
 BaseModelT = TypeVar("BaseModelT", bound=BaseModel)

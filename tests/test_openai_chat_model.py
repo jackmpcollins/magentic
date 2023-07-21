@@ -1,3 +1,4 @@
+import json
 from collections import OrderedDict
 from typing import Annotated, Any
 
@@ -214,25 +215,35 @@ def test_dict_function_schema(type_, json_schema):
     assert function_schema.dict() == json_schema
 
 
+dict_function_schema_args_test_cases = [
+    (dict, '{"name": "Alice"}', {"name": "Alice"}),
+    (dict[str, Any], '{"name": "Alice"}', {"name": "Alice"}),
+    (dict[str, str], '{"name": "Alice"}', {"name": "Alice"}),
+    (dict[str, int], '{"age": 99}', {"age": 99}),
+    (
+        dict[str, User],
+        '{"alice": {"name": "Alice", "age": 99}}',
+        {"alice": User(name="Alice", age=99)},
+    ),
+    (OrderedDict[str, int], '{"age": 99}', OrderedDict({"age": 99})),
+]
+
+
 @pytest.mark.parametrize(
-    ["type_", "args_str", "output"],
-    [
-        (dict, '{"name": "Alice"}', {"name": "Alice"}),
-        (dict[str, Any], '{"name": "Alice"}', {"name": "Alice"}),
-        (dict[str, str], '{"name": "Alice"}', {"name": "Alice"}),
-        (dict[str, int], '{"age": 99}', {"age": 99}),
-        (
-            dict[str, User],
-            '{"alice": {"name": "Alice", "age": 99}}',
-            {"alice": User(name="Alice", age=99)},
-        ),
-        (OrderedDict[str, int], '{"age": 99}', OrderedDict({"age": 99})),
-    ],
+    ["type_", "args_str", "expected_args"], dict_function_schema_args_test_cases
 )
-def test_dict_function_schema_parse_args(type_, args_str, output):
+def test_dict_function_schema_parse_args(type_, args_str, expected_args):
     parsed_args = DictFunctionSchema(type_).parse_args(args_str)
-    assert parsed_args == output
+    assert parsed_args == expected_args
     assert is_origin_subclass(type_, type(parsed_args))
+
+
+@pytest.mark.parametrize(
+    ["type_", "expected_args_str", "args"], dict_function_schema_args_test_cases
+)
+def test_dict_function_schema_serialize_args(type_, expected_args_str, args):
+    serialized_args = DictFunctionSchema(type_).serialize_args(args)
+    assert json.loads(serialized_args) == json.loads(expected_args_str)
 
 
 def test_base_model_function_schema():
