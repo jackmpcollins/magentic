@@ -132,19 +132,30 @@ def test_any_function_schema(type_, json_schema):
     assert function_schema.dict() == json_schema
 
 
+any_function_schema_args_test_cases = [
+    (str, '{"value": "Dublin"}', "Dublin"),
+    (int, '{"value": 42}', 42),
+    (bool | str, '{"value": true}', True),
+    (bool | str, '{"value": "Dublin"}', "Dublin"),
+    (list[str], '{"value": ["Dublin", "London"]}', ["Dublin", "London"]),
+    (list[str | int], '{"value": ["Dublin", 42]}', ["Dublin", 42]),
+]
+
+
 @pytest.mark.parametrize(
-    ["type_", "args_str", "output"],
-    [
-        (str, '{"value": "Dublin"}', "Dublin"),
-        (int, '{"value": 42}', 42),
-        (bool | str, '{"value": true}', True),
-        (bool | str, '{"value": "Dublin"}', "Dublin"),
-        (list[str], '{"value": ["Dublin", "London"]}', ["Dublin", "London"]),
-        (list[str | int], '{"value": ["Dublin", 42]}', ["Dublin", 42]),
-    ],
+    ["type_", "args_str", "expected_args"], any_function_schema_args_test_cases
 )
-def test_any_function_schema_parse_args(type_, args_str, output):
-    assert AnyFunctionSchema(type_).parse_args(args_str) == output
+def test_any_function_schema_parse_args(type_, args_str, expected_args):
+    parsed_args = AnyFunctionSchema(type_).parse_args(args_str)
+    assert parsed_args == expected_args
+
+
+@pytest.mark.parametrize(
+    ["type_", "expected_args_str", "args"], any_function_schema_args_test_cases
+)
+def test_any_function_schema_serialize_args(type_, expected_args_str, args):
+    serialized_args = AnyFunctionSchema(type_).serialize_args(args)
+    assert json.loads(serialized_args) == json.loads(expected_args_str)
 
 
 class User(BaseModel):
