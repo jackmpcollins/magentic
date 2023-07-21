@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import Annotated, Any
 
 import pytest
@@ -10,6 +11,7 @@ from magentic.chat_model.openai_chat_model import (
     FunctionCallFunctionSchema,
 )
 from magentic.function_call import FunctionCall
+from magentic.typing import is_origin_subclass
 
 
 @pytest.mark.parametrize(
@@ -224,10 +226,13 @@ def test_dict_function_schema(type_, json_schema):
             '{"alice": {"name": "Alice", "age": 99}}',
             {"alice": User(name="Alice", age=99)},
         ),
+        (OrderedDict[str, int], '{"age": 99}', OrderedDict({"age": 99})),
     ],
 )
 def test_dict_function_schema_parse_args(type_, args_str, output):
-    assert DictFunctionSchema(type_).parse_args(args_str) == output
+    parsed_args = DictFunctionSchema(type_).parse_args(args_str)
+    assert parsed_args == output
+    assert is_origin_subclass(type_, type(parsed_args))
 
 
 def test_base_model_function_schema():
