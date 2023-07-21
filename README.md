@@ -16,19 +16,19 @@ Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variab
 
 ## Usage
 
-The `@prompt` decorator allows you to define a template for a Large Language Model (LLM) prompt as a Python function.
+The `@prompt` decorator allows you to define a template for a Large Language Model (LLM) prompt as a Python function. When this function is called, the arguments are inserted into the template, then this prompt is sent to an LLM which generates the function output.
 
 ```python
 from magentic import prompt
 
 
-@prompt("What is a good name for a company that makes {product}?")
-def get_company_name(product: str) -> str:
-    ...  # No code required!
+@prompt('Add more "dude"ness to: {phrase}')
+def dudeify(phrase: str) -> str:
+    ...  # No function body as this is never executed
 
 
-get_company_name(product="colorful socks")
-# 'Colorful Threads'
+dudeify("Hello, how are you?")
+# "Hey, dude! What's up? How's it going, my man?"
 ```
 
 The `@prompt` decorator will respect the return type annotation of the decorated function. This can be [any type supported by pydantic](https://docs.pydantic.dev/latest/usage/types/types/) including a `pydantic` model.
@@ -83,7 +83,7 @@ output()
 
 Sometimes the LLM requires making one or more function calls to generate a final answer. The `@prompt_chain` decorator will resolve `FunctionCall` objects automatically and pass the output back to the LLM to continue until the final answer is reached.
 
-In the following example the LLM first calls the `get_current_weather` function, then uses the result to formulate its final answer.
+In the following example, when `describe_weather` is called the LLM first calls the `get_current_weather` function, then uses the result of this to formulate its final answer which gets returned.
 
 ```python
 from magentic import prompt_chain
