@@ -51,6 +51,3 @@ line-length = 120
 
 [tool.ruff.isort]
 known-first-party = ["magentic"]
-
-[tool.ruff.extend-per-file-ignores]
-"__init__.py" = ["F401"]
