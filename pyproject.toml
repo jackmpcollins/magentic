@@ -38,6 +38,7 @@ pytest-cov = "*"
 
 [tool.poetry.group.examples.dependencies]
 jupyter = "*"
+wikipedia = "*"
 
 [tool.pytest.ini_options]
 addopts = "--cov=magentic --cov-report=term-missing"
