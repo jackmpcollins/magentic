@@ -139,6 +139,8 @@ any_function_schema_args_test_cases = [
     (bool | str, '{"value": "Dublin"}', "Dublin"),
     (list[str], '{"value": ["Dublin", "London"]}', ["Dublin", "London"]),
     (list[str | int], '{"value": ["Dublin", 42]}', ["Dublin", 42]),
+    (str | None, '{"value": "Dublin"}', "Dublin"),
+    (str | None, '{"value": null}', None),
 ]
 
 
