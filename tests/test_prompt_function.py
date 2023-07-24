@@ -6,7 +6,7 @@ import pytest
 from pydantic import BaseModel
 
 from magentic.function_call import FunctionCall
-from magentic.prompt_function import PromptFunction, prompt
+from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
 
 
 @pytest.mark.openai
@@ -108,3 +108,15 @@ def test_decorator_return_function_call():
     assert isinstance(func_result, int)
     assert isinstance(func_result, int)
     assert isinstance(func_result, int)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_async_decorator_return_str():
+    @prompt()
+    async def get_capital(country: str) -> str:
+        """What is the capital of {country}? Name only. No punctuation."""
+        ...
+
+    assert isinstance(get_capital, AsyncPromptFunction)
+    assert await get_capital("Ireland") == "Dublin"

@@ -1,6 +1,17 @@
 import inspect
 from functools import update_wrapper
-from typing import Any, Callable, Generic, ParamSpec, Sequence, TypeVar
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Generic,
+    ParamSpec,
+    Protocol,
+    Sequence,
+    TypeVar,
+    cast,
+    overload,
+)
 
 from magentic.chat_model.base import UserMessage
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
@@ -90,36 +101,50 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
         return message.content  # type: ignore[return-value]
 
 
+class PromptDecorator(Protocol):
+    # This allows finer-grain type annotation of the `prompt` function
+    # https://github.com/microsoft/pyright/issues/5014#issuecomment-1523778421
+    @overload
+    def __call__(self, func: Callable[P, Awaitable[R]]) -> AsyncPromptFunction[P, R]:  # type: ignore[misc]
+        ...
+
+    @overload
+    def __call__(self, func: Callable[P, R]) -> PromptFunction[P, R]:
+        ...
+
+
 def prompt(
     template: str | None = None,
     functions: list[Callable[..., Any]] | None = None,
     model: OpenaiChatModel | None = None,
-) -> Callable[[Callable[P, R]], BasePromptFunction[P, R]]:
-    def decorator(func: Callable[P, R]) -> BasePromptFunction[P, R]:
+) -> PromptDecorator:
+    def decorator(
+        func: Callable[P, Awaitable[R]] | Callable[P, R]
+    ) -> AsyncPromptFunction[P, R] | PromptFunction[P, R]:
         if (_template := template or inspect.getdoc(func)) is None:
             raise ValueError(
                 "`template` argument must be provided if function has no docstring"
             )
         func_signature = inspect.signature(func)
 
-        prompt_function: BasePromptFunction[P, R]
         if inspect.iscoroutinefunction(func):
-            prompt_function = AsyncPromptFunction[P, R](
+            async_prompt_function = AsyncPromptFunction[P, R](
                 template=_template,
                 parameters=list(func_signature.parameters.values()),
                 return_type=func_signature.return_annotation,
                 functions=functions,
                 model=model,
             )
-        else:
-            prompt_function = PromptFunction[P, R](
-                template=_template,
-                parameters=list(func_signature.parameters.values()),
-                return_type=func_signature.return_annotation,
-                functions=functions,
-                model=model,
-            )
+            async_prompt_function = update_wrapper(async_prompt_function, func)
+            return cast(AsyncPromptFunction[P, R], async_prompt_function)  # type: ignore[redundant-cast]
 
-        return update_wrapper(prompt_function, func)
+        prompt_function = PromptFunction[P, R](
+            template=_template,
+            parameters=list(func_signature.parameters.values()),
+            return_type=func_signature.return_annotation,
+            functions=functions,
+            model=model,
+        )
+        return cast(PromptFunction[P, R], update_wrapper(prompt_function, func))  # type: ignore[redundant-cast]
 
-    return decorator
+    return cast(PromptDecorator, decorator)
