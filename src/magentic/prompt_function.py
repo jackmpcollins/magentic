@@ -15,7 +15,9 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
-class PromptFunction(Generic[P, R]):
+class BasePromptFunction(Generic[P, R]):
+    """Base class for an LLM prompt template that is directly callable to query the LLM."""
+
     def __init__(
         self,
         template: str,
@@ -38,18 +40,6 @@ class PromptFunction(Generic[P, R]):
             if not is_origin_subclass(type_, FunctionCall)
         ]
 
-    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
-        bound_args = self._signature.bind(*args, **kwargs)
-        bound_args.apply_defaults()
-        message = self._model.complete(
-            messages=[
-                UserMessage(content=self._template.format(**bound_args.arguments))
-            ],
-            functions=self._functions,
-            output_types=self._return_types,
-        )
-        return message.content  # type: ignore[return-value]
-
     @property
     def functions(self) -> list[Callable[..., Any]]:
         return self._functions.copy()
@@ -68,25 +58,68 @@ class PromptFunction(Generic[P, R]):
         return self._template.format(**bound_args.arguments)
 
 
+class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
+    """An LLM prompt template that is directly callable to query the LLM."""
+
+    def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+        bound_args = self._signature.bind(*args, **kwargs)
+        bound_args.apply_defaults()
+        message = self._model.complete(
+            messages=[
+                UserMessage(content=self._template.format(**bound_args.arguments))
+            ],
+            functions=self._functions,
+            output_types=self._return_types,
+        )
+        return message.content  # type: ignore[return-value]
+
+
+class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
+    """Async version of `PromptFunction`."""
+
+    async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+        bound_args = self._signature.bind(*args, **kwargs)
+        bound_args.apply_defaults()
+        message = await self._model.acomplete(
+            messages=[
+                UserMessage(content=self._template.format(**bound_args.arguments))
+            ],
+            functions=self._functions,
+            output_types=self._return_types,
+        )
+        return message.content  # type: ignore[return-value]
+
+
 def prompt(
     template: str | None = None,
     functions: list[Callable[..., Any]] | None = None,
     model: OpenaiChatModel | None = None,
-) -> Callable[[Callable[P, R]], PromptFunction[P, R]]:
-    def decorator(func: Callable[P, R]) -> PromptFunction[P, R]:
+) -> Callable[[Callable[P, R]], BasePromptFunction[P, R]]:
+    def decorator(func: Callable[P, R]) -> BasePromptFunction[P, R]:
         if (_template := template or inspect.getdoc(func)) is None:
             raise ValueError(
                 "`template` argument must be provided if function has no docstring"
             )
-
         func_signature = inspect.signature(func)
-        prompt_function = PromptFunction[P, R](
-            template=_template,
-            parameters=list(func_signature.parameters.values()),
-            return_type=func_signature.return_annotation,
-            functions=functions,
-            model=model,
-        )
+
+        prompt_function: BasePromptFunction[P, R]
+        if inspect.iscoroutinefunction(func):
+            prompt_function = AsyncPromptFunction[P, R](
+                template=_template,
+                parameters=list(func_signature.parameters.values()),
+                return_type=func_signature.return_annotation,
+                functions=functions,
+                model=model,
+            )
+        else:
+            prompt_function = PromptFunction[P, R](
+                template=_template,
+                parameters=list(func_signature.parameters.values()),
+                return_type=func_signature.return_annotation,
+                functions=functions,
+                model=model,
+            )
+
         return update_wrapper(prompt_function, func)
 
     return decorator

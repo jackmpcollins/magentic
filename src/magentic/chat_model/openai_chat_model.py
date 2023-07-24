@@ -284,3 +284,58 @@ class OpenaiChatModel:
             )
 
         return AssistantMessage(response_message["content"])
+
+    async def acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., FuncR]] | None = None,
+        output_types: Iterable[type[R | str]] | None = None,
+    ) -> FunctionCallMessage[FuncR] | AssistantMessage[R]:
+        """Async version of `complete`."""
+        if output_types is None:
+            output_types = [str]
+
+        function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
+            function_schema_for_type(type_)
+            for type_ in output_types
+            if not issubclass(type_, str)
+        ]
+
+        includes_str_output_type = any(issubclass(cls, str) for cls in output_types)
+
+        # `openai.ChatCompletion.acreate` doesn't accept `None`
+        # so only pass function args if there are functions
+        function_args: dict[str, Any] = {}
+        if function_schemas:
+            function_args["functions"] = [schema.dict() for schema in function_schemas]
+        if len(function_schemas) == 1 and not includes_str_output_type:
+            # Force the model to call the function
+            function_args["function_call"] = {"name": function_schemas[0].name}
+
+        response: dict[str, Any] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
+            model=self._model,
+            messages=[message_to_openai_message(m) for m in messages],
+            temperature=self._temperature,
+            **function_args,
+        )
+        response_message = response["choices"][0]["message"]
+
+        if response_message.get("function_call"):
+            function_schema_by_name = {
+                function_schema.name: function_schema
+                for function_schema in function_schemas
+            }
+            function_name = response_message["function_call"]["name"]
+            function_schema = function_schema_by_name[function_name]
+            message = function_schema.parse_args_to_message(
+                response_message["function_call"]["arguments"]
+            )
+            return message
+
+        if not includes_str_output_type:
+            raise ValueError(
+                "String was returned by model but not expected. You may need to update"
+                " your prompt to encourage the model to return a specific type."
+            )
+
+        return AssistantMessage(response_message["content"])
