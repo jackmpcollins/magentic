@@ -33,6 +33,7 @@ black = "*"
 isort = "*"
 mypy = "*"
 pytest = "*"
+pytest-asyncio = "*"
 pytest-clarity = "*"
 pytest-cov = "*"
 
