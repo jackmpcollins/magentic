@@ -82,7 +82,7 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
             functions=self._functions,
             output_types=self._return_types,
         )
-        return message.content  # type: ignore[return-value]
+        return cast(R, message.content)
 
 
 class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
@@ -98,7 +98,7 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
             functions=self._functions,
             output_types=self._return_types,
         )
-        return message.content  # type: ignore[return-value]
+        return cast(R, message.content)
 
 
 class PromptDecorator(Protocol):

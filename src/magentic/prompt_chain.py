@@ -1,6 +1,6 @@
 import inspect
 from functools import update_wrapper
-from typing import Any, Callable, ParamSpec, TypeVar
+from typing import Any, Callable, ParamSpec, TypeVar, cast
 
 from magentic.chat import Chat
 from magentic.chat_model.base import FunctionCallMessage
@@ -38,7 +38,7 @@ def prompt_chain(
             while isinstance(chat.messages[-1], FunctionCallMessage):
                 function_result_message = chat.messages[-1].get_result()
                 chat = chat.add_message(function_result_message).submit()
-            return chat.messages[-1].content  # type: ignore[no-any-return]
+            return cast(R, chat.messages[-1].content)
 
         return update_wrapper(wrapper, func)
 
