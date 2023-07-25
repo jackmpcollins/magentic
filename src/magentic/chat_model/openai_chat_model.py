@@ -285,6 +285,7 @@ class OpenaiChatModel:
 
         return AssistantMessage(response_message["content"])
 
+    # TODO: Deduplicate this and `complete`
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
