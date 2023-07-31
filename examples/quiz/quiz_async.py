@@ -76,16 +76,6 @@ async def generate_question(topic: str, difficulty: int) -> Question:
     ...
 
 
-async def generate_questions(topic: str, num_questions: int) -> list[Question]:
-    """Generates a list of questions of increasing difficulty."""
-    return await asyncio.gather(
-        *(
-            generate_question(topic, difficulty=max(num + 1, 5))
-            for num in range(num_questions)
-        )
-    )
-
-
 @prompt("""Return true if the user's answer is correct.
 Question: {question.question}
 Answer: {question.answer}
@@ -105,7 +95,13 @@ def create_encouragement_message(score: int, topic: str) -> str:
 async def main() -> None:
     topic = input("Enter a topic for a quiz: ")
     num_questions = int(input("Enter the number of questions: "))
-    questions = await generate_questions(topic, num_questions)
+    # Generate questions concurrently
+    questions = await asyncio.gather(
+        *(
+            generate_question(topic, difficulty=max(num + 1, 5))
+            for num in range(num_questions)
+        )
+    )
 
     user_points = 0
     for num, question in enumerate(questions, start=1):
