@@ -116,6 +116,7 @@ LLM-powered functions created using `@prompt` and `@prompt_chain` can be supplie
 
 ### Additional Features
 
+- The `@prompt` decorator can also be used with `async` function definitions.
 - The docstring of the decorated function will be used as the prompt template if the `template` argument is not provided to `@prompt`/`@prompt_chain`.
 - The `Annotated` type annotation can be used to provide descriptions and other metadata for function parameters. See [the pydantic documentation on using `Field` to describe function arguments](https://docs.pydantic.dev/latest/usage/validation_decorator/#using-field-to-describe-function-arguments).
 - The `@prompt` and `@prompt_chain` decorators also accept a `model` argument. You can pass an instance of `OpenaiChatModel` (from `magentic.chat_model.openai_chat_model`) to use GPT4 or configure a different temperature.
