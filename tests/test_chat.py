@@ -11,9 +11,8 @@ def test_chat_from_prompt():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    @prompt(functions=[plus])
+    @prompt("What is {a} plus {b}?", functions=[plus])
     def add_text_numbers(a: str, b: str) -> int:
-        """What is {a} plus {b}?"""
         ...
 
     chat = Chat.from_prompt(add_text_numbers, "one", "two")

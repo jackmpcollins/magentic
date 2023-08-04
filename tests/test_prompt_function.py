@@ -11,17 +11,7 @@ from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
 
 @pytest.mark.openai
 def test_decorator_return_str():
-    @prompt()
-    def get_capital(country: str) -> str:
-        """What is the capital of {country}? Name only. No punctuation."""
-        ...
-
-    assert get_capital("Ireland") == "Dublin"
-
-
-@pytest.mark.openai
-def test_decorator_template_with_docstring():
-    @prompt(template="What is the capital of {country}? Name only. No punctuation.")
+    @prompt("What is the capital of {country}? Name only. No punctuation.")
     def get_capital(country: str) -> str:
         """This is the docstring."""
         ...
@@ -33,9 +23,8 @@ def test_decorator_template_with_docstring():
 
 @pytest.mark.openai
 def test_decorator_return_bool():
-    @prompt()
+    @prompt("True if {capital} is the capital of {country}.")
     def is_capital(capital: str, country: str) -> bool:
-        """True if {capital} is the capital of {country}."""
         ...
 
     assert is_capital("Dublin", "Ireland") is True
@@ -43,9 +32,8 @@ def test_decorator_return_bool():
 
 @pytest.mark.openai
 def test_decorator_return_bool_str():
-    @prompt()
+    @prompt("Answer the following question: {question}.")
     def answer_question(question: str) -> bool | str:
-        """Answer the following question: {question}."""
         ...
 
     assert answer_question("What is the capital of Ireland? Name only") == "Dublin"
@@ -72,7 +60,7 @@ def test_decorator_return_pydantic_model():
         capital: str
         country: str
 
-    @prompt(template="What is the capital of {country}?")
+    @prompt("What is the capital of {country}?")
     def get_capital(country: str) -> CapitalCity:
         ...
 
@@ -85,7 +73,7 @@ def test_decorator_input_pydantic_model():
         capital: str
         country: str
 
-    @prompt(template="Is this capital-country pair correct? {pair}")
+    @prompt("Is this capital-country pair correct? {pair}")
     def check_capital(pair: CapitalCity) -> bool:
         ...
 
@@ -97,9 +85,8 @@ def test_decorator_return_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    @prompt(functions=[plus])
+    @prompt("Sum the populations of {country_one} and {country_two}.", functions=[plus])
     def sum_populations(country_one: str, country_two: str) -> FunctionCall[int]:
-        """Sum the populations of {country_one} and {country_two}."""
         ...
 
     output = sum_populations("Ireland", "UK")
@@ -111,9 +98,8 @@ def test_decorator_return_function_call():
 @pytest.mark.asyncio
 @pytest.mark.openai
 async def test_async_decorator_return_str():
-    @prompt()
+    @prompt("What is the capital of {country}? Name only. No punctuation.")
     async def get_capital(country: str) -> str:
-        """What is the capital of {country}? Name only. No punctuation."""
         ...
 
     assert isinstance(get_capital, AsyncPromptFunction)
@@ -126,9 +112,8 @@ async def test_async_decorator_return_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    @prompt(functions=[plus])
+    @prompt("Sum the populations of {country_one} and {country_two}.", functions=[plus])
     async def sum_populations(country_one: str, country_two: str) -> FunctionCall[int]:
-        """Sum the populations of {country_one} and {country_two}."""
         ...
 
     output = await sum_populations("Ireland", "UK")
