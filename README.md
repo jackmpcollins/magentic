@@ -68,7 +68,7 @@ def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]) -> 
 
 
 @prompt(
-    template="Prepare the oven so I can make {food}",
+    "Prepare the oven so I can make {food}",
     functions=[activate_oven],
 )
 def configure_oven(food: str) -> FunctionCall[str]:
@@ -101,7 +101,7 @@ def get_current_weather(location, unit="fahrenheit"):
 
 
 @prompt_chain(
-    template="What's the weather like in {city}?",
+    "What's the weather like in {city}?",
     functions=[get_current_weather],
 )
 def describe_weather(city: str) -> str:
@@ -133,14 +133,13 @@ Many type checkers will raise warnings or errors for functions with the `prompt`
    ```
 1. Make the function body `...` (this does not satisfy mypy) or `raise`.
    ```python
-   @prompt()
+   @prompt("Choose a color")
    def random_color() -> str:
-       """Choose a color"""
        ...
    ```
-1. Use comment `# type: ignore[empty-body]` on each function.
+1. Use comment `# type: ignore[empty-body]` on each function. In this case you can add a docstring instead of `...`.
    ```python
-   @prompt()
+   @prompt("Choose a color")
    def random_color() -> str:  # type: ignore[empty-body]
-       """Choose a color"""
+       """Returns a random color."""
    ```
