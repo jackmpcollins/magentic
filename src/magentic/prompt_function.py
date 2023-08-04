@@ -114,22 +114,18 @@ class PromptDecorator(Protocol):
 
 
 def prompt(
-    template: str | None = None,
+    template: str,
     functions: list[Callable[..., Any]] | None = None,
     model: OpenaiChatModel | None = None,
 ) -> PromptDecorator:
     def decorator(
         func: Callable[P, Awaitable[R]] | Callable[P, R]
     ) -> AsyncPromptFunction[P, R] | PromptFunction[P, R]:
-        if (_template := template or inspect.getdoc(func)) is None:
-            raise ValueError(
-                "`template` argument must be provided if function has no docstring"
-            )
         func_signature = inspect.signature(func)
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncPromptFunction[P, R](
-                template=_template,
+                template=template,
                 parameters=list(func_signature.parameters.values()),
                 return_type=func_signature.return_annotation,
                 functions=functions,
@@ -139,7 +135,7 @@ def prompt(
             return cast(AsyncPromptFunction[P, R], async_prompt_function)  # type: ignore[redundant-cast]
 
         prompt_function = PromptFunction[P, R](
-            template=_template,
+            template=template,
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
             functions=functions,
