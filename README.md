@@ -133,14 +133,13 @@ Many type checkers will raise warnings or errors for functions with the `prompt`
    ```
 1. Make the function body `...` (this does not satisfy mypy) or `raise`.
    ```python
-   @prompt()
+   @prompt("Choose a color")
    def random_color() -> str:
-       """Choose a color"""
        ...
    ```
-1. Use comment `# type: ignore[empty-body]` on each function.
+1. Use comment `# type: ignore[empty-body]` on each function. In this case you can add a docstring instead of `...`.
    ```python
-   @prompt()
+   @prompt("Choose a color")
    def random_color() -> str:  # type: ignore[empty-body]
-       """Choose a color"""
+       """Returns a random color."""
    ```
