@@ -1,5 +1,17 @@
 # magentic
 
+Easily integrate Large Language Models into your Python code. Simply use the `@prompt` decorator to create functions that return structured output from the LLM. Mix LLM queries and function calling with regular Python code to create complex logic.
+
+`magentic` is
+
+- **Compact:** Query LLMs without duplicating boilerplate code.
+- **Atomic:** Prompts are functions that can be individually tested and reasoned about.
+- **Transparent:** Create "chains" using regular Python code. Define all of your own prompts.
+- **Compatible:** Use `@prompt` functions as normal functions, including with decorators like `@lru_cache`.
+- **Type Annotated:** Works with linters and IDEs.
+
+Continue reading for sample usage, or go straight to the [examples directory](examples/).
+
 ## Installation
 
 ```sh
@@ -114,10 +126,11 @@ describe_weather("Boston")
 
 LLM-powered functions created using `@prompt` and `@prompt_chain` can be supplied as `functions` to other `@prompt`/`@prompt_chain` decorators, just like regular python functions. This enables increasingly complex LLM-powered functionality, while allowing individual components to be tested and improved in isolation.
 
+See the [examples directory](examples/) for more.
+
 ### Additional Features
 
-- The `@prompt` decorator can also be used with `async` function definitions.
-- The docstring of the decorated function will be used as the prompt template if the `template` argument is not provided to `@prompt`/`@prompt_chain`.
+- The `@prompt` decorator can also be used with `async` function definitions, which enables making concurrent queries to the LLM.
 - The `Annotated` type annotation can be used to provide descriptions and other metadata for function parameters. See [the pydantic documentation on using `Field` to describe function arguments](https://docs.pydantic.dev/latest/usage/validation_decorator/#using-field-to-describe-function-arguments).
 - The `@prompt` and `@prompt_chain` decorators also accept a `model` argument. You can pass an instance of `OpenaiChatModel` (from `magentic.chat_model.openai_chat_model`) to use GPT4 or configure a different temperature.
 
