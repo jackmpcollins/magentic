@@ -5,6 +5,7 @@ from inspect import getdoc
 import pytest
 from pydantic import BaseModel
 
+from magentic.chat_model.openai_chat_model import StructuredOutputError
 from magentic.function_call import FunctionCall
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
 
@@ -93,6 +94,17 @@ def test_decorator_return_function_call():
     assert isinstance(output, FunctionCall)
     func_result = output()
     assert isinstance(func_result, int)
+
+
+@pytest.mark.openai
+def test_decorator_raise_structured_output_error():
+    @prompt("How many days between {start_date} and {end_date}? Do out the math.")
+    def days_between(start_date: str, end_date: str) -> int:
+        ...
+
+    with pytest.raises(StructuredOutputError):
+        # The model will return a math expression, not an integer
+        days_between("Jan 4th 2019", "Jul 3rd 2019")
 
 
 @pytest.mark.asyncio
