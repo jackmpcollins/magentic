@@ -1,11 +1,12 @@
 import inspect
 import json
+import textwrap
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Callable, Generic, Iterable, TypeVar
 
 import openai
-from pydantic import BaseModel, TypeAdapter, create_model
+from pydantic import BaseModel, TypeAdapter, ValidationError, create_model
 
 from magentic.chat_model.base import (
     AssistantMessage,
@@ -16,6 +17,11 @@ from magentic.chat_model.base import (
 )
 from magentic.function_call import FunctionCall
 from magentic.typing import is_origin_subclass, name_type
+
+
+class StructuredOutputError(Exception):
+    ...
+
 
 T = TypeVar("T")
 
@@ -272,9 +278,16 @@ class OpenaiChatModel:
             }
             function_name = response_message["function_call"]["name"]
             function_schema = function_schema_by_name[function_name]
-            message = function_schema.parse_args_to_message(
-                response_message["function_call"]["arguments"]
-            )
+            function_call_args = response_message["function_call"]["arguments"]
+            try:
+                message = function_schema.parse_args_to_message(function_call_args)
+            except ValidationError as e:
+                raise StructuredOutputError(
+                    "Failed to parse model output"
+                    f" {textwrap.shorten(function_call_args, 100)!r}."
+                    " You may need to update your prompt to encourage the model to"
+                    " return a specific type."
+                ) from e
             return message
 
         if not includes_str_output_type:
@@ -328,9 +341,16 @@ class OpenaiChatModel:
             }
             function_name = response_message["function_call"]["name"]
             function_schema = function_schema_by_name[function_name]
-            message = function_schema.parse_args_to_message(
-                response_message["function_call"]["arguments"]
-            )
+            function_call_args = response_message["function_call"]["arguments"]
+            try:
+                message = function_schema.parse_args_to_message(function_call_args)
+            except ValidationError as e:
+                raise StructuredOutputError(
+                    "Failed to parse model output"
+                    f" {textwrap.shorten(function_call_args, 100)!r}."
+                    " You may need to update your prompt to encourage the model to"
+                    " return a specific type."
+                ) from e
             return message
 
         if not includes_str_output_type:
