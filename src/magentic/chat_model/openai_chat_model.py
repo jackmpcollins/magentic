@@ -3,7 +3,16 @@ import json
 import textwrap
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Any, Callable, Generic, Iterable, Iterator, TypeVar, cast
+from typing import (
+    Any,
+    AsyncIterator,
+    Callable,
+    Generic,
+    Iterable,
+    Iterator,
+    TypeVar,
+    cast,
+)
 
 import openai
 from pydantic import BaseModel, TypeAdapter, ValidationError, create_model
@@ -16,7 +25,7 @@ from magentic.chat_model.base import (
     UserMessage,
 )
 from magentic.function_call import FunctionCall
-from magentic.streamed_str import StreamedStr
+from magentic.streamed_str import AsyncStreamedStr, StreamedStr
 from magentic.typing import is_origin_subclass, name_type
 
 
@@ -330,36 +339,49 @@ class OpenaiChatModel:
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not issubclass(type_, str)
+            if not issubclass(type_, (str, AsyncStreamedStr))
         ]
 
-        includes_str_output_type = any(issubclass(cls, str) for cls in output_types)
+        str_in_output_types = any(issubclass(cls, str) for cls in output_types)
+        async_streamed_str_in_output_types = any(
+            issubclass(cls, AsyncStreamedStr) for cls in output_types
+        )
+        allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
         # `openai.ChatCompletion.acreate` doesn't accept `None`
         # so only pass function args if there are functions
         function_args: dict[str, Any] = {}
         if function_schemas:
             function_args["functions"] = [schema.dict() for schema in function_schemas]
-        if len(function_schemas) == 1 and not includes_str_output_type:
+        if len(function_schemas) == 1 and not allow_string_output:
             # Force the model to call the function
             function_args["function_call"] = {"name": function_schemas[0].name}
 
-        response: dict[str, Any] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
+        response: AsyncIterator[dict[str, Any]] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
             model=self._model,
             messages=[message_to_openai_message(m) for m in messages],
             temperature=self._temperature,
             **function_args,
+            stream=True,
         )
-        response_message = response["choices"][0]["message"]
 
-        if response_message.get("function_call"):
+        first_chunk = await anext(response)
+        first_chunk_delta = first_chunk["choices"][0]["delta"]
+
+        if first_chunk_delta.get("function_call"):
             function_schema_by_name = {
                 function_schema.name: function_schema
                 for function_schema in function_schemas
             }
-            function_name = response_message["function_call"]["name"]
+            function_name = first_chunk_delta["function_call"]["name"]
             function_schema = function_schema_by_name[function_name]
-            function_call_args = response_message["function_call"]["arguments"]
+            function_call_args = "".join(
+                [
+                    chunk["choices"][0]["delta"]["function_call"]["arguments"]
+                    async for chunk in response
+                    if chunk["choices"][0]["delta"]
+                ]
+            )
             try:
                 message = function_schema.parse_args_to_message(function_call_args)
             except ValidationError as e:
@@ -371,10 +393,18 @@ class OpenaiChatModel:
                 ) from e
             return message
 
-        if not includes_str_output_type:
+        if not allow_string_output:
             raise ValueError(
                 "String was returned by model but not expected. You may need to update"
                 " your prompt to encourage the model to return a specific type."
             )
-
-        return AssistantMessage(response_message["content"])
+        async_streamed_str = AsyncStreamedStr(
+            chunk["choices"][0]["delta"]["content"]
+            async for chunk in response
+            if chunk["choices"][0]["delta"]
+        )
+        if async_streamed_str_in_output_types:
+            return cast(AssistantMessage[R], AssistantMessage(async_streamed_str))
+        return cast(
+            AssistantMessage[R], AssistantMessage(await async_streamed_str.to_string())
+        )
