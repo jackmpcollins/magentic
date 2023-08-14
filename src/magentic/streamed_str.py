@@ -1,4 +1,4 @@
-from typing import Iterator
+from typing import AsyncIterator, Iterator
 
 
 class StreamedStr:
@@ -16,3 +16,28 @@ class StreamedStr:
 
     def __str__(self) -> str:
         return "".join(self)
+
+    def to_string(self) -> str:
+        """Convert the streamed string to a string."""
+        return str(self)
+
+
+class AsyncStreamedStr:
+    """A string that is generated in chunks."""
+
+    def __init__(self, generator: AsyncIterator[str]):
+        self._generator = generator
+        self._cached_chunks: list[str] = []
+
+    async def __aiter__(self) -> AsyncIterator[str]:
+        # Cannot use `yield from` inside an async function
+        # https://peps.python.org/pep-0525/#asynchronous-yield-from
+        for chunk in self._cached_chunks:
+            yield chunk
+        async for chunk in self._generator:
+            self._cached_chunks.append(chunk)
+            yield chunk
+
+    async def to_string(self) -> str:
+        """Convert the streamed string to a string."""
+        return "".join([item async for item in self])
