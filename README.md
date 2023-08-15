@@ -128,6 +128,31 @@ LLM-powered functions created using `@prompt` and `@prompt_chain` can be supplie
 
 See the [examples directory](examples/) for more.
 
+### Streaming
+
+The `StreamedStr` (and `AsyncStreamedStr`) class can be used to stream the output of the LLM. This allows you to process the text while it is being generated, rather than receiving the whole output at once. Multiple `StreamedStr` can be created at the same time to stream LLM outputs concurrently. In the below example, generating the description for a single country takes approximately the same amount of time as for multiple countries.
+
+```python
+from magentic import prompt, StreamedStr
+
+
+@prompt("Tell me about {country}")
+def describe_country(country: str) -> StreamedStr:
+    ...
+
+
+# Print the chunks while they are being received
+for chunk in describe_country("Brazil"):
+    print(chunk, end="")
+# 'Brazil, officially known as the Federative Republic of Brazil, is ...'
+
+
+# Generate text concurrently by creating the streams before consuming them
+streamed_strs = [describe_country(c) for c in ["Australia", "Brazil", "Chile"]]
+[str(s) for s in streamed_strs]
+# ["Australia is a country ...", "Brazil, officially known as ...", "Chile, officially known as ..."]
+```
+
 ### Additional Features
 
 - The `@prompt` decorator can also be used with `async` function definitions, which enables making concurrent queries to the LLM.
@@ -136,7 +161,7 @@ See the [examples directory](examples/) for more.
 
 ## Type Checking
 
-Many type checkers will raise warnings or errors for functions with the `prompt` decorator due to the function having no body or return value. There are several ways to deal with these.
+Many type checkers will raise warnings or errors for functions with the `@prompt` decorator due to the function having no body or return value. There are several ways to deal with these.
 
 1. Disable the check globally for the type checker. For example in mypy by disabling error code `empty-body`.
    ```toml
