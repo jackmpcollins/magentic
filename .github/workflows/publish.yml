@@ -5,6 +5,8 @@ on:
     types:
       - created
 
+run-name: Publish ${{ github.event.release.tag_name }} to PyPI
+
 jobs:
   publish:
     runs-on: ubuntu-latest
