@@ -23,7 +23,7 @@ class StreamedStr:
 
 
 class AsyncStreamedStr:
-    """A string that is generated in chunks."""
+    """Async version of `StreamedStr`."""
 
     def __init__(self, generator: AsyncIterator[str]):
         self._generator = generator
