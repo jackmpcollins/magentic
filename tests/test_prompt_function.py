@@ -8,6 +8,7 @@ from pydantic import BaseModel
 from magentic.chat_model.openai_chat_model import StructuredOutputError
 from magentic.function_call import FunctionCall
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
+from magentic.streamed_str import AsyncStreamedStr, StreamedStr
 
 
 @pytest.mark.openai
@@ -97,6 +98,16 @@ def test_decorator_return_function_call():
 
 
 @pytest.mark.openai
+def test_decorator_return_streamed_str():
+    @prompt("What is the capital of {country}?")
+    def get_capital(country: str) -> StreamedStr:
+        ...
+
+    output = get_capital("Ireland")
+    assert isinstance(output, StreamedStr)
+
+
+@pytest.mark.openai
 def test_decorator_raise_structured_output_error():
     @prompt("How many days between {start_date} and {end_date}? Do out the math.")
     def days_between(start_date: str, end_date: str) -> int:
@@ -116,6 +127,17 @@ async def test_async_decorator_return_str():
 
     assert isinstance(get_capital, AsyncPromptFunction)
     assert await get_capital("Ireland") == "Dublin"
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_async_decorator_return_async_streamed_str():
+    @prompt("What is the capital of {country}?")
+    async def get_capital(country: str) -> AsyncStreamedStr:
+        ...
+
+    output = await get_capital("Ireland")
+    assert isinstance(output, AsyncStreamedStr)
 
 
 @pytest.mark.asyncio
