@@ -130,7 +130,7 @@ See the [examples directory](examples/) for more.
 
 ### Streaming
 
-The `StreamedStr` (and `AsyncStreamedStr`) class can be used to stream the output of the LLM. This allows you to process the text while it is being generated, rather than receiving the whole output at once. Multiple `StreamedStr` can be created at the same time to stream LLM outputs concurrently. In the below example, generating the description for a single country takes approximately the same amount of time as for multiple countries.
+The `StreamedStr` (and `AsyncStreamedStr`) class can be used to stream the output of the LLM. This allows you to process the text while it is being generated, rather than receiving the whole output at once. Multiple `StreamedStr` can be created at the same time to stream LLM outputs concurrently. In the below example, generating the description for multiple countries takes (approximately) the same amount of time as for a single country.
 
 ```python
 from magentic import prompt, StreamedStr
