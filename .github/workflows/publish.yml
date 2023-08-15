@@ -4,6 +4,7 @@ on:
   release:
     types:
       - created
+  push:
 
 run-name: Publish ${{ github.event.release.tag_name }} to PyPI
 
