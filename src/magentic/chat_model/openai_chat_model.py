@@ -259,12 +259,12 @@ class OpenaiChatModel:
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not issubclass(type_, (str, StreamedStr))
+            if not is_origin_subclass(type_, (str, StreamedStr))
         ]
 
-        str_in_output_types = any(issubclass(cls, str) for cls in output_types)
+        str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
         streamed_str_in_output_types = any(
-            issubclass(cls, StreamedStr) for cls in output_types
+            is_origin_subclass(cls, StreamedStr) for cls in output_types
         )
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
@@ -339,12 +339,12 @@ class OpenaiChatModel:
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not issubclass(type_, (str, AsyncStreamedStr))
+            if not is_origin_subclass(type_, (str, AsyncStreamedStr))
         ]
 
-        str_in_output_types = any(issubclass(cls, str) for cls in output_types)
+        str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
         async_streamed_str_in_output_types = any(
-            issubclass(cls, AsyncStreamedStr) for cls in output_types
+            is_origin_subclass(cls, AsyncStreamedStr) for cls in output_types
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
