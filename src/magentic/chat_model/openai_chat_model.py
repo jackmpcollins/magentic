@@ -25,7 +25,7 @@ from magentic.chat_model.base import (
     UserMessage,
 )
 from magentic.function_call import FunctionCall
-from magentic.streamed_str import AsyncStreamedStr, StreamedStr
+from magentic.streaming import AsyncStreamedStr, StreamedStr
 from magentic.typing import is_origin_subclass, name_type
 
 
