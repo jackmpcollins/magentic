@@ -47,6 +47,56 @@ def iter_streamed_json_array(generator: Iterator[str]) -> Iterator[str]:
         is_escaped = (char == "\\") and not is_escaped
 
 
+async def aiter_streamed_json_array(
+    generator: AsyncIterator[str],
+) -> AsyncIterator[str]:
+    """Async version of `iter_streamed_json_array`."""
+
+    async def chars_generator() -> AsyncIterator[str]:
+        async for chunk in generator:
+            for char in chunk:
+                yield char
+
+    iter_chars = chars_generator()
+
+    first_char = await anext(iter_chars)
+    if not first_char == "[":
+        raise ValueError("Expected array")
+
+    array_level = 1
+    object_level = 0
+    in_string = False
+    is_escaped = False
+
+    item_chars: list[str] = []
+    async for char in iter_chars:
+        if in_string:
+            if char == '"' and not is_escaped:
+                in_string = False
+        elif char == '"':
+            in_string = True
+        elif char == ",":
+            if array_level == 1 and object_level == 0:
+                yield "".join(item_chars).strip()
+                item_chars = []
+                continue
+        elif char == "[":
+            array_level += 1
+        elif char == "]":
+            array_level -= 1
+            if array_level == 0:
+                if item_chars:
+                    yield "".join(item_chars).strip()
+                return
+        elif char == "{":
+            object_level += 1
+        elif char == "}":
+            object_level -= 1
+
+        item_chars.append(char)
+        is_escaped = (char == "\\") and not is_escaped
+
+
 class StreamedStr:
     """A string that is generated in chunks."""
 
