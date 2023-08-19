@@ -3,6 +3,21 @@ from typing import AsyncIterator, Iterator
 import pytest
 
 from magentic import AsyncStreamedStr, StreamedStr
+from magentic.streaming import iter_streamed_json_array
+
+
+@pytest.mark.parametrize(
+    ["input", "expected"],
+    [
+        (["[]"], []),
+        (['["He', 'llo", ', '"Wo', 'rld"]'], ['"Hello"', '"World"']),
+        (["[1, 2, 3]"], ["1", "2", "3"]),
+        (["[1, ", "2, 3]"], ["1", "2", "3"]),
+        (['[{"a": 1}, {2: "b"}]'], ['{"a": 1}', '{2: "b"}']),
+    ],
+)
+def test_iter_streamed_json_array(input: str, expected: list[str]):
+    assert list(iter_streamed_json_array(iter(input))) == expected
 
 
 def test_streamed_str_iter():

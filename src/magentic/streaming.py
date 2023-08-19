@@ -1,4 +1,50 @@
+from itertools import chain
 from typing import AsyncIterator, Iterator
+
+
+def iter_streamed_json_array(generator: Iterator[str]) -> Iterator[str]:
+    """Convert a stream of text chunks into a stream of objects.
+
+    The text chunks must represent an array of objects.
+    """
+    iter_chars = chain.from_iterable(generator)
+
+    first_char = next(iter_chars)
+    if not first_char == "[":
+        raise ValueError("Expected array")
+
+    array_level = 1
+    object_level = 0
+    in_string = False
+    is_escaped = False
+
+    item_chars: list[str] = []
+    for char in iter_chars:
+        if in_string:
+            if char == '"' and not is_escaped:
+                in_string = False
+        elif char == '"':
+            in_string = True
+        elif char == ",":
+            if array_level == 1 and object_level == 0:
+                yield "".join(item_chars).strip()
+                item_chars = []
+                continue
+        elif char == "[":
+            array_level += 1
+        elif char == "]":
+            array_level -= 1
+            if array_level == 0:
+                if item_chars:
+                    yield "".join(item_chars).strip()
+                return
+        elif char == "{":
+            object_level += 1
+        elif char == "}":
+            object_level -= 1
+
+        item_chars.append(char)
+        is_escaped = (char == "\\") and not is_escaped
 
 
 class StreamedStr:
