@@ -1,3 +1,4 @@
+from collections.abc import AsyncIterable, Iterable
 from dataclasses import dataclass
 from itertools import chain
 from typing import AsyncIterator, Iterator
@@ -92,7 +93,7 @@ async def aiter_streamed_json_array(
             item_chars.append(char)
 
 
-class StreamedStr:
+class StreamedStr(Iterable[str]):
     """A string that is generated in chunks."""
 
     def __init__(self, generator: Iterator[str]):
@@ -113,7 +114,7 @@ class StreamedStr:
         return str(self)
 
 
-class AsyncStreamedStr:
+class AsyncStreamedStr(AsyncIterable[str]):
     """Async version of `StreamedStr`."""
 
     def __init__(self, generator: AsyncIterator[str]):
