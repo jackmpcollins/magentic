@@ -15,13 +15,13 @@ iter_streamed_json_array_test_cases = [
 
 
 @pytest.mark.parametrize(["input", "expected"], iter_streamed_json_array_test_cases)
-def test_iter_streamed_json_array(input: list[str], expected: list[str]):
+def test_iter_streamed_json_array(input, expected):
     assert list(iter_streamed_json_array(iter(input))) == expected
 
 
 @pytest.mark.parametrize(["input", "expected"], iter_streamed_json_array_test_cases)
 @pytest.mark.asyncio
-async def test_aiter_streamed_json_array(input: list[str], expected: list[str]):
+async def test_aiter_streamed_json_array(input, expected):
     async def generator() -> AsyncIterator[str]:
         for chunk in input:
             yield chunk
