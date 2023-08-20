@@ -40,12 +40,12 @@ class JsonArrayParserState:
         self.is_element_separator = False
 
 
-def iter_streamed_json_array(generator: Iterator[str]) -> Iterator[str]:
-    """Convert a stream of text chunks of a JSON array into an iterable of JSON objects.
+def iter_streamed_json_array(chunks: Iterable[str]) -> Iterable[str]:
+    """Convert a streamed JSON array into an iterable of JSON object strings.
 
     This ignores all characters before the start of the first array i.e. the first "["
     """
-    iter_chars: Iterator[str] = chain.from_iterable(generator)
+    iter_chars: Iterator[str] = chain.from_iterable(chunks)
     parser_state = JsonArrayParserState()
 
     iter_chars = dropwhile(lambda x: x != "[", iter_chars)
@@ -62,13 +62,11 @@ def iter_streamed_json_array(generator: Iterator[str]) -> Iterator[str]:
             item_chars.append(char)
 
 
-async def aiter_streamed_json_array(
-    generator: AsyncIterator[str],
-) -> AsyncIterator[str]:
+async def aiter_streamed_json_array(chunks: AsyncIterable[str]) -> AsyncIterable[str]:
     """Async version of `iter_streamed_json_array`."""
 
-    async def chars_generator() -> AsyncIterator[str]:
-        async for chunk in generator:
+    async def chars_generator() -> AsyncIterable[str]:
+        async for chunk in chunks:
             for char in chunk:
                 yield char
 
@@ -94,13 +92,13 @@ async def aiter_streamed_json_array(
 class StreamedStr(Iterable[str]):
     """A string that is generated in chunks."""
 
-    def __init__(self, generator: Iterator[str]):
-        self._generator = generator
+    def __init__(self, chunks: Iterable[str]):
+        self._chunks = chunks
         self._cached_chunks: list[str] = []
 
     def __iter__(self) -> Iterator[str]:
         yield from self._cached_chunks
-        for chunk in self._generator:
+        for chunk in self._chunks:
             self._cached_chunks.append(chunk)
             yield chunk
 
@@ -115,8 +113,8 @@ class StreamedStr(Iterable[str]):
 class AsyncStreamedStr(AsyncIterable[str]):
     """Async version of `StreamedStr`."""
 
-    def __init__(self, generator: AsyncIterator[str]):
-        self._generator = generator
+    def __init__(self, chunks: AsyncIterable[str]):
+        self._chunks = chunks
         self._cached_chunks: list[str] = []
 
     async def __aiter__(self) -> AsyncIterator[str]:
@@ -124,7 +122,7 @@ class AsyncStreamedStr(AsyncIterable[str]):
         # https://peps.python.org/pep-0525/#asynchronous-yield-from
         for chunk in self._cached_chunks:
             yield chunk
-        async for chunk in self._generator:
+        async for chunk in self._chunks:
             self._cached_chunks.append(chunk)
             yield chunk
 
