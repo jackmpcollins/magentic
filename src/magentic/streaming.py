@@ -1,6 +1,6 @@
 from collections.abc import AsyncIterable, Iterable
 from dataclasses import dataclass
-from itertools import chain
+from itertools import chain, dropwhile
 from typing import AsyncIterator, Iterator
 
 
@@ -41,17 +41,15 @@ class JsonArrayParserState:
 
 
 def iter_streamed_json_array(generator: Iterator[str]) -> Iterator[str]:
-    """Convert a stream of text chunks into a stream of objects.
+    """Convert a stream of text chunks of a JSON array into an iterable of JSON objects.
 
-    The text chunks must represent an array of objects.
+    This ignores all characters before the start of the first array i.e. the first "["
     """
-    iter_chars = chain.from_iterable(generator)
+    iter_chars: Iterator[str] = chain.from_iterable(generator)
     parser_state = JsonArrayParserState()
 
-    first_char = next(iter_chars)
-    if not first_char == "[":
-        raise ValueError("Expected array")
-    parser_state.update(first_char)
+    iter_chars = dropwhile(lambda x: x != "[", iter_chars)
+    parser_state.update(next(iter_chars))
 
     item_chars: list[str] = []
     for char in iter_chars:
@@ -77,10 +75,10 @@ async def aiter_streamed_json_array(
     iter_chars = chars_generator()
     parser_state = JsonArrayParserState()
 
-    first_char = await anext(iter_chars)
-    if not first_char == "[":
-        raise ValueError("Expected array")
-    parser_state.update(first_char)
+    async for char in iter_chars:
+        if char == "[":
+            break
+    parser_state.update("[")
 
     item_chars: list[str] = []
     async for char in iter_chars:
