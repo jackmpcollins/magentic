@@ -1,10 +1,10 @@
 import inspect
 import json
-import textwrap
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import (
     Any,
+    AsyncIterable,
     AsyncIterator,
     Callable,
     Generic,
@@ -58,11 +58,20 @@ class BaseFunctionSchema(ABC, Generic[T]):
         return schema
 
     @abstractmethod
-    def parse_args(self, arguments: str) -> T:
+    def parse_args(self, arguments: Iterable[str]) -> T:
         ...
 
-    def parse_args_to_message(self, arguments: str) -> AssistantMessage[T]:
+    async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
+        # TODO: Convert AsyncIterable to lazy Iterable rather than list
+        return self.parse_args([arg async for arg in arguments])
+
+    def parse_args_to_message(self, arguments: Iterable[str]) -> AssistantMessage[T]:
         return AssistantMessage(self.parse_args(arguments))
+
+    async def aparse_args_to_message(
+        self, arguments: AsyncIterable[str]
+    ) -> AssistantMessage[T]:
+        return AssistantMessage(await self.aparse_args(arguments))
 
     @abstractmethod
     def serialize_args(self, value: T) -> str:
@@ -90,8 +99,8 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: str) -> T:
-        return self._model.model_validate_json(arguments).value
+    def parse_args(self, arguments: Iterable[str]) -> T:
+        return self._model.model_validate_json("".join(arguments)).value
 
     def serialize_args(self, value: T) -> str:
         return self._model(value=value).model_dump_json()
@@ -112,8 +121,8 @@ class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         model_schema["properties"] = model_schema.get("properties", {})
         return model_schema
 
-    def parse_args(self, arguments: str) -> T:
-        return self._type_adapter.validate_json(arguments)
+    def parse_args(self, arguments: Iterable[str]) -> T:
+        return self._type_adapter.validate_json("".join(arguments))
 
     def serialize_args(self, value: T) -> str:
         return self._type_adapter.dump_json(value).decode()
@@ -137,8 +146,8 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: str) -> BaseModelT:
-        return self._model.model_validate_json(arguments)
+    def parse_args(self, arguments: Iterable[str]) -> BaseModelT:
+        return self._model.model_validate_json("".join(arguments))
 
     def serialize_args(self, value: BaseModelT) -> str:
         return value.model_dump_json()
@@ -171,11 +180,13 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         schema.pop("title", None)
         return schema
 
-    def parse_args(self, arguments: str) -> FunctionCall[T]:
-        args = self._model.model_validate_json(arguments).model_dump(exclude_unset=True)
+    def parse_args(self, arguments: Iterable[str]) -> FunctionCall[T]:
+        args = self._model.model_validate_json("".join(arguments)).model_dump(
+            exclude_unset=True
+        )
         return FunctionCall(self._func, **args)
 
-    def parse_args_to_message(self, arguments: str) -> FunctionCallMessage[T]:
+    def parse_args_to_message(self, arguments: Iterable[str]) -> FunctionCallMessage[T]:
         return FunctionCallMessage(self.parse_args(arguments))
 
     def serialize_args(self, value: FunctionCall[T]) -> str:
@@ -295,19 +306,16 @@ class OpenaiChatModel:
             }
             function_name = first_chunk_delta["function_call"]["name"]
             function_schema = function_schema_by_name[function_name]
-            function_call_args = "".join(
-                chunk["choices"][0]["delta"]["function_call"]["arguments"]
-                for chunk in response
-                if chunk["choices"][0]["delta"]
-            )
             try:
-                message = function_schema.parse_args_to_message(function_call_args)
+                message = function_schema.parse_args_to_message(
+                    chunk["choices"][0]["delta"]["function_call"]["arguments"]
+                    for chunk in response
+                    if chunk["choices"][0]["delta"]
+                )
             except ValidationError as e:
                 raise StructuredOutputError(
-                    "Failed to parse model output"
-                    f" {textwrap.shorten(function_call_args, 100)!r}."
-                    " You may need to update your prompt to encourage the model to"
-                    " return a specific type."
+                    "Failed to parse model output. You may need to update your prompt"
+                    " to encourage the model to return a specific type."
                 ) from e
             return message
 
@@ -375,21 +383,16 @@ class OpenaiChatModel:
             }
             function_name = first_chunk_delta["function_call"]["name"]
             function_schema = function_schema_by_name[function_name]
-            function_call_args = "".join(
-                [
+            try:
+                message = await function_schema.aparse_args_to_message(
                     chunk["choices"][0]["delta"]["function_call"]["arguments"]
                     async for chunk in response
                     if chunk["choices"][0]["delta"]
-                ]
-            )
-            try:
-                message = function_schema.parse_args_to_message(function_call_args)
+                )
             except ValidationError as e:
                 raise StructuredOutputError(
-                    "Failed to parse model output"
-                    f" {textwrap.shorten(function_call_args, 100)!r}."
-                    " You may need to update your prompt to encourage the model to"
-                    " return a specific type."
+                    "Failed to parse model output. You may need to update your prompt"
+                    " to encourage the model to return a specific type."
                 ) from e
             return message
 
