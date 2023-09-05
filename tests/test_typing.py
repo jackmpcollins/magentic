@@ -1,5 +1,5 @@
 from types import NoneType
-from typing import Any
+from typing import Any, Iterable
 
 import pytest
 
@@ -43,6 +43,7 @@ def test_is_origin_subclass(type_, cls_or_tuple, expected_result):
         (list[str | bool], "list_of_str_or_bool"),
         (list[str] | bool, "list_of_str_or_bool"),
         (dict[str, int], "dict_of_str_to_int"),
+        (Iterable[str], "iterable_of_str"),
     ],
 )
 def test_name_type(type_, expected_name):

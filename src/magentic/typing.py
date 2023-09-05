@@ -53,8 +53,8 @@ def name_type(type_: type) -> str:
 
     if name := getattr(type_, "__name__", None):
         if len(args) == 1:
-            return f"{name}_of_{name_type(args[0])}"
+            return f"{name.lower()}_of_{name_type(args[0])}"
 
-        return type_.__name__.lower()
+        return name.lower()
 
     raise ValueError(f"Unable to name type {type_}")
