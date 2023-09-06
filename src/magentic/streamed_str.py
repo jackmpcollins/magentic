@@ -1,16 +1,17 @@
+from collections.abc import AsyncIterable, Iterable
 from typing import AsyncIterator, Iterator
 
 
-class StreamedStr:
+class StreamedStr(Iterable[str]):
     """A string that is generated in chunks."""
 
-    def __init__(self, generator: Iterator[str]):
-        self._generator = generator
+    def __init__(self, chunks: Iterable[str]):
+        self._chunks = chunks
         self._cached_chunks: list[str] = []
 
     def __iter__(self) -> Iterator[str]:
         yield from self._cached_chunks
-        for chunk in self._generator:
+        for chunk in self._chunks:
             self._cached_chunks.append(chunk)
             yield chunk
 
@@ -22,11 +23,11 @@ class StreamedStr:
         return str(self)
 
 
-class AsyncStreamedStr:
+class AsyncStreamedStr(AsyncIterable[str]):
     """Async version of `StreamedStr`."""
 
-    def __init__(self, generator: AsyncIterator[str]):
-        self._generator = generator
+    def __init__(self, chunks: AsyncIterable[str]):
+        self._chunks = chunks
         self._cached_chunks: list[str] = []
 
     async def __aiter__(self) -> AsyncIterator[str]:
@@ -34,7 +35,7 @@ class AsyncStreamedStr:
         # https://peps.python.org/pep-0525/#asynchronous-yield-from
         for chunk in self._cached_chunks:
             yield chunk
-        async for chunk in self._generator:
+        async for chunk in self._chunks:
             self._cached_chunks.append(chunk)
             yield chunk
 
