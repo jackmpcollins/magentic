@@ -130,7 +130,7 @@ See the [examples directory](examples/) for more.
 
 ### Streaming
 
-The `StreamedStr` (and `AsyncStreamedStr`) class can be used to stream the output of the LLM. This allows you to process the text while it is being generated, rather than receiving the whole output at once. Multiple `StreamedStr` can be created at the same time to stream LLM outputs concurrently. In the below example, generating the description for multiple countries takes approximately the same amount of time as for a single country.
+The `StreamedStr` (and `AsyncStreamedStr`) class can be used to stream the output of the LLM. This allows you to process the text while it is being generated, rather than receiving the whole output at once.
 
 ```python
 from magentic import prompt, StreamedStr
@@ -145,12 +145,38 @@ def describe_country(country: str) -> StreamedStr:
 for chunk in describe_country("Brazil"):
     print(chunk, end="")
 # 'Brazil, officially known as the Federative Republic of Brazil, is ...'
+```
+
+Multiple `StreamedStr` can be created at the same time to stream LLM outputs concurrently. In the below example, generating the description for multiple countries takes approximately the same amount of time as for a single country.
+
+```python
+from time import time
+
+countries = ["Australia", "Brazil", "Chile"]
 
 
-# Generate text concurrently by creating the streams before consuming them
-streamed_strs = [describe_country(c) for c in ["Australia", "Brazil", "Chile"]]
-[str(s) for s in streamed_strs]
-# ["Australia is a country ...", "Brazil, officially known as ...", "Chile, officially known as ..."]
+# Generate the descriptions one at a time
+start_time = time()
+for country in countries:
+    # Converting `StreamedStr` to `str` blocks until the LLM output is fully generated
+    description = str(describe_country(country))
+    print(f"{time() - start_time:.2f}s : {country} - {len(description)} chars")
+
+# 22.72s : Australia - 2130 chars
+# 41.63s : Brazil - 1884 chars
+# 74.31s : Chile - 2968 chars
+
+
+# Generate the descriptions concurrently by creating the StreamedStrs at the same time
+start_time = time()
+streamed_strs = [describe_country(country) for country in countries]
+for country, streamed_str in zip(countries, streamed_strs):
+    description = str(streamed_str)
+    print(f"{time() - start_time:.2f}s : {country} - {len(description)} chars")
+
+# 22.79s : Australia - 2147 chars
+# 23.64s : Brazil - 2202 chars
+# 24.67s : Chile - 2186 chars
 ```
 
 ### Additional Features
