@@ -28,8 +28,10 @@ def test_streamed_str_str():
 
 @pytest.mark.asyncio
 async def test_async_streamed_str_iter():
-    async_streamed_str = AsyncStreamedStr(async_iter(["Hello", " World"]))
+    aiter_chunks = async_iter(["Hello", " World"])
+    async_streamed_str = AsyncStreamedStr(aiter_chunks)
     assert [chunk async for chunk in async_streamed_str] == ["Hello", " World"]
+    assert [chunk async for chunk in aiter_chunks] == []  # iterator is exhausted
     assert [chunk async for chunk in async_streamed_str] == ["Hello", " World"]
 
 
