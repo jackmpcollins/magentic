@@ -2,6 +2,12 @@ from collections.abc import AsyncIterable, Iterable
 from typing import AsyncIterator, Iterator
 
 
+async def async_iter(iterable: Iterable[str]) -> AsyncIterator[str]:
+    """Get an AsyncIterator for an Iterable."""
+    for item in iterable:
+        yield item
+
+
 class StreamedStr(Iterable[str]):
     """A string that is generated in chunks."""
 
