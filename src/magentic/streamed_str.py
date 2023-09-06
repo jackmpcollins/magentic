@@ -1,8 +1,10 @@
 from collections.abc import AsyncIterable, Iterable
-from typing import AsyncIterator, Iterator
+from typing import AsyncIterator, Iterator, TypeVar
+
+T = TypeVar("T")
 
 
-async def async_iter(iterable: Iterable[str]) -> AsyncIterator[str]:
+async def async_iter(iterable: Iterable[T]) -> AsyncIterator[T]:
     """Get an AsyncIterator for an Iterable."""
     for item in iterable:
         yield item
