@@ -3,7 +3,11 @@ from typing import AsyncIterator
 import pytest
 
 from magentic import AsyncStreamedStr, StreamedStr
-from magentic.streamed_str import async_iter
+from magentic.streaming import (
+    aiter_streamed_json_array,
+    async_iter,
+    iter_streamed_json_array,
+)
 
 
 @pytest.mark.asyncio
@@ -11,6 +15,27 @@ async def test_async_iter():
     output = async_iter(["Hello", " World"])
     assert isinstance(output, AsyncIterator)
     assert [chunk async for chunk in output] == ["Hello", " World"]
+
+
+iter_streamed_json_array_test_cases = [
+    (["[]"], []),
+    (['["He', 'llo", ', '"Wo', 'rld"]'], ['"Hello"', '"World"']),
+    (["[1, 2, 3]"], ["1", "2", "3"]),
+    (["[1, ", "2, 3]"], ["1", "2", "3"]),
+    (['[{"a": 1}, {2: "b"}]'], ['{"a": 1}', '{2: "b"}']),
+    (["{\n", '"value', '":', " [", "1, ", "2, 3", "]"], ["1", "2", "3"]),
+]
+
+
+@pytest.mark.parametrize(["input", "expected"], iter_streamed_json_array_test_cases)
+def test_iter_streamed_json_array(input, expected):
+    assert list(iter_streamed_json_array(iter(input))) == expected
+
+
+@pytest.mark.parametrize(["input", "expected"], iter_streamed_json_array_test_cases)
+@pytest.mark.asyncio
+async def test_aiter_streamed_json_array(input, expected):
+    assert [x async for x in aiter_streamed_json_array(async_iter(input))] == expected
 
 
 def test_streamed_str_iter():

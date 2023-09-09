@@ -179,6 +179,29 @@ for country, streamed_str in zip(countries, streamed_strs):
 # 24.67s : Chile - 2186 chars
 ```
 
+#### Object Streaming
+
+Structured outputs can also be streamed from the LLM by using the return type annotation `Iterable` (or `AsyncIterable`). This allows each item to be processed while the next one is being generated. See the example in [examples/quiz](examples/quiz/) for how this can be used to improve user experience by quickly displaying/using the first item returned.
+
+```python
+from collections.abc import Iterable
+from time import time
+
+
+@prompt("Create a Superhero team named {name}.")
+def create_superhero_team(name: str) -> Iterable[Superhero]:
+    ...
+
+
+start_time = time()
+for hero in create_superhero_team("The Food Dudes"):
+    print(f"{time() - start_time:.2f}s : {hero}")
+
+# 2.23s : name='Pizza Man' age=30 power='Can shoot pizza slices from his hands' enemies=['The Hungry Horde', 'The Junk Food Gang']
+# 4.03s : name='Captain Carrot' age=35 power='Super strength and agility from eating carrots' enemies=['The Sugar Squad', 'The Greasy Gang']
+# 6.05s : name='Ice Cream Girl' age=25 power='Can create ice cream out of thin air' enemies=['The Hot Sauce Squad', 'The Healthy Eaters']
+```
+
 ### Additional Features
 
 - The `@prompt` decorator can also be used with `async` function definitions, which enables making concurrent queries to the LLM.

@@ -1,18 +1,10 @@
 import inspect
 import json
-import textwrap
+import typing
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
-from typing import (
-    Any,
-    AsyncIterator,
-    Callable,
-    Generic,
-    Iterable,
-    Iterator,
-    TypeVar,
-    cast,
-)
+from typing import Any, Generic, TypeVar, cast, get_args, get_origin
 
 import openai
 from pydantic import BaseModel, TypeAdapter, ValidationError, create_model
@@ -25,8 +17,13 @@ from magentic.chat_model.base import (
     UserMessage,
 )
 from magentic.function_call import FunctionCall
-from magentic.streamed_str import AsyncStreamedStr, StreamedStr
-from magentic.typing import is_origin_subclass, name_type
+from magentic.streaming import (
+    AsyncStreamedStr,
+    StreamedStr,
+    aiter_streamed_json_array,
+    iter_streamed_json_array,
+)
+from magentic.typing import is_origin_abstract, is_origin_subclass, name_type
 
 
 class StructuredOutputError(Exception):
@@ -58,11 +55,20 @@ class BaseFunctionSchema(ABC, Generic[T]):
         return schema
 
     @abstractmethod
-    def parse_args(self, arguments: str) -> T:
+    def parse_args(self, arguments: Iterable[str]) -> T:
         ...
 
-    def parse_args_to_message(self, arguments: str) -> AssistantMessage[T]:
+    async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
+        # TODO: Convert AsyncIterable to lazy Iterable rather than list
+        return self.parse_args([arg async for arg in arguments])
+
+    def parse_args_to_message(self, arguments: Iterable[str]) -> AssistantMessage[T]:
         return AssistantMessage(self.parse_args(arguments))
+
+    async def aparse_args_to_message(
+        self, arguments: AsyncIterable[str]
+    ) -> AssistantMessage[T]:
+        return AssistantMessage(await self.aparse_args(arguments))
 
     @abstractmethod
     def serialize_args(self, value: T) -> str:
@@ -90,10 +96,86 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: str) -> T:
-        return self._model.model_validate_json(arguments).value
+    def parse_args(self, arguments: Iterable[str]) -> T:
+        return self._model.model_validate_json("".join(arguments)).value
 
     def serialize_args(self, value: T) -> str:
+        return self._model(value=value).model_dump_json()
+
+
+IterableT = TypeVar("IterableT", bound=Iterable[Any])
+
+
+class IterableFunctionSchema(BaseFunctionSchema[IterableT], Generic[IterableT]):
+    def __init__(self, output_type: type[IterableT]):
+        self._output_type = output_type
+        self._item_type_adapter = TypeAdapter(get_args(output_type)[0])
+        # https://github.com/python/mypy/issues/14458
+        self._model = Output[output_type]  # type: ignore[valid-type]
+
+    @property
+    def name(self) -> str:
+        return f"return_{name_type(self._output_type)}"
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        model_schema = self._model.model_json_schema().copy()
+        model_schema.pop("title", None)
+        model_schema.pop("description", None)
+        return model_schema
+
+    def parse_args(self, arguments: Iterable[str]) -> IterableT:
+        iter_items = (
+            self._item_type_adapter.validate_json(item)
+            for item in iter_streamed_json_array(arguments)
+        )
+        return self._model.model_validate({"value": iter_items}).value
+
+    def serialize_args(self, value: IterableT) -> str:
+        return self._model(value=value).model_dump_json()
+
+
+AsyncIterableT = TypeVar("AsyncIterableT", bound=AsyncIterable[Any])
+
+
+class AsyncIterableFunctionSchema(
+    BaseFunctionSchema[AsyncIterableT], Generic[AsyncIterableT]
+):
+    def __init__(self, output_type: type[AsyncIterableT]):
+        self._output_type = output_type
+        self._item_type_adapter = TypeAdapter(get_args(output_type)[0])
+        # Convert to list so pydantic can handle for schema generation
+        # But keep the type hint using AsyncIterableT for type checking
+        self._model: type[Output[AsyncIterableT]] = Output[list[get_args(output_type)[0]]]  # type: ignore
+
+    @property
+    def name(self) -> str:
+        return f"return_{name_type(self._output_type)}"
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        model_schema = self._model.model_json_schema().copy()
+        model_schema.pop("title", None)
+        model_schema.pop("description", None)
+        return model_schema
+
+    def parse_args(self, arguments: Iterable[str]) -> AsyncIterableT:
+        raise NotImplementedError()
+
+    async def aparse_args(self, arguments: AsyncIterable[str]) -> AsyncIterableT:
+        aiter_items = (
+            self._item_type_adapter.validate_json(item)
+            async for item in aiter_streamed_json_array(arguments)
+        )
+        if (get_origin(self._output_type) or self._output_type) in (
+            typing.AsyncIterable,
+            typing.AsyncIterator,
+        ) or is_origin_abstract(self._output_type):
+            return cast(AsyncIterableT, aiter_items)
+
+        raise NotImplementedError()
+
+    def serialize_args(self, value: AsyncIterableT) -> str:
         return self._model(value=value).model_dump_json()
 
 
@@ -112,8 +194,8 @@ class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         model_schema["properties"] = model_schema.get("properties", {})
         return model_schema
 
-    def parse_args(self, arguments: str) -> T:
-        return self._type_adapter.validate_json(arguments)
+    def parse_args(self, arguments: Iterable[str]) -> T:
+        return self._type_adapter.validate_json("".join(arguments))
 
     def serialize_args(self, value: T) -> str:
         return self._type_adapter.dump_json(value).decode()
@@ -137,8 +219,8 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: str) -> BaseModelT:
-        return self._model.model_validate_json(arguments)
+    def parse_args(self, arguments: Iterable[str]) -> BaseModelT:
+        return self._model.model_validate_json("".join(arguments))
 
     def serialize_args(self, value: BaseModelT) -> str:
         return value.model_dump_json()
@@ -171,24 +253,41 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         schema.pop("title", None)
         return schema
 
-    def parse_args(self, arguments: str) -> FunctionCall[T]:
-        args = self._model.model_validate_json(arguments).model_dump(exclude_unset=True)
+    def parse_args(self, arguments: Iterable[str]) -> FunctionCall[T]:
+        args = self._model.model_validate_json("".join(arguments)).model_dump(
+            exclude_unset=True
+        )
         return FunctionCall(self._func, **args)
 
-    def parse_args_to_message(self, arguments: str) -> FunctionCallMessage[T]:
+    async def aparse_args(self, arguments: AsyncIterable[str]) -> FunctionCall[T]:
+        return self.parse_args([arg async for arg in arguments])
+
+    def parse_args_to_message(self, arguments: Iterable[str]) -> FunctionCallMessage[T]:
         return FunctionCallMessage(self.parse_args(arguments))
+
+    async def aparse_args_to_message(
+        self, arguments: AsyncIterable[str]
+    ) -> FunctionCallMessage[T]:
+        return FunctionCallMessage(await self.aparse_args(arguments))
 
     def serialize_args(self, value: FunctionCall[T]) -> str:
         return json.dumps(value.arguments)
 
 
-def function_schema_for_type(type_: type[T]) -> BaseFunctionSchema[T]:
+# TODO: Add type hints here. Possibly use `functools.singledispatch` instead.
+def function_schema_for_type(type_: type[Any]) -> BaseFunctionSchema[Any]:
     """Create a FunctionSchema for the given type."""
     if is_origin_subclass(type_, BaseModel):
-        return BaseModelFunctionSchema(type_)  # type: ignore[return-value]
+        return BaseModelFunctionSchema(type_)
 
     if is_origin_subclass(type_, dict):
-        return DictFunctionSchema(type_)  # type: ignore[arg-type]
+        return DictFunctionSchema(type_)
+
+    if is_origin_subclass(type_, Iterable):
+        return IterableFunctionSchema(type_)
+
+    if is_origin_subclass(type_, AsyncIterable):
+        return AsyncIterableFunctionSchema(type_)
 
     return AnyFunctionSchema(type_)
 
@@ -259,12 +358,12 @@ class OpenaiChatModel:
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not issubclass(type_, (str, StreamedStr))
+            if not is_origin_subclass(type_, (str, StreamedStr))
         ]
 
-        str_in_output_types = any(issubclass(cls, str) for cls in output_types)
+        str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
         streamed_str_in_output_types = any(
-            issubclass(cls, StreamedStr) for cls in output_types
+            is_origin_subclass(cls, StreamedStr) for cls in output_types
         )
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
@@ -295,19 +394,16 @@ class OpenaiChatModel:
             }
             function_name = first_chunk_delta["function_call"]["name"]
             function_schema = function_schema_by_name[function_name]
-            function_call_args = "".join(
-                chunk["choices"][0]["delta"]["function_call"]["arguments"]
-                for chunk in response
-                if chunk["choices"][0]["delta"]
-            )
             try:
-                message = function_schema.parse_args_to_message(function_call_args)
+                message = function_schema.parse_args_to_message(
+                    chunk["choices"][0]["delta"]["function_call"]["arguments"]
+                    for chunk in response
+                    if chunk["choices"][0]["delta"]
+                )
             except ValidationError as e:
                 raise StructuredOutputError(
-                    "Failed to parse model output"
-                    f" {textwrap.shorten(function_call_args, 100)!r}."
-                    " You may need to update your prompt to encourage the model to"
-                    " return a specific type."
+                    "Failed to parse model output. You may need to update your prompt"
+                    " to encourage the model to return a specific type."
                 ) from e
             return message
 
@@ -339,12 +435,12 @@ class OpenaiChatModel:
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not issubclass(type_, (str, AsyncStreamedStr))
+            if not is_origin_subclass(type_, (str, AsyncStreamedStr))
         ]
 
-        str_in_output_types = any(issubclass(cls, str) for cls in output_types)
+        str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
         async_streamed_str_in_output_types = any(
-            issubclass(cls, AsyncStreamedStr) for cls in output_types
+            is_origin_subclass(cls, AsyncStreamedStr) for cls in output_types
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
@@ -375,21 +471,16 @@ class OpenaiChatModel:
             }
             function_name = first_chunk_delta["function_call"]["name"]
             function_schema = function_schema_by_name[function_name]
-            function_call_args = "".join(
-                [
+            try:
+                message = await function_schema.aparse_args_to_message(
                     chunk["choices"][0]["delta"]["function_call"]["arguments"]
                     async for chunk in response
                     if chunk["choices"][0]["delta"]
-                ]
-            )
-            try:
-                message = function_schema.parse_args_to_message(function_call_args)
+                )
             except ValidationError as e:
                 raise StructuredOutputError(
-                    "Failed to parse model output"
-                    f" {textwrap.shorten(function_call_args, 100)!r}."
-                    " You may need to update your prompt to encourage the model to"
-                    " return a specific type."
+                    "Failed to parse model output. You may need to update your prompt"
+                    " to encourage the model to return a specific type."
                 ) from e
             return message
 

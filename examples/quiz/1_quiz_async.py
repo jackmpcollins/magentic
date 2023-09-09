@@ -1,6 +1,6 @@
 """A simple quiz game.
 
-This example builds on the `quiz.py` example to demonstrate how using asyncio can greatly speed up queries. The quiz
+This example builds on the `0_quiz.py` example to demonstrate how using asyncio can greatly speed up queries. The quiz
 questions are now generated concurrently which means the quiz starts much more quickly after the user has entered the
 topic and number of questions. However since the questions are generated independently there is more likelihood of
 duplicates - increasing the model temperature can help with this.
@@ -10,13 +10,13 @@ duplicates - increasing the model temperature can help with this.
 Run this example within this directory with:
 
 ```sh
-poetry run python quiz.py
+poetry run python 1_quiz_async.py
 ```
 
 or if you have installed magentic with pip:
 
 ```sh
-python quiz.py
+python 1_quiz_async.py
 ```
 
 ---
@@ -24,7 +24,6 @@ python quiz.py
 Example run:
 
 ```
-% poetry run python examples/quiz/quiz_async.py
 Enter a topic for a quiz: France
 Enter the number of questions: 3
 
