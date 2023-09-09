@@ -58,6 +58,8 @@ def name_type(type_: type) -> str:
         return f"dict_of_{name_type(key_type)}_to_{name_type(value_type)}"
 
     if name := getattr(type_, "__name__", None):
+        assert isinstance(name, str)
+
         if len(args) == 1:
             return f"{name.lower()}_of_{name_type(args[0])}"
 
