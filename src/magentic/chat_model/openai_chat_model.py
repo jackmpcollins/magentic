@@ -336,6 +336,50 @@ def message_to_openai_message(message: Message[Any]) -> dict[str, Any]:
     raise NotImplementedError(type(message))
 
 
+def openai_chatcompletion_create(
+    model: str,
+    messages: Iterable[dict[str, Any]],
+    temperature: float | None = None,
+    functions: list[dict[str, Any]] | None = None,
+    function_call: dict[str, Any] | None = None,
+) -> Iterator[dict[str, Any]]:
+    """Type-annotated version of `openai.ChatCompletion.create`."""
+    # `openai.ChatCompletion.create` doesn't accept `None`
+    # so only pass function args if there are functions
+    kwargs: dict[str, Any] = {}
+    if functions:
+        kwargs["functions"] = functions
+    if function_call:
+        kwargs["function_call"] = function_call
+
+    response: Iterator[dict[str, Any]] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
+        model=model, messages=messages, temperature=temperature, stream=True, **kwargs
+    )
+    return response
+
+
+async def openai_chatcompletion_acreate(
+    model: str,
+    messages: Iterable[dict[str, Any]],
+    temperature: float | None = None,
+    functions: list[dict[str, Any]] | None = None,
+    function_call: dict[str, Any] | None = None,
+) -> AsyncIterator[dict[str, Any]]:
+    """Type-annotated version of `openai.ChatCompletion.acreate`."""
+    # `openai.ChatCompletion.create` doesn't accept `None`
+    # so only pass function args if there are functions
+    kwargs: dict[str, Any] = {}
+    if functions:
+        kwargs["functions"] = functions
+    if function_call:
+        kwargs["function_call"] = function_call
+
+    response: AsyncIterator[dict[str, Any]] = openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
+        model=model, messages=messages, temperature=temperature, stream=True, **kwargs
+    )
+    return response
+
+
 R = TypeVar("R")
 FuncR = TypeVar("FuncR")
 
@@ -367,21 +411,17 @@ class OpenaiChatModel:
         )
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
-        # `openai.ChatCompletion.create` doesn't accept `None`
-        # so only pass function args if there are functions
-        function_args: dict[str, Any] = {}
-        if function_schemas:
-            function_args["functions"] = [schema.dict() for schema in function_schemas]
-        if len(function_schemas) == 1 and not allow_string_output:
-            # Force the model to call the function
-            function_args["function_call"] = {"name": function_schemas[0].name}
-
-        response: Iterator[dict[str, Any]] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
+        openai_functions = [schema.dict() for schema in function_schemas]
+        response = openai_chatcompletion_create(
             model=self._model,
             messages=[message_to_openai_message(m) for m in messages],
             temperature=self._temperature,
-            **function_args,
-            stream=True,
+            functions=openai_functions,
+            function_call=(
+                {"name": openai_functions[0]["name"]}
+                if len(openai_functions) == 1 and not allow_string_output
+                else None
+            ),
         )
 
         first_chunk = next(response)
@@ -444,21 +484,17 @@ class OpenaiChatModel:
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        # `openai.ChatCompletion.acreate` doesn't accept `None`
-        # so only pass function args if there are functions
-        function_args: dict[str, Any] = {}
-        if function_schemas:
-            function_args["functions"] = [schema.dict() for schema in function_schemas]
-        if len(function_schemas) == 1 and not allow_string_output:
-            # Force the model to call the function
-            function_args["function_call"] = {"name": function_schemas[0].name}
-
-        response: AsyncIterator[dict[str, Any]] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
+        openai_functions = [schema.dict() for schema in function_schemas]
+        response = await openai_chatcompletion_acreate(
             model=self._model,
             messages=[message_to_openai_message(m) for m in messages],
             temperature=self._temperature,
-            **function_args,
-            stream=True,
+            functions=openai_functions,
+            function_call=(
+                {"name": openai_functions[0]["name"]}
+                if len(openai_functions) == 1 and not allow_string_output
+                else None
+            ),
         )
 
         first_chunk = await anext(response)
