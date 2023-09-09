@@ -285,13 +285,20 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         return json.dumps(value.arguments)
 
 
-def function_schema_for_type(type_: type[T]) -> BaseFunctionSchema[T]:
+# TODO: Add type hints here. Possibly use `functools.singledispatch` instead.
+def function_schema_for_type(type_: type[Any]) -> BaseFunctionSchema[Any]:
     """Create a FunctionSchema for the given type."""
     if is_origin_subclass(type_, BaseModel):
-        return BaseModelFunctionSchema(type_)  # type: ignore[return-value]
+        return BaseModelFunctionSchema(type_)
 
     if is_origin_subclass(type_, dict):
-        return DictFunctionSchema(type_)  # type: ignore[arg-type]
+        return DictFunctionSchema(type_)
+
+    if is_origin_subclass(type_, Iterable):
+        return IterableFunctionSchema(type_)
+
+    if is_origin_subclass(type_, AsyncIterable):
+        return AsyncIterableFunctionSchema(type_)
 
     return AnyFunctionSchema(type_)
 
