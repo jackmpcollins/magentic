@@ -2,20 +2,9 @@ import inspect
 import json
 import typing
 from abc import ABC, abstractmethod
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
-from typing import (
-    Any,
-    AsyncIterable,
-    AsyncIterator,
-    Callable,
-    Generic,
-    Iterable,
-    Iterator,
-    TypeVar,
-    cast,
-    get_args,
-    get_origin,
-)
+from typing import Any, Generic, TypeVar, cast, get_args, get_origin
 
 import openai
 from pydantic import BaseModel, TypeAdapter, ValidationError, create_model
