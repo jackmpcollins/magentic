@@ -1,3 +1,4 @@
+import inspect
 import types
 from typing import (
     Any,
@@ -23,6 +24,11 @@ TypeT = TypeVar("TypeT", bound=type)
 def split_union_type(type_: TypeT) -> Sequence[TypeT]:
     """Split a union type into its constituent types."""
     return get_args(type_) if is_union_type(type_) else [type_]
+
+
+def is_origin_abstract(type_: type) -> bool:
+    """Return true if the unsubscripted type is an abstract base class (ABC)."""
+    return inspect.isabstract(get_origin(type_) or type_)
 
 
 def is_origin_subclass(
