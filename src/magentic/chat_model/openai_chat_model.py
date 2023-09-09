@@ -1,5 +1,6 @@
 import inspect
 import json
+import typing
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import (
@@ -12,6 +13,8 @@ from typing import (
     Iterator,
     TypeVar,
     cast,
+    get_args,
+    get_origin,
 )
 
 import openai
@@ -25,8 +28,13 @@ from magentic.chat_model.base import (
     UserMessage,
 )
 from magentic.function_call import FunctionCall
-from magentic.streaming import AsyncStreamedStr, StreamedStr
-from magentic.typing import is_origin_subclass, name_type
+from magentic.streaming import (
+    AsyncStreamedStr,
+    StreamedStr,
+    aiter_streamed_json_array,
+    iter_streamed_json_array,
+)
+from magentic.typing import is_origin_abstract, is_origin_subclass, name_type
 
 
 class StructuredOutputError(Exception):
@@ -103,6 +111,82 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         return self._model.model_validate_json("".join(arguments)).value
 
     def serialize_args(self, value: T) -> str:
+        return self._model(value=value).model_dump_json()
+
+
+IterableT = TypeVar("IterableT", bound=Iterable[Any])
+
+
+class IterableFunctionSchema(BaseFunctionSchema[IterableT], Generic[IterableT]):
+    def __init__(self, output_type: type[IterableT]):
+        self._output_type = output_type
+        self._item_type_adapter = TypeAdapter(get_args(output_type)[0])
+        # https://github.com/python/mypy/issues/14458
+        self._model = Output[output_type]  # type: ignore[valid-type]
+
+    @property
+    def name(self) -> str:
+        return f"return_{name_type(self._output_type)}"
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        model_schema = self._model.model_json_schema().copy()
+        model_schema.pop("title", None)
+        model_schema.pop("description", None)
+        return model_schema
+
+    def parse_args(self, arguments: Iterable[str]) -> IterableT:
+        iter_items = (
+            self._item_type_adapter.validate_json(item)
+            for item in iter_streamed_json_array(arguments)
+        )
+        return self._model.model_validate({"value": iter_items}).value
+
+    def serialize_args(self, value: IterableT) -> str:
+        return self._model(value=value).model_dump_json()
+
+
+AsyncIterableT = TypeVar("AsyncIterableT", bound=AsyncIterable[Any])
+
+
+class AsyncIterableFunctionSchema(
+    BaseFunctionSchema[AsyncIterableT], Generic[AsyncIterableT]
+):
+    def __init__(self, output_type: type[AsyncIterableT]):
+        self._output_type = output_type
+        self._item_type_adapter = TypeAdapter(get_args(output_type)[0])
+        # Convert to list so pydantic can handle for schema generation
+        # But keep the type hint using AsyncIterableT for type checking
+        self._model: type[Output[AsyncIterableT]] = Output[list[get_args(output_type)[0]]]  # type: ignore
+
+    @property
+    def name(self) -> str:
+        return f"return_{name_type(self._output_type)}"
+
+    @property
+    def parameters(self) -> dict[str, Any]:
+        model_schema = self._model.model_json_schema().copy()
+        model_schema.pop("title", None)
+        model_schema.pop("description", None)
+        return model_schema
+
+    def parse_args(self, arguments: Iterable[str]) -> AsyncIterableT:
+        raise NotImplementedError()
+
+    async def aparse_args(self, arguments: AsyncIterable[str]) -> AsyncIterableT:
+        aiter_items = (
+            self._item_type_adapter.validate_json(item)
+            async for item in aiter_streamed_json_array(arguments)
+        )
+        if (get_origin(self._output_type) or self._output_type) in (
+            typing.AsyncIterable,
+            typing.AsyncIterator,
+        ) or is_origin_abstract(self._output_type):
+            return cast(AsyncIterableT, aiter_items)
+
+        raise NotImplementedError()
+
+    def serialize_args(self, value: AsyncIterableT) -> str:
         return self._model(value=value).model_dump_json()
 
 

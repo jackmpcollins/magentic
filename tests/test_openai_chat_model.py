@@ -1,17 +1,22 @@
+import collections.abc
 import json
+import typing
 from collections import OrderedDict
-from typing import Annotated, Any
+from typing import Annotated, Any, get_origin
 
 import pytest
 from pydantic import BaseModel, Field
 
 from magentic.chat_model.openai_chat_model import (
     AnyFunctionSchema,
+    AsyncIterableFunctionSchema,
     BaseModelFunctionSchema,
     DictFunctionSchema,
     FunctionCallFunctionSchema,
+    IterableFunctionSchema,
 )
 from magentic.function_call import FunctionCall
+from magentic.streaming import async_iter
 from magentic.typing import is_origin_subclass
 
 
@@ -153,10 +158,178 @@ def test_any_function_schema_parse_args(type_, args_str, expected_args):
 
 
 @pytest.mark.parametrize(
+    ["type_", "args_str", "expected_args"], any_function_schema_args_test_cases
+)
+@pytest.mark.asyncio
+async def test_any_function_schema_aparse_args(type_, args_str, expected_args):
+    parsed_args = await AnyFunctionSchema(type_).aparse_args(async_iter(args_str))
+    assert parsed_args == expected_args
+
+
+@pytest.mark.parametrize(
     ["type_", "expected_args_str", "args"], any_function_schema_args_test_cases
 )
 def test_any_function_schema_serialize_args(type_, expected_args_str, args):
     serialized_args = AnyFunctionSchema(type_).serialize_args(args)
+    assert json.loads(serialized_args) == json.loads(expected_args_str)
+
+
+@pytest.mark.parametrize(
+    ["type_", "json_schema"],
+    [
+        (
+            list[str],
+            {
+                "name": "return_list_of_str",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "type": "array",
+                            "items": {"type": "string"},
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            typing.Iterable[str],
+            {
+                "name": "return_iterable_of_str",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "type": "array",
+                            "items": {"type": "string"},
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            collections.abc.Iterable[str],
+            {
+                "name": "return_iterable_of_str",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "type": "array",
+                            "items": {"type": "string"},
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+    ],
+)
+def test_iterable_function_schema(type_, json_schema):
+    function_schema = IterableFunctionSchema(type_)
+    assert function_schema.dict() == json_schema
+
+
+iterable_function_schema_args_test_cases = [
+    (list[str], '{"value": ["One", "Two"]}', ["One", "Two"]),
+    (typing.Iterable[str], '{"value": ["One", "Two"]}', ["One", "Two"]),
+    (collections.abc.Iterable[str], '{"value": ["One", "Two"]}', ["One", "Two"]),
+]
+
+
+@pytest.mark.parametrize(
+    ["type_", "args_str", "expected_args"], iterable_function_schema_args_test_cases
+)
+def test_iterable_function_schema_parse_args(type_, args_str, expected_args):
+    parsed_args = IterableFunctionSchema(type_).parse_args(args_str)
+    assert isinstance(parsed_args, get_origin(type_))
+    assert list(parsed_args) == expected_args
+
+
+@pytest.mark.parametrize(
+    ["type_", "expected_args_str", "args"], iterable_function_schema_args_test_cases
+)
+def test_iterable_function_schema_serialize_args(type_, expected_args_str, args):
+    serialized_args = IterableFunctionSchema(type_).serialize_args(args)
+    assert json.loads(serialized_args) == json.loads(expected_args_str)
+
+
+@pytest.mark.parametrize(
+    ["type_", "json_schema"],
+    [
+        (
+            typing.AsyncIterable[str],
+            {
+                "name": "return_asynciterable_of_str",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "type": "array",
+                            "items": {"type": "string"},
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            collections.abc.AsyncIterable[str],
+            {
+                "name": "return_asynciterable_of_str",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "type": "array",
+                            "items": {"type": "string"},
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+    ],
+)
+def test_async_iterable_function_schema(type_, json_schema):
+    function_schema = AsyncIterableFunctionSchema(type_)
+    assert function_schema.dict() == json_schema
+
+
+async_iterable_function_schema_args_test_cases = [
+    (typing.AsyncIterable[str], '{"value": ["One", "Two"]}', ["One", "Two"]),
+    (collections.abc.AsyncIterable[str], '{"value": ["One", "Two"]}', ["One", "Two"]),
+]
+
+
+@pytest.mark.parametrize(
+    ["type_", "args_str", "expected_args"],
+    async_iterable_function_schema_args_test_cases,
+)
+@pytest.mark.asyncio
+async def test_async_iterable_function_schema_aparse_args(
+    type_, args_str, expected_args
+):
+    parsed_args = await AsyncIterableFunctionSchema(type_).aparse_args(
+        async_iter(args_str)
+    )
+    assert isinstance(parsed_args, get_origin(type_))
+    assert [arg async for arg in parsed_args] == expected_args
+
+
+@pytest.mark.parametrize(
+    ["type_", "expected_args_str", "args"],
+    async_iterable_function_schema_args_test_cases,
+)
+def test_async_iterable_function_schema_serialize_args(type_, expected_args_str, args):
+    serialized_args = AsyncIterableFunctionSchema(type_).serialize_args(args)
     assert json.loads(serialized_args) == json.loads(expected_args_str)
 
 
