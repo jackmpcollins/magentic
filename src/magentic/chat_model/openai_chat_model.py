@@ -186,8 +186,16 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         )
         return FunctionCall(self._func, **args)
 
+    async def aparse_args(self, arguments: AsyncIterable[str]) -> FunctionCall[T]:
+        return self.parse_args([arg async for arg in arguments])
+
     def parse_args_to_message(self, arguments: Iterable[str]) -> FunctionCallMessage[T]:
         return FunctionCallMessage(self.parse_args(arguments))
+
+    async def aparse_args_to_message(
+        self, arguments: AsyncIterable[str]
+    ) -> FunctionCallMessage[T]:
+        return FunctionCallMessage(await self.aparse_args(arguments))
 
     def serialize_args(self, value: FunctionCall[T]) -> str:
         return json.dumps(value.arguments)
