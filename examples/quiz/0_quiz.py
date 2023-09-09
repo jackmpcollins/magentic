@@ -8,13 +8,13 @@ at multiple points in a program, for different purposes.
 Run this example within this directory with:
 
 ```sh
-poetry run python quiz.py
+poetry run python 0_quiz.py
 ```
 
 or if you have installed magentic with pip:
 
 ```sh
-python quiz.py
+python 0_quiz.py
 ```
 
 ---
@@ -22,7 +22,6 @@ python quiz.py
 Example run:
 
 ```
-% poetry run python quiz.py
 Enter a topic for a quiz: pizza
 Enter the number of questions: 3
 
@@ -43,9 +42,9 @@ Correct! The answer is: Round
 
 Quiz complete! You scored: 66%
 
-"Hey pizza enthusiast! Congrats on scoring 66/100 on the pizza quiz! You may not have
-aced it, but hey, you've still got a slice of the pie! Keep up the cheesy spirit and
-remember, there's always room for improvement... and extra toppings! 🍕🎉"
+Hey pizza enthusiast! Congrats on scoring 66/100 on the pizza quiz! You may not have
+ aced it, but hey, you've still got a slice of the pie! Keep up the cheesy spirit and
+ remember, there's always room for improvement... and extra toppings! 🍕🎉
 ```
 
 """
