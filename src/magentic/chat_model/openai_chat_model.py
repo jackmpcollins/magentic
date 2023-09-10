@@ -429,7 +429,7 @@ async def openai_chatcompletion_acreate(
     if function_call:
         kwargs["function_call"] = function_call
 
-    response: AsyncIterator[dict[str, Any]] = openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
+    response: AsyncIterator[dict[str, Any]] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
         model=model,
         messages=[m.model_dump() for m in messages],
         temperature=temperature,
