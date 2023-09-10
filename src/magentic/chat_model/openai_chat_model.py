@@ -4,7 +4,7 @@ import typing
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
-from typing import Any, Generic, TypeVar, cast, get_args, get_origin
+from typing import Any, Generic, Literal, TypeVar, cast, get_args, get_origin
 
 import openai
 from pydantic import BaseModel, TypeAdapter, ValidationError, create_model
@@ -376,7 +376,7 @@ def openai_chatcompletion_create(
     messages: Iterable[dict[str, Any]],
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
-    function_call: dict[str, Any] | None = None,
+    function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> Iterator[OpenaiChatCompletionChunk]:
     """Type-annotated version of `openai.ChatCompletion.create`."""
     # `openai.ChatCompletion.create` doesn't accept `None`
@@ -398,7 +398,7 @@ async def openai_chatcompletion_acreate(
     messages: Iterable[dict[str, Any]],
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
-    function_call: dict[str, Any] | None = None,
+    function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> AsyncIterator[OpenaiChatCompletionChunk]:
     """Type-annotated version of `openai.ChatCompletion.acreate`."""
     # `openai.ChatCompletion.create` doesn't accept `None`
