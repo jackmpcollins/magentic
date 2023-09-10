@@ -405,7 +405,7 @@ def openai_chatcompletion_create(
 
     response: Iterator[dict[str, Any]] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
         model=model,
-        messages=[m.model_dump() for m in messages],
+        messages=[m.model_dump(mode="json", exclude_none=True) for m in messages],
         temperature=temperature,
         stream=True,
         **kwargs,
@@ -431,7 +431,7 @@ async def openai_chatcompletion_acreate(
 
     response: AsyncIterator[dict[str, Any]] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
         model=model,
-        messages=[m.model_dump() for m in messages],
+        messages=[m.model_dump(mode="json", exclude_none=True) for m in messages],
         temperature=temperature,
         stream=True,
         **kwargs,
