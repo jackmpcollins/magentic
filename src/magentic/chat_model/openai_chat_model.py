@@ -305,7 +305,7 @@ class OpenaiChatCompletionFunctionCall(BaseModel):
 
     def get_name_or_raise(self) -> str:
         """Return the name, raising an error if it doesn't exist."""
-        assert self.name
+        assert self.name is not None
         return self.name
 
 
@@ -316,12 +316,12 @@ class OpenaiChatCompletionDelta(BaseModel):
 
     def get_content_or_raise(self) -> str:
         """Return the content, raising an error if it doesn't exist."""
-        assert self.content
+        assert self.content is not None
         return self.content
 
     def get_function_call_or_raise(self) -> OpenaiChatCompletionFunctionCall:
         """Return the function_call, raising an error if it doesn't exist."""
-        assert self.function_call
+        assert self.function_call is not None
         return self.function_call
 
 
