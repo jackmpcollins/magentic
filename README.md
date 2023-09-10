@@ -187,6 +187,16 @@ Structured outputs can also be streamed from the LLM by using the return type an
 from collections.abc import Iterable
 from time import time
 
+from magentic import prompt
+from pydantic import BaseModel
+
+
+class Superhero(BaseModel):
+    name: str
+    age: int
+    power: str
+    enemies: list[str]
+
 
 @prompt("Create a Superhero team named {name}.")
 def create_superhero_team(name: str) -> Iterable[Superhero]:
