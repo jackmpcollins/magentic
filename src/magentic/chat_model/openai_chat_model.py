@@ -314,16 +314,6 @@ class OpenaiChatCompletionDelta(BaseModel):
     content: str | None = None
     function_call: OpenaiChatCompletionFunctionCall | None = None
 
-    def get_content_or_raise(self) -> str:
-        """Return the content, raising an error if it doesn't exist."""
-        assert self.content is not None
-        return self.content
-
-    def get_function_call_or_raise(self) -> OpenaiChatCompletionFunctionCall:
-        """Return the function_call, raising an error if it doesn't exist."""
-        assert self.function_call is not None
-        return self.function_call
-
 
 class OpenaiChatCompletionChunkChoice(BaseModel):
     delta: OpenaiChatCompletionDelta
@@ -495,9 +485,9 @@ class OpenaiChatModel:
             function_schema = function_schema_by_name[function_name]
             try:
                 message = function_schema.parse_args_to_message(
-                    chunk.choices[0].delta.get_function_call_or_raise().arguments
+                    chunk.choices[0].delta.function_call.arguments
                     for chunk in response
-                    if chunk.choices[0].delta
+                    if chunk.choices[0].delta.function_call
                 )
             except ValidationError as e:
                 raise StructuredOutputError(
@@ -512,9 +502,9 @@ class OpenaiChatModel:
                 " your prompt to encourage the model to return a specific type."
             )
         streamed_str = StreamedStr(
-            chunk.choices[0].delta.get_content_or_raise()
+            chunk.choices[0].delta.content
             for chunk in response
-            if chunk.choices[0].delta
+            if chunk.choices[0].delta.content is not None
         )
         if streamed_str_in_output_types:
             return cast(AssistantMessage[R], AssistantMessage(streamed_str))
@@ -568,9 +558,9 @@ class OpenaiChatModel:
             function_schema = function_schema_by_name[function_name]
             try:
                 message = await function_schema.aparse_args_to_message(
-                    chunk.choices[0].delta.get_function_call_or_raise().arguments
+                    chunk.choices[0].delta.function_call.arguments
                     async for chunk in response
-                    if chunk.choices[0].delta
+                    if chunk.choices[0].delta.function_call
                 )
             except ValidationError as e:
                 raise StructuredOutputError(
@@ -585,9 +575,9 @@ class OpenaiChatModel:
                 " your prompt to encourage the model to return a specific type."
             )
         async_streamed_str = AsyncStreamedStr(
-            chunk.choices[0].delta.get_content_or_raise()
+            chunk.choices[0].delta.content
             async for chunk in response
-            if chunk.choices[0].delta
+            if chunk.choices[0].delta.content is not None
         )
         if async_streamed_str_in_output_types:
             return cast(AssistantMessage[R], AssistantMessage(async_streamed_str))
