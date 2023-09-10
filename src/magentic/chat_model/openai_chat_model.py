@@ -299,7 +299,7 @@ class OpenaiMessageRole(Enum):
     USER = "user"
 
 
-class OpenaiChatCompletionDeltaFunctionCall(BaseModel):
+class OpenaiChatCompletionFunctionCall(BaseModel):
     name: str | None = None
     arguments: str
 
@@ -312,39 +312,56 @@ class OpenaiChatCompletionDeltaFunctionCall(BaseModel):
 class OpenaiChatCompletionDelta(BaseModel):
     role: OpenaiMessageRole | None = None
     content: str | None = None
-    function_call: OpenaiChatCompletionDeltaFunctionCall | None = None
+    function_call: OpenaiChatCompletionFunctionCall | None = None
 
     def get_content_or_raise(self) -> str:
         """Return the content, raising an error if it doesn't exist."""
         assert self.content
         return self.content
 
-    def get_function_call_or_raise(self) -> OpenaiChatCompletionDeltaFunctionCall:
+    def get_function_call_or_raise(self) -> OpenaiChatCompletionFunctionCall:
         """Return the function_call, raising an error if it doesn't exist."""
         assert self.function_call
         return self.function_call
 
 
-class OpenaiChatCompletionChoice(BaseModel):
+class OpenaiChatCompletionChunkChoice(BaseModel):
     delta: OpenaiChatCompletionDelta
-    finish_reason: str | None = None
 
 
 class OpenaiChatCompletionChunk(BaseModel):
+    choices: list[OpenaiChatCompletionChunkChoice]
+
+
+class OpenaiChatCompletionChoiceMessage(BaseModel):
+    role: OpenaiMessageRole
+    name: str | None = None
+    content: str | None = None
+    function_call: OpenaiChatCompletionFunctionCall | None = None
+
+
+class OpenaiChatCompletionChoice(BaseModel):
+    message: OpenaiChatCompletionDelta
+
+
+class OpenaiChatCompletion(BaseModel):
     choices: list[OpenaiChatCompletionChoice]
 
 
-def message_to_openai_message(message: Message[Any]) -> dict[str, Any]:
+def message_to_openai_message(
+    message: Message[Any],
+) -> OpenaiChatCompletionChoiceMessage:
     """Convert a `Message` to an OpenAI message dict."""
     if isinstance(message, UserMessage):
-        return {"role": OpenaiMessageRole.USER.value, "content": message.content}
+        return OpenaiChatCompletionChoiceMessage(
+            role=OpenaiMessageRole.USER, content=message.content
+        )
 
     if isinstance(message, AssistantMessage):
         if isinstance(message.content, str):
-            return {
-                "role": OpenaiMessageRole.ASSISTANT.value,
-                "content": message.content,
-            }
+            return OpenaiChatCompletionChoiceMessage(
+                role=OpenaiMessageRole.ASSISTANT, content=message.content
+            )
 
         function_schema: BaseFunctionSchema[Any]
         if isinstance(message.content, FunctionCall):
@@ -352,28 +369,27 @@ def message_to_openai_message(message: Message[Any]) -> dict[str, Any]:
         else:
             function_schema = function_schema_for_type(type(message.content))
 
-        return {
-            "role": OpenaiMessageRole.ASSISTANT.value,
-            "content": None,
-            "function_call": {
-                "name": function_schema.name,
-                "arguments": function_schema.serialize_args(message.content),
-            },
-        }
+        return OpenaiChatCompletionChoiceMessage(
+            role=OpenaiMessageRole.ASSISTANT,
+            function_call=OpenaiChatCompletionFunctionCall(
+                name=function_schema.name,
+                arguments=function_schema.serialize_args(message.content),
+            ),
+        )
 
     if isinstance(message, FunctionResultMessage):
-        return {
-            "role": OpenaiMessageRole.FUNCTION.value,
-            "name": FunctionCallFunctionSchema(message.function_call.function).name,
-            "content": json.dumps(message.content),
-        }
+        return OpenaiChatCompletionChoiceMessage(
+            role=OpenaiMessageRole.FUNCTION,
+            name=FunctionCallFunctionSchema(message.function_call.function).name,
+            content=json.dumps(message.content),
+        )
 
     raise NotImplementedError(type(message))
 
 
 def openai_chatcompletion_create(
     model: str,
-    messages: Iterable[dict[str, Any]],
+    messages: Iterable[OpenaiChatCompletionChoiceMessage],
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -388,14 +404,18 @@ def openai_chatcompletion_create(
         kwargs["function_call"] = function_call
 
     response: Iterator[dict[str, Any]] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
-        model=model, messages=messages, temperature=temperature, stream=True, **kwargs
+        model=model,
+        messages=[m.model_dump() for m in messages],
+        temperature=temperature,
+        stream=True,
+        **kwargs,
     )
     return (OpenaiChatCompletionChunk.model_validate(chunk) for chunk in response)
 
 
 async def openai_chatcompletion_acreate(
     model: str,
-    messages: Iterable[dict[str, Any]],
+    messages: Iterable[OpenaiChatCompletionChoiceMessage],
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -410,7 +430,11 @@ async def openai_chatcompletion_acreate(
         kwargs["function_call"] = function_call
 
     response: AsyncIterator[dict[str, Any]] = openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
-        model=model, messages=messages, temperature=temperature, stream=True, **kwargs
+        model=model,
+        messages=[m.model_dump() for m in messages],
+        temperature=temperature,
+        stream=True,
+        **kwargs,
     )
     return (OpenaiChatCompletionChunk.model_validate(chunk) async for chunk in response)
 
