@@ -219,6 +219,20 @@ for hero in create_superhero_team("The Food Dudes"):
 - The `Annotated` type annotation can be used to provide descriptions and other metadata for function parameters. See [the pydantic documentation on using `Field` to describe function arguments](https://docs.pydantic.dev/latest/usage/validation_decorator/#using-field-to-describe-function-arguments).
 - The `@prompt` and `@prompt_chain` decorators also accept a `model` argument. You can pass an instance of `OpenaiChatModel` (from `magentic.chat_model.openai_chat_model`) to use GPT4 or configure a different temperature.
 
+## Configuration
+
+The order of precedence of configuration is
+
+1. Arguments passed when initializing an instance in Python
+2. Environment variables
+
+The following environment variables can be set.
+
+| Environment Variable        | Description               |
+| --------------------------- | ------------------------- |
+| MAGENTIC_OPENAI_MODEL       | OpenAI model e.g. "gpt-4" |
+| MAGENTIC_OPENAI_TEMPERATURE | OpenAI temperature, float |
+
 ## Type Checking
 
 Many type checkers will raise warnings or errors for functions with the `@prompt` decorator due to the function having no body or return value. There are several ways to deal with these.
