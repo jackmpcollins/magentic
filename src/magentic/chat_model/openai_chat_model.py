@@ -299,6 +299,41 @@ class OpenaiMessageRole(Enum):
     USER = "user"
 
 
+class OpenaiChatCompletionDeltaFunctionCall(BaseModel):
+    name: str | None = None
+    arguments: str
+
+    def get_name_or_raise(self) -> str:
+        """Return the name, raising an error if it doesn't exist."""
+        assert self.name
+        return self.name
+
+
+class OpenaiChatCompletionDelta(BaseModel):
+    role: OpenaiMessageRole | None = None
+    content: str | None = None
+    function_call: OpenaiChatCompletionDeltaFunctionCall | None = None
+
+    def get_content_or_raise(self) -> str:
+        """Return the content, raising an error if it doesn't exist."""
+        assert self.content
+        return self.content
+
+    def get_function_call_or_raise(self) -> OpenaiChatCompletionDeltaFunctionCall:
+        """Return the function_call, raising an error if it doesn't exist."""
+        assert self.function_call
+        return self.function_call
+
+
+class OpenaiChatCompletionChoice(BaseModel):
+    delta: OpenaiChatCompletionDelta
+    finish_reason: str | None = None
+
+
+class OpenaiChatCompletionChunk(BaseModel):
+    choices: list[OpenaiChatCompletionChoice]
+
+
 def message_to_openai_message(message: Message[Any]) -> dict[str, Any]:
     """Convert a `Message` to an OpenAI message dict."""
     if isinstance(message, UserMessage):
@@ -342,7 +377,7 @@ def openai_chatcompletion_create(
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: dict[str, Any] | None = None,
-) -> Iterator[dict[str, Any]]:
+) -> Iterator[OpenaiChatCompletionChunk]:
     """Type-annotated version of `openai.ChatCompletion.create`."""
     # `openai.ChatCompletion.create` doesn't accept `None`
     # so only pass function args if there are functions
@@ -355,7 +390,7 @@ def openai_chatcompletion_create(
     response: Iterator[dict[str, Any]] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
         model=model, messages=messages, temperature=temperature, stream=True, **kwargs
     )
-    return response
+    return (OpenaiChatCompletionChunk.model_validate(chunk) for chunk in response)
 
 
 async def openai_chatcompletion_acreate(
@@ -364,7 +399,7 @@ async def openai_chatcompletion_acreate(
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: dict[str, Any] | None = None,
-) -> AsyncIterator[dict[str, Any]]:
+) -> AsyncIterator[OpenaiChatCompletionChunk]:
     """Type-annotated version of `openai.ChatCompletion.acreate`."""
     # `openai.ChatCompletion.create` doesn't accept `None`
     # so only pass function args if there are functions
@@ -377,7 +412,7 @@ async def openai_chatcompletion_acreate(
     response: AsyncIterator[dict[str, Any]] = openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
         model=model, messages=messages, temperature=temperature, stream=True, **kwargs
     )
-    return response
+    return (OpenaiChatCompletionChunk.model_validate(chunk) async for chunk in response)
 
 
 R = TypeVar("R")
@@ -425,20 +460,20 @@ class OpenaiChatModel:
         )
 
         first_chunk = next(response)
-        first_chunk_delta = first_chunk["choices"][0]["delta"]
+        first_chunk_delta = first_chunk.choices[0].delta
 
-        if first_chunk_delta.get("function_call"):
+        if first_chunk_delta.function_call:
             function_schema_by_name = {
                 function_schema.name: function_schema
                 for function_schema in function_schemas
             }
-            function_name = first_chunk_delta["function_call"]["name"]
+            function_name = first_chunk_delta.function_call.get_name_or_raise()
             function_schema = function_schema_by_name[function_name]
             try:
                 message = function_schema.parse_args_to_message(
-                    chunk["choices"][0]["delta"]["function_call"]["arguments"]
+                    chunk.choices[0].delta.get_function_call_or_raise().arguments
                     for chunk in response
-                    if chunk["choices"][0]["delta"]
+                    if chunk.choices[0].delta
                 )
             except ValidationError as e:
                 raise StructuredOutputError(
@@ -453,9 +488,9 @@ class OpenaiChatModel:
                 " your prompt to encourage the model to return a specific type."
             )
         streamed_str = StreamedStr(
-            chunk["choices"][0]["delta"]["content"]
+            chunk.choices[0].delta.get_content_or_raise()
             for chunk in response
-            if chunk["choices"][0]["delta"]
+            if chunk.choices[0].delta
         )
         if streamed_str_in_output_types:
             return cast(AssistantMessage[R], AssistantMessage(streamed_str))
@@ -498,20 +533,20 @@ class OpenaiChatModel:
         )
 
         first_chunk = await anext(response)
-        first_chunk_delta = first_chunk["choices"][0]["delta"]
+        first_chunk_delta = first_chunk.choices[0].delta
 
-        if first_chunk_delta.get("function_call"):
+        if first_chunk_delta.function_call:
             function_schema_by_name = {
                 function_schema.name: function_schema
                 for function_schema in function_schemas
             }
-            function_name = first_chunk_delta["function_call"]["name"]
+            function_name = first_chunk_delta.function_call.get_name_or_raise()
             function_schema = function_schema_by_name[function_name]
             try:
                 message = await function_schema.aparse_args_to_message(
-                    chunk["choices"][0]["delta"]["function_call"]["arguments"]
+                    chunk.choices[0].delta.get_function_call_or_raise().arguments
                     async for chunk in response
-                    if chunk["choices"][0]["delta"]
+                    if chunk.choices[0].delta
                 )
             except ValidationError as e:
                 raise StructuredOutputError(
@@ -526,9 +561,9 @@ class OpenaiChatModel:
                 " your prompt to encourage the model to return a specific type."
             )
         async_streamed_str = AsyncStreamedStr(
-            chunk["choices"][0]["delta"]["content"]
+            chunk.choices[0].delta.get_content_or_raise()
             async for chunk in response
-            if chunk["choices"][0]["delta"]
+            if chunk.choices[0].delta
         )
         if async_streamed_str_in_output_types:
             return cast(AssistantMessage[R], AssistantMessage(async_streamed_str))
