@@ -17,6 +17,7 @@ from magentic.chat_model.base import (
     UserMessage,
 )
 from magentic.function_call import FunctionCall
+from magentic.settings import get_settings
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
@@ -435,9 +436,21 @@ FuncR = TypeVar("FuncR")
 
 
 class OpenaiChatModel:
-    def __init__(self, model: str = "gpt-3.5-turbo-0613", temperature: float = 0):
+    def __init__(self, model: str | None = None, temperature: float | None = None):
         self._model = model
         self._temperature = temperature
+
+    @property
+    def model(self) -> str:
+        if self._model is not None:
+            return self._model
+        return get_settings().openai_model
+
+    @property
+    def temperature(self) -> float | None:
+        if self._temperature is not None:
+            return self._temperature
+        return get_settings().openai_temperature
 
     def complete(
         self,
@@ -463,9 +476,9 @@ class OpenaiChatModel:
 
         openai_functions = [schema.dict() for schema in function_schemas]
         response = openai_chatcompletion_create(
-            model=self._model,
+            model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
-            temperature=self._temperature,
+            temperature=self.temperature,
             functions=openai_functions,
             function_call=(
                 {"name": openai_functions[0]["name"]}
@@ -536,9 +549,9 @@ class OpenaiChatModel:
 
         openai_functions = [schema.dict() for schema in function_schemas]
         response = await openai_chatcompletion_acreate(
-            model=self._model,
+            model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
-            temperature=self._temperature,
+            temperature=self.temperature,
             functions=openai_functions,
             function_call=(
                 {"name": openai_functions[0]["name"]}
