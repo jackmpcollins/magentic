@@ -1,6 +1,7 @@
 """Tests for PromptFunction."""
 
 from inspect import getdoc
+from typing import Awaitable
 
 import pytest
 from pydantic import BaseModel
@@ -154,3 +155,23 @@ async def test_async_decorator_return_function_call():
     assert isinstance(output, FunctionCall)
     func_result = output()
     assert isinstance(func_result, int)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_async_decorator_return_async_function_call():
+    async def async_plus(a: int, b: int) -> int:
+        return a + b
+
+    @prompt(
+        "Sum the populations of {country_one} and {country_two}.",
+        functions=[async_plus],
+    )
+    async def sum_populations(
+        country_one: str, country_two: str
+    ) -> FunctionCall[Awaitable[int]]:
+        ...
+
+    output = await sum_populations("Ireland", "UK")
+    assert isinstance(output, FunctionCall)
+    assert isinstance(await output(), int)

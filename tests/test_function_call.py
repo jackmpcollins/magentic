@@ -1,3 +1,5 @@
+import inspect
+
 import pytest
 
 from magentic.function_call import FunctionCall
@@ -47,3 +49,14 @@ def test_function_call_eq(left, right, equal):
 )
 def test_function_call_arguments(function_call, arguments):
     assert function_call.arguments == arguments
+
+
+@pytest.mark.asyncio
+async def test_function_call_async_function():
+    async def async_plus(a: int, b: int) -> int:
+        return a + b
+
+    function_call = FunctionCall(async_plus, a=1, b=2)
+    result = function_call()
+    assert inspect.isawaitable(result)
+    assert await result == 3
