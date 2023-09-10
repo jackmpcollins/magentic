@@ -14,6 +14,7 @@ from magentic.chat_model.openai_chat_model import (
     DictFunctionSchema,
     FunctionCallFunctionSchema,
     IterableFunctionSchema,
+    OpenaiChatModel,
 )
 from magentic.function_call import FunctionCall
 from magentic.streaming import async_iter
@@ -605,3 +606,13 @@ def test_function_call_function_schema_serialize_args(
 ):
     serialized_args = FunctionCallFunctionSchema(function).serialize_args(args)
     assert json.loads(serialized_args) == json.loads(expected_args_str)
+
+
+def test_openai_chat_model_model(monkeypatch):
+    monkeypatch.setenv("MAGENTIC_OPENAI_MODEL", "gpt-4")
+    assert OpenaiChatModel().model == "gpt-4"
+
+
+def test_openai_chat_model_temperature(monkeypatch):
+    monkeypatch.setenv("MAGENTIC_OPENAI_TEMPERATURE", "2")
+    assert OpenaiChatModel().temperature == 2
