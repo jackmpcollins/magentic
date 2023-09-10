@@ -27,6 +27,7 @@ repository = "https://github.com/jackmpcollins/magentic"
 python = ">=3.10"
 openai = ">=0.27"
 pydantic = ">=2.0.0"
+pydantic-settings = "*"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
