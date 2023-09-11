@@ -52,6 +52,7 @@ class FunctionResultMessage(Message[T], Generic[T]):
         )
 
 
+# TODO: Delete this class?
 class FunctionCallMessage(AssistantMessage[FunctionCall[T]], Generic[T]):
     def get_result(self) -> FunctionResultMessage[T]:
         return FunctionResultMessage.from_function_call(self.content)
