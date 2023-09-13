@@ -161,7 +161,7 @@ class AsyncIterableFunctionSchema(
         return model_schema
 
     def parse_args(self, arguments: Iterable[str]) -> AsyncIterableT:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def aparse_args(self, arguments: AsyncIterable[str]) -> AsyncIterableT:
         aiter_items = (
@@ -174,7 +174,7 @@ class AsyncIterableFunctionSchema(
         ) or is_origin_abstract(self._output_type):
             return cast(AsyncIterableT, aiter_items)
 
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def serialize_args(self, value: AsyncIterableT) -> str:
         return self._model(value=value).model_dump_json()
