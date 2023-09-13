@@ -5,9 +5,6 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 preview = true
 
-[tool.isort]
-profile = "black"
-
 [tool.mypy]
 check_untyped_defs = true
 disable_error_code = ["empty-body"]
@@ -31,7 +28,6 @@ pydantic-settings = ">=2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
-isort = "*"
 mypy = "*"
 pytest = "*"
 pytest-asyncio = "*"
