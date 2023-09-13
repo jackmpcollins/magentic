@@ -147,7 +147,7 @@ class AsyncIterableFunctionSchema(
         self._item_type_adapter = TypeAdapter(get_args(output_type)[0])
         # Convert to list so pydantic can handle for schema generation
         # But keep the type hint using AsyncIterableT for type checking
-        self._model: type[Output[AsyncIterableT]] = Output[list[get_args(output_type)[0]]]  # type: ignore
+        self._model: type[Output[AsyncIterableT]] = Output[list[get_args(output_type)[0]]]  # type: ignore[index,misc]
 
     @property
     def name(self) -> str:

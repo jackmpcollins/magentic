@@ -65,7 +65,6 @@ ignore = [
   "ARG",  # flake8-unused-arguments
    "TD",  # flake8-todos
   "FIX",  # flake8-fixme
-  "PGH",  # pygrep-hooks
    "PL",  # Pylint
   "TRY",  # tryceratops
   "RUF",  # Ruff-specific rules
