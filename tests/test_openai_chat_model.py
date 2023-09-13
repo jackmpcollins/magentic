@@ -22,7 +22,7 @@ from magentic.typing import is_origin_subclass
 
 
 @pytest.mark.parametrize(
-    ["type_", "json_schema"],
+    ("type_", "json_schema"),
     [
         (
             str,
@@ -151,7 +151,7 @@ any_function_schema_args_test_cases = [
 
 
 @pytest.mark.parametrize(
-    ["type_", "args_str", "expected_args"], any_function_schema_args_test_cases
+    ("type_", "args_str", "expected_args"), any_function_schema_args_test_cases
 )
 def test_any_function_schema_parse_args(type_, args_str, expected_args):
     parsed_args = AnyFunctionSchema(type_).parse_args(args_str)
@@ -159,7 +159,7 @@ def test_any_function_schema_parse_args(type_, args_str, expected_args):
 
 
 @pytest.mark.parametrize(
-    ["type_", "args_str", "expected_args"], any_function_schema_args_test_cases
+    ("type_", "args_str", "expected_args"), any_function_schema_args_test_cases
 )
 @pytest.mark.asyncio
 async def test_any_function_schema_aparse_args(type_, args_str, expected_args):
@@ -168,7 +168,7 @@ async def test_any_function_schema_aparse_args(type_, args_str, expected_args):
 
 
 @pytest.mark.parametrize(
-    ["type_", "expected_args_str", "args"], any_function_schema_args_test_cases
+    ("type_", "expected_args_str", "args"), any_function_schema_args_test_cases
 )
 def test_any_function_schema_serialize_args(type_, expected_args_str, args):
     serialized_args = AnyFunctionSchema(type_).serialize_args(args)
@@ -176,7 +176,7 @@ def test_any_function_schema_serialize_args(type_, expected_args_str, args):
 
 
 @pytest.mark.parametrize(
-    ["type_", "json_schema"],
+    ("type_", "json_schema"),
     [
         (
             list[str],
@@ -244,7 +244,7 @@ iterable_function_schema_args_test_cases = [
 
 
 @pytest.mark.parametrize(
-    ["type_", "args_str", "expected_args"], iterable_function_schema_args_test_cases
+    ("type_", "args_str", "expected_args"), iterable_function_schema_args_test_cases
 )
 def test_iterable_function_schema_parse_args(type_, args_str, expected_args):
     parsed_args = IterableFunctionSchema(type_).parse_args(args_str)
@@ -253,7 +253,7 @@ def test_iterable_function_schema_parse_args(type_, args_str, expected_args):
 
 
 @pytest.mark.parametrize(
-    ["type_", "expected_args_str", "args"], iterable_function_schema_args_test_cases
+    ("type_", "expected_args_str", "args"), iterable_function_schema_args_test_cases
 )
 def test_iterable_function_schema_serialize_args(type_, expected_args_str, args):
     serialized_args = IterableFunctionSchema(type_).serialize_args(args)
@@ -261,7 +261,7 @@ def test_iterable_function_schema_serialize_args(type_, expected_args_str, args)
 
 
 @pytest.mark.parametrize(
-    ["type_", "json_schema"],
+    ("type_", "json_schema"),
     [
         (
             typing.AsyncIterable[str],
@@ -311,7 +311,7 @@ async_iterable_function_schema_args_test_cases = [
 
 
 @pytest.mark.parametrize(
-    ["type_", "args_str", "expected_args"],
+    ("type_", "args_str", "expected_args"),
     async_iterable_function_schema_args_test_cases,
 )
 @pytest.mark.asyncio
@@ -326,7 +326,7 @@ async def test_async_iterable_function_schema_aparse_args(
 
 
 @pytest.mark.parametrize(
-    ["type_", "expected_args_str", "args"],
+    ("type_", "expected_args_str", "args"),
     async_iterable_function_schema_args_test_cases,
 )
 def test_async_iterable_function_schema_serialize_args(type_, expected_args_str, args):
@@ -340,7 +340,7 @@ class User(BaseModel):
 
 
 @pytest.mark.parametrize(
-    ["type_", "json_schema"],
+    ("type_", "json_schema"),
     [
         (
             dict,
@@ -417,7 +417,7 @@ dict_function_schema_args_test_cases = [
 
 
 @pytest.mark.parametrize(
-    ["type_", "args_str", "expected_args"], dict_function_schema_args_test_cases
+    ("type_", "args_str", "expected_args"), dict_function_schema_args_test_cases
 )
 def test_dict_function_schema_parse_args(type_, args_str, expected_args):
     parsed_args = DictFunctionSchema(type_).parse_args(args_str)
@@ -426,7 +426,7 @@ def test_dict_function_schema_parse_args(type_, args_str, expected_args):
 
 
 @pytest.mark.parametrize(
-    ["type_", "expected_args_str", "args"], dict_function_schema_args_test_cases
+    ("type_", "expected_args_str", "args"), dict_function_schema_args_test_cases
 )
 def test_dict_function_schema_serialize_args(type_, expected_args_str, args):
     serialized_args = DictFunctionSchema(type_).serialize_args(args)
@@ -478,7 +478,7 @@ def plus_with_annotated(
 
 
 @pytest.mark.parametrize(
-    ["function", "json_schema"],
+    ("function", "json_schema"),
     [
         (
             plus,
@@ -589,7 +589,7 @@ function_call_function_schema_args_test_cases = [
 
 
 @pytest.mark.parametrize(
-    ["function", "args_str", "expected_args"],
+    ("function", "args_str", "expected_args"),
     function_call_function_schema_args_test_cases,
 )
 def test_function_call_function_schema_parse_args(function, args_str, expected_args):
@@ -598,7 +598,7 @@ def test_function_call_function_schema_parse_args(function, args_str, expected_a
 
 
 @pytest.mark.parametrize(
-    ["function", "expected_args_str", "args"],
+    ("function", "expected_args_str", "args"),
     function_call_function_schema_args_test_cases,
 )
 def test_function_call_function_schema_serialize_args(

@@ -59,13 +59,15 @@ ignore = [
   "COM",  # flake8-commas
    "FA",  # flake8-future-annotations
   "INP",  # flake8-no-pep420
-   "PT",  # flake8-pytest-style
   "SLF",  # flake8-self
   "ARG",  # flake8-unused-arguments
    "TD",  # flake8-todos
   "FIX",  # flake8-fixme
    "PL",  # Pylint
 ]
+
+[tool.ruff.flake8-pytest-style]
+mark-parentheses = false
 
 [tool.ruff.isort]
 known-first-party = ["magentic"]
