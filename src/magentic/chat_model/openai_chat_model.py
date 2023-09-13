@@ -504,17 +504,19 @@ class OpenaiChatModel:
                     if chunk.choices[0].delta.function_call
                 )
             except ValidationError as e:
-                raise StructuredOutputError(
+                msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
-                ) from e
+                )
+                raise StructuredOutputError(msg) from e
             return message
 
         if not allow_string_output:
-            raise ValueError(
+            msg = (
                 "String was returned by model but not expected. You may need to update"
                 " your prompt to encourage the model to return a specific type."
             )
+            raise ValueError(msg)
         streamed_str = StreamedStr(
             chunk.choices[0].delta.content
             for chunk in response
@@ -577,17 +579,19 @@ class OpenaiChatModel:
                     if chunk.choices[0].delta.function_call
                 )
             except ValidationError as e:
-                raise StructuredOutputError(
+                msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
-                ) from e
+                )
+                raise StructuredOutputError(msg) from e
             return message
 
         if not allow_string_output:
-            raise ValueError(
+            msg = (
                 "String was returned by model but not expected. You may need to update"
                 " your prompt to encourage the model to return a specific type."
             )
+            raise ValueError(msg)
         async_streamed_str = AsyncStreamedStr(
             chunk.choices[0].delta.content
             async for chunk in response

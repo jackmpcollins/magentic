@@ -57,7 +57,6 @@ ignore = [
     "S",  # flake8-bandit
     "A",  # flake8-builtins
   "COM",  # flake8-commas
-   "EM",  # flake8-errmsg
    "FA",  # flake8-future-annotations
   "INP",  # flake8-no-pep420
   "T20",  # flake8-print

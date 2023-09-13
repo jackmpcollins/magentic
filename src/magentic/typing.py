@@ -1,9 +1,8 @@
 import inspect
 import types
+from collections.abc import Mapping, Sequence
 from typing import (
     Any,
-    Mapping,
-    Sequence,
     TypeGuard,
     TypeVar,
     Union,
@@ -65,4 +64,5 @@ def name_type(type_: type) -> str:
 
         return name.lower()
 
-    raise ValueError(f"Unable to name type {type_}")
+    msg = f"Unable to name type {type_}"
+    raise ValueError(msg)
