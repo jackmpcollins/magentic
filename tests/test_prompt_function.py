@@ -1,27 +1,20 @@
 """Tests for PromptFunction."""
 
 from inspect import getdoc
+from typing import Awaitable
 
 import pytest
 from pydantic import BaseModel
 
+from magentic.chat_model.openai_chat_model import StructuredOutputError
 from magentic.function_call import FunctionCall
-from magentic.prompt_function import PromptFunction, prompt
+from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
+from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 
 @pytest.mark.openai
 def test_decorator_return_str():
-    @prompt()
-    def get_capital(country: str) -> str:
-        """What is the capital of {country}? Name only. No punctuation."""
-        ...
-
-    assert get_capital("Ireland") == "Dublin"
-
-
-@pytest.mark.openai
-def test_decorator_template_with_docstring():
-    @prompt(template="What is the capital of {country}? Name only. No punctuation.")
+    @prompt("What is the capital of {country}? Name only. No punctuation.")
     def get_capital(country: str) -> str:
         """This is the docstring."""
         ...
@@ -33,9 +26,8 @@ def test_decorator_template_with_docstring():
 
 @pytest.mark.openai
 def test_decorator_return_bool():
-    @prompt()
+    @prompt("True if {capital} is the capital of {country}.")
     def is_capital(capital: str, country: str) -> bool:
-        """True if {capital} is the capital of {country}."""
         ...
 
     assert is_capital("Dublin", "Ireland") is True
@@ -43,9 +35,8 @@ def test_decorator_return_bool():
 
 @pytest.mark.openai
 def test_decorator_return_bool_str():
-    @prompt()
+    @prompt("Answer the following question: {question}.")
     def answer_question(question: str) -> bool | str:
-        """Answer the following question: {question}."""
         ...
 
     assert answer_question("What is the capital of Ireland? Name only") == "Dublin"
@@ -72,7 +63,7 @@ def test_decorator_return_pydantic_model():
         capital: str
         country: str
 
-    @prompt(template="What is the capital of {country}?")
+    @prompt("What is the capital of {country}?")
     def get_capital(country: str) -> CapitalCity:
         ...
 
@@ -85,7 +76,7 @@ def test_decorator_input_pydantic_model():
         capital: str
         country: str
 
-    @prompt(template="Is this capital-country pair correct? {pair}")
+    @prompt("Is this capital-country pair correct? {pair}")
     def check_capital(pair: CapitalCity) -> bool:
         ...
 
@@ -97,14 +88,90 @@ def test_decorator_return_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    @prompt(functions=[plus])
+    @prompt("Sum the populations of {country_one} and {country_two}.", functions=[plus])
     def sum_populations(country_one: str, country_two: str) -> FunctionCall[int]:
-        """Sum the populations of {country_one} and {country_two}."""
         ...
 
     output = sum_populations("Ireland", "UK")
     assert isinstance(output, FunctionCall)
     func_result = output()
     assert isinstance(func_result, int)
+
+
+@pytest.mark.openai
+def test_decorator_return_streamed_str():
+    @prompt("What is the capital of {country}?")
+    def get_capital(country: str) -> StreamedStr:
+        ...
+
+    output = get_capital("Ireland")
+    assert isinstance(output, StreamedStr)
+
+
+@pytest.mark.openai
+def test_decorator_raise_structured_output_error():
+    @prompt("How many days between {start_date} and {end_date}? Do out the math.")
+    def days_between(start_date: str, end_date: str) -> int:
+        ...
+
+    with pytest.raises(StructuredOutputError):
+        # The model will return a math expression, not an integer
+        days_between("Jan 4th 2019", "Jul 3rd 2019")
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_async_decorator_return_str():
+    @prompt("What is the capital of {country}? Name only. No punctuation.")
+    async def get_capital(country: str) -> str:
+        ...
+
+    assert isinstance(get_capital, AsyncPromptFunction)
+    assert await get_capital("Ireland") == "Dublin"
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_async_decorator_return_async_streamed_str():
+    @prompt("What is the capital of {country}?")
+    async def get_capital(country: str) -> AsyncStreamedStr:
+        ...
+
+    output = await get_capital("Ireland")
+    assert isinstance(output, AsyncStreamedStr)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_async_decorator_return_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    @prompt("Sum the populations of {country_one} and {country_two}.", functions=[plus])
+    async def sum_populations(country_one: str, country_two: str) -> FunctionCall[int]:
+        ...
+
+    output = await sum_populations("Ireland", "UK")
+    assert isinstance(output, FunctionCall)
+    func_result = output()
     assert isinstance(func_result, int)
-    assert isinstance(func_result, int)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_async_decorator_return_async_function_call():
+    async def async_plus(a: int, b: int) -> int:
+        return a + b
+
+    @prompt(
+        "Sum the populations of {country_one} and {country_two}.",
+        functions=[async_plus],
+    )
+    async def sum_populations(
+        country_one: str, country_two: str
+    ) -> FunctionCall[Awaitable[int]]:
+        ...
+
+    output = await sum_populations("Ireland", "UK")
+    assert isinstance(output, FunctionCall)
+    assert isinstance(await output(), int)

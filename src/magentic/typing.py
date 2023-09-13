@@ -1,3 +1,4 @@
+import inspect
 import types
 from typing import (
     Any,
@@ -23,6 +24,11 @@ TypeT = TypeVar("TypeT", bound=type)
 def split_union_type(type_: TypeT) -> Sequence[TypeT]:
     """Split a union type into its constituent types."""
     return get_args(type_) if is_union_type(type_) else [type_]
+
+
+def is_origin_abstract(type_: type) -> bool:
+    """Return true if the unsubscripted type is an abstract base class (ABC)."""
+    return inspect.isabstract(get_origin(type_) or type_)
 
 
 def is_origin_subclass(
@@ -52,9 +58,11 @@ def name_type(type_: type) -> str:
         return f"dict_of_{name_type(key_type)}_to_{name_type(value_type)}"
 
     if name := getattr(type_, "__name__", None):
-        if len(args) == 1:
-            return f"{name}_of_{name_type(args[0])}"
+        assert isinstance(name, str)
 
-        return type_.__name__.lower()
+        if len(args) == 1:
+            return f"{name.lower()}_of_{name_type(args[0])}"
+
+        return name.lower()
 
     raise ValueError(f"Unable to name type {type_}")

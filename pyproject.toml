@@ -16,7 +16,7 @@ strict = true
 
 [tool.poetry]
 name = "magentic"
-version = "0.1.1"
+version = "0.4.0"
 description = "Seamlessly integrate LLMs as Python functions"
 license = "MIT"
 authors = ["Jack Collins"]
@@ -27,15 +27,23 @@ repository = "https://github.com/jackmpcollins/magentic"
 python = ">=3.10"
 openai = ">=0.27"
 pydantic = ">=2.0.0"
+pydantic-settings = ">=2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
 isort = "*"
 mypy = "*"
 pytest = "*"
+pytest-asyncio = "*"
 pytest-clarity = "*"
+pytest-cov = "*"
+
+[tool.poetry.group.examples.dependencies]
+jupyter = "*"
+wikipedia = "*"
 
 [tool.pytest.ini_options]
+addopts = "--cov=magentic --cov-report=term-missing"
 markers = [
     "openai: Tests that query the OpenAI API"
 ]
@@ -45,6 +53,3 @@ line-length = 120
 
 [tool.ruff.isort]
 known-first-party = ["magentic"]
-
-[tool.ruff.extend-per-file-ignores]
-"__init__.py" = ["F401"]
