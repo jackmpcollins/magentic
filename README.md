@@ -35,8 +35,7 @@ from magentic import prompt
 
 
 @prompt('Add more "dude"ness to: {phrase}')
-def dudeify(phrase: str) -> str:
-    ...  # No function body as this is never executed
+def dudeify(phrase: str) -> str: ...  # No function body as this is never executed
 
 
 dudeify("Hello, how are you?")
@@ -58,8 +57,7 @@ class Superhero(BaseModel):
 
 
 @prompt("Create a Superhero named {name}.")
-def create_superhero(name: str) -> Superhero:
-    ...
+def create_superhero(name: str) -> Superhero: ...
 
 
 create_superhero("Garden Man")
@@ -83,8 +81,7 @@ def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]) -> 
     "Prepare the oven so I can make {food}",
     functions=[activate_oven],
 )
-def configure_oven(food: str) -> FunctionCall[str]:
-    ...
+def configure_oven(food: str) -> FunctionCall[str]: ...
 
 
 output = configure_oven("cookies!")
@@ -116,8 +113,7 @@ def get_current_weather(location, unit="fahrenheit"):
     "What's the weather like in {city}?",
     functions=[get_current_weather],
 )
-def describe_weather(city: str) -> str:
-    ...
+def describe_weather(city: str) -> str: ...
 
 
 describe_weather("Boston")
@@ -137,8 +133,7 @@ from magentic import prompt, StreamedStr
 
 
 @prompt("Tell me about {country}")
-def describe_country(country: str) -> StreamedStr:
-    ...
+def describe_country(country: str) -> StreamedStr: ...
 
 
 # Print the chunks while they are being received
@@ -199,8 +194,7 @@ class Superhero(BaseModel):
 
 
 @prompt("Create a Superhero team named {name}.")
-def create_superhero_team(name: str) -> Iterable[Superhero]:
-    ...
+def create_superhero_team(name: str) -> Iterable[Superhero]: ...
 
 
 start_time = time()
@@ -246,8 +240,7 @@ Many type checkers will raise warnings or errors for functions with the `@prompt
 1. Make the function body `...` (this does not satisfy mypy) or `raise`.
    ```python
    @prompt("Choose a color")
-   def random_color() -> str:
-       ...
+   def random_color() -> str: ...
    ```
 1. Use comment `# type: ignore[empty-body]` on each function. In this case you can add a docstring instead of `...`.
    ```python
