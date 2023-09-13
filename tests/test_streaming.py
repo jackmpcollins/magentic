@@ -27,12 +27,12 @@ iter_streamed_json_array_test_cases = [
 ]
 
 
-@pytest.mark.parametrize(["input", "expected"], iter_streamed_json_array_test_cases)
+@pytest.mark.parametrize(("input", "expected"), iter_streamed_json_array_test_cases)
 def test_iter_streamed_json_array(input, expected):
     assert list(iter_streamed_json_array(iter(input))) == expected
 
 
-@pytest.mark.parametrize(["input", "expected"], iter_streamed_json_array_test_cases)
+@pytest.mark.parametrize(("input", "expected"), iter_streamed_json_array_test_cases)
 @pytest.mark.asyncio
 async def test_aiter_streamed_json_array(input, expected):
     assert [x async for x in aiter_streamed_json_array(async_iter(input))] == expected

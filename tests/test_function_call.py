@@ -14,7 +14,7 @@ def plus_default_value(a: int, b: int = 3) -> int:
 
 
 @pytest.mark.parametrize(
-    ["left", "right", "equal"],
+    ("left", "right", "equal"),
     [
         (FunctionCall(plus, a=1, b=2), FunctionCall(plus, a=1, b=2), True),
         (FunctionCall(plus, a=1, b=2), FunctionCall(plus, a=1, b=33), False),
@@ -40,7 +40,7 @@ def test_function_call_eq(left, right, equal):
 
 
 @pytest.mark.parametrize(
-    ["function_call", "arguments"],
+    ("function_call", "arguments"),
     [
         (FunctionCall(plus, a=1, b=2), {"a": 1, "b": 2}),
         (FunctionCall(plus, 1, 2), {"a": 1, "b": 2}),

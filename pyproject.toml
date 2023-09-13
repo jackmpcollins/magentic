@@ -54,23 +54,27 @@ ignore = [
   "C90",  # mccabe
     "D",  # pydocstyle
   "ANN",  # flake8-annotations
-    "S",  # flake8-bandit
     "A",  # flake8-builtins
   "COM",  # flake8-commas
-   "EM",  # flake8-errmsg
    "FA",  # flake8-future-annotations
   "INP",  # flake8-no-pep420
-  "T20",  # flake8-print
-   "PT",  # flake8-pytest-style
   "SLF",  # flake8-self
   "ARG",  # flake8-unused-arguments
    "TD",  # flake8-todos
   "FIX",  # flake8-fixme
-  "PGH",  # pygrep-hooks
    "PL",  # Pylint
-  "TRY",  # tryceratops
-  "RUF",  # Ruff-specific rules
 ]
+
+[tool.ruff.flake8-pytest-style]
+mark-parentheses = false
 
 [tool.ruff.isort]
 known-first-party = ["magentic"]
+
+[tool.ruff.per-file-ignores]
+"examples/*" = [
+  "T20",  # flake8-print
+]
+"tests/*" = [
+    "S",  # flake8-bandit
+]

@@ -147,7 +147,7 @@ class AsyncIterableFunctionSchema(
         self._item_type_adapter = TypeAdapter(get_args(output_type)[0])
         # Convert to list so pydantic can handle for schema generation
         # But keep the type hint using AsyncIterableT for type checking
-        self._model: type[Output[AsyncIterableT]] = Output[list[get_args(output_type)[0]]]  # type: ignore
+        self._model: type[Output[AsyncIterableT]] = Output[list[get_args(output_type)[0]]]  # type: ignore[index,misc]
 
     @property
     def name(self) -> str:
@@ -306,7 +306,9 @@ class OpenaiChatCompletionFunctionCall(BaseModel):
 
     def get_name_or_raise(self) -> str:
         """Return the name, raising an error if it doesn't exist."""
-        assert self.name is not None
+        if self.name is None:
+            msg = "OpenAI function call name is None"
+            raise ValueError(msg)
         return self.name
 
 
@@ -504,17 +506,19 @@ class OpenaiChatModel:
                     if chunk.choices[0].delta.function_call
                 )
             except ValidationError as e:
-                raise StructuredOutputError(
+                msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
-                ) from e
+                )
+                raise StructuredOutputError(msg) from e
             return message
 
         if not allow_string_output:
-            raise ValueError(
+            msg = (
                 "String was returned by model but not expected. You may need to update"
                 " your prompt to encourage the model to return a specific type."
             )
+            raise ValueError(msg)
         streamed_str = StreamedStr(
             chunk.choices[0].delta.content
             for chunk in response
@@ -577,17 +581,19 @@ class OpenaiChatModel:
                     if chunk.choices[0].delta.function_call
                 )
             except ValidationError as e:
-                raise StructuredOutputError(
+                msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
-                ) from e
+                )
+                raise StructuredOutputError(msg) from e
             return message
 
         if not allow_string_output:
-            raise ValueError(
+            msg = (
                 "String was returned by model but not expected. You may need to update"
                 " your prompt to encourage the model to return a specific type."
             )
+            raise ValueError(msg)
         async_streamed_str = AsyncStreamedStr(
             chunk.choices[0].delta.content
             async for chunk in response

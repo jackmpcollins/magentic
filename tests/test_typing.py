@@ -13,7 +13,7 @@ from magentic.typing import (
 
 
 @pytest.mark.parametrize(
-    ["type_", "expected_types"],
+    ("type_", "expected_types"),
     [
         (str, ["str"]),
         (int, ["int"]),
@@ -25,7 +25,7 @@ def test_split_union_type(type_, expected_types):
 
 
 @pytest.mark.parametrize(
-    ["type_", "expected_result"],
+    ("type_", "expected_result"),
     [
         (str, False),
         (list[str], False),
@@ -37,7 +37,7 @@ def test_is_origin_abstract(type_, expected_result):
 
 
 @pytest.mark.parametrize(
-    ["type_", "cls_or_tuple", "expected_result"],
+    ("type_", "cls_or_tuple", "expected_result"),
     [
         (str, str, True),
         (str, int, False),
@@ -52,7 +52,7 @@ def test_is_origin_subclass(type_, cls_or_tuple, expected_result):
 
 
 @pytest.mark.parametrize(
-    ["type_", "expected_name"],
+    ("type_", "expected_name"),
     [
         (str, "str"),
         (int, "int"),
