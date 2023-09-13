@@ -306,7 +306,9 @@ class OpenaiChatCompletionFunctionCall(BaseModel):
 
     def get_name_or_raise(self) -> str:
         """Return the name, raising an error if it doesn't exist."""
-        assert self.name is not None
+        if self.name is None:
+            msg = "OpenAI function call name is None"
+            raise ValueError(msg)
         return self.name
 
 

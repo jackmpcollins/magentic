@@ -54,7 +54,6 @@ ignore = [
   "C90",  # mccabe
     "D",  # pydocstyle
   "ANN",  # flake8-annotations
-    "S",  # flake8-bandit
     "A",  # flake8-builtins
   "COM",  # flake8-commas
    "FA",  # flake8-future-annotations
@@ -75,4 +74,7 @@ known-first-party = ["magentic"]
 [tool.ruff.per-file-ignores]
 "examples/*" = [
   "T20",  # flake8-print
+]
+"tests/*" = [
+    "S",  # flake8-bandit
 ]
