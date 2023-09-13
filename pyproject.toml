@@ -67,7 +67,6 @@ ignore = [
   "FIX",  # flake8-fixme
    "PL",  # Pylint
   "TRY",  # tryceratops
-  "RUF",  # Ruff-specific rules
 ]
 
 [tool.ruff.isort]

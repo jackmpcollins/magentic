@@ -14,7 +14,7 @@ from typing import (
 def is_union_type(type_: type) -> bool:
     """Return True if the type is a union type."""
     type_ = get_origin(type_) or type_
-    return type_ is Union or type_ is types.UnionType  # noqa: E721
+    return type_ is Union or type_ is types.UnionType
 
 
 TypeT = TypeVar("TypeT", bound=type)
