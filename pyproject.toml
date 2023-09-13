@@ -49,7 +49,17 @@ markers = [
 ]
 
 [tool.ruff]
+include = ["*.py", "*.pyi", "**/pyproject.toml", "*.ipynb"]
 line-length = 120
+# Use `ruff linter` to list available linters
+select = [
+    "F",  # Pyflakes
+    "E",  # pycodestyle
+    "I",  # isort
+    "N",  # pep8-naming
+    "UP",  # pyupgrade
+    "B",  # flake8-bugbear
+]
 
 [tool.ruff.isort]
 known-first-party = ["magentic"]
