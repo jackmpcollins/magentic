@@ -6,6 +6,8 @@ T = TypeVar("T")
 
 
 class Message(Generic[T]):
+    """A message sent to or from an LLM chat model."""
+
     def __init__(self, content: T):
         self._content = content
 
@@ -23,14 +25,16 @@ class Message(Generic[T]):
 
 
 class UserMessage(Message[str]):
-    ...
+    """A message sent by a user to an LLM chat model."""
 
 
 class AssistantMessage(Message[T], Generic[T]):
-    ...
+    """A message received from an LLM chat model."""
 
 
 class FunctionResultMessage(Message[T], Generic[T]):
+    """A message containing the result of a function call."""
+
     def __init__(self, content: T, function_call: FunctionCall[T]):
         super().__init__(content)
         self._function_call = function_call
@@ -46,6 +50,7 @@ class FunctionResultMessage(Message[T], Generic[T]):
     def from_function_call(
         cls, function_call: FunctionCall[T]
     ) -> "FunctionResultMessage[T]":
+        """Create a message containing the result of a function call."""
         return cls(
             content=function_call(),
             function_call=function_call,
@@ -53,5 +58,8 @@ class FunctionResultMessage(Message[T], Generic[T]):
 
 
 class FunctionCallMessage(AssistantMessage[FunctionCall[T]], Generic[T]):
+    """A message containing a function call."""
+
     def get_result(self) -> FunctionResultMessage[T]:
+        """Call the function and return a message containing the result."""
         return FunctionResultMessage.from_function_call(self.content)

@@ -64,6 +64,7 @@ class BasePromptFunction(Generic[P, R]):
         return self._return_types.copy()
 
     def format(self, *args: P.args, **kwargs: P.kwargs) -> str:
+        """Format the prompt template with the given arguments."""
         bound_args = self._signature.bind(*args, **kwargs)
         bound_args.apply_defaults()
         return self._template.format(**bound_args.arguments)
@@ -73,6 +74,7 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
     """An LLM prompt template that is directly callable to query the LLM."""
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+        """Query the LLM with the formatted prompt template."""
         bound_args = self._signature.bind(*args, **kwargs)
         bound_args.apply_defaults()
         message = self._model.complete(
@@ -89,6 +91,7 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
     """Async version of `PromptFunction`."""
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
+        """Asynchronously query the LLM with the formatted prompt template."""
         bound_args = self._signature.bind(*args, **kwargs)
         bound_args.apply_defaults()
         message = await self._model.acomplete(
@@ -102,8 +105,12 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
 
 class PromptDecorator(Protocol):
-    # This allows finer-grain type annotation of the `prompt` function
-    # https://github.com/microsoft/pyright/issues/5014#issuecomment-1523778421
+    """Protocol for a decorator that returns a `PromptFunction`.
+
+    This allows finer-grain type annotation of the `prompt` function
+    See https://github.com/microsoft/pyright/issues/5014#issuecomment-1523778421
+    """
+
     @overload
     def __call__(self, func: Callable[P, Awaitable[R]]) -> AsyncPromptFunction[P, R]:  # type: ignore[misc]
         ...
@@ -118,6 +125,22 @@ def prompt(
     functions: list[Callable[..., Any]] | None = None,
     model: OpenaiChatModel | None = None,
 ) -> PromptDecorator:
+    """Convert a function into an LLM prompt template.
+
+    The `@prompt` decorator allows you to define a template for a Large Language Model (LLM) prompt as a function.
+    When this function is called, the arguments are inserted into the template, then this prompt is sent to an LLM which
+    generates the function output.
+
+    Examples
+    --------
+    >>> @prompt("Add more dudeness to: {phrase}")
+    >>> def dudeify(phrase: str) -> str:
+    >>>     ...  # No function body as this is never executed
+    >>>
+    >>> dudeify("Hello, how are you?")
+    "Hey, dude! What's up? How's it going, my man?"
+    """
+
     def decorator(
         func: Callable[P, Awaitable[R]] | Callable[P, R]
     ) -> AsyncPromptFunction[P, R] | PromptFunction[P, R]:
