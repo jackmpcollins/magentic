@@ -9,6 +9,18 @@ Self = TypeVar("Self", bound="Chat")
 
 
 class Chat:
+    """A chat with an LLM chat model.
+
+    Examples
+    --------
+    >>> chat = Chat().add_user_message("Hello")
+    >>> chat.messages
+    [UserMessage('Hello')]
+    >>> chat = chat.submit()
+    >>> chat.messages
+    [UserMessage('Hello'), AssistantMessage('Hello! How can I assist you today?')]
+    """
+
     def __init__(
         self,
         messages: list[Message[Any]] | None = None,
@@ -41,6 +53,7 @@ class Chat:
         return self._messages.copy()
 
     def add_message(self: Self, message: Message[Any]) -> Self:
+        """Add a message to the chat."""
         return type(self)(
             messages=[*self._messages, message],
             functions=self._functions,
@@ -49,10 +62,11 @@ class Chat:
         )
 
     def add_user_message(self: Self, content: str) -> Self:
+        """Add a user message to the chat."""
         return self.add_message(UserMessage(content=content))
 
     def submit(self: Self) -> Self:
-        """Request an LLM message."""
+        """Request an LLM message to be added to the chat."""
         output_message: AssistantMessage[Any] = self._model.complete(
             messages=self._messages,
             functions=self._functions,
