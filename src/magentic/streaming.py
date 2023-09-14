@@ -14,6 +14,8 @@ async def async_iter(iterable: Iterable[T]) -> AsyncIterator[T]:
 
 @dataclass
 class JsonArrayParserState:
+    """State of the parser for a streamed JSON array."""
+
     array_level: int = 0
     object_level: int = 0
     in_string: bool = False
