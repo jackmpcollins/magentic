@@ -1,4 +1,4 @@
-from typing import Awaitable, Generic, TypeVar
+from typing import Awaitable, Generic, TypeVar, overload
 
 from magentic.function_call import FunctionCall
 
@@ -34,6 +34,14 @@ class AssistantMessage(Message[T], Generic[T]):
 
 class FunctionResultMessage(Message[T], Generic[T]):
     """A message containing the result of a function call."""
+
+    @overload
+    def __init__(self, content: T, function_call: FunctionCall[T]):
+        ...
+
+    @overload
+    def __init__(self, content: T, function_call: FunctionCall[Awaitable[T]]):
+        ...
 
     def __init__(
         self, content: T, function_call: FunctionCall[T] | FunctionCall[Awaitable[T]]

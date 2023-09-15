@@ -1,7 +1,12 @@
 import pytest
 
 from magentic.chat import Chat
-from magentic.chat_model.base import AssistantMessage, UserMessage
+from magentic.chat_model.base import (
+    AssistantMessage,
+    FunctionResultMessage,
+    UserMessage,
+)
+from magentic.function_call import FunctionCall
 from magentic.prompt_function import prompt
 
 
@@ -47,3 +52,53 @@ async def test_chat_asubmit():
     assert chat1.messages == [UserMessage(content="Hello")]
     assert chat2.messages[0] == UserMessage(content="Hello")
     assert isinstance(chat2.messages[1], AssistantMessage)
+
+
+def test_exec_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    chat = Chat(
+        messages=[
+            UserMessage(content="What is 1 plus 2?"),
+            AssistantMessage(content=FunctionCall(plus, 1, 2)),
+        ],
+        functions=[plus],
+    )
+    chat = chat.exec_function_call()
+    assert len(chat.messages) == 3
+    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
+
+
+@pytest.mark.asyncio
+async def test_aexec_function_call_async_function():
+    async def aplus(a: int, b: int) -> int:
+        return a + b
+
+    chat = Chat(
+        messages=[
+            UserMessage(content="What is 1 plus 2?"),
+            AssistantMessage(content=FunctionCall(aplus, 1, 2)),
+        ],
+        functions=[aplus],
+    )
+    chat = await chat.aexec_function_call()
+    assert len(chat.messages) == 3
+    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(aplus, 1, 2))
+
+
+@pytest.mark.asyncio
+async def test_aexec_function_call_not_async_function():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    chat = Chat(
+        messages=[
+            UserMessage(content="What is 1 plus 2?"),
+            AssistantMessage(content=FunctionCall(plus, 1, 2)),
+        ],
+        functions=[plus],
+    )
+    chat = await chat.aexec_function_call()
+    assert len(chat.messages) == 3
+    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
