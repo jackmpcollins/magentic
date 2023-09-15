@@ -500,7 +500,7 @@ class OpenaiChatModel:
             function_name = first_chunk_delta.function_call.get_name_or_raise()
             function_schema = function_schema_by_name[function_name]
             try:
-                message = AssistantMessage(
+                return AssistantMessage(
                     function_schema.parse_args(
                         chunk.choices[0].delta.function_call.arguments
                         for chunk in response
@@ -513,7 +513,6 @@ class OpenaiChatModel:
                     " to encourage the model to return a specific type."
                 )
                 raise StructuredOutputError(msg) from e
-            return message
 
         if not allow_string_output:
             msg = (
@@ -581,7 +580,7 @@ class OpenaiChatModel:
             function_name = first_chunk_delta.function_call.get_name_or_raise()
             function_schema = function_schema_by_name[function_name]
             try:
-                message = AssistantMessage(
+                return AssistantMessage(
                     await function_schema.aparse_args(
                         chunk.choices[0].delta.function_call.arguments
                         async for chunk in response
@@ -594,7 +593,6 @@ class OpenaiChatModel:
                     " to encourage the model to return a specific type."
                 )
                 raise StructuredOutputError(msg) from e
-            return message
 
         if not allow_string_output:
             msg = (
