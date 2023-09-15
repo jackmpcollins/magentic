@@ -35,3 +35,15 @@ def test_chat_submit():
     assert chat1.messages == [UserMessage(content="Hello")]
     assert chat2.messages[0] == UserMessage(content="Hello")
     assert isinstance(chat2.messages[1], AssistantMessage)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_chat_asubmit():
+    chat1 = Chat(
+        messages=[UserMessage(content="Hello")],
+    )
+    chat2 = await chat1.asubmit()
+    assert chat1.messages == [UserMessage(content="Hello")]
+    assert chat2.messages[0] == UserMessage(content="Hello")
+    assert isinstance(chat2.messages[1], AssistantMessage)
