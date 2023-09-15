@@ -23,3 +23,26 @@ def test_prompt_chain():
 
     output = describe_weather("Boston")
     assert isinstance(output, str)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_async_prompt_chain():
+    async def get_current_weather(location, unit="fahrenheit"):
+        """Get the current weather in a given location"""
+        return {
+            "location": location,
+            "temperature": "72",
+            "unit": unit,
+            "forecast": ["sunny", "windy"],
+        }
+
+    @prompt_chain(
+        template="What's the weather like in {city}?",
+        functions=[get_current_weather],
+    )
+    async def describe_weather(city: str) -> str:
+        ...
+
+    output = await describe_weather("Boston")
+    assert isinstance(output, str)
