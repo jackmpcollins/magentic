@@ -64,14 +64,6 @@ class BaseFunctionSchema(ABC, Generic[T]):
         # TODO: Convert AsyncIterable to lazy Iterable rather than list
         return self.parse_args([arg async for arg in arguments])
 
-    def parse_args_to_message(self, arguments: Iterable[str]) -> AssistantMessage[T]:
-        return AssistantMessage(self.parse_args(arguments))
-
-    async def aparse_args_to_message(
-        self, arguments: AsyncIterable[str]
-    ) -> AssistantMessage[T]:
-        return AssistantMessage(await self.aparse_args(arguments))
-
     @abstractmethod
     def serialize_args(self, value: T) -> str:
         ...
@@ -508,10 +500,12 @@ class OpenaiChatModel:
             function_name = first_chunk_delta.function_call.get_name_or_raise()
             function_schema = function_schema_by_name[function_name]
             try:
-                message = function_schema.parse_args_to_message(
-                    chunk.choices[0].delta.function_call.arguments
-                    for chunk in response
-                    if chunk.choices[0].delta.function_call
+                message = AssistantMessage(
+                    function_schema.parse_args(
+                        chunk.choices[0].delta.function_call.arguments
+                        for chunk in response
+                        if chunk.choices[0].delta.function_call
+                    )
                 )
             except ValidationError as e:
                 msg = (
@@ -587,10 +581,12 @@ class OpenaiChatModel:
             function_name = first_chunk_delta.function_call.get_name_or_raise()
             function_schema = function_schema_by_name[function_name]
             try:
-                message = await function_schema.aparse_args_to_message(
-                    chunk.choices[0].delta.function_call.arguments
-                    async for chunk in response
-                    if chunk.choices[0].delta.function_call
+                message = AssistantMessage(
+                    await function_schema.aparse_args(
+                        chunk.choices[0].delta.function_call.arguments
+                        async for chunk in response
+                        if chunk.choices[0].delta.function_call
+                    )
                 )
             except ValidationError as e:
                 msg = (
