@@ -5,9 +5,6 @@ build-backend = "poetry.core.masonry.api"
 [tool.black]
 preview = true
 
-[tool.isort]
-profile = "black"
-
 [tool.mypy]
 check_untyped_defs = true
 disable_error_code = ["empty-body"]
@@ -16,7 +13,7 @@ strict = true
 
 [tool.poetry]
 name = "magentic"
-version = "0.4.0"
+version = "0.4.1"
 description = "Seamlessly integrate LLMs as Python functions"
 license = "MIT"
 authors = ["Jack Collins"]
@@ -31,7 +28,6 @@ pydantic-settings = ">=2.0.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "*"
-isort = "*"
 mypy = "*"
 pytest = "*"
 pytest-asyncio = "*"
@@ -49,7 +45,36 @@ markers = [
 ]
 
 [tool.ruff]
+include = ["*.py", "*.pyi", "**/pyproject.toml", "*.ipynb"]
 line-length = 120
+# Use `ruff linter` to list available linters
+# https://beta.ruff.rs/docs/rules/
+select = ["ALL"]
+ignore = [
+  "C90",  # mccabe
+    "D",  # pydocstyle
+  "ANN",  # flake8-annotations
+    "A",  # flake8-builtins
+  "COM",  # flake8-commas
+   "FA",  # flake8-future-annotations
+  "INP",  # flake8-no-pep420
+  "SLF",  # flake8-self
+  "ARG",  # flake8-unused-arguments
+   "TD",  # flake8-todos
+  "FIX",  # flake8-fixme
+   "PL",  # Pylint
+]
+
+[tool.ruff.flake8-pytest-style]
+mark-parentheses = false
 
 [tool.ruff.isort]
 known-first-party = ["magentic"]
+
+[tool.ruff.per-file-ignores]
+"examples/*" = [
+  "T20",  # flake8-print
+]
+"tests/*" = [
+    "S",  # flake8-bandit
+]

@@ -16,7 +16,7 @@ def prompt_chain(
     functions: list[Callable[..., Any]] | None = None,
     model: OpenaiChatModel | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
-    """Converts a Python function to an LLM query, auto-resolving function calls."""
+    """Convert a Python function to an LLM query, auto-resolving function calls."""
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         func_signature = inspect.signature(func)

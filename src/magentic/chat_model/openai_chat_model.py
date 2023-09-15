@@ -28,13 +28,15 @@ from magentic.typing import is_origin_abstract, is_origin_subclass, name_type
 
 
 class StructuredOutputError(Exception):
-    ...
+    """Raised when the LLM output could not be parsed."""
 
 
 T = TypeVar("T")
 
 
 class BaseFunctionSchema(ABC, Generic[T]):
+    """Converts a Python object to the JSON Schema that represents it as a function for the LLM."""
+
     @property
     @abstractmethod
     def name(self) -> str:
@@ -81,6 +83,8 @@ class Output(BaseModel, Generic[T]):
 
 
 class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
+    """The most generic FunctionSchema that should work for most types supported by pydantic."""
+
     def __init__(self, output_type: type[T]):
         self._output_type = output_type
         # https://github.com/python/mypy/issues/14458
@@ -108,6 +112,8 @@ IterableT = TypeVar("IterableT", bound=Iterable[Any])
 
 
 class IterableFunctionSchema(BaseFunctionSchema[IterableT], Generic[IterableT]):
+    """FunctionSchema for types that are iterable. Can parse LLM output as a stream."""
+
     def __init__(self, output_type: type[IterableT]):
         self._output_type = output_type
         self._item_type_adapter = TypeAdapter(get_args(output_type)[0])
@@ -142,12 +148,14 @@ AsyncIterableT = TypeVar("AsyncIterableT", bound=AsyncIterable[Any])
 class AsyncIterableFunctionSchema(
     BaseFunctionSchema[AsyncIterableT], Generic[AsyncIterableT]
 ):
+    """FunctionSchema for types that are async iterable. Can parse LLM output as a stream."""
+
     def __init__(self, output_type: type[AsyncIterableT]):
         self._output_type = output_type
         self._item_type_adapter = TypeAdapter(get_args(output_type)[0])
         # Convert to list so pydantic can handle for schema generation
         # But keep the type hint using AsyncIterableT for type checking
-        self._model: type[Output[AsyncIterableT]] = Output[list[get_args(output_type)[0]]]  # type: ignore
+        self._model: type[Output[AsyncIterableT]] = Output[list[get_args(output_type)[0]]]  # type: ignore[index,misc]
 
     @property
     def name(self) -> str:
@@ -161,7 +169,7 @@ class AsyncIterableFunctionSchema(
         return model_schema
 
     def parse_args(self, arguments: Iterable[str]) -> AsyncIterableT:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     async def aparse_args(self, arguments: AsyncIterable[str]) -> AsyncIterableT:
         aiter_items = (
@@ -174,13 +182,15 @@ class AsyncIterableFunctionSchema(
         ) or is_origin_abstract(self._output_type):
             return cast(AsyncIterableT, aiter_items)
 
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def serialize_args(self, value: AsyncIterableT) -> str:
         return self._model(value=value).model_dump_json()
 
 
 class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
+    """FunctionSchema for dict."""
+
     def __init__(self, output_type: type[T]):
         self._output_type = output_type
         self._type_adapter: TypeAdapter[T] = TypeAdapter(output_type)
@@ -206,6 +216,8 @@ BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
 
 class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT]):
+    """FunctionSchema for pydantic BaseModel."""
+
     def __init__(self, model: type[BaseModelT]):
         self._model = model
 
@@ -228,6 +240,8 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
 
 
 class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]):
+    """FunctionSchema for FunctionCall."""
+
     def __init__(self, func: Callable[..., T]):
         self._func = func
         # https://github.com/pydantic/pydantic/issues/3585#issuecomment-1002745763
@@ -306,7 +320,9 @@ class OpenaiChatCompletionFunctionCall(BaseModel):
 
     def get_name_or_raise(self) -> str:
         """Return the name, raising an error if it doesn't exist."""
-        assert self.name is not None
+        if self.name is None:
+            msg = "OpenAI function call name is None"
+            raise ValueError(msg)
         return self.name
 
 
@@ -342,7 +358,7 @@ class OpenaiChatCompletion(BaseModel):
 def message_to_openai_message(
     message: Message[Any],
 ) -> OpenaiChatCompletionChoiceMessage:
-    """Convert a `Message` to an OpenAI message dict."""
+    """Convert a Message to an OpenAI message."""
     if isinstance(message, UserMessage):
         return OpenaiChatCompletionChoiceMessage(
             role=OpenaiMessageRole.USER, content=message.content
@@ -436,6 +452,8 @@ FuncR = TypeVar("FuncR")
 
 
 class OpenaiChatModel:
+    """An LLM chat model that uses the `openai` python package."""
+
     def __init__(self, model: str | None = None, temperature: float | None = None):
         self._model = model
         self._temperature = temperature
@@ -504,17 +522,19 @@ class OpenaiChatModel:
                     if chunk.choices[0].delta.function_call
                 )
             except ValidationError as e:
-                raise StructuredOutputError(
+                msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
-                ) from e
+                )
+                raise StructuredOutputError(msg) from e
             return message
 
         if not allow_string_output:
-            raise ValueError(
+            msg = (
                 "String was returned by model but not expected. You may need to update"
                 " your prompt to encourage the model to return a specific type."
             )
+            raise ValueError(msg)
         streamed_str = StreamedStr(
             chunk.choices[0].delta.content
             for chunk in response
@@ -577,17 +597,19 @@ class OpenaiChatModel:
                     if chunk.choices[0].delta.function_call
                 )
             except ValidationError as e:
-                raise StructuredOutputError(
+                msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
-                ) from e
+                )
+                raise StructuredOutputError(msg) from e
             return message
 
         if not allow_string_output:
-            raise ValueError(
+            msg = (
                 "String was returned by model but not expected. You may need to update"
                 " your prompt to encourage the model to return a specific type."
             )
+            raise ValueError(msg)
         async_streamed_str = AsyncStreamedStr(
             chunk.choices[0].delta.content
             async for chunk in response

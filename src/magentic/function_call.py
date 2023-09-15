@@ -6,6 +6,11 @@ P = ParamSpec("P")
 
 
 class FunctionCall(Generic[T]):
+    """A function with arguments supplied.
+
+    Calling the instance will call the function with the supplied arguments.
+    """
+
     def __init__(self, function: Callable[P, T], *args: P.args, **kwargs: P.kwargs):
         self._function = function
         self._args = args
