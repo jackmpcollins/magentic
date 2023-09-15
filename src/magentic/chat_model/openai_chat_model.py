@@ -11,7 +11,6 @@ from pydantic import BaseModel, TypeAdapter, ValidationError, create_model
 
 from magentic.chat_model.base import (
     AssistantMessage,
-    FunctionCallMessage,
     FunctionResultMessage,
     Message,
     UserMessage,
@@ -274,17 +273,6 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         )
         return FunctionCall(self._func, **args)
 
-    async def aparse_args(self, arguments: AsyncIterable[str]) -> FunctionCall[T]:
-        return self.parse_args([arg async for arg in arguments])
-
-    def parse_args_to_message(self, arguments: Iterable[str]) -> FunctionCallMessage[T]:
-        return FunctionCallMessage(self.parse_args(arguments))
-
-    async def aparse_args_to_message(
-        self, arguments: AsyncIterable[str]
-    ) -> FunctionCallMessage[T]:
-        return FunctionCallMessage(await self.aparse_args(arguments))
-
     def serialize_args(self, value: FunctionCall[T]) -> str:
         return json.dumps(value.arguments)
 
@@ -475,7 +463,11 @@ class OpenaiChatModel:
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
-    ) -> FunctionCallMessage[FuncR] | AssistantMessage[R]:
+    ) -> (
+        AssistantMessage[FunctionCall[FuncR]]
+        | AssistantMessage[R]
+        | AssistantMessage[str]
+    ):
         """Request an LLM message."""
         if output_types is None:
             output_types = [str]
@@ -550,7 +542,11 @@ class OpenaiChatModel:
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
-    ) -> FunctionCallMessage[FuncR] | AssistantMessage[R]:
+    ) -> (
+        AssistantMessage[FunctionCall[FuncR]]
+        | AssistantMessage[R]
+        | AssistantMessage[str]
+    ):
         """Async version of `complete`."""
         if output_types is None:
             output_types = [str]

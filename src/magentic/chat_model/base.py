@@ -1,4 +1,4 @@
-from typing import Generic, TypeVar
+from typing import Awaitable, Generic, TypeVar, overload
 
 from magentic.function_call import FunctionCall
 
@@ -35,7 +35,17 @@ class AssistantMessage(Message[T], Generic[T]):
 class FunctionResultMessage(Message[T], Generic[T]):
     """A message containing the result of a function call."""
 
+    @overload
     def __init__(self, content: T, function_call: FunctionCall[T]):
+        ...
+
+    @overload
+    def __init__(self, content: T, function_call: FunctionCall[Awaitable[T]]):
+        ...
+
+    def __init__(
+        self, content: T, function_call: FunctionCall[T] | FunctionCall[Awaitable[T]]
+    ):
         super().__init__(content)
         self._function_call = function_call
 
@@ -43,7 +53,7 @@ class FunctionResultMessage(Message[T], Generic[T]):
         return f"{self.__class__.__name__}({self.content!r}, {self._function_call!r})"
 
     @property
-    def function_call(self) -> FunctionCall[T]:
+    def function_call(self) -> FunctionCall[T] | FunctionCall[Awaitable[T]]:
         return self._function_call
 
     @classmethod
@@ -56,10 +66,12 @@ class FunctionResultMessage(Message[T], Generic[T]):
             function_call=function_call,
         )
 
-
-class FunctionCallMessage(AssistantMessage[FunctionCall[T]], Generic[T]):
-    """A message containing a function call."""
-
-    def get_result(self) -> FunctionResultMessage[T]:
-        """Call the function and return a message containing the result."""
-        return FunctionResultMessage.from_function_call(self.content)
+    @classmethod
+    async def afrom_function_call(
+        cls, function_call: FunctionCall[Awaitable[T]]
+    ) -> "FunctionResultMessage[T]":
+        """Async version of `from_function_call`."""
+        return cls(
+            content=await function_call(),
+            function_call=function_call,
+        )
