@@ -55,12 +55,3 @@ class FunctionResultMessage(Message[T], Generic[T]):
             content=function_call(),
             function_call=function_call,
         )
-
-
-# TODO: Delete this class?
-class FunctionCallMessage(AssistantMessage[FunctionCall[T]], Generic[T]):
-    """A message containing a function call."""
-
-    def get_result(self) -> FunctionResultMessage[T]:
-        """Call the function and return a message containing the result."""
-        return FunctionResultMessage.from_function_call(self.content)
