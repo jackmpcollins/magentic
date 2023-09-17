@@ -61,7 +61,6 @@ class BaseFunctionSchema(ABC, Generic[T]):
         ...
 
     async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
-        # TODO: Convert AsyncIterable to lazy Iterable rather than list
         return self.parse_args([arg async for arg in arguments])
 
     @abstractmethod
@@ -269,7 +268,6 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         return json.dumps(value.arguments)
 
 
-# TODO: Add type hints here. Possibly use `functools.singledispatch` instead.
 def function_schema_for_type(type_: type[Any]) -> BaseFunctionSchema[Any]:
     """Create a FunctionSchema for the given type."""
     if is_origin_subclass(type_, BaseModel):
@@ -529,7 +527,6 @@ class OpenaiChatModel:
             return cast(AssistantMessage[R], AssistantMessage(streamed_str))
         return cast(AssistantMessage[R], AssistantMessage(str(streamed_str)))
 
-    # TODO: Deduplicate this and `complete`
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
