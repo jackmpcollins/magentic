@@ -1,5 +1,4 @@
 import inspect
-import json
 import typing
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Callable, Iterable
@@ -249,7 +248,9 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         return FunctionCall(self._func, **args)
 
     def serialize_args(self, value: FunctionCall[T]) -> str:
-        return json.dumps(value.arguments)
+        return cast(
+            str, self._model(**value.arguments).model_dump_json(exclude_unset=True)
+        )
 
 
 def function_schema_for_type(type_: type[Any]) -> BaseFunctionSchema[Any]:

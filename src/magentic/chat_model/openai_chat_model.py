@@ -1,4 +1,3 @@
-import json
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from typing import Any, Literal, TypeVar, cast
@@ -109,10 +108,11 @@ def message_to_openai_message(
         )
 
     if isinstance(message, FunctionResultMessage):
+        function_schema = FunctionCallFunctionSchema(message.function_call.function)
         return OpenaiChatCompletionChoiceMessage(
             role=OpenaiMessageRole.FUNCTION,
-            name=FunctionCallFunctionSchema(message.function_call.function).name,
-            content=json.dumps(message.content),
+            name=function_schema.name,
+            content=function_schema.serialize_args(message.content),
         )
 
     raise NotImplementedError(type(message))
