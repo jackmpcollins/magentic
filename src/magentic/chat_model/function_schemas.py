@@ -242,9 +242,8 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         return schema
 
     def parse_args(self, arguments: Iterable[str]) -> FunctionCall[T]:
-        args = self._model.model_validate_json("".join(arguments)).model_dump(
-            exclude_unset=True
-        )
+        model = self._model.model_validate_json("".join(arguments))
+        args = {attr: getattr(model, attr) for attr in model.model_fields_set}
         return FunctionCall(self._func, **args)
 
     def serialize_args(self, value: FunctionCall[T]) -> str:

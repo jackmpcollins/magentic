@@ -476,6 +476,14 @@ def plus_with_annotated(
     return a + b
 
 
+class IntModel(BaseModel):
+    value: int
+
+
+def plus_with_basemodel(a: IntModel, b: IntModel) -> IntModel:
+    return IntModel(value=a.value + b.value)
+
+
 @pytest.mark.parametrize(
     ("function", "json_schema"),
     [
@@ -554,14 +562,35 @@ def plus_with_annotated(
                 },
             },
         ),
+        (
+            plus_with_basemodel,
+            {
+                "name": "plus_with_basemodel",
+                "parameters": {
+                    "$defs": {
+                        "IntModel": {
+                            "properties": {
+                                "value": {"title": "Value", "type": "integer"}
+                            },
+                            "required": ["value"],
+                            "title": "IntModel",
+                            "type": "object",
+                        }
+                    },
+                    "properties": {
+                        "a": {"$ref": "#/$defs/IntModel"},
+                        "b": {"$ref": "#/$defs/IntModel"},
+                    },
+                    "required": ["a", "b"],
+                    "type": "object",
+                },
+            },
+        ),
     ],
 )
 def test_function_call_function_schema(function, json_schema):
     function_schema = FunctionCallFunctionSchema(function)
     assert function_schema.dict() == json_schema
-    output = function_schema.parse_args('{"a": 1, "b": 2}')
-    assert isinstance(output, FunctionCall)
-    assert output() == 3
 
 
 def test_function_call_function_schema_with_default_value():
@@ -583,6 +612,11 @@ function_call_function_schema_args_test_cases = [
         plus_with_annotated,
         '{"a": 1, "b": 2}',
         FunctionCall(plus_with_annotated, a=1, b=2),
+    ),
+    (
+        plus_with_basemodel,
+        '{"a": {"value": 1}, "b": {"value": 2}}',
+        FunctionCall(plus_with_basemodel, a=IntModel(value=1), b=IntModel(value=2)),
     ),
 ]
 
