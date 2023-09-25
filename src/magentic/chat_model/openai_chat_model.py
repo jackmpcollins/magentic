@@ -5,7 +5,7 @@ from typing import Any, Literal, TypeVar, cast
 import openai
 from pydantic import BaseModel, ValidationError
 
-from magentic.chat_model.function_schemas import (
+from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
     function_schema_for_type,

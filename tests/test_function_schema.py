@@ -7,7 +7,7 @@ from typing import Annotated, Any, get_origin
 import pytest
 from pydantic import BaseModel, Field
 
-from magentic.chat_model.function_schemas import (
+from magentic.chat_model.function_schema import (
     AnyFunctionSchema,
     AsyncIterableFunctionSchema,
     BaseModelFunctionSchema,
