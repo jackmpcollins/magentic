@@ -13,7 +13,7 @@ from typing import (
     overload,
 )
 
-from magentic.chat_model.message import UserMessage
+from magentic.chat_model.message import AssistantMessage, UserMessage
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.function_call import FunctionCall
 from magentic.typing import is_origin_subclass, split_union_type
@@ -34,6 +34,7 @@ class BasePromptFunction(Generic[P, R]):
         template: str,
         parameters: Sequence[inspect.Parameter],
         return_type: type[R],
+        examples: list[tuple[dict[str, Any], R]] | None = None,
         functions: list[Callable[..., Any]] | None = None,
         model: OpenaiChatModel | None = None,
     ):
@@ -42,6 +43,7 @@ class BasePromptFunction(Generic[P, R]):
             return_annotation=return_type,
         )
         self._template = template
+        self._examples = examples or []
         self._functions = functions or []
         self._model = model or OpenaiChatModel()
 
@@ -50,6 +52,22 @@ class BasePromptFunction(Generic[P, R]):
             for type_ in split_union_type(return_type)
             if not is_origin_subclass(type_, FunctionCall)
         ]
+
+    @property
+    def examples(self) -> list[tuple[dict[str, Any], R]]:
+        return self._examples.copy()
+
+    @property
+    def example_messages(self) -> list[UserMessage | AssistantMessage[R]]:
+        example_messages: list[UserMessage | AssistantMessage[R]] = []
+        for args, output in self.examples:
+            example_messages.extend(
+                [
+                    UserMessage(content=self._template.format(**args)),
+                    AssistantMessage(content=output),
+                ]
+            )
+        return example_messages
 
     @property
     def functions(self) -> list[Callable[..., Any]]:
@@ -79,7 +97,8 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
         bound_args.apply_defaults()
         message = self._model.complete(
             messages=[
-                UserMessage(content=self._template.format(**bound_args.arguments))
+                *self.example_messages,
+                UserMessage(content=self._template.format(**bound_args.arguments)),
             ],
             functions=self._functions,
             output_types=self._return_types,
@@ -96,7 +115,8 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
         bound_args.apply_defaults()
         message = await self._model.acomplete(
             messages=[
-                UserMessage(content=self._template.format(**bound_args.arguments))
+                *self.example_messages,
+                UserMessage(content=self._template.format(**bound_args.arguments)),
             ],
             functions=self._functions,
             output_types=self._return_types,
@@ -122,6 +142,7 @@ class PromptDecorator(Protocol):
 
 def prompt(
     template: str,
+    examples: list[tuple[dict[str, Any], R]] | None = None,
     functions: list[Callable[..., Any]] | None = None,
     model: OpenaiChatModel | None = None,
 ) -> PromptDecorator:
@@ -151,6 +172,7 @@ def prompt(
                 template=template,
                 parameters=list(func_signature.parameters.values()),
                 return_type=func_signature.return_annotation,
+                examples=examples,
                 functions=functions,
                 model=model,
             )
@@ -161,6 +183,7 @@ def prompt(
             template=template,
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
+            examples=examples,
             functions=functions,
             model=model,
         )
