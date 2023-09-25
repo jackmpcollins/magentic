@@ -228,10 +228,10 @@ The order of precedence of configuration is
 
 The following environment variables can be set.
 
-| Environment Variable        | Description               |
-| --------------------------- | ------------------------- |
-| MAGENTIC_OPENAI_MODEL       | OpenAI model e.g. "gpt-4" |
-| MAGENTIC_OPENAI_TEMPERATURE | OpenAI temperature, float |
+| Environment Variable        | Description        | Example |
+| --------------------------- | ------------------ | ------- |
+| MAGENTIC_OPENAI_MODEL       | OpenAI model       | gpt-4   |
+| MAGENTIC_OPENAI_TEMPERATURE | OpenAI temperature | 0.5     |
 
 ## Type Checking
 
