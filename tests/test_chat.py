@@ -1,7 +1,7 @@
 import pytest
 
 from magentic.chat import Chat
-from magentic.chat_model.base import (
+from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
     UserMessage,

@@ -13,7 +13,7 @@ from typing import (
     overload,
 )
 
-from magentic.chat_model.base import UserMessage
+from magentic.chat_model.message import UserMessage
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.function_call import FunctionCall
 from magentic.typing import is_origin_subclass, split_union_type
