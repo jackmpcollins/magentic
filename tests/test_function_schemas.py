@@ -195,6 +195,23 @@ def test_any_function_schema_serialize_args(type_, expected_args_str, args):
             },
         ),
         (
+            list,
+            {
+                "name": "return_list",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "type": "array",
+                            "items": {},
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+        (
             typing.Iterable[str],
             {
                 "name": "return_iterable_of_str",
@@ -272,6 +289,23 @@ def test_iterable_function_schema_serialize_args(type_, expected_args_str, args)
                             "title": "Value",
                             "type": "array",
                             "items": {"type": "string"},
+                        }
+                    },
+                    "required": ["value"],
+                    "type": "object",
+                },
+            },
+        ),
+        (
+            typing.AsyncIterable,
+            {
+                "name": "return_asynciterable",
+                "parameters": {
+                    "properties": {
+                        "value": {
+                            "title": "Value",
+                            "type": "array",
+                            "items": {},
                         }
                     },
                     "required": ["value"],

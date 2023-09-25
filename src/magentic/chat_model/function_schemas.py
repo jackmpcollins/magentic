@@ -90,7 +90,9 @@ class IterableFunctionSchema(BaseFunctionSchema[IterableT], Generic[IterableT]):
 
     def __init__(self, output_type: type[IterableT]):
         self._output_type = output_type
-        self._item_type_adapter = TypeAdapter(get_args(output_type)[0])
+        self._item_type_adapter = TypeAdapter(
+            args[0] if (args := get_args(output_type)) else Any
+        )
         # https://github.com/python/mypy/issues/14458
         self._model = Output[output_type]  # type: ignore[valid-type]
 
@@ -126,10 +128,11 @@ class AsyncIterableFunctionSchema(
 
     def __init__(self, output_type: type[AsyncIterableT]):
         self._output_type = output_type
-        self._item_type_adapter = TypeAdapter(get_args(output_type)[0])
+        item_type = args[0] if (args := get_args(output_type)) else Any
+        self._item_type_adapter = TypeAdapter(item_type)
         # Convert to list so pydantic can handle for schema generation
         # But keep the type hint using AsyncIterableT for type checking
-        self._model: type[Output[AsyncIterableT]] = Output[list[get_args(output_type)[0]]]  # type: ignore[index,misc]
+        self._model = Output[list[item_type]]  # type: ignore[valid-type]
 
     @property
     def name(self) -> str:
@@ -159,7 +162,7 @@ class AsyncIterableFunctionSchema(
         raise NotImplementedError
 
     def serialize_args(self, value: AsyncIterableT) -> str:
-        return self._model(value=value).model_dump_json()
+        return self._model(value=value).model_dump_json()  # type: ignore[arg-type]
 
 
 class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
