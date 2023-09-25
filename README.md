@@ -179,7 +179,7 @@ for country, streamed_str in zip(countries, streamed_strs):
 # 24.67s : Chile - 2186 chars
 ```
 
-#### Object Streaming
+### Object Streaming
 
 Structured outputs can also be streamed from the LLM by using the return type annotation `Iterable` (or `AsyncIterable`). This allows each item to be processed while the next one is being generated. See the example in [examples/quiz](examples/quiz/) for how this can be used to improve user experience by quickly displaying/using the first item returned.
 
