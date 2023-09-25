@@ -108,7 +108,7 @@ def message_to_openai_message(
         )
 
     if isinstance(message, FunctionResultMessage):
-        function_schema = FunctionCallFunctionSchema(message.function_call.function)
+        function_schema = function_schema_for_type(type(message.content))
         return OpenaiChatCompletionChoiceMessage(
             role=OpenaiMessageRole.FUNCTION,
             name=function_schema.name,
