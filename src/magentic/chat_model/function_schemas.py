@@ -161,7 +161,7 @@ class AsyncIterableFunctionSchema(
         raise NotImplementedError
 
     def serialize_args(self, value: AsyncIterableT) -> str:
-        return self._model(value=value).model_dump_json()  # type: ignore[arg-type]
+        raise NotImplementedError
 
 
 class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):

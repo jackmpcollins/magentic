@@ -363,8 +363,8 @@ async def test_async_iterable_function_schema_aparse_args(
     async_iterable_function_schema_args_test_cases,
 )
 def test_async_iterable_function_schema_serialize_args(type_, expected_args_str, args):
-    serialized_args = AsyncIterableFunctionSchema(type_).serialize_args(args)
-    assert json.loads(serialized_args) == json.loads(expected_args_str)
+    with pytest.raises(NotImplementedError):
+        AsyncIterableFunctionSchema(type_).serialize_args(async_iter(args))
 
 
 class User(BaseModel):
