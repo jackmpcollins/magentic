@@ -1,7 +1,7 @@
 import inspect
 from typing import Any, Callable, Iterable, ParamSpec, TypeVar
 
-from magentic.chat_model.base import (
+from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
     Message,
