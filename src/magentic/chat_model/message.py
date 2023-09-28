@@ -24,6 +24,10 @@ class Message(Generic[T]):
         return self._content
 
 
+class SystemMessage(Message[str]):
+    """A message to the LLM to guide the whole chat."""
+
+
 class UserMessage(Message[str]):
     """A message sent by a user to an LLM chat model."""
 
