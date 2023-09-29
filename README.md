@@ -128,6 +128,29 @@ LLM-powered functions created using `@prompt` and `@prompt_chain` can be supplie
 
 See the [examples directory](examples/) for more.
 
+### Chat Prompting
+
+The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages rather than a single text prompt. This can be used for few-shot prompting where you provide example responses to guide the output.
+
+```python
+from magentic import prompt, AssistantMessage, SystemMessage, UserMessage
+
+
+@chatprompt(
+    SystemMessage("Only use uppercase letters."),
+    UserMessage("What is your favorite quote from Harry Potter?"),
+    AssistantMessage(
+        ("It does not do to dwell on dreams and forget to live.", "Albus Dumbledore")
+    ),
+    UserMessage("What is your favorite quote from {movie}?"),
+)
+def get_movie_quote(movie: str) -> tuple[str, str]:
+    ...
+
+
+get_movie_quote("Iron Man 3")
+```
+
 ### Streaming
 
 The `StreamedStr` (and `AsyncStreamedStr`) class can be used to stream the output of the LLM. This allows you to process the text while it is being generated, rather than receiving the whole output at once.
