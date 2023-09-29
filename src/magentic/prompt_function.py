@@ -75,12 +75,8 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted prompt template."""
-        bound_args = self._signature.bind(*args, **kwargs)
-        bound_args.apply_defaults()
         message = self._model.complete(
-            messages=[
-                UserMessage(content=self._template.format(**bound_args.arguments))
-            ],
+            messages=[UserMessage(content=self.format(*args, **kwargs))],
             functions=self._functions,
             output_types=self._return_types,
         )
@@ -92,12 +88,8 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted prompt template."""
-        bound_args = self._signature.bind(*args, **kwargs)
-        bound_args.apply_defaults()
         message = await self._model.acomplete(
-            messages=[
-                UserMessage(content=self._template.format(**bound_args.arguments))
-            ],
+            messages=[UserMessage(content=self.format(*args, **kwargs))],
             functions=self._functions,
             output_types=self._return_types,
         )
