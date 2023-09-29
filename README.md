@@ -130,25 +130,36 @@ See the [examples directory](examples/) for more.
 
 ### Chat Prompting
 
-The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages rather than a single text prompt. This can be used for few-shot prompting where you provide example responses to guide the output.
+The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages rather than a single text prompt. This can be used for few-shot prompting where you provide example responses to guide the model's output.
 
 ```python
-from magentic import prompt, AssistantMessage, SystemMessage, UserMessage
+from magentic import chatprompt, AssistantMessage, SystemMessage, UserMessage
+
+from pydantic import BaseModel
+
+
+class Quote(BaseModel):
+    quote: str
+    character: str
 
 
 @chatprompt(
-    SystemMessage("Only use uppercase letters."),
+    SystemMessage("You are a movie buff."),
     UserMessage("What is your favorite quote from Harry Potter?"),
     AssistantMessage(
-        ("It does not do to dwell on dreams and forget to live.", "Albus Dumbledore")
+        Quote(
+            quote="It does not do to dwell on dreams and forget to live.",
+            character="Albus Dumbledore",
+        )
     ),
     UserMessage("What is your favorite quote from {movie}?"),
 )
-def get_movie_quote(movie: str) -> tuple[str, str]:
+def get_movie_quote(movie: str) -> Quote:
     ...
 
 
-get_movie_quote("Iron Man 3")
+get_movie_quote("Iron Man")
+# Quote(quote='I am Iron Man.', character='Tony Stark')
 ```
 
 ### Streaming
