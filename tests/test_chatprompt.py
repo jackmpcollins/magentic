@@ -4,6 +4,7 @@ from inspect import getdoc
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+from pydantic import BaseModel
 
 from magentic.chat_model.message import AssistantMessage, SystemMessage, UserMessage
 from magentic.chatprompt import AsyncChatPromptFunction, ChatPromptFunction, chatprompt
@@ -85,3 +86,27 @@ async def test_async_chatprompt_decorator_docstring():
 
     assert isinstance(func, AsyncChatPromptFunction)
     assert getdoc(func) == "This is the docstring."
+
+
+@pytest.mark.openai
+def test_chatprompt_readme_example():
+    class Quote(BaseModel):
+        quote: str
+        character: str
+
+    @chatprompt(
+        SystemMessage("You are a movie buff."),
+        UserMessage("What is your favorite quote from Harry Potter?"),
+        AssistantMessage(
+            Quote(
+                quote="It does not do to dwell on dreams and forget to live.",
+                character="Albus Dumbledore",
+            )
+        ),
+        UserMessage("What is your favorite quote from {movie}?"),
+    )
+    def get_movie_quote(movie: str) -> Quote:
+        ...
+
+    movie_quote = get_movie_quote("Iron Man")
+    assert isinstance(movie_quote, Quote)
