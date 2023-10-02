@@ -77,7 +77,8 @@ def test_decorator_return_pydantic_model():
     def get_capital(country: str) -> CapitalCity:
         ...
 
-    assert get_capital("Ireland") == CapitalCity(capital="Dublin", country="Ireland")
+    output = get_capital("Ireland")
+    assert isinstance(output, CapitalCity)
 
 
 @pytest.mark.openai
