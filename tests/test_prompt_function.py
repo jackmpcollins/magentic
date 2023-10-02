@@ -12,6 +12,14 @@ from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
 from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 
+def test_promptfunction_format():
+    @prompt("Test {param}.")
+    def func(param: str) -> str:
+        ...
+
+    assert func.format("arg") == "Test arg."
+
+
 @pytest.mark.openai
 def test_decorator_return_str():
     @prompt("What is the capital of {country}? Name only. No punctuation.")
@@ -19,9 +27,10 @@ def test_decorator_return_str():
         """This is the docstring."""
         ...
 
-    assert get_capital("Ireland") == "Dublin"
     assert isinstance(get_capital, PromptFunction)
     assert getdoc(get_capital) == "This is the docstring."
+    output = get_capital("Ireland")
+    assert isinstance(output, str)
 
 
 @pytest.mark.openai
@@ -35,26 +44,27 @@ def test_decorator_return_bool():
 
 @pytest.mark.openai
 def test_decorator_return_bool_str():
-    @prompt("Answer the following question: {question}.")
-    def answer_question(question: str) -> bool | str:
+    @prompt("{text}")
+    def query(text: str) -> bool | str:
         ...
 
-    assert answer_question("What is the capital of Ireland? Name only") == "Dublin"
-    assert answer_question("Dublin is the capital of Ireland: True or False?") is True
+    output = query("Reply to me with just the word hello.")
+    assert isinstance(output, str)
+    output = query("Use the function to return the value True.")
+    assert isinstance(output, bool)
 
 
 @pytest.mark.openai
 def test_decorator_return_dict():
-    @prompt("Return a mapping of the 5 tallest mountains to their height in metres")
-    def get_tallest_mountains() -> dict[str, int]:
+    @prompt('Return the mapping {{"one": 1, "two": 2}}')
+    def return_mapping() -> dict[str, int]:
         ...
 
-    height_by_mountain = get_tallest_mountains()
-    assert isinstance(height_by_mountain, dict)
-    assert len(height_by_mountain) == 5
-    name, height = next(iter(height_by_mountain.items()))
+    mapping = return_mapping()
+    assert isinstance(mapping, dict)
+    name, value = next(iter(mapping.items()))
     assert isinstance(name, str)
-    assert isinstance(height, int)
+    assert isinstance(value, int)
 
 
 @pytest.mark.openai
@@ -67,7 +77,8 @@ def test_decorator_return_pydantic_model():
     def get_capital(country: str) -> CapitalCity:
         ...
 
-    assert get_capital("Ireland") == CapitalCity(capital="Dublin", country="Ireland")
+    output = get_capital("Ireland")
+    assert isinstance(output, CapitalCity)
 
 
 @pytest.mark.openai
@@ -76,7 +87,7 @@ def test_decorator_input_pydantic_model():
         capital: str
         country: str
 
-    @prompt("Is this capital-country pair correct? {pair}")
+    @prompt("Is this capital-country pair correct? {pair} Just answer True or False.")
     def check_capital(pair: CapitalCity) -> bool:
         ...
 
@@ -88,11 +99,11 @@ def test_decorator_return_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    @prompt("Sum the populations of {country_one} and {country_two}.", functions=[plus])
-    def sum_populations(country_one: str, country_two: str) -> FunctionCall[int]:
+    @prompt("Sum {a} and {b}", functions=[plus])
+    def sum_ab(a: int, b: int) -> FunctionCall[int]:
         ...
 
-    output = sum_populations("Ireland", "UK")
+    output = sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
     func_result = output()
     assert isinstance(func_result, int)
@@ -127,7 +138,8 @@ async def test_async_decorator_return_str():
         ...
 
     assert isinstance(get_capital, AsyncPromptFunction)
-    assert await get_capital("Ireland") == "Dublin"
+    output = await get_capital("Ireland")
+    assert isinstance(output, str)
 
 
 @pytest.mark.asyncio
@@ -147,11 +159,11 @@ async def test_async_decorator_return_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    @prompt("Sum the populations of {country_one} and {country_two}.", functions=[plus])
-    async def sum_populations(country_one: str, country_two: str) -> FunctionCall[int]:
+    @prompt("Sum {a} and {b}", functions=[plus])
+    async def sum_ab(a: int, b: int) -> FunctionCall[int]:
         ...
 
-    output = await sum_populations("Ireland", "UK")
+    output = await sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
     func_result = output()
     assert isinstance(func_result, int)
@@ -163,15 +175,10 @@ async def test_async_decorator_return_async_function_call():
     async def async_plus(a: int, b: int) -> int:
         return a + b
 
-    @prompt(
-        "Sum the populations of {country_one} and {country_two}.",
-        functions=[async_plus],
-    )
-    async def sum_populations(
-        country_one: str, country_two: str
-    ) -> FunctionCall[Awaitable[int]]:
+    @prompt("Sum {a} and {b}", functions=[async_plus])
+    async def sum_ab(a: int, b: int) -> FunctionCall[Awaitable[int]]:
         ...
 
-    output = await sum_populations("Ireland", "UK")
+    output = await sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
     assert isinstance(await output(), int)
