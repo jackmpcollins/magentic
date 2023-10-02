@@ -26,6 +26,15 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
+def escape_braces(text: str) -> str:
+    """Escape curly braces in a string.
+
+    This allows curly braces to be used in a string template without being interpreted
+    as format specifiers.
+    """
+    return text.replace("{", "{{").replace("}", "}}")
+
+
 class BaseChatPromptFunction(Generic[P, R]):
     """Base class for an LLM chat prompt template that is directly callable to query the LLM."""
 

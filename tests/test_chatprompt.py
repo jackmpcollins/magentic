@@ -12,7 +12,21 @@ from magentic.chat_model.message import (
     SystemMessage,
     UserMessage,
 )
-from magentic.chatprompt import AsyncChatPromptFunction, ChatPromptFunction, chatprompt
+from magentic.chatprompt import (
+    AsyncChatPromptFunction,
+    ChatPromptFunction,
+    chatprompt,
+    escape_braces,
+)
+
+
+@pytest.mark.parametrize(
+    "text",
+    ["", "test", "{test}", "{{test}}", "{{test"],
+)
+def test_escape_braces(text):
+    """Test that `escape_braces` makes `str.format` recover the original string."""
+    assert escape_braces(text).format() == text
 
 
 @pytest.mark.parametrize(

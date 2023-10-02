@@ -130,10 +130,11 @@ See the [examples directory](examples/) for more.
 
 ### Chat Prompting
 
-The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages rather than a single text prompt. This can be used for few-shot prompting where you provide example responses to guide the model's output.
+The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages as a template rather than a single text prompt. This can be used to provide a system message or for few-shot prompting where you provide example responses to guide the model's output. Format fields denoted by curly braces `{example}` will be filled in all messages - use the `escape_braces` function to prevent a string being used as a template.
 
 ```python
 from magentic import chatprompt, AssistantMessage, SystemMessage, UserMessage
+from magentic.chatprompt import escape_braces
 
 from pydantic import BaseModel
 
