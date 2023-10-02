@@ -44,13 +44,14 @@ def test_decorator_return_bool():
 
 @pytest.mark.openai
 def test_decorator_return_bool_str():
-    @prompt("Answer the following question: {question}.")
-    def answer_question(question: str) -> bool | str:
+    @prompt("{text}")
+    def query(text: str) -> bool | str:
         ...
 
-    capital_name = answer_question("What is the capital of Ireland? Name only")
-    assert isinstance(capital_name, str)
-    assert answer_question("Dublin is the capital of Ireland: True or False?") is True
+    output = query("Reply to me with just the word hello.")
+    assert isinstance(output, str)
+    output = query("Use the function to return the value True.")
+    assert isinstance(output, bool)
 
 
 @pytest.mark.openai
