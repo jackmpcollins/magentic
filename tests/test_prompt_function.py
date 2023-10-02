@@ -96,11 +96,11 @@ def test_decorator_return_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    @prompt("Sum the populations of {country_one} and {country_two}.", functions=[plus])
-    def sum_populations(country_one: str, country_two: str) -> FunctionCall[int]:
+    @prompt("Sum {a} and {b}", functions=[plus])
+    def sum_ab(a: int, b: int) -> FunctionCall[int]:
         ...
 
-    output = sum_populations("Ireland", "UK")
+    output = sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
     func_result = output()
     assert isinstance(func_result, int)
@@ -155,11 +155,11 @@ async def test_async_decorator_return_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    @prompt("Sum the populations of {country_one} and {country_two}.", functions=[plus])
-    async def sum_populations(country_one: str, country_two: str) -> FunctionCall[int]:
+    @prompt("Sum {a} and {b}", functions=[plus])
+    async def sum_ab(a: int, b: int) -> FunctionCall[int]:
         ...
 
-    output = await sum_populations("Ireland", "UK")
+    output = await sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
     func_result = output()
     assert isinstance(func_result, int)
@@ -171,15 +171,10 @@ async def test_async_decorator_return_async_function_call():
     async def async_plus(a: int, b: int) -> int:
         return a + b
 
-    @prompt(
-        "Sum the populations of {country_one} and {country_two}.",
-        functions=[async_plus],
-    )
-    async def sum_populations(
-        country_one: str, country_two: str
-    ) -> FunctionCall[Awaitable[int]]:
+    @prompt("Sum {a} and {b}", functions=[async_plus])
+    async def sum_ab(a: int, b: int) -> FunctionCall[Awaitable[int]]:
         ...
 
-    output = await sum_populations("Ireland", "UK")
+    output = await sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
     assert isinstance(await output(), int)
