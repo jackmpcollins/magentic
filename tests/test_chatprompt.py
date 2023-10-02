@@ -6,7 +6,12 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from pydantic import BaseModel
 
-from magentic.chat_model.message import AssistantMessage, SystemMessage, UserMessage
+from magentic.chat_model.message import (
+    AssistantMessage,
+    FunctionResultMessage,
+    SystemMessage,
+    UserMessage,
+)
 from magentic.chatprompt import AsyncChatPromptFunction, ChatPromptFunction, chatprompt
 
 
@@ -28,6 +33,18 @@ from magentic.chatprompt import AsyncChatPromptFunction, ChatPromptFunction, cha
         (
             [AssistantMessage("Assistant message with {param}.")],
             [AssistantMessage("Assistant message with arg.")],
+        ),
+        (
+            [
+                FunctionResultMessage(
+                    "Function result message with {param}", function_call=Mock()
+                )
+            ],
+            [
+                FunctionResultMessage(
+                    "Function result message with arg", function_call=Mock()
+                )
+            ],
         ),
     ],
 )

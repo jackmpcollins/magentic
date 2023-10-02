@@ -70,10 +70,9 @@ class BaseChatPromptFunction(Generic[P, R]):
 
         messages = []
         for message_template in self._messages:
-            if isinstance(content := message_template.content, str):
-                messages.append(
-                    type(message_template)(content.format(**bound_args.arguments))
-                )
+            if isinstance(message_template.content, str):
+                content = message_template.content.format(**bound_args.arguments)
+                messages.append(message_template.with_content(content))
             else:
                 messages.append(message_template)
 
