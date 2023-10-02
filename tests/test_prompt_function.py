@@ -12,6 +12,14 @@ from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
 from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 
+def test_promptfunction_format():
+    @prompt("Test {param}.")
+    def func(param: str) -> str:
+        ...
+
+    assert func.format("arg") == "Test arg."
+
+
 @pytest.mark.openai
 def test_decorator_return_str():
     @prompt("What is the capital of {country}? Name only. No punctuation.")
