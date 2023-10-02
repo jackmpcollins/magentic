@@ -85,7 +85,7 @@ def test_decorator_input_pydantic_model():
         capital: str
         country: str
 
-    @prompt("Is this capital-country pair correct? {pair}")
+    @prompt("Is this capital-country pair correct? {pair} Just answer True or False.")
     def check_capital(pair: CapitalCity) -> bool:
         ...
 
