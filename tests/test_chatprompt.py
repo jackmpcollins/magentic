@@ -10,22 +10,33 @@ from magentic.chat_model.message import AssistantMessage, SystemMessage, UserMes
 from magentic.chatprompt import AsyncChatPromptFunction, ChatPromptFunction, chatprompt
 
 
-def test_chatpromptfunction_format():
-    @chatprompt(
-        SystemMessage("This is a system message with {one}."),
-        UserMessage("This is a {two} user message."),
-        AssistantMessage("This {three} is an assistant message."),
-        AssistantMessage([1, 2, 3]),
-    )
-    def func(one: int, two: bool, three: str) -> str:  # noqa: FBT001
+@pytest.mark.parametrize(
+    ("message_templates", "expected_messages"),
+    [
+        (
+            [AssistantMessage([1, 2, 3])],
+            [AssistantMessage([1, 2, 3])],
+        ),
+        (
+            [SystemMessage("System message with {param}.")],
+            [SystemMessage("System message with arg.")],
+        ),
+        (
+            [UserMessage("User message with {param}.")],
+            [UserMessage("User message with arg.")],
+        ),
+        (
+            [AssistantMessage("Assistant message with {param}.")],
+            [AssistantMessage("Assistant message with arg.")],
+        ),
+    ],
+)
+def test_chatpromptfunction_format(message_templates, expected_messages):
+    @chatprompt(*message_templates)
+    def func(param: str) -> str:
         ...
 
-    assert func.format(one=1, two=True, three="three") == [
-        SystemMessage("This is a system message with 1."),
-        UserMessage("This is a True user message."),
-        AssistantMessage("This three is an assistant message."),
-        AssistantMessage([1, 2, 3]),
-    ]
+    assert func.format(param="arg") == expected_messages
 
 
 def test_chatpromptfunction_call():
