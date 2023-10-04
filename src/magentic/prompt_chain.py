@@ -21,8 +21,10 @@ def prompt_chain(
     template: str,
     functions: list[Callable[..., Any]] | None = None,
     model: OpenaiChatModel | None = None,
+    max_calls: int | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Convert a Python function to an LLM query, auto-resolving function calls."""
+    
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         func_signature = inspect.signature(func)
@@ -41,9 +43,13 @@ def prompt_chain(
                 chat = await Chat.from_prompt(
                     async_prompt_function, *args, **kwargs
                 ).asubmit()
+                calls = 0
                 while isinstance(chat.messages[-1].content, FunctionCall):
+                    if max_calls is not None and calls >= max_calls:
+                        raise PermissionError("max_calls reached")
                     chat = await chat.aexec_function_call()
                     chat = await chat.asubmit()
+                    calls += 1
                 return chat.messages[-1].content
 
             return cast(Callable[P, R], awrapper)
@@ -59,8 +65,12 @@ def prompt_chain(
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
+            calls = 0
             while isinstance(chat.messages[-1].content, FunctionCall):
+                if max_calls is not None and calls >= max_calls:
+                    raise PermissionError("max_calls reached")
                 chat = chat.exec_function_call().submit()
+                calls += 1
             return cast(R, chat.messages[-1].content)
 
         return wrapper
