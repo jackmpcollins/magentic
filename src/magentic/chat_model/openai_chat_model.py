@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Any, Literal, TypeVar, cast
 
 import openai
+import litellm
 from pydantic import BaseModel, ValidationError
 
 from magentic.chat_model.function_schema import (
@@ -131,8 +132,8 @@ def openai_chatcompletion_create(
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> Iterator[OpenaiChatCompletionChunk]:
-    """Type-annotated version of `openai.ChatCompletion.create`."""
-    # `openai.ChatCompletion.create` doesn't accept `None`
+    """Type-annotated version of `litellm.completion`."""
+    # `litellm.completion` doesn't accept `None`
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
     if functions:
@@ -140,7 +141,7 @@ def openai_chatcompletion_create(
     if function_call:
         kwargs["function_call"] = function_call
 
-    response: Iterator[dict[str, Any]] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
+    response: Iterator[dict[str, Any]] = litellm.completion(  # type: ignore[no-untyped-call]
         model=model,
         messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
         temperature=temperature,
@@ -157,8 +158,8 @@ async def openai_chatcompletion_acreate(
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> AsyncIterator[OpenaiChatCompletionChunk]:
-    """Type-annotated version of `openai.ChatCompletion.acreate`."""
-    # `openai.ChatCompletion.create` doesn't accept `None`
+    """Type-annotated version of `litellm.acompletion`."""
+    # `litellm.completion` doesn't accept `None`
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
     if functions:
@@ -166,7 +167,7 @@ async def openai_chatcompletion_acreate(
     if function_call:
         kwargs["function_call"] = function_call
 
-    response: AsyncIterator[dict[str, Any]] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
+    response: AsyncIterator[dict[str, Any]] = await litellm.acompletion(  # type: ignore[no-untyped-call]
         model=model,
         messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
         temperature=temperature,
