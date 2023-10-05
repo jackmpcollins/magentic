@@ -49,7 +49,8 @@ def prompt_chain(
                 calls = 0
                 while isinstance(chat.messages[-1].content, FunctionCall):
                     if max_calls is not None and calls >= max_calls:
-                        raise MaxFunctionCallsError()
+                        msg = f"Function {func.__name__} reached {max_calls} function calls"
+                        raise MaxFunctionCallsError(msg)
                     chat = await chat.aexec_function_call()
                     chat = await chat.asubmit()
                     calls += 1
@@ -71,7 +72,8 @@ def prompt_chain(
             calls = 0
             while isinstance(chat.messages[-1].content, FunctionCall):
                 if max_calls is not None and calls >= max_calls:
-                    raise MaxFunctionCallsError()
+                    msg = f"Function {func.__name__} reached {max_calls} function calls"
+                    raise MaxFunctionCallsError(msg)
                 chat = chat.exec_function_call().submit()
                 calls += 1
             return cast(R, chat.messages[-1].content)
