@@ -17,6 +17,10 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
+class MaxFunctionCallsError(Exception):
+    """Raised when prompt chain reaches the max number of function calls."""
+
+
 def prompt_chain(
     template: str,
     functions: list[Callable[..., Any]] | None = None,
@@ -24,7 +28,6 @@ def prompt_chain(
     max_calls: int | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Convert a Python function to an LLM query, auto-resolving function calls."""
-    
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
         func_signature = inspect.signature(func)
@@ -46,7 +49,7 @@ def prompt_chain(
                 calls = 0
                 while isinstance(chat.messages[-1].content, FunctionCall):
                     if max_calls is not None and calls >= max_calls:
-                        raise PermissionError("max_calls reached")
+                        raise MaxFunctionCallsError()
                     chat = await chat.aexec_function_call()
                     chat = await chat.asubmit()
                     calls += 1
@@ -68,7 +71,7 @@ def prompt_chain(
             calls = 0
             while isinstance(chat.messages[-1].content, FunctionCall):
                 if max_calls is not None and calls >= max_calls:
-                    raise PermissionError("max_calls reached")
+                    raise MaxFunctionCallsError()
                 chat = chat.exec_function_call().submit()
                 calls += 1
             return cast(R, chat.messages[-1].content)
