@@ -3,6 +3,7 @@ from unittest.mock import Mock
 import pytest
 
 from magentic.chat_model.message import AssistantMessage
+from magentic.function_call import FunctionCall
 from magentic.prompt_chain import MaxFunctionCallsError, prompt_chain
 
 
@@ -39,7 +40,9 @@ def test_prompt_chain_max_calls():
         }
 
     mock_model = Mock()
-    mock_model.complete.return_value = AssistantMessage(content="Weather yay!")
+    mock_model.complete.return_value = AssistantMessage(
+        content=FunctionCall(get_current_weather, "Boston")
+    )
 
     @prompt_chain(
         template="What's the weather like in {city}?",
