@@ -307,6 +307,7 @@ The order of precedence of configuration is
 
 1. Arguments passed when initializing an instance in Python
 2. Environment variables
+3. Default values from [src/magentic/settings.py](src/magentic/settings.py)
 
 The following environment variables can be set.
 
