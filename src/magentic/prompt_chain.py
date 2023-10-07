@@ -17,10 +17,15 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
+class MaxFunctionCallsError(Exception):
+    """Raised when prompt chain reaches the max number of function calls."""
+
+
 def prompt_chain(
     template: str,
     functions: list[Callable[..., Any]] | None = None,
     model: OpenaiChatModel | None = None,
+    max_calls: int | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Convert a Python function to an LLM query, auto-resolving function calls."""
 
@@ -41,9 +46,17 @@ def prompt_chain(
                 chat = await Chat.from_prompt(
                     async_prompt_function, *args, **kwargs
                 ).asubmit()
+                num_calls = 0
                 while isinstance(chat.messages[-1].content, FunctionCall):
+                    if max_calls is not None and num_calls >= max_calls:
+                        msg = (
+                            f"Function {func.__name__} reached limit of"
+                            f" {max_calls} function calls"
+                        )
+                        raise MaxFunctionCallsError(msg)
                     chat = await chat.aexec_function_call()
                     chat = await chat.asubmit()
+                    num_calls += 1
                 return chat.messages[-1].content
 
             return cast(Callable[P, R], awrapper)
@@ -59,8 +72,16 @@ def prompt_chain(
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
+            num_calls = 0
             while isinstance(chat.messages[-1].content, FunctionCall):
+                if max_calls is not None and num_calls >= max_calls:
+                    msg = (
+                        f"Function {func.__name__} reached limit of"
+                        f" {max_calls} function calls"
+                    )
+                    raise MaxFunctionCallsError(msg)
                 chat = chat.exec_function_call().submit()
+                num_calls += 1
             return cast(R, chat.messages[-1].content)
 
         return wrapper
