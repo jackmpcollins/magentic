@@ -1,8 +1,10 @@
+from unittest.mock import Mock
+
 import pytest
 
-from magentic.prompt_chain import prompt_chain, MaxFunctionCallsError
-from unittest.mock import Mock
 from magentic.chat_model.message import AssistantMessage
+from magentic.prompt_chain import MaxFunctionCallsError, prompt_chain
+
 
 @pytest.mark.openai
 def test_prompt_chain():
@@ -25,6 +27,7 @@ def test_prompt_chain():
     output = describe_weather("Boston")
     assert isinstance(output, str)
 
+
 def test_prompt_chain_max_calls():
     def get_current_weather(location, unit="fahrenheit"):
         """Get the current weather in a given location"""
@@ -34,13 +37,15 @@ def test_prompt_chain_max_calls():
             "unit": unit,
             "forecast": ["sunny", "windy"],
         }
+
     mock_model = Mock()
-    mock_model.complete.return_value = AssistantMessage(content="Weather yay!") 
+    mock_model.complete.return_value = AssistantMessage(content="Weather yay!")
+
     @prompt_chain(
         template="What's the weather like in {city}?",
         functions=[get_current_weather],
         model=mock_model,
-        max_calls=0
+        max_calls=0,
     )
     def describe_weather(city: str) -> str:
         ...
@@ -70,5 +75,3 @@ async def test_async_prompt_chain():
 
     output = await describe_weather("Boston")
     assert isinstance(output, str)
-
-
