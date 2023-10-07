@@ -14,6 +14,7 @@ from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
     Message,
+    SystemMessage,
     UserMessage,
 )
 from magentic.function_call import FunctionCall
@@ -81,6 +82,11 @@ def message_to_openai_message(
     message: Message[Any],
 ) -> OpenaiChatCompletionChoiceMessage:
     """Convert a Message to an OpenAI message."""
+    if isinstance(message, SystemMessage):
+        return OpenaiChatCompletionChoiceMessage(
+            role=OpenaiMessageRole.SYSTEM, content=message.content
+        )
+
     if isinstance(message, UserMessage):
         return OpenaiChatCompletionChoiceMessage(
             role=OpenaiMessageRole.USER, content=message.content
