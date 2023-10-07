@@ -30,31 +30,25 @@ def test_prompt_chain():
 
 
 def test_prompt_chain_max_calls():
-    def get_current_weather(location, unit="fahrenheit"):
-        """Get the current weather in a given location"""
-        return {
-            "location": location,
-            "temperature": "72",
-            "unit": unit,
-            "forecast": ["sunny", "windy"],
-        }
-
+    mock_function = Mock()
     mock_model = Mock()
     mock_model.complete.return_value = AssistantMessage(
-        content=FunctionCall(get_current_weather, "Boston")
+        content=FunctionCall(mock_function)
     )
 
     @prompt_chain(
-        template="What's the weather like in {city}?",
-        functions=[get_current_weather],
+        template="...",
+        functions=[mock_function],
         model=mock_model,
-        max_calls=0,
+        max_calls=1,
     )
-    def describe_weather(city: str) -> str:
+    def make_function_call() -> str:
         ...
 
     with pytest.raises(MaxFunctionCallsError):
-        describe_weather("Boston")
+        make_function_call()
+    assert mock_model.complete.call_count == 2
+    assert mock_function.call_count == 1
 
 
 @pytest.mark.asyncio
