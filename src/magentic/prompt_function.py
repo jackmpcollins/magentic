@@ -13,6 +13,7 @@ from typing import (
     overload,
 )
 
+from magentic.backend import get_chat_model
 from magentic.chat_model.message import UserMessage
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.function_call import FunctionCall
@@ -43,7 +44,7 @@ class BasePromptFunction(Generic[P, R]):
         )
         self._template = template
         self._functions = functions or []
-        self._model = model or OpenaiChatModel()
+        self._model = model
 
         self._return_types = [
             type_
@@ -57,7 +58,7 @@ class BasePromptFunction(Generic[P, R]):
 
     @property
     def model(self) -> OpenaiChatModel:
-        return self._model
+        return self._model or get_chat_model()
 
     @property
     def return_types(self) -> list[type[R]]:
@@ -75,7 +76,7 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted prompt template."""
-        message = self._model.complete(
+        message = self.model.complete(
             messages=[UserMessage(content=self.format(*args, **kwargs))],
             functions=self._functions,
             output_types=self._return_types,
@@ -88,7 +89,7 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted prompt template."""
-        message = await self._model.acomplete(
+        message = await self.model.acomplete(
             messages=[UserMessage(content=self.format(*args, **kwargs))],
             functions=self._functions,
             output_types=self._return_types,
