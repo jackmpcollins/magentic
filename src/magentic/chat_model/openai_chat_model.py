@@ -18,7 +18,6 @@ from magentic.chat_model.message import (
     UserMessage,
 )
 from magentic.function_call import FunctionCall
-from magentic.settings import get_settings
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
@@ -183,21 +182,17 @@ FuncR = TypeVar("FuncR")
 class OpenaiChatModel:
     """An LLM chat model that uses the `openai` python package."""
 
-    def __init__(self, model: str | None = None, temperature: float | None = None):
+    def __init__(self, model: str, temperature: float | None = None):
         self._model = model
         self._temperature = temperature
 
     @property
     def model(self) -> str:
-        if self._model is not None:
-            return self._model
-        return get_settings().openai_model
+        return self._model
 
     @property
     def temperature(self) -> float | None:
-        if self._temperature is not None:
-            return self._temperature
-        return get_settings().openai_temperature
+        return self._temperature
 
     def complete(
         self,
