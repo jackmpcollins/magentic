@@ -317,6 +317,8 @@ The following environment variables can be set.
 | MAGENTIC_OPENAI_TEMPERATURE | OpenAI temperature                    | 0.5                   |
 | OPENAI_API_BASE             | Base URL for an OpenAI-compatible API | http://localhost:8080 |
 
+Since `magentic` uses the `openai` Python package, setting the `OPENAI_API_BASE` environment variable or `openai.api_base` in code allows you to use it with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support function calling then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
+
 ## Type Checking
 
 Many type checkers will raise warnings or errors for functions with the `@prompt` decorator due to the function having no body or return value. There are several ways to deal with these.
