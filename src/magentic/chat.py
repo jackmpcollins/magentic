@@ -1,6 +1,7 @@
 import inspect
 from typing import Any, Callable, Iterable, ParamSpec, TypeVar
 
+from magentic.backend import get_chat_model
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
@@ -38,7 +39,7 @@ class Chat:
         self._messages = list(messages) if messages else []
         self._functions = list(functions) if functions else []
         self._output_types = list(output_types) if output_types else [str]
-        self._model = model if model else OpenaiChatModel()
+        self._model = model
 
     @classmethod
     def from_prompt(
@@ -59,13 +60,17 @@ class Chat:
     def messages(self) -> list[Message[Any]]:
         return self._messages.copy()
 
+    @property
+    def model(self) -> OpenaiChatModel:
+        return self._model or get_chat_model()
+
     def add_message(self: Self, message: Message[Any]) -> Self:
         """Add a message to the chat."""
         return type(self)(
             messages=[*self._messages, message],
             functions=self._functions,
             output_types=self._output_types,
-            model=self._model,
+            model=self.model,
         )
 
     def add_user_message(self: Self, content: str) -> Self:
@@ -78,7 +83,7 @@ class Chat:
 
     def submit(self: Self) -> Self:
         """Request an LLM message to be added to the chat."""
-        output_message: AssistantMessage[Any] = self._model.complete(
+        output_message: AssistantMessage[Any] = self.model.complete(
             messages=self._messages,
             functions=self._functions,
             output_types=self._output_types,
@@ -87,7 +92,7 @@ class Chat:
 
     async def asubmit(self: Self) -> Self:
         """Async version of `submit`."""
-        output_message: AssistantMessage[Any] = await self._model.acomplete(
+        output_message: AssistantMessage[Any] = await self.model.acomplete(
             messages=self._messages,
             functions=self._functions,
             output_types=self._output_types,
