@@ -319,6 +319,34 @@ The following environment variables can be set.
 
 Since `magentic` uses the `openai` Python package, setting the `OPENAI_API_BASE` environment variable or `openai.api_base` in code allows you to use it with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support function calling then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
 
+## Use Anthropic,Huggingface,Palm,Ollama, etc.[Full List](https://docs.litellm.ai/docs/providers)
+
+### Create OpenAI-proxy
+We'll use [LiteLLM](https://docs.litellm.ai/docs/) to create an OpenAI-compatible endpoint, that translates OpenAI calls to any of the [supported providers](https://docs.litellm.ai/docs/providers).
+
+
+Example to use a local CodeLLama model from Ollama.ai with Magentic: 
+
+Let's spin up a proxy server to route any OpenAI call from Magentic to Ollama/CodeLlama
+
+```python
+pip install litellm
+```
+```python
+$ litellm --model ollama/codellama
+
+#INFO: Ollama running on http://0.0.0.0:8000
+```
+
+[Docs](https://docs.litellm.ai/docs/proxy_server)
+
+### Update Magentic
+In our .env
+```shell
+OPENAI_API_BASE=http://0.0.0.0:8000
+OPENAI_API_KEY=my-fake-key
+```
+
 ## Type Checking
 
 Many type checkers will raise warnings or errors for functions with the `@prompt` decorator due to the function having no body or return value. There are several ways to deal with these.
