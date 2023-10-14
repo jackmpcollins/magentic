@@ -1,6 +1,6 @@
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
-from typing import Any, Literal, TypeVar, cast
+from typing import Any, Literal, TypeVar, cast, overload
 
 import openai
 from pydantic import BaseModel, ValidationError
@@ -216,6 +216,42 @@ class OpenaiChatModel:
             return self._temperature
         return get_settings().openai_temperature
 
+    @overload
+    def complete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: None = ...,
+        output_types: None = ...,
+    ) -> AssistantMessage[str]:
+        ...
+
+    @overload
+    def complete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., FuncR]],
+        output_types: None = ...,
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
+        ...
+
+    @overload
+    def complete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: None = ...,
+        output_types: Iterable[type[R]] = ...,
+    ) -> AssistantMessage[R]:
+        ...
+
+    @overload
+    def complete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., FuncR]],
+        output_types: Iterable[type[R]],
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
+        ...
+
     def complete(
         self,
         messages: Iterable[Message[Any]],
@@ -295,6 +331,42 @@ class OpenaiChatModel:
         if streamed_str_in_output_types:
             return cast(AssistantMessage[R], AssistantMessage(streamed_str))
         return cast(AssistantMessage[R], AssistantMessage(str(streamed_str)))
+
+    @overload
+    async def acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: None = ...,
+        output_types: None = ...,
+    ) -> AssistantMessage[str]:
+        ...
+
+    @overload
+    async def acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., FuncR]],
+        output_types: None = ...,
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
+        ...
+
+    @overload
+    async def acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: None = ...,
+        output_types: Iterable[type[R]] = ...,
+    ) -> AssistantMessage[R]:
+        ...
+
+    @overload
+    async def acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., FuncR]],
+        output_types: Iterable[type[R]],
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
+        ...
 
     async def acomplete(
         self,
