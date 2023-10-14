@@ -127,6 +127,7 @@ def message_to_openai_message(
 def openai_chatcompletion_create(
     model: str,
     messages: Iterable[OpenaiChatCompletionChoiceMessage],
+    max_tokens: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -143,6 +144,7 @@ def openai_chatcompletion_create(
     response: Iterator[dict[str, Any]] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
         model=model,
         messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
+        max_tokens=max_tokens,
         temperature=temperature,
         stream=True,
         **kwargs,
@@ -153,6 +155,7 @@ def openai_chatcompletion_create(
 async def openai_chatcompletion_acreate(
     model: str,
     messages: Iterable[OpenaiChatCompletionChoiceMessage],
+    max_tokens: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -169,6 +172,7 @@ async def openai_chatcompletion_acreate(
     response: AsyncIterator[dict[str, Any]] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
         model=model,
         messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
+        max_tokens=max_tokens,
         temperature=temperature,
         stream=True,
         **kwargs,
@@ -183,8 +187,15 @@ FuncR = TypeVar("FuncR")
 class OpenaiChatModel:
     """An LLM chat model that uses the `openai` python package."""
 
-    def __init__(self, model: str | None = None, temperature: float | None = None):
+    def __init__(
+        self,
+        model: str | None = None,
+        *,
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+    ):
         self._model = model
+        self._max_tokens = max_tokens
         self._temperature = temperature
 
     @property
@@ -192,6 +203,12 @@ class OpenaiChatModel:
         if self._model is not None:
             return self._model
         return get_settings().openai_model
+
+    @property
+    def max_tokens(self) -> int | None:
+        if self._max_tokens is not None:
+            return self._max_tokens
+        return get_settings().openai_max_tokens
 
     @property
     def temperature(self) -> float | None:
@@ -229,6 +246,7 @@ class OpenaiChatModel:
         response = openai_chatcompletion_create(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
+            max_tokens=self.max_tokens,
             temperature=self.temperature,
             functions=openai_functions,
             function_call=(
@@ -308,6 +326,7 @@ class OpenaiChatModel:
         response = await openai_chatcompletion_acreate(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
+            max_tokens=self.max_tokens,
             temperature=self.temperature,
             functions=openai_functions,
             function_call=(
