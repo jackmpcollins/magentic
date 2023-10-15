@@ -314,6 +314,7 @@ The following environment variables can be set.
 | Environment Variable        | Description                           | Example               |
 | --------------------------- | ------------------------------------- | --------------------- |
 | MAGENTIC_OPENAI_MODEL       | OpenAI model                          | gpt-4                 |
+| MAGENTIC_OPENAI_MAX_TOKENS  | OpenAI max number of generated tokens | 1024                  |
 | MAGENTIC_OPENAI_TEMPERATURE | OpenAI temperature                    | 0.5                   |
 | OPENAI_API_BASE             | Base URL for an OpenAI-compatible API | http://localhost:8080 |
 

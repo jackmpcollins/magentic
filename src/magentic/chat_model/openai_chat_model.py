@@ -1,6 +1,6 @@
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
-from typing import Any, Literal, TypeVar, cast
+from typing import Any, Literal, TypeVar, cast, overload
 
 import openai
 from pydantic import BaseModel, ValidationError
@@ -126,6 +126,7 @@ def message_to_openai_message(
 def openai_chatcompletion_create(
     model: str,
     messages: Iterable[OpenaiChatCompletionChoiceMessage],
+    max_tokens: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -142,6 +143,7 @@ def openai_chatcompletion_create(
     response: Iterator[dict[str, Any]] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
         model=model,
         messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
+        max_tokens=max_tokens,
         temperature=temperature,
         stream=True,
         **kwargs,
@@ -152,6 +154,7 @@ def openai_chatcompletion_create(
 async def openai_chatcompletion_acreate(
     model: str,
     messages: Iterable[OpenaiChatCompletionChoiceMessage],
+    max_tokens: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -168,6 +171,7 @@ async def openai_chatcompletion_acreate(
     response: AsyncIterator[dict[str, Any]] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
         model=model,
         messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
+        max_tokens=max_tokens,
         temperature=temperature,
         stream=True,
         **kwargs,
@@ -182,8 +186,15 @@ FuncR = TypeVar("FuncR")
 class OpenaiChatModel:
     """An LLM chat model that uses the `openai` python package."""
 
-    def __init__(self, model: str, temperature: float | None = None):
+    def __init__(
+        self,
+        model: str,
+        *,
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+    ):
         self._model = model
+        self._max_tokens = max_tokens
         self._temperature = temperature
 
     @property
@@ -191,8 +202,48 @@ class OpenaiChatModel:
         return self._model
 
     @property
+    def max_tokens(self) -> int | None:
+        return self._max_tokens
+
+    @property
     def temperature(self) -> float | None:
         return self._temperature
+
+    @overload
+    def complete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: None = ...,
+        output_types: None = ...,
+    ) -> AssistantMessage[str]:
+        ...
+
+    @overload
+    def complete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., FuncR]],
+        output_types: None = ...,
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
+        ...
+
+    @overload
+    def complete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: None = ...,
+        output_types: Iterable[type[R]] = ...,
+    ) -> AssistantMessage[R]:
+        ...
+
+    @overload
+    def complete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., FuncR]],
+        output_types: Iterable[type[R]],
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
+        ...
 
     def complete(
         self,
@@ -224,6 +275,7 @@ class OpenaiChatModel:
         response = openai_chatcompletion_create(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
+            max_tokens=self.max_tokens,
             temperature=self.temperature,
             functions=openai_functions,
             function_call=(
@@ -273,6 +325,42 @@ class OpenaiChatModel:
             return cast(AssistantMessage[R], AssistantMessage(streamed_str))
         return cast(AssistantMessage[R], AssistantMessage(str(streamed_str)))
 
+    @overload
+    async def acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: None = ...,
+        output_types: None = ...,
+    ) -> AssistantMessage[str]:
+        ...
+
+    @overload
+    async def acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., FuncR]],
+        output_types: None = ...,
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
+        ...
+
+    @overload
+    async def acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: None = ...,
+        output_types: Iterable[type[R]] = ...,
+    ) -> AssistantMessage[R]:
+        ...
+
+    @overload
+    async def acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., FuncR]],
+        output_types: Iterable[type[R]],
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
+        ...
+
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
@@ -303,6 +391,7 @@ class OpenaiChatModel:
         response = await openai_chatcompletion_acreate(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
+            max_tokens=self.max_tokens,
             temperature=self.temperature,
             functions=openai_functions,
             function_call=(
