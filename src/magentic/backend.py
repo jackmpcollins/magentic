@@ -11,6 +11,7 @@ def get_chat_model() -> OpenaiChatModel:
 
             return OpenaiChatModel(
                 model=settings.openai_model,
+                max_tokens=settings.openai_max_tokens,
                 temperature=settings.openai_temperature,
             )
         case _:
