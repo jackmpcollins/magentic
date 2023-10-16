@@ -313,6 +313,7 @@ The following environment variables can be set.
 
 | Environment Variable        | Description                           | Example               |
 | --------------------------- | ------------------------------------- | --------------------- |
+| MAGENTIC_BACKEND            | The package to use as the LLM backend | openai                |
 | MAGENTIC_OPENAI_MODEL       | OpenAI model                          | gpt-4                 |
 | MAGENTIC_OPENAI_MAX_TOKENS  | OpenAI max number of generated tokens | 1024                  |
 | MAGENTIC_OPENAI_TEMPERATURE | OpenAI temperature                    | 0.5                   |
