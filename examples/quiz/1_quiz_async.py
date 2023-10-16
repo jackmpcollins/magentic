@@ -69,7 +69,7 @@ class Question(BaseModel):
 @prompt(
     "Generate a quiz question about {topic} with difficulty {difficulty}/5.",
     # Increase temperature to try generate unique questions
-    model=OpenaiChatModel(temperature=1),
+    model=OpenaiChatModel("gpt-3.5-turbo", temperature=1),
 )
 async def generate_question(topic: str, difficulty: int) -> Question:
     ...

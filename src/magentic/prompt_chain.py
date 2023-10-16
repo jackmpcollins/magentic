@@ -9,7 +9,7 @@ from typing import (
 )
 
 from magentic.chat import Chat
-from magentic.chat_model.openai_chat_model import OpenaiChatModel
+from magentic.chat_model.base import ChatModel
 from magentic.function_call import FunctionCall
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction
 
@@ -24,7 +24,7 @@ class MaxFunctionCallsError(Exception):
 def prompt_chain(
     template: str,
     functions: list[Callable[..., Any]] | None = None,
-    model: OpenaiChatModel | None = None,
+    model: ChatModel | None = None,
     max_calls: int | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Convert a Python function to an LLM query, auto-resolving function calls."""

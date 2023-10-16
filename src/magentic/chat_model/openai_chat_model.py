@@ -5,6 +5,7 @@ from typing import Any, Literal, TypeVar, cast, overload
 import openai
 from pydantic import BaseModel, ValidationError
 
+from magentic.chat_model.base import ChatModel
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
@@ -18,7 +19,6 @@ from magentic.chat_model.message import (
     UserMessage,
 )
 from magentic.function_call import FunctionCall
-from magentic.settings import get_settings
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
@@ -184,12 +184,12 @@ R = TypeVar("R")
 FuncR = TypeVar("FuncR")
 
 
-class OpenaiChatModel:
+class OpenaiChatModel(ChatModel):
     """An LLM chat model that uses the `openai` python package."""
 
     def __init__(
         self,
-        model: str | None = None,
+        model: str,
         *,
         max_tokens: int | None = None,
         temperature: float | None = None,
@@ -200,21 +200,15 @@ class OpenaiChatModel:
 
     @property
     def model(self) -> str:
-        if self._model is not None:
-            return self._model
-        return get_settings().openai_model
+        return self._model
 
     @property
     def max_tokens(self) -> int | None:
-        if self._max_tokens is not None:
-            return self._max_tokens
-        return get_settings().openai_max_tokens
+        return self._max_tokens
 
     @property
     def temperature(self) -> float | None:
-        if self._temperature is not None:
-            return self._temperature
-        return get_settings().openai_temperature
+        return self._temperature
 
     @overload
     def complete(

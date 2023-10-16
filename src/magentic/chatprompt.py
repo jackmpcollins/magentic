@@ -13,8 +13,9 @@ from typing import (
     overload,
 )
 
+from magentic.backend import get_chat_model
+from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import Message
-from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.function_call import FunctionCall
 from magentic.typing import is_origin_subclass, split_union_type
 
@@ -44,7 +45,7 @@ class BaseChatPromptFunction(Generic[P, R]):
         parameters: Sequence[inspect.Parameter],
         return_type: type[R],
         functions: list[Callable[..., Any]] | None = None,
-        model: OpenaiChatModel | None = None,
+        model: ChatModel | None = None,
     ):
         self._signature = inspect.Signature(
             parameters=parameters,
@@ -52,7 +53,7 @@ class BaseChatPromptFunction(Generic[P, R]):
         )
         self._messages = messages
         self._functions = functions or []
-        self._model = model or OpenaiChatModel()
+        self._model = model
 
         self._return_types = [
             type_
@@ -65,8 +66,8 @@ class BaseChatPromptFunction(Generic[P, R]):
         return self._functions.copy()
 
     @property
-    def model(self) -> OpenaiChatModel:
-        return self._model
+    def model(self) -> ChatModel:
+        return self._model or get_chat_model()
 
     @property
     def return_types(self) -> list[type[R]]:
@@ -93,7 +94,7 @@ class ChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted chat prompt template."""
-        message = self._model.complete(
+        message = self.model.complete(
             messages=self.format(*args, **kwargs),
             functions=self._functions,
             output_types=self._return_types,
@@ -106,7 +107,7 @@ class AsyncChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted chat prompt template."""
-        message = await self._model.acomplete(
+        message = await self.model.acomplete(
             messages=self.format(*args, **kwargs),
             functions=self._functions,
             output_types=self._return_types,
@@ -133,7 +134,7 @@ class ChatPromptDecorator(Protocol):
 def chatprompt(
     *messages: Message[Any],
     functions: list[Callable[..., Any]] | None = None,
-    model: OpenaiChatModel | None = None,
+    model: ChatModel | None = None,
 ) -> ChatPromptDecorator:
     """Convert a function into an LLM chat prompt template.
 
