@@ -2,13 +2,13 @@ import inspect
 from typing import Any, Callable, Iterable, ParamSpec, TypeVar
 
 from magentic.backend import get_chat_model
+from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
     Message,
     UserMessage,
 )
-from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.function_call import FunctionCall
 from magentic.prompt_function import BasePromptFunction
 
@@ -34,7 +34,7 @@ class Chat:
         messages: list[Message[Any]] | None = None,
         functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[Any]] | None = None,
-        model: OpenaiChatModel | None = None,
+        model: ChatModel | None = None,
     ):
         self._messages = list(messages) if messages else []
         self._functions = list(functions) if functions else []
@@ -61,7 +61,7 @@ class Chat:
         return self._messages.copy()
 
     @property
-    def model(self) -> OpenaiChatModel:
+    def model(self) -> ChatModel:
         return self._model or get_chat_model()
 
     def add_message(self: Self, message: Message[Any]) -> Self:

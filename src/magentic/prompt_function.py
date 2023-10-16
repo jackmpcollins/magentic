@@ -14,8 +14,8 @@ from typing import (
 )
 
 from magentic.backend import get_chat_model
+from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import UserMessage
-from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.function_call import FunctionCall
 from magentic.typing import is_origin_subclass, split_union_type
 
@@ -36,7 +36,7 @@ class BasePromptFunction(Generic[P, R]):
         parameters: Sequence[inspect.Parameter],
         return_type: type[R],
         functions: list[Callable[..., Any]] | None = None,
-        model: OpenaiChatModel | None = None,
+        model: ChatModel | None = None,
     ):
         self._signature = inspect.Signature(
             parameters=parameters,
@@ -57,7 +57,7 @@ class BasePromptFunction(Generic[P, R]):
         return self._functions.copy()
 
     @property
-    def model(self) -> OpenaiChatModel:
+    def model(self) -> ChatModel:
         return self._model or get_chat_model()
 
     @property
@@ -116,7 +116,7 @@ class PromptDecorator(Protocol):
 def prompt(
     template: str,
     functions: list[Callable[..., Any]] | None = None,
-    model: OpenaiChatModel | None = None,
+    model: ChatModel | None = None,
 ) -> PromptDecorator:
     """Convert a function into an LLM prompt template.
 

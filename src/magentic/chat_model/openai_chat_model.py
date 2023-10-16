@@ -5,6 +5,7 @@ from typing import Any, Literal, TypeVar, cast, overload
 import openai
 from pydantic import BaseModel, ValidationError
 
+from magentic.chat_model.base import ChatModel
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
@@ -183,7 +184,7 @@ R = TypeVar("R")
 FuncR = TypeVar("FuncR")
 
 
-class OpenaiChatModel:
+class OpenaiChatModel(ChatModel):
     """An LLM chat model that uses the `openai` python package."""
 
     def __init__(

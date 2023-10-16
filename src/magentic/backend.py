@@ -1,8 +1,8 @@
-from magentic.chat_model.openai_chat_model import OpenaiChatModel
+from magentic.chat_model.base import ChatModel
 from magentic.settings import Backend, get_settings
 
 
-def get_chat_model() -> OpenaiChatModel:
+def get_chat_model() -> ChatModel:
     settings = get_settings()
 
     match (settings.backend):
