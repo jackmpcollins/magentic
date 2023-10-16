@@ -5,7 +5,7 @@ from magentic.settings import Backend, get_settings
 def get_chat_model() -> ChatModel:
     settings = get_settings()
 
-    match (settings.backend):
+    match settings.backend:
         case Backend.OPENAI:
             from magentic.chat_model.openai_chat_model import OpenaiChatModel
 
