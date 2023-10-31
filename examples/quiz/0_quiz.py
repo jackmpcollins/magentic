@@ -65,10 +65,12 @@ def generate_questions(topic: str, num: int) -> list[Question]:
     ...
 
 
-@prompt("""Return true if the user's answer is correct.
+@prompt(
+    """Return true if the user's answer is correct.
 Question: {question.question}
 Answer: {question.answer}
-User Answer: {user_answer}""")
+User Answer: {user_answer}"""
+)
 def is_answer_correct(question: Question, user_answer: str) -> bool:
     ...
 

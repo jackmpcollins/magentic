@@ -123,7 +123,9 @@ class ChatPromptDecorator(Protocol):
     """
 
     @overload
-    def __call__(self, func: Callable[P, Awaitable[R]]) -> AsyncChatPromptFunction[P, R]:  # type: ignore[misc]
+    def __call__(
+        self, func: Callable[P, Awaitable[R]]
+    ) -> AsyncChatPromptFunction[P, R]:  # type: ignore[misc]
         ...
 
     @overload

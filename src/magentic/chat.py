@@ -46,7 +46,7 @@ class Chat:
         cls: type[Self],
         prompt: BasePromptFunction[P, Any],
         *args: P.args,
-        **kwargs: P.kwargs
+        **kwargs: P.kwargs,
     ) -> Self:
         """Create a chat from a prompt function."""
         return cls(
