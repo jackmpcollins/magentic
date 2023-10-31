@@ -2,9 +2,6 @@
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.black]
-preview = true
-
 [tool.mypy]
 check_untyped_defs = true
 disable_error_code = ["empty-body"]
