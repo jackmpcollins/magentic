@@ -11,10 +11,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - run: |
-          pipx install ruff
-          ruff check --output-format=github .
-          ruff format --check .
+      - run: pipx install ruff
+      - run: ruff check --output-format=github .
+      - run: ruff format --check .
       - run: pipx install poetry
       - name: Set up Python
         uses: actions/setup-python@v4
