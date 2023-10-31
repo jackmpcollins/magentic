@@ -11,7 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: chartboost/ruff-action@v1
+      - run: |
+          pipx install ruff
+          ruff check --output-format=github .
+          ruff format --check .
       - run: pipx install poetry
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -19,6 +22,5 @@ jobs:
           python-version: "3.10"
           cache: "poetry"
       - run: poetry install
-      - run: poetry run black --check .
       - run: poetry run mypy .
       - run: poetry run pytest -m "not openai"
