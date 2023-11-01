@@ -1,10 +1,10 @@
 import re
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
-from typing import Any, Literal, TypeVar, cast, overload
+from typing import Any, Literal, TypeVar, cast, overload, Annotated
 
 import openai
-from pydantic import BaseModel, Field, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator, model_validator
 
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.function_schema import (
@@ -66,17 +66,24 @@ class OpenaiChatCompletionChunk(BaseModel):
 
 class OpenaiChatCompletionChoiceMessage(BaseModel):
     role: OpenaiMessageRole
-    name: str | None = Field(None, max_length=64)
+    name: Annotated[str | None, Field(min_length=1, max_length=64)] = None
     content: str | None
     function_call: OpenaiChatCompletionFunctionCall | None = None
 
-    @field_validator("name")
+    @field_validator("name", mode="before")
     @classmethod
     def clean_name(cls, v: str | None) -> str | None:
         if isinstance(v, str):
             # See https://platform.openai.com/docs/api-reference/chat/create
-            return re.sub(pattern=r'[^a-zA-Z0-9_-]', repl="_", string=v)
+            return re.sub(pattern=r'[^a-zA-Z0-9_-]', repl="_", string=v)[:64]
         return None
+
+    @model_validator(mode='after')
+    def check_name_is_set_for_function_role(self) -> 'OpenaiChatCompletionChoiceMessage':
+        if self.role == OpenaiMessageRole.FUNCTION and self.name is None:
+            raise ValueError("name is required if role is function, and it should be the name of the function whose "
+                             "response is in the content")
+        return self
 
 
 class OpenaiChatCompletionChoice(BaseModel):
