@@ -1,9 +1,10 @@
+import re
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from typing import Any, Literal, TypeVar, cast, overload
 
 import openai
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.function_schema import (
@@ -65,9 +66,17 @@ class OpenaiChatCompletionChunk(BaseModel):
 
 class OpenaiChatCompletionChoiceMessage(BaseModel):
     role: OpenaiMessageRole
-    name: str | None = None
+    name: str | None = Field(None, max_length=64)
     content: str | None
     function_call: OpenaiChatCompletionFunctionCall | None = None
+
+    @field_validator("name")
+    @classmethod
+    def clean_name(cls, v: str | None) -> str | None:
+        if isinstance(v, str):
+            # See https://platform.openai.com/docs/api-reference/chat/create
+            return re.sub(pattern=r'[^a-zA-Z0-9_-]', repl="_", string=v)
+        return None
 
 
 class OpenaiChatCompletionChoice(BaseModel):
@@ -79,7 +88,7 @@ class OpenaiChatCompletion(BaseModel):
 
 
 def message_to_openai_message(
-    message: Message[Any],
+        message: Message[Any],
 ) -> OpenaiChatCompletionChoiceMessage:
     """Convert a Message to an OpenAI message."""
     if isinstance(message, SystemMessage):
@@ -125,12 +134,12 @@ def message_to_openai_message(
 
 
 def openai_chatcompletion_create(
-    model: str,
-    messages: Iterable[OpenaiChatCompletionChoiceMessage],
-    max_tokens: int | None = None,
-    temperature: float | None = None,
-    functions: list[dict[str, Any]] | None = None,
-    function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
+        model: str,
+        messages: Iterable[OpenaiChatCompletionChoiceMessage],
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+        functions: list[dict[str, Any]] | None = None,
+        function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> Iterator[OpenaiChatCompletionChunk]:
     """Type-annotated version of `openai.ChatCompletion.create`."""
     # `openai.ChatCompletion.create` doesn't accept `None`
@@ -153,12 +162,12 @@ def openai_chatcompletion_create(
 
 
 async def openai_chatcompletion_acreate(
-    model: str,
-    messages: Iterable[OpenaiChatCompletionChoiceMessage],
-    max_tokens: int | None = None,
-    temperature: float | None = None,
-    functions: list[dict[str, Any]] | None = None,
-    function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
+        model: str,
+        messages: Iterable[OpenaiChatCompletionChoiceMessage],
+        max_tokens: int | None = None,
+        temperature: float | None = None,
+        functions: list[dict[str, Any]] | None = None,
+        function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> AsyncIterator[OpenaiChatCompletionChunk]:
     """Type-annotated version of `openai.ChatCompletion.acreate`."""
     # `openai.ChatCompletion.create` doesn't accept `None`
@@ -188,11 +197,11 @@ class OpenaiChatModel(ChatModel):
     """An LLM chat model that uses the `openai` python package."""
 
     def __init__(
-        self,
-        model: str,
-        *,
-        max_tokens: int | None = None,
-        temperature: float | None = None,
+            self,
+            model: str,
+            *,
+            max_tokens: int | None = None,
+            temperature: float | None = None,
     ):
         self._model = model
         self._max_tokens = max_tokens
@@ -212,49 +221,49 @@ class OpenaiChatModel(ChatModel):
 
     @overload
     def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
-        output_types: None = ...,
+            self,
+            messages: Iterable[Message[Any]],
+            functions: None = ...,
+            output_types: None = ...,
     ) -> AssistantMessage[str]:
         ...
 
     @overload
     def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: None = ...,
+            self,
+            messages: Iterable[Message[Any]],
+            functions: Iterable[Callable[..., FuncR]],
+            output_types: None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
         ...
 
     @overload
     def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
-        output_types: Iterable[type[R]] = ...,
+            self,
+            messages: Iterable[Message[Any]],
+            functions: None = ...,
+            output_types: Iterable[type[R]] = ...,
     ) -> AssistantMessage[R]:
         ...
 
     @overload
     def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: Iterable[type[R]],
+            self,
+            messages: Iterable[Message[Any]],
+            functions: Iterable[Callable[..., FuncR]],
+            output_types: Iterable[type[R]],
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
         ...
 
     def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]] | None = None,
-        output_types: Iterable[type[R | str]] | None = None,
+            self,
+            messages: Iterable[Message[Any]],
+            functions: Iterable[Callable[..., FuncR]] | None = None,
+            output_types: Iterable[type[R | str]] | None = None,
     ) -> (
-        AssistantMessage[FunctionCall[FuncR]]
-        | AssistantMessage[R]
-        | AssistantMessage[str]
+            AssistantMessage[FunctionCall[FuncR]]
+            | AssistantMessage[R]
+            | AssistantMessage[str]
     ):
         """Request an LLM message."""
         if output_types is None:
@@ -328,49 +337,49 @@ class OpenaiChatModel(ChatModel):
 
     @overload
     async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
-        output_types: None = ...,
+            self,
+            messages: Iterable[Message[Any]],
+            functions: None = ...,
+            output_types: None = ...,
     ) -> AssistantMessage[str]:
         ...
 
     @overload
     async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: None = ...,
+            self,
+            messages: Iterable[Message[Any]],
+            functions: Iterable[Callable[..., FuncR]],
+            output_types: None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
         ...
 
     @overload
     async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
-        output_types: Iterable[type[R]] = ...,
+            self,
+            messages: Iterable[Message[Any]],
+            functions: None = ...,
+            output_types: Iterable[type[R]] = ...,
     ) -> AssistantMessage[R]:
         ...
 
     @overload
     async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: Iterable[type[R]],
+            self,
+            messages: Iterable[Message[Any]],
+            functions: Iterable[Callable[..., FuncR]],
+            output_types: Iterable[type[R]],
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
         ...
 
     async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]] | None = None,
-        output_types: Iterable[type[R | str]] | None = None,
+            self,
+            messages: Iterable[Message[Any]],
+            functions: Iterable[Callable[..., FuncR]] | None = None,
+            output_types: Iterable[type[R | str]] | None = None,
     ) -> (
-        AssistantMessage[FunctionCall[FuncR]]
-        | AssistantMessage[R]
-        | AssistantMessage[str]
+            AssistantMessage[FunctionCall[FuncR]]
+            | AssistantMessage[R]
+            | AssistantMessage[str]
     ):
         """Async version of `complete`."""
         if output_types is None:
