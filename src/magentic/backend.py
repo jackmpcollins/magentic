@@ -1,8 +1,11 @@
-from magentic.chat_model.base import ChatModel
+from magentic.chat_model.base import ChatModel, _chat_model_context
 from magentic.settings import Backend, get_settings
 
 
 def get_chat_model() -> ChatModel:
+    if chat_model := _chat_model_context.get():
+        return chat_model
+
     settings = get_settings()
 
     match settings.backend:
