@@ -4,6 +4,7 @@ from magentic.chat_model.message import (
     SystemMessage,
     UserMessage,
 )
+from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.chatprompt import chatprompt
 from magentic.function_call import FunctionCall
 from magentic.prompt_chain import prompt_chain
@@ -15,6 +16,7 @@ __all__ = [
     "FunctionResultMessage",
     "SystemMessage",
     "UserMessage",
+    "OpenaiChatModel",
     "chatprompt",
     "FunctionCall",
     "prompt_chain",

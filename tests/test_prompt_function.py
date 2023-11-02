@@ -6,9 +6,10 @@ from typing import Awaitable
 import pytest
 from pydantic import BaseModel
 
-from magentic.chat_model.openai_chat_model import StructuredOutputError
+from magentic.chat_model.openai_chat_model import OpenaiChatModel, StructuredOutputError
 from magentic.function_call import FunctionCall
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
+from magentic.settings import get_settings
 from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 
@@ -182,3 +183,22 @@ async def test_async_decorator_return_async_function_call():
     output = await sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
     assert isinstance(await output(), int)
+
+
+def test_decorator_with_context_manager():
+    @prompt("Say hello")
+    def say_hello() -> str:
+        ...
+
+    @prompt(
+        "Say hello",
+        model=OpenaiChatModel("gpt-4", temperature=1),
+    )
+    def say_hello_gpt4() -> str:
+        ...
+
+    assert say_hello.model.model == get_settings().openai_model  # type: ignore[attr-defined]
+
+    with OpenaiChatModel("gpt-3.5-turbo"):
+        assert say_hello.model.model == "gpt-3.5-turbo"  # type: ignore[attr-defined]
+        assert say_hello_gpt4.model.model == "gpt-4"  # type: ignore[attr-defined]

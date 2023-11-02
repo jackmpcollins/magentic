@@ -1,6 +1,8 @@
+import types
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
-from typing import Any, TypeVar, overload
+from contextvars import ContextVar
+from typing import TYPE_CHECKING, Any, TypeVar, overload
 
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -10,6 +12,11 @@ from magentic.function_call import FunctionCall
 
 R = TypeVar("R")
 FuncR = TypeVar("FuncR")
+
+if TYPE_CHECKING:
+    _chat_model_context: ContextVar["ChatModel" | None]
+
+_chat_model_context = ContextVar("chat_model", default=None)
 
 
 class ChatModel(ABC):
@@ -122,3 +129,14 @@ class ChatModel(ABC):
     ):
         """Async version of `complete`."""
         ...
+
+    def __enter__(self) -> None:
+        self.__token = _chat_model_context.set(self)
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: types.TracebackType | None,
+    ) -> None:
+        _chat_model_context.reset(self.__token)
