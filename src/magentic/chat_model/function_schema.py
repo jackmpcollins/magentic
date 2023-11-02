@@ -199,7 +199,7 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
 
     @property
     def name(self) -> str:
-        return f"return_{self._model.__name__.lower()}"
+        return f"return_{name_type(self._model)}"
 
     @property
     def parameters(self) -> dict[str, Any]:
