@@ -299,15 +299,40 @@ print(len(out), time_elapsed, len(out) / time_elapsed)
 
 - The `functions` argument to `@prompt` can contain async/coroutine functions. When the corresponding `FunctionCall` objects are called the result must be awaited.
 - The `Annotated` type annotation can be used to provide descriptions and other metadata for function parameters. See [the pydantic documentation on using `Field` to describe function arguments](https://docs.pydantic.dev/latest/usage/validation_decorator/#using-field-to-describe-function-arguments).
-- The `@prompt` and `@prompt_chain` decorators also accept a `model` argument. You can pass an instance of `OpenaiChatModel` (from `magentic.chat_model.openai_chat_model`) to use GPT4 or configure a different temperature.
+- The `@prompt` and `@prompt_chain` decorators also accept a `model` argument. You can pass an instance of `OpenaiChatModel` to use GPT4 or configure a different temperature. See below.
 
 ## Configuration
 
-The order of precedence of configuration is
+The backend/LLM used by `magentic` can be configured in several ways. The order of precedence of configuration is
 
-1. Arguments passed when initializing an instance in Python
-2. Environment variables
-3. Default values from [src/magentic/settings.py](src/magentic/settings.py)
+1. Arguments explicitly passed when initializing an instance in Python
+1. Values set using a context manager in Python
+1. Environment variables
+1. Default values from [src/magentic/settings.py](src/magentic/settings.py)
+
+```python
+from magentic import OpenaiChatModel, prompt
+
+
+@prompt("Say hello")
+def say_hello() -> str:
+    ...
+
+
+@prompt(
+    "Say hello",
+    model=OpenaiChatModel("gpt-4", temperature=1),
+)
+def say_hello_gpt4() -> str:
+    ...
+
+
+say_hello()  # Uses env vars or default settings
+
+with OpenaiChatModel("gpt-3.5-turbo"):
+    say_hello()  # Uses gpt-3.5-turbo due to context manager
+    say_hello_gpt4()  # Uses gpt-4 with temperature=1 because explicitly configured
+```
 
 The following environment variables can be set.
 
