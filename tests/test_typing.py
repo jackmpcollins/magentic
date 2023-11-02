@@ -77,6 +77,7 @@ class DoubleGenericModel(BaseModel, Generic[T1, T2]):
         (dict[str, int], "dict_of_str_to_int"),
         (typing.Iterable[str], "iterable_of_str"),
         (GenericModel[int], "genericmodel_int"),
+        (GenericModel[GenericModel[int]], "genericmodel_genericmodel_int"),
         (DoubleGenericModel[int, str], "doublegenericmodel_int_str"),
     ],
 )
