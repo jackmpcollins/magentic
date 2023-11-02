@@ -1,8 +1,9 @@
 import typing
 from types import NoneType
-from typing import Any
+from typing import Any, Generic, TypeVar
 
 import pytest
+from pydantic import BaseModel
 
 from magentic.typing import (
     is_origin_abstract,
@@ -51,6 +52,19 @@ def test_is_origin_subclass(type_, cls_or_tuple, expected_result):
     assert is_origin_subclass(type_, cls_or_tuple) == expected_result
 
 
+T1 = TypeVar("T1")
+T2 = TypeVar("T2")
+
+
+class GenericModel(BaseModel, Generic[T1]):
+    one: T1
+
+
+class DoubleGenericModel(BaseModel, Generic[T1, T2]):
+    one: T1
+    two: T2
+
+
 @pytest.mark.parametrize(
     ("type_", "expected_name"),
     [
@@ -62,6 +76,9 @@ def test_is_origin_subclass(type_, cls_or_tuple, expected_result):
         (list[str] | bool, "list_of_str_or_bool"),
         (dict[str, int], "dict_of_str_to_int"),
         (typing.Iterable[str], "iterable_of_str"),
+        (GenericModel[int], "genericmodel_int"),
+        (GenericModel[GenericModel[int]], "genericmodel_genericmodel_int"),
+        (DoubleGenericModel[int, str], "doublegenericmodel_int_str"),
     ],
 )
 def test_name_type(type_, expected_name):

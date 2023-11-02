@@ -56,6 +56,14 @@ def name_type(type_: type) -> str:
         key_type, value_type = args
         return f"dict_of_{name_type(key_type)}_to_{name_type(value_type)}"
 
+    pydantic_metadata = getattr(type_, "__pydantic_generic_metadata__", None)
+    if (
+        pydantic_metadata
+        and (origin := pydantic_metadata.get("origin"))
+        and (args := pydantic_metadata.get("args"))
+    ):
+        return name_type(origin) + "_" + "_".join(name_type(arg) for arg in args)
+
     if name := getattr(type_, "__name__", None):
         assert isinstance(name, str)  # noqa: S101
 

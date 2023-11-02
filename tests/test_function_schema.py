@@ -2,7 +2,7 @@ import collections.abc
 import json
 import typing
 from collections import OrderedDict
-from typing import Annotated, Any, get_origin
+from typing import Annotated, Any, Generic, TypeVar, get_origin
 
 import pytest
 from pydantic import BaseModel, Field
@@ -476,6 +476,33 @@ def test_base_model_function_schema():
     assert function_schema.name == "return_user"
     assert function_schema.dict() == {
         "name": "return_user",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                # TODO: Remove "title" keys from schema
+                "name": {"title": "Name", "type": "string"},
+                "age": {"title": "Age", "type": "integer"},
+            },
+            "required": ["name", "age"],
+        },
+    }
+    assert function_schema.parse_args('{"name": "Alice", "age": 99}') == User(
+        name="Alice", age=99
+    )
+
+
+def test_base_model_function_schema_generic_model():
+    T = TypeVar("T")
+
+    class User(BaseModel, Generic[T]):
+        name: str
+        age: T
+
+    function_schema = BaseModelFunctionSchema(User[int])
+
+    assert function_schema.name == "return_user_int"
+    assert function_schema.dict() == {
+        "name": "return_user_int",
         "parameters": {
             "type": "object",
             "properties": {
