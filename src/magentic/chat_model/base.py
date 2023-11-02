@@ -128,7 +128,7 @@ class ChatModel(ABC):
         """Async version of `complete`."""
         ...
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self.__token = _chat_model_context.set(self)
 
     def __exit__(
@@ -136,5 +136,5 @@ class ChatModel(ABC):
         exc_type: type[BaseException] | None,
         exc_value: BaseException | None,
         traceback: types.TracebackType | None,
-    ):
+    ) -> None:
         _chat_model_context.reset(self.__token)
