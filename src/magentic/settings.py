@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Backend(Enum):
+    LITELLM = "litellm"
     OPENAI = "openai"
 
 
