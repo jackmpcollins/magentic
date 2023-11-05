@@ -301,9 +301,14 @@ print(len(out), time_elapsed, len(out) / time_elapsed)
 - The `Annotated` type annotation can be used to provide descriptions and other metadata for function parameters. See [the pydantic documentation on using `Field` to describe function arguments](https://docs.pydantic.dev/latest/usage/validation_decorator/#using-field-to-describe-function-arguments).
 - The `@prompt` and `@prompt_chain` decorators also accept a `model` argument. You can pass an instance of `OpenaiChatModel` to use GPT4 or configure a different temperature. See below.
 
-## Configuration
+## Backend/LLM Configuration
 
-The backend/LLM used by `magentic` can be configured in several ways. The order of precedence of configuration is
+Currently two backends are available
+
+- `openai` : the default backend that uses the `openai` Python package.
+- `litellm` : uses the `litellm` Python package to enable querying LLMs from [many different providers](https://docs.litellm.ai/docs/providers). Install this with `pip install magentic[litellm]`.
+
+The backend and LLM used by `magentic` can be configured in several ways. The order of precedence of configuration is
 
 1. Arguments explicitly passed when initializing an instance in Python
 1. Values set using a context manager in Python
@@ -312,6 +317,7 @@ The backend/LLM used by `magentic` can be configured in several ways. The order 
 
 ```python
 from magentic import OpenaiChatModel, prompt
+from magentic.chat_model.litellm_chat_model import LitellmChatModel
 
 
 @prompt("Say hello")
@@ -321,17 +327,17 @@ def say_hello() -> str:
 
 @prompt(
     "Say hello",
-    model=OpenaiChatModel("gpt-4", temperature=1),
+    model=LitellmChatModel("claude-2", temperature=1),
 )
-def say_hello_gpt4() -> str:
+def say_hello_litellm() -> str:
     ...
 
 
 say_hello()  # Uses env vars or default settings
 
 with OpenaiChatModel("gpt-3.5-turbo"):
-    say_hello()  # Uses gpt-3.5-turbo due to context manager
-    say_hello_gpt4()  # Uses gpt-4 with temperature=1 because explicitly configured
+    say_hello()  # Uses openai with gpt-3.5-turbo due to context manager
+    say_hello_litellm()  # Uses litellm with claude-2 and temperature=1 because explicitly configured
 ```
 
 The following environment variables can be set.
