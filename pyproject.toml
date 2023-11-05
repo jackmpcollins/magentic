@@ -19,7 +19,7 @@ repository = "https://github.com/jackmpcollins/magentic"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
-litellm = { version = "*", optional = true }
+litellm = {version = ">=0.8.4", optional = true}
 openai = ">=0.27"
 pydantic = ">=2.0.0"
 pydantic-settings = ">=2.0.0"
