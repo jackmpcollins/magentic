@@ -342,16 +342,17 @@ with OpenaiChatModel("gpt-3.5-turbo"):
 
 The following environment variables can be set.
 
-| Environment Variable         | Description                            | Example               |
-| ---------------------------- | -------------------------------------- | --------------------- |
-| MAGENTIC_BACKEND             | The package to use as the LLM backend  | openai                |
-| MAGENTIC_LITELLM_MODEL       | LiteLLM model                          | claude-2              |
-| MAGENTIC_LITELLM_MAX_TOKENS  | LiteLLM max number of generated tokens | 1024                  |
-| MAGENTIC_LITELLM_TEMPERATURE | LiteLLM temperature                    | 0.5                   |
-| MAGENTIC_OPENAI_MODEL        | OpenAI model                           | gpt-4                 |
-| MAGENTIC_OPENAI_MAX_TOKENS   | OpenAI max number of generated tokens  | 1024                  |
-| MAGENTIC_OPENAI_TEMPERATURE  | OpenAI temperature                     | 0.5                   |
-| OPENAI_API_BASE              | Base URL for an OpenAI-compatible API  | http://localhost:8080 |
+| Environment Variable         | Description                            | Example                |
+| ---------------------------- | -------------------------------------- | ---------------------- |
+| MAGENTIC_BACKEND             | The package to use as the LLM backend  | openai                 |
+| MAGENTIC_LITELLM_MODEL       | LiteLLM model                          | claude-2               |
+| MAGENTIC_LITELLM_API_BASE    | The base url to query                  | http://localhost:11434 |
+| MAGENTIC_LITELLM_MAX_TOKENS  | LiteLLM max number of generated tokens | 1024                   |
+| MAGENTIC_LITELLM_TEMPERATURE | LiteLLM temperature                    | 0.5                    |
+| MAGENTIC_OPENAI_MODEL        | OpenAI model                           | gpt-4                  |
+| MAGENTIC_OPENAI_MAX_TOKENS   | OpenAI max number of generated tokens  | 1024                   |
+| MAGENTIC_OPENAI_TEMPERATURE  | OpenAI temperature                     | 0.5                    |
+| OPENAI_API_BASE              | Base URL for an OpenAI-compatible API  | http://localhost:8080  |
 
 Since `magentic` uses the `openai` Python package, setting the `OPENAI_API_BASE` environment variable or `openai.api_base` in code allows you to use it with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support function calling then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
 

@@ -14,6 +14,7 @@ def get_chat_model() -> ChatModel:
 
             return LitellmChatModel(
                 model=settings.litellm_model,
+                api_base=settings.litellm_api_base,
                 max_tokens=settings.litellm_max_tokens,
                 temperature=settings.litellm_temperature,
             )

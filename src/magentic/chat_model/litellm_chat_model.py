@@ -134,6 +134,7 @@ def message_to_openai_message(
 def litellm_completion(
     model: str,
     messages: Iterable[OpenaiChatCompletionChoiceMessage],
+    api_base: str | None = None,
     max_tokens: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
@@ -143,6 +144,8 @@ def litellm_completion(
     # `litellm.completion` doesn't accept `None`
     # so only pass args with values
     kwargs: dict[str, Any] = {}
+    if api_base is not None:
+        kwargs["api_base"] = api_base
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
     if functions:
@@ -164,6 +167,7 @@ def litellm_completion(
 async def litellm_acompletion(
     model: str,
     messages: Iterable[OpenaiChatCompletionChoiceMessage],
+    api_base: str | None = None,
     max_tokens: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
@@ -173,6 +177,8 @@ async def litellm_acompletion(
     # `litellm.acompletion` doesn't accept `None`
     # so only pass args with values
     kwargs: dict[str, Any] = {}
+    if api_base is not None:
+        kwargs["api_base"] = api_base
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
     if functions:
@@ -202,16 +208,22 @@ class LitellmChatModel(ChatModel):
         self,
         model: str,
         *,
+        api_base: str | None = None,
         max_tokens: int | None = None,
         temperature: float | None = None,
     ):
         self._model = model
+        self._api_base = api_base
         self._max_tokens = max_tokens
         self._temperature = temperature
 
     @property
     def model(self) -> str:
         return self._model
+
+    @property
+    def api_base(self) -> str | None:
+        return self._api_base
 
     @property
     def max_tokens(self) -> int | None:
@@ -287,6 +299,7 @@ class LitellmChatModel(ChatModel):
         response = litellm_completion(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
+            api_base=self.api_base,
             max_tokens=self.max_tokens,
             temperature=self.temperature,
             functions=openai_functions,
@@ -404,6 +417,7 @@ class LitellmChatModel(ChatModel):
         response = await litellm_acompletion(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
+            api_base=self.api_base,
             max_tokens=self.max_tokens,
             temperature=self.temperature,
             functions=openai_functions,

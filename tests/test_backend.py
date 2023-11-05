@@ -22,11 +22,13 @@ def test_backend_openai_chat_model(monkeypatch):
 
 def test_backend_litellm_chat_model(monkeypatch):
     monkeypatch.setenv("MAGENTIC_BACKEND", "litellm")
+    monkeypatch.setenv("MAGENTIC_LITELLM_API_BASE", "http://localhost:11434")
     monkeypatch.setenv("MAGENTIC_LITELLM_MODEL", "claude-2")
     monkeypatch.setenv("MAGENTIC_LITELLM_MAX_TOKENS", "1024")
     monkeypatch.setenv("MAGENTIC_LITELLM_TEMPERATURE", "2")
     chat_model = get_chat_model()
     assert isinstance(chat_model, LitellmChatModel)
+    assert chat_model.api_base == "http://localhost:11434"
     assert chat_model.model == "claude-2"
     assert chat_model.max_tokens == 1024
     assert chat_model.temperature == 2
