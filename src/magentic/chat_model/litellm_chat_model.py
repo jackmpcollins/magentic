@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
+from itertools import chain
 from typing import Any, Literal, TypeVar, cast, overload
 
 try:
@@ -26,6 +27,8 @@ from magentic.function_call import FunctionCall
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
+    achain,
+    async_iter,
 )
 from magentic.typing import is_origin_subclass
 
@@ -295,6 +298,7 @@ class LitellmChatModel(ChatModel):
         )
 
         first_chunk = next(response)
+        response = chain([first_chunk], response)  # Replace first chunk
         first_chunk_delta = first_chunk.choices[0].delta
 
         if first_chunk_delta.function_call:
@@ -411,6 +415,7 @@ class LitellmChatModel(ChatModel):
         )
 
         first_chunk = await anext(response)
+        response = achain(async_iter([first_chunk]), response)  # Replace first chunk
         first_chunk_delta = first_chunk.choices[0].delta
 
         if first_chunk_delta.function_call:

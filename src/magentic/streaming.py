@@ -12,6 +12,13 @@ async def async_iter(iterable: Iterable[T]) -> AsyncIterator[T]:
         yield item
 
 
+async def achain(*aiterables: AsyncIterable[T]) -> AsyncIterator[T]:
+    """Async version of `itertools.chain`."""
+    for aiterable in aiterables:
+        async for item in aiterable:
+            yield item
+
+
 @dataclass
 class JsonArrayParserState:
     """State of the parser for a streamed JSON array."""
