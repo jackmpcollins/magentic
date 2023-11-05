@@ -39,7 +39,7 @@ jupyter = "*"
 wikipedia = "*"
 
 [tool.pytest.ini_options]
-addopts = "--cov=magentic --cov-report=term-missing"
+addopts = "--cov=magentic --cov-report=term-missing -m 'not openai'"
 markers = [
     "openai: Tests that query the OpenAI API"
 ]
