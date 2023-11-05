@@ -12,6 +12,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="MAGENTIC_")
 
     backend: Backend = Backend.OPENAI
+    litellm_model: str = "gpt-3.5-turbo"
+    litellm_max_tokens: int | None = None
+    litellm_temperature: float | None = None
     openai_model: str = "gpt-3.5-turbo"
     openai_max_tokens: int | None = None
     openai_temperature: float | None = None

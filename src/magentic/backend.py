@@ -13,9 +13,9 @@ def get_chat_model() -> ChatModel:
             from magentic.chat_model.litellm_chat_model import LitellmChatModel
 
             return LitellmChatModel(
-                model=settings.openai_model,
-                max_tokens=settings.openai_max_tokens,
-                temperature=settings.openai_temperature,
+                model=settings.litellm_model,
+                max_tokens=settings.litellm_max_tokens,
+                temperature=settings.litellm_temperature,
             )
         case Backend.OPENAI:
             from magentic.chat_model.openai_chat_model import OpenaiChatModel
