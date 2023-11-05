@@ -155,7 +155,7 @@ def litellm_completion(
     if temperature is not None:
         kwargs["temperature"] = temperature
 
-    response: Iterator[dict[str, Any]] = litellm.completion(  # type: ignore[no-untyped-call]
+    response: Iterator[dict[str, Any]] = litellm.completion(  # type: ignore[no-untyped-call,unused-ignore]
         model=model,
         messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
         stream=True,
@@ -188,7 +188,7 @@ async def litellm_acompletion(
     if temperature is not None:
         kwargs["temperature"] = temperature
 
-    response: AsyncIterator[dict[str, Any]] = await litellm.acompletion(  # type: ignore[no-untyped-call]
+    response: AsyncIterator[dict[str, Any]] = await litellm.acompletion(  # type: ignore[no-untyped-call,unused-ignore]
         model=model,
         messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
         stream=True,

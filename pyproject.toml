@@ -8,6 +8,12 @@ disable_error_code = ["empty-body"]
 disallow_untyped_defs = false
 strict = true
 
+[[tool.mypy.overrides]]
+module = [
+    "litellm",
+]
+ignore_missing_imports = true
+
 [tool.poetry]
 name = "magentic"
 version = "0.8.0"
