@@ -39,9 +39,10 @@ jupyter = "*"
 wikipedia = "*"
 
 [tool.pytest.ini_options]
-addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not openai'"
+addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not ollama and not openai'"
 markers = [
     "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
+    "ollama: Tests that query Ollama. Requires ollama to be installed and running on localhost:11434.",
     "openai: Tests that query the OpenAI API. Requires the OPENAI_API_KEY environment variable to be set.",
 ]
 

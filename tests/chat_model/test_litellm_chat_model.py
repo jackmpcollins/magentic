@@ -19,6 +19,13 @@ def test_litellm_chat_model_complete_anthropic():
     assert isinstance(message.content, str)
 
 
+@pytest.mark.ollama
+def test_litellm_chat_model_complete_ollama():
+    chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
+    message = chat_model.complete(messages=[UserMessage("Say hello!")])
+    assert isinstance(message.content, str)
+
+
 @pytest.mark.anthropic
 def test_litellm_chat_model_complete_anthropic_function_calling_error():
     def sum(a: int, b: int) -> int:
@@ -27,6 +34,17 @@ def test_litellm_chat_model_complete_anthropic_function_calling_error():
 
     chat_model = LitellmChatModel("claude-2")
     with pytest.raises(litellm.exceptions.ServiceUnavailableError):
+        chat_model.complete(messages=[UserMessage("Say hello!")], functions=[sum])
+
+
+@pytest.mark.ollama
+def test_litellm_chat_model_complete_ollama_function_calling_error():
+    def sum(a: int, b: int) -> int:
+        """Sum two numbers."""
+        return a + b
+
+    chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
+    with pytest.raises(litellm.exceptions.APIError):
         chat_model.complete(messages=[UserMessage("Say hello!")], functions=[sum])
 
 
