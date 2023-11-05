@@ -39,9 +39,10 @@ jupyter = "*"
 wikipedia = "*"
 
 [tool.pytest.ini_options]
-addopts = "--cov=magentic --cov-report=term-missing -m 'not openai'"
+addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not openai'"
 markers = [
-    "openai: Tests that query the OpenAI API"
+    "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
+    "openai: Tests that query the OpenAI API. Requires the OPENAI_API_KEY environment variable to be set.",
 ]
 
 [tool.ruff]
