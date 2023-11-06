@@ -1,27 +1,28 @@
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
-from enum import Enum
 from itertools import chain
 from typing import Any, Literal, TypeVar, cast, overload
+
+from magentic.chat_model.openai_chat_model import (
+    OpenaiChatCompletionChoiceMessage,
+    OpenaiChatCompletionChunk,
+    message_to_openai_message,
+)
 
 try:
     import litellm
 except ImportError as error:
     msg = "To use LitellmChatModel you must install the `litellm` package."
     raise ImportError(msg) from error
-from pydantic import BaseModel, ValidationError
+from pydantic import ValidationError
 
-from magentic.chat_model.base import ChatModel
+from magentic.chat_model.base import ChatModel, StructuredOutputError
 from magentic.chat_model.function_schema import (
-    BaseFunctionSchema,
     FunctionCallFunctionSchema,
     function_schema_for_type,
 )
 from magentic.chat_model.message import (
     AssistantMessage,
-    FunctionResultMessage,
     Message,
-    SystemMessage,
-    UserMessage,
 )
 from magentic.function_call import FunctionCall
 from magentic.streaming import (
@@ -31,104 +32,6 @@ from magentic.streaming import (
     async_iter,
 )
 from magentic.typing import is_origin_subclass
-
-
-class StructuredOutputError(Exception):
-    """Raised when the LLM output could not be parsed."""
-
-
-class OpenaiMessageRole(Enum):
-    ASSISTANT = "assistant"
-    FUNCTION = "function"
-    SYSTEM = "system"
-    USER = "user"
-
-
-class OpenaiChatCompletionFunctionCall(BaseModel):
-    name: str | None = None
-    arguments: str
-
-    def get_name_or_raise(self) -> str:
-        """Return the name, raising an error if it doesn't exist."""
-        if self.name is None:
-            msg = "OpenAI function call name is None"
-            raise ValueError(msg)
-        return self.name
-
-
-class OpenaiChatCompletionDelta(BaseModel):
-    role: OpenaiMessageRole | None = None
-    content: str | None = None
-    function_call: OpenaiChatCompletionFunctionCall | None = None
-
-
-class OpenaiChatCompletionChunkChoice(BaseModel):
-    delta: OpenaiChatCompletionDelta
-
-
-class OpenaiChatCompletionChunk(BaseModel):
-    choices: list[OpenaiChatCompletionChunkChoice]
-
-
-class OpenaiChatCompletionChoiceMessage(BaseModel):
-    role: OpenaiMessageRole
-    name: str | None = None
-    content: str | None
-    function_call: OpenaiChatCompletionFunctionCall | None = None
-
-
-class OpenaiChatCompletionChoice(BaseModel):
-    message: OpenaiChatCompletionDelta
-
-
-class OpenaiChatCompletion(BaseModel):
-    choices: list[OpenaiChatCompletionChoice]
-
-
-def message_to_openai_message(
-    message: Message[Any],
-) -> OpenaiChatCompletionChoiceMessage:
-    """Convert a Message to an OpenAI message."""
-    if isinstance(message, SystemMessage):
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.SYSTEM, content=message.content
-        )
-
-    if isinstance(message, UserMessage):
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.USER, content=message.content
-        )
-
-    if isinstance(message, AssistantMessage):
-        if isinstance(message.content, str):
-            return OpenaiChatCompletionChoiceMessage(
-                role=OpenaiMessageRole.ASSISTANT, content=message.content
-            )
-
-        function_schema: BaseFunctionSchema[Any]
-        if isinstance(message.content, FunctionCall):
-            function_schema = FunctionCallFunctionSchema(message.content.function)
-        else:
-            function_schema = function_schema_for_type(type(message.content))
-
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.ASSISTANT,
-            content=None,
-            function_call=OpenaiChatCompletionFunctionCall(
-                name=function_schema.name,
-                arguments=function_schema.serialize_args(message.content),
-            ),
-        )
-
-    if isinstance(message, FunctionResultMessage):
-        function_schema = function_schema_for_type(type(message.content))
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.FUNCTION,
-            name=function_schema.name,
-            content=function_schema.serialize_args(message.content),
-        )
-
-    raise NotImplementedError(type(message))
 
 
 def litellm_completion(

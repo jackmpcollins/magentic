@@ -19,6 +19,10 @@ if TYPE_CHECKING:
 _chat_model_context = ContextVar("chat_model", default=None)
 
 
+class StructuredOutputError(Exception):
+    """Raised when the LLM output could not be parsed."""
+
+
 class ChatModel(ABC):
     """An LLM chat model."""
 

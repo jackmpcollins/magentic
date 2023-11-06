@@ -6,7 +6,8 @@ from typing import Awaitable
 import pytest
 from pydantic import BaseModel
 
-from magentic.chat_model.openai_chat_model import OpenaiChatModel, StructuredOutputError
+from magentic.chat_model.base import StructuredOutputError
+from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.function_call import FunctionCall
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
 from magentic.settings import get_settings

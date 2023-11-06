@@ -6,7 +6,7 @@ from typing import Any, Literal, TypeVar, cast, overload
 import openai
 from pydantic import BaseModel, ValidationError
 
-from magentic.chat_model.base import ChatModel
+from magentic.chat_model.base import ChatModel, StructuredOutputError
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
@@ -27,10 +27,6 @@ from magentic.streaming import (
     async_iter,
 )
 from magentic.typing import is_origin_subclass
-
-
-class StructuredOutputError(Exception):
-    """Raised when the LLM output could not be parsed."""
 
 
 class OpenaiMessageRole(Enum):
