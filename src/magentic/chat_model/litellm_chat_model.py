@@ -1,23 +1,28 @@
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
-from enum import Enum
 from itertools import chain
 from typing import Any, Literal, TypeVar, cast, overload
 
-import openai
-from pydantic import BaseModel, ValidationError
+from magentic.chat_model.openai_chat_model import (
+    OpenaiChatCompletionChoiceMessage,
+    OpenaiChatCompletionChunk,
+    message_to_openai_message,
+)
+
+try:
+    import litellm
+except ImportError as error:
+    msg = "To use LitellmChatModel you must install the `litellm` package."
+    raise ImportError(msg) from error
+from pydantic import ValidationError
 
 from magentic.chat_model.base import ChatModel, StructuredOutputError
 from magentic.chat_model.function_schema import (
-    BaseFunctionSchema,
     FunctionCallFunctionSchema,
     function_schema_for_type,
 )
 from magentic.chat_model.message import (
     AssistantMessage,
-    FunctionResultMessage,
     Message,
-    SystemMessage,
-    UserMessage,
 )
 from magentic.function_call import FunctionCall
 from magentic.streaming import (
@@ -29,150 +34,66 @@ from magentic.streaming import (
 from magentic.typing import is_origin_subclass
 
 
-class OpenaiMessageRole(Enum):
-    ASSISTANT = "assistant"
-    FUNCTION = "function"
-    SYSTEM = "system"
-    USER = "user"
-
-
-class OpenaiChatCompletionFunctionCall(BaseModel):
-    name: str | None = None
-    arguments: str
-
-    def get_name_or_raise(self) -> str:
-        """Return the name, raising an error if it doesn't exist."""
-        if self.name is None:
-            msg = "OpenAI function call name is None"
-            raise ValueError(msg)
-        return self.name
-
-
-class OpenaiChatCompletionDelta(BaseModel):
-    role: OpenaiMessageRole | None = None
-    content: str | None = None
-    function_call: OpenaiChatCompletionFunctionCall | None = None
-
-
-class OpenaiChatCompletionChunkChoice(BaseModel):
-    delta: OpenaiChatCompletionDelta
-
-
-class OpenaiChatCompletionChunk(BaseModel):
-    choices: list[OpenaiChatCompletionChunkChoice]
-
-
-class OpenaiChatCompletionChoiceMessage(BaseModel):
-    role: OpenaiMessageRole
-    name: str | None = None
-    content: str | None
-    function_call: OpenaiChatCompletionFunctionCall | None = None
-
-
-class OpenaiChatCompletionChoice(BaseModel):
-    message: OpenaiChatCompletionDelta
-
-
-class OpenaiChatCompletion(BaseModel):
-    choices: list[OpenaiChatCompletionChoice]
-
-
-def message_to_openai_message(
-    message: Message[Any],
-) -> OpenaiChatCompletionChoiceMessage:
-    """Convert a Message to an OpenAI message."""
-    if isinstance(message, SystemMessage):
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.SYSTEM, content=message.content
-        )
-
-    if isinstance(message, UserMessage):
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.USER, content=message.content
-        )
-
-    if isinstance(message, AssistantMessage):
-        if isinstance(message.content, str):
-            return OpenaiChatCompletionChoiceMessage(
-                role=OpenaiMessageRole.ASSISTANT, content=message.content
-            )
-
-        function_schema: BaseFunctionSchema[Any]
-        if isinstance(message.content, FunctionCall):
-            function_schema = FunctionCallFunctionSchema(message.content.function)
-        else:
-            function_schema = function_schema_for_type(type(message.content))
-
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.ASSISTANT,
-            content=None,
-            function_call=OpenaiChatCompletionFunctionCall(
-                name=function_schema.name,
-                arguments=function_schema.serialize_args(message.content),
-            ),
-        )
-
-    if isinstance(message, FunctionResultMessage):
-        function_schema = function_schema_for_type(type(message.content))
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.FUNCTION,
-            name=function_schema.name,
-            content=function_schema.serialize_args(message.content),
-        )
-
-    raise NotImplementedError(type(message))
-
-
-def openai_chatcompletion_create(
+def litellm_completion(
     model: str,
     messages: Iterable[OpenaiChatCompletionChoiceMessage],
+    api_base: str | None = None,
     max_tokens: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> Iterator[OpenaiChatCompletionChunk]:
-    """Type-annotated version of `openai.ChatCompletion.create`."""
-    # `openai.ChatCompletion.create` doesn't accept `None`
-    # so only pass function args if there are functions
+    """Type-annotated version of `litellm.completion`."""
+    # `litellm.completion` doesn't accept `None`
+    # so only pass args with values
     kwargs: dict[str, Any] = {}
+    if api_base is not None:
+        kwargs["api_base"] = api_base
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
     if functions:
         kwargs["functions"] = functions
     if function_call:
         kwargs["function_call"] = function_call
+    if temperature is not None:
+        kwargs["temperature"] = temperature
 
-    response: Iterator[dict[str, Any]] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
+    response: Iterator[dict[str, Any]] = litellm.completion(  # type: ignore[no-untyped-call,unused-ignore]
         model=model,
         messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
-        max_tokens=max_tokens,
-        temperature=temperature,
         stream=True,
         **kwargs,
     )
     return (OpenaiChatCompletionChunk.model_validate(chunk) for chunk in response)
 
 
-async def openai_chatcompletion_acreate(
+async def litellm_acompletion(
     model: str,
     messages: Iterable[OpenaiChatCompletionChoiceMessage],
+    api_base: str | None = None,
     max_tokens: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> AsyncIterator[OpenaiChatCompletionChunk]:
-    """Type-annotated version of `openai.ChatCompletion.acreate`."""
-    # `openai.ChatCompletion.create` doesn't accept `None`
-    # so only pass function args if there are functions
+    """Type-annotated version of `litellm.acompletion`."""
+    # `litellm.acompletion` doesn't accept `None`
+    # so only pass args with values
     kwargs: dict[str, Any] = {}
+    if api_base is not None:
+        kwargs["api_base"] = api_base
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
     if functions:
         kwargs["functions"] = functions
     if function_call:
         kwargs["function_call"] = function_call
+    if temperature is not None:
+        kwargs["temperature"] = temperature
 
-    response: AsyncIterator[dict[str, Any]] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
+    response: AsyncIterator[dict[str, Any]] = await litellm.acompletion(  # type: ignore[no-untyped-call,unused-ignore]
         model=model,
         messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
-        max_tokens=max_tokens,
-        temperature=temperature,
         stream=True,
         **kwargs,
     )
@@ -183,23 +104,29 @@ R = TypeVar("R")
 FuncR = TypeVar("FuncR")
 
 
-class OpenaiChatModel(ChatModel):
-    """An LLM chat model that uses the `openai` python package."""
+class LitellmChatModel(ChatModel):
+    """An LLM chat model that uses the `litellm` python package."""
 
     def __init__(
         self,
         model: str,
         *,
+        api_base: str | None = None,
         max_tokens: int | None = None,
         temperature: float | None = None,
     ):
         self._model = model
+        self._api_base = api_base
         self._max_tokens = max_tokens
         self._temperature = temperature
 
     @property
     def model(self) -> str:
         return self._model
+
+    @property
+    def api_base(self) -> str | None:
+        return self._api_base
 
     @property
     def max_tokens(self) -> int | None:
@@ -272,9 +199,10 @@ class OpenaiChatModel(ChatModel):
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
         openai_functions = [schema.dict() for schema in function_schemas]
-        response = openai_chatcompletion_create(
+        response = litellm_completion(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
+            api_base=self.api_base,
             max_tokens=self.max_tokens,
             temperature=self.temperature,
             functions=openai_functions,
@@ -389,9 +317,10 @@ class OpenaiChatModel(ChatModel):
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
         openai_functions = [schema.dict() for schema in function_schemas]
-        response = await openai_chatcompletion_acreate(
+        response = await litellm_acompletion(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
+            api_base=self.api_base,
             max_tokens=self.max_tokens,
             temperature=self.temperature,
             functions=openai_functions,

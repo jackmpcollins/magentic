@@ -301,9 +301,14 @@ print(len(out), time_elapsed, len(out) / time_elapsed)
 - The `Annotated` type annotation can be used to provide descriptions and other metadata for function parameters. See [the pydantic documentation on using `Field` to describe function arguments](https://docs.pydantic.dev/latest/usage/validation_decorator/#using-field-to-describe-function-arguments).
 - The `@prompt` and `@prompt_chain` decorators also accept a `model` argument. You can pass an instance of `OpenaiChatModel` to use GPT4 or configure a different temperature. See below.
 
-## Configuration
+## Backend/LLM Configuration
 
-The backend/LLM used by `magentic` can be configured in several ways. The order of precedence of configuration is
+Currently two backends are available
+
+- `openai` : the default backend that uses the `openai` Python package. Supports all features.
+- `litellm` : uses the `litellm` Python package to enable querying LLMs from [many different providers](https://docs.litellm.ai/docs/providers). Install this with `pip install magentic[litellm]`. Note: some models may not support all features of `magentic` e.g. function calling/structured output and streaming.
+
+The backend and LLM used by `magentic` can be configured in several ways. The order of precedence of configuration is
 
 1. Arguments explicitly passed when initializing an instance in Python
 1. Values set using a context manager in Python
@@ -312,6 +317,7 @@ The backend/LLM used by `magentic` can be configured in several ways. The order 
 
 ```python
 from magentic import OpenaiChatModel, prompt
+from magentic.chat_model.litellm_chat_model import LitellmChatModel
 
 
 @prompt("Say hello")
@@ -321,30 +327,34 @@ def say_hello() -> str:
 
 @prompt(
     "Say hello",
-    model=OpenaiChatModel("gpt-4", temperature=1),
+    model=LitellmChatModel("ollama/llama2"),
 )
-def say_hello_gpt4() -> str:
+def say_hello_litellm() -> str:
     ...
 
 
 say_hello()  # Uses env vars or default settings
 
-with OpenaiChatModel("gpt-3.5-turbo"):
-    say_hello()  # Uses gpt-3.5-turbo due to context manager
-    say_hello_gpt4()  # Uses gpt-4 with temperature=1 because explicitly configured
+with OpenaiChatModel("gpt-3.5-turbo", temperature=1):
+    say_hello()  # Uses openai with gpt-3.5-turbo and temperature=1 due to context manager
+    say_hello_litellm()  # Uses litellm with ollama/llama2 because explicitly configured
 ```
 
 The following environment variables can be set.
 
-| Environment Variable        | Description                           | Example               |
-| --------------------------- | ------------------------------------- | --------------------- |
-| MAGENTIC_BACKEND            | The package to use as the LLM backend | openai                |
-| MAGENTIC_OPENAI_MODEL       | OpenAI model                          | gpt-4                 |
-| MAGENTIC_OPENAI_MAX_TOKENS  | OpenAI max number of generated tokens | 1024                  |
-| MAGENTIC_OPENAI_TEMPERATURE | OpenAI temperature                    | 0.5                   |
-| OPENAI_API_BASE             | Base URL for an OpenAI-compatible API | http://localhost:8080 |
+| Environment Variable         | Description                            | Example                |
+| ---------------------------- | -------------------------------------- | ---------------------- |
+| MAGENTIC_BACKEND             | The package to use as the LLM backend  | openai                 |
+| MAGENTIC_LITELLM_MODEL       | LiteLLM model                          | claude-2               |
+| MAGENTIC_LITELLM_API_BASE    | The base url to query                  | http://localhost:11434 |
+| MAGENTIC_LITELLM_MAX_TOKENS  | LiteLLM max number of generated tokens | 1024                   |
+| MAGENTIC_LITELLM_TEMPERATURE | LiteLLM temperature                    | 0.5                    |
+| MAGENTIC_OPENAI_MODEL        | OpenAI model                           | gpt-4                  |
+| MAGENTIC_OPENAI_MAX_TOKENS   | OpenAI max number of generated tokens  | 1024                   |
+| MAGENTIC_OPENAI_TEMPERATURE  | OpenAI temperature                     | 0.5                    |
+| OPENAI_API_BASE              | Base URL for an OpenAI-compatible API  | http://localhost:8080  |
 
-Since `magentic` uses the `openai` Python package, setting the `OPENAI_API_BASE` environment variable or `openai.api_base` in code allows you to use it with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support function calling then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
+When using the `openai` backend, setting the `OPENAI_API_BASE` environment variable or `openai.api_base` in code allows you to use `magentic` with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LiteLLM OpenAI Proxy Server](https://docs.litellm.ai/docs/proxy_server), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support function calling then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
 
 ## Type Checking
 

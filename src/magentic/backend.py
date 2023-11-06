@@ -9,6 +9,15 @@ def get_chat_model() -> ChatModel:
     settings = get_settings()
 
     match settings.backend:
+        case Backend.LITELLM:
+            from magentic.chat_model.litellm_chat_model import LitellmChatModel
+
+            return LitellmChatModel(
+                model=settings.litellm_model,
+                api_base=settings.litellm_api_base,
+                max_tokens=settings.litellm_max_tokens,
+                temperature=settings.litellm_temperature,
+            )
         case Backend.OPENAI:
             from magentic.chat_model.openai_chat_model import OpenaiChatModel
 
