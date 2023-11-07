@@ -316,7 +316,8 @@ The backend and LLM used by `magentic` can be configured in several ways. The or
 1. Default values from [src/magentic/settings.py](src/magentic/settings.py)
 
 ```python
-from magentic import OpenaiChatModel, prompt
+from magentic import prompt
+from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.chat_model.litellm_chat_model import LitellmChatModel
 
 
