@@ -4,7 +4,8 @@ from itertools import chain
 from typing import Any, Literal, TypeVar, cast, overload
 
 import openai
-from pydantic import BaseModel, ValidationError
+from openai.types.chat import ChatCompletionChunk, ChatCompletionMessageParam
+from pydantic import ValidationError
 
 from magentic.chat_model.base import ChatModel, StructuredOutputError
 from magentic.chat_model.function_schema import (
@@ -36,66 +37,26 @@ class OpenaiMessageRole(Enum):
     USER = "user"
 
 
-class OpenaiChatCompletionFunctionCall(BaseModel):
-    name: str | None = None
-    arguments: str
-
-    def get_name_or_raise(self) -> str:
-        """Return the name, raising an error if it doesn't exist."""
-        if self.name is None:
-            msg = "OpenAI function call name is None"
-            raise ValueError(msg)
-        return self.name
-
-
-class OpenaiChatCompletionDelta(BaseModel):
-    role: OpenaiMessageRole | None = None
-    content: str | None = None
-    function_call: OpenaiChatCompletionFunctionCall | None = None
-
-
-class OpenaiChatCompletionChunkChoice(BaseModel):
-    delta: OpenaiChatCompletionDelta
-
-
-class OpenaiChatCompletionChunk(BaseModel):
-    choices: list[OpenaiChatCompletionChunkChoice]
-
-
-class OpenaiChatCompletionChoiceMessage(BaseModel):
-    role: OpenaiMessageRole
-    name: str | None = None
-    content: str | None
-    function_call: OpenaiChatCompletionFunctionCall | None = None
-
-
-class OpenaiChatCompletionChoice(BaseModel):
-    message: OpenaiChatCompletionDelta
-
-
-class OpenaiChatCompletion(BaseModel):
-    choices: list[OpenaiChatCompletionChoice]
-
-
-def message_to_openai_message(
-    message: Message[Any],
-) -> OpenaiChatCompletionChoiceMessage:
+def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessageParam:
     """Convert a Message to an OpenAI message."""
     if isinstance(message, SystemMessage):
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.SYSTEM, content=message.content
-        )
+        return {
+            "role": OpenaiMessageRole.SYSTEM.value,
+            "content": message.content,
+        }
 
     if isinstance(message, UserMessage):
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.USER, content=message.content
-        )
+        return {
+            "role": OpenaiMessageRole.USER.value,
+            "content": message.content,
+        }
 
     if isinstance(message, AssistantMessage):
         if isinstance(message.content, str):
-            return OpenaiChatCompletionChoiceMessage(
-                role=OpenaiMessageRole.ASSISTANT, content=message.content
-            )
+            return {
+                "role": OpenaiMessageRole.ASSISTANT.value,
+                "content": message.content,
+            }
 
         function_schema: BaseFunctionSchema[Any]
         if isinstance(message.content, FunctionCall):
@@ -103,36 +64,35 @@ def message_to_openai_message(
         else:
             function_schema = function_schema_for_type(type(message.content))
 
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.ASSISTANT,
-            content=None,
-            function_call=OpenaiChatCompletionFunctionCall(
-                name=function_schema.name,
-                arguments=function_schema.serialize_args(message.content),
-            ),
-        )
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": None,
+            "function_call": {
+                "name": function_schema.name,
+                "arguments": function_schema.serialize_args(message.content),
+            },
+        }
 
     if isinstance(message, FunctionResultMessage):
         function_schema = function_schema_for_type(type(message.content))
-        return OpenaiChatCompletionChoiceMessage(
-            role=OpenaiMessageRole.FUNCTION,
-            name=function_schema.name,
-            content=function_schema.serialize_args(message.content),
-        )
+        return {
+            "role": OpenaiMessageRole.FUNCTION.value,
+            "name": function_schema.name,
+            "content": function_schema.serialize_args(message.content),
+        }
 
     raise NotImplementedError(type(message))
 
 
 def openai_chatcompletion_create(
     model: str,
-    messages: Iterable[OpenaiChatCompletionChoiceMessage],
+    messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
-) -> Iterator[OpenaiChatCompletionChunk]:
-    """Type-annotated version of `openai.ChatCompletion.create`."""
-    # `openai.ChatCompletion.create` doesn't accept `None`
+) -> Iterator[ChatCompletionChunk]:
+    # `openai.OpenAI().chat.completions.create` doesn't accept `None` for some args
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
     if functions:
@@ -140,27 +100,26 @@ def openai_chatcompletion_create(
     if function_call:
         kwargs["function_call"] = function_call
 
-    response: Iterator[dict[str, Any]] = openai.ChatCompletion.create(  # type: ignore[no-untyped-call]
+    response: Iterator[ChatCompletionChunk] = openai.OpenAI().chat.completions.create(
         model=model,
-        messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
+        messages=messages,
         max_tokens=max_tokens,
         temperature=temperature,
         stream=True,
         **kwargs,
     )
-    return (OpenaiChatCompletionChunk.model_validate(chunk) for chunk in response)
+    return response
 
 
 async def openai_chatcompletion_acreate(
     model: str,
-    messages: Iterable[OpenaiChatCompletionChoiceMessage],
+    messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
-) -> AsyncIterator[OpenaiChatCompletionChunk]:
-    """Type-annotated version of `openai.ChatCompletion.acreate`."""
-    # `openai.ChatCompletion.create` doesn't accept `None`
+) -> AsyncIterator[ChatCompletionChunk]:
+    # `openai.AsyncClient().chat.completions.create` doesn't accept `None` for some args
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
     if functions:
@@ -168,15 +127,17 @@ async def openai_chatcompletion_acreate(
     if function_call:
         kwargs["function_call"] = function_call
 
-    response: AsyncIterator[dict[str, Any]] = await openai.ChatCompletion.acreate(  # type: ignore[no-untyped-call]
+    response: AsyncIterator[
+        ChatCompletionChunk
+    ] = await openai.AsyncClient().chat.completions.create(
         model=model,
-        messages=[m.model_dump(mode="json", exclude_unset=True) for m in messages],
+        messages=messages,
         max_tokens=max_tokens,
         temperature=temperature,
         stream=True,
         **kwargs,
     )
-    return (OpenaiChatCompletionChunk.model_validate(chunk) async for chunk in response)
+    return response
 
 
 R = TypeVar("R")
@@ -294,7 +255,10 @@ class OpenaiChatModel(ChatModel):
                 function_schema.name: function_schema
                 for function_schema in function_schemas
             }
-            function_name = first_chunk_delta.function_call.get_name_or_raise()
+            function_name = first_chunk_delta.function_call.name
+            if function_name is None:
+                msg = "OpenAI function call name is None"
+                raise ValueError(msg)
             function_schema = function_schema_by_name[function_name]
             try:
                 return AssistantMessage(
@@ -302,6 +266,7 @@ class OpenaiChatModel(ChatModel):
                         chunk.choices[0].delta.function_call.arguments
                         for chunk in response
                         if chunk.choices[0].delta.function_call
+                        and chunk.choices[0].delta.function_call.arguments is not None
                     )
                 )
             except ValidationError as e:
@@ -411,7 +376,10 @@ class OpenaiChatModel(ChatModel):
                 function_schema.name: function_schema
                 for function_schema in function_schemas
             }
-            function_name = first_chunk_delta.function_call.get_name_or_raise()
+            function_name = first_chunk_delta.function_call.name
+            if function_name is None:
+                msg = "OpenAI function call name is None"
+                raise ValueError(msg)
             function_schema = function_schema_by_name[function_name]
             try:
                 return AssistantMessage(
@@ -419,6 +387,7 @@ class OpenaiChatModel(ChatModel):
                         chunk.choices[0].delta.function_call.arguments
                         async for chunk in response
                         if chunk.choices[0].delta.function_call
+                        and chunk.choices[0].delta.function_call.arguments is not None
                     )
                 )
             except ValidationError as e:
