@@ -34,7 +34,7 @@ from magentic.typing import is_origin_subclass
 
 def litellm_completion(
     model: str,
-    messages: Iterable[ChatCompletionMessageParam],
+    messages: list[ChatCompletionMessageParam],
     api_base: str | None = None,
     max_tokens: int | None = None,
     temperature: float | None = None,
@@ -67,7 +67,7 @@ def litellm_completion(
 
 async def litellm_acompletion(
     model: str,
-    messages: Iterable[ChatCompletionMessageParam],
+    messages: list[ChatCompletionMessageParam],
     api_base: str | None = None,
     max_tokens: int | None = None,
     temperature: float | None = None,
