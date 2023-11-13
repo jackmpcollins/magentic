@@ -11,6 +11,7 @@ strict = true
 [[tool.mypy.overrides]]
 module = [
     "litellm",
+    "litellm.utils",
 ]
 ignore_missing_imports = true
 
