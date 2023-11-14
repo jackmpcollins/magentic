@@ -44,7 +44,7 @@ def test_litellm_chat_model_complete_ollama_function_calling_error():
         return a + b
 
     chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
-    with pytest.raises(litellm.exceptions.APIError):
+    with pytest.raises(litellm.utils.UnsupportedParamsError):
         chat_model.complete(messages=[UserMessage("Say hello!")], functions=[sum])
 
 
