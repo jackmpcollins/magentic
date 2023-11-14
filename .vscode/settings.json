@@ -1,0 +1,7 @@
+{
+  "python.testing.pytestArgs": [
+    "--no-cov" // Breaks debugger. https://code.visualstudio.com/docs/python/testing#_pytest-configuration-settings
+  ],
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false
+}

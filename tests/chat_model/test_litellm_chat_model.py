@@ -26,6 +26,7 @@ def test_litellm_chat_model_complete_ollama():
     assert isinstance(message.content, str)
 
 
+@pytest.mark.skip(reason="Waiting for fix: https://github.com/BerriAI/litellm/pull/813")
 @pytest.mark.anthropic
 def test_litellm_chat_model_complete_anthropic_function_calling_error():
     def sum(a: int, b: int) -> int:
@@ -44,7 +45,7 @@ def test_litellm_chat_model_complete_ollama_function_calling_error():
         return a + b
 
     chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
-    with pytest.raises(litellm.exceptions.APIError):
+    with pytest.raises(litellm.utils.UnsupportedParamsError):
         chat_model.complete(messages=[UserMessage("Say hello!")], functions=[sum])
 
 
