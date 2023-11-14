@@ -1497,13 +1497,13 @@ files = [
 
 [[package]]
 name = "litellm"
-version = "1.0.0.dev1"
+version = "1.0.0"
 description = "Library to easily interface with LLM API providers"
 optional = true
 python-versions = ">=3.8,<4.0"
 files = [
-    {file = "litellm-1.0.0.dev1-py3-none-any.whl", hash = "sha256:4f1964279b07345f47bb4e317e705e120f22476935b1fd49bee6a12ac75a7960"},
-    {file = "litellm-1.0.0.dev1.tar.gz", hash = "sha256:017ff63291d355afcd0714a45cb84c2f22cabba032b539dbe9138a7cf069ef1b"},
+    {file = "litellm-1.0.0-py3-none-any.whl", hash = "sha256:5cba48aba24ea49ecd99f712aa2843174137c2bcb824ff5a691f9dca9fd7d1f7"},
+    {file = "litellm-1.0.0.tar.gz", hash = "sha256:f67c3dec0cc5608ed4933c02074d415cef02c92c9a0c88ccd803fe91728a54b1"},
 ]
 
 [package.dependencies]
@@ -3467,4 +3467,4 @@ litellm = ["litellm"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "529b9ee3fd45f13898ac7dfd996fa9ac21fb8a850edca43bc829e33eee75c79f"
+content-hash = "216544ac49a04d66ddb921c5b79bee4d32e5144bd3e71b49376984a6ecc83068"
