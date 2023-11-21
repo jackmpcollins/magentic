@@ -100,7 +100,9 @@ def openai_chatcompletion_create(
     if function_call:
         kwargs["function_call"] = function_call
 
-    response: Iterator[ChatCompletionChunk] = openai.OpenAI().chat.completions.create(
+    client = openai.AzureOpenAI() if openai.api_type == "azure" else openai.OpenAI()
+
+    response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
         model=model,
         messages=messages,
         max_tokens=max_tokens,
@@ -127,9 +129,13 @@ async def openai_chatcompletion_acreate(
     if function_call:
         kwargs["function_call"] = function_call
 
-    response: AsyncIterator[
-        ChatCompletionChunk
-    ] = await openai.AsyncClient().chat.completions.create(
+    client = (
+        openai.AsyncAzureOpenAI()
+        if openai.api_type == "azure"
+        else openai.AsyncClient()
+    )
+
+    response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
         model=model,
         messages=messages,
         max_tokens=max_tokens,
