@@ -350,11 +350,14 @@ The following environment variables can be set.
 | MAGENTIC_LITELLM_MAX_TOKENS  | LiteLLM max number of generated tokens | 1024                   |
 | MAGENTIC_LITELLM_TEMPERATURE | LiteLLM temperature                    | 0.5                    |
 | MAGENTIC_OPENAI_MODEL        | OpenAI model                           | gpt-4                  |
+| MAGENTIC_OPENAI_API_TYPE     | Allowed options: "openai", "azure"     | azure                  |
 | MAGENTIC_OPENAI_MAX_TOKENS   | OpenAI max number of generated tokens  | 1024                   |
 | MAGENTIC_OPENAI_TEMPERATURE  | OpenAI temperature                     | 0.5                    |
 | OPENAI_API_BASE              | Base URL for an OpenAI-compatible API  | http://localhost:8080  |
 
 When using the `openai` backend, setting the `OPENAI_API_BASE` environment variable or `openai.api_base` in code allows you to use `magentic` with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LiteLLM OpenAI Proxy Server](https://docs.litellm.ai/docs/proxy_server), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support function calling then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
+
+To use Azure with the openai backend you will also need to set the `MAGENTIC_OPENAI_API_TYPE` environment variable to "azure", or use `OpenaiChatModel(..., api_type="azure")`.
 
 ## Type Checking
 
