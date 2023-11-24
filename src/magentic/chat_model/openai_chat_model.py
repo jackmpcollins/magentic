@@ -382,9 +382,9 @@ class OpenaiChatModel(ChatModel):
         )
 
         # Azure OpenAI sends a chunk with empty choices first
-        first_chunk = next(response)
+        first_chunk = await anext(response)
         if len(first_chunk.choices) == 0:
-            first_chunk = next(response)
+            first_chunk = await anext(response)
 
         response = achain(async_iter([first_chunk]), response)  # Replace first chunk
         first_chunk_delta = first_chunk.choices[0].delta
