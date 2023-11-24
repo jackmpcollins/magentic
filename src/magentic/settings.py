@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     litellm_max_tokens: int | None = None
     litellm_temperature: float | None = None
     openai_model: str = "gpt-3.5-turbo"
+    openai_api_type: Literal["openai", "azure"] = "openai"
     openai_max_tokens: int | None = None
     openai_temperature: float | None = None
 
