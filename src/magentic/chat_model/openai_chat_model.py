@@ -85,6 +85,7 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
 
 
 def openai_chatcompletion_create(
+    api_type: Literal["openai", "azure"],
     model: str,
     messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
@@ -100,8 +101,7 @@ def openai_chatcompletion_create(
     if function_call:
         kwargs["function_call"] = function_call
 
-    client = openai.AzureOpenAI() if openai.api_type == "azure" else openai.OpenAI()
-
+    client = openai.AzureOpenAI() if api_type == "azure" else openai.OpenAI()
     response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
         model=model,
         messages=messages,
@@ -114,6 +114,7 @@ def openai_chatcompletion_create(
 
 
 async def openai_chatcompletion_acreate(
+    api_type: Literal["openai", "azure"],
     model: str,
     messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
@@ -129,12 +130,7 @@ async def openai_chatcompletion_acreate(
     if function_call:
         kwargs["function_call"] = function_call
 
-    client = (
-        openai.AsyncAzureOpenAI()
-        if openai.api_type == "azure"
-        else openai.AsyncClient()
-    )
-
+    client = openai.AsyncAzureOpenAI() if api_type == "azure" else openai.AsyncClient()
     response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
         model=model,
         messages=messages,
@@ -157,16 +153,22 @@ class OpenaiChatModel(ChatModel):
         self,
         model: str,
         *,
+        api_type: Literal["openai", "azure"] = "openai",
         max_tokens: int | None = None,
         temperature: float | None = None,
     ):
         self._model = model
+        self._api_type = api_type
         self._max_tokens = max_tokens
         self._temperature = temperature
 
     @property
     def model(self) -> str:
         return self._model
+
+    @property
+    def api_type(self) -> Literal["openai", "azure"]:
+        return self._api_type
 
     @property
     def max_tokens(self) -> int | None:
@@ -240,6 +242,7 @@ class OpenaiChatModel(ChatModel):
 
         openai_functions = [schema.dict() for schema in function_schemas]
         response = openai_chatcompletion_create(
+            api_type=self.api_type,
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
             max_tokens=self.max_tokens,
@@ -365,6 +368,7 @@ class OpenaiChatModel(ChatModel):
 
         openai_functions = [schema.dict() for schema in function_schemas]
         response = await openai_chatcompletion_acreate(
+            api_type=self.api_type,
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
             max_tokens=self.max_tokens,
