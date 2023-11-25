@@ -140,9 +140,9 @@ async def openai_chatcompletion_acreate(
     client = (
         openai.AsyncAzureOpenAI(**client_kwargs)
         if api_type == "azure"
-        else openai.AsyncClient(**client_kwargs)
+        else openai.AsyncOpenAI(**client_kwargs)
     )
-    # `openai.AsyncClient().chat.completions.create` doesn't accept `None` for some args
+    # `openai.AsyncOpenAI().chat.completions.create` doesn't accept `None` for some args
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
     if functions:
