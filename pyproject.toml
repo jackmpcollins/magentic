@@ -40,7 +40,6 @@ pytest = "*"
 pytest-asyncio = "*"
 pytest-clarity = "*"
 pytest-cov = "*"
-requests-mock = "*"
 
 [tool.poetry.group.examples.dependencies]
 jupyter = "*"
