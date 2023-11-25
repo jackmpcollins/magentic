@@ -192,7 +192,7 @@ class OpenaiChatModel(ChatModel):
         return self._api_type
 
     @property
-    def base_url(self) -> str:
+    def base_url(self) -> str | None:
         return self._base_url
 
     @property
