@@ -86,6 +86,7 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
 
 def openai_chatcompletion_create(
     api_type: Literal["openai", "azure"],
+    base_url: str | None,
     model: str,
     messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
@@ -93,6 +94,16 @@ def openai_chatcompletion_create(
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> Iterator[ChatCompletionChunk]:
+    client_kwargs: dict[str, Any] = {}
+    if api_type == "openai" and base_url:
+        client_kwargs["base_url"] = base_url
+
+    client = (
+        openai.AzureOpenAI(**client_kwargs)
+        if api_type == "azure"
+        else openai.OpenAI(**client_kwargs)
+    )
+
     # `openai.OpenAI().chat.completions.create` doesn't accept `None` for some args
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
@@ -101,7 +112,6 @@ def openai_chatcompletion_create(
     if function_call:
         kwargs["function_call"] = function_call
 
-    client = openai.AzureOpenAI() if api_type == "azure" else openai.OpenAI()
     response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
         model=model,
         messages=messages,
@@ -115,6 +125,7 @@ def openai_chatcompletion_create(
 
 async def openai_chatcompletion_acreate(
     api_type: Literal["openai", "azure"],
+    base_url: str | None,
     model: str,
     messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
@@ -122,7 +133,16 @@ async def openai_chatcompletion_acreate(
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> AsyncIterator[ChatCompletionChunk]:
-    # `openai.AsyncClient().chat.completions.create` doesn't accept `None` for some args
+    client_kwargs: dict[str, Any] = {}
+    if api_type == "openai" and base_url:
+        client_kwargs["base_url"] = base_url
+
+    client = (
+        openai.AsyncAzureOpenAI(**client_kwargs)
+        if api_type == "azure"
+        else openai.AsyncOpenAI(**client_kwargs)
+    )
+    # `openai.AsyncOpenAI().chat.completions.create` doesn't accept `None` for some args
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
     if functions:
@@ -130,7 +150,6 @@ async def openai_chatcompletion_acreate(
     if function_call:
         kwargs["function_call"] = function_call
 
-    client = openai.AsyncAzureOpenAI() if api_type == "azure" else openai.AsyncClient()
     response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
         model=model,
         messages=messages,
@@ -154,11 +173,13 @@ class OpenaiChatModel(ChatModel):
         model: str,
         *,
         api_type: Literal["openai", "azure"] = "openai",
+        base_url: str | None = None,
         max_tokens: int | None = None,
         temperature: float | None = None,
     ):
         self._model = model
         self._api_type = api_type
+        self._base_url = base_url
         self._max_tokens = max_tokens
         self._temperature = temperature
 
@@ -169,6 +190,10 @@ class OpenaiChatModel(ChatModel):
     @property
     def api_type(self) -> Literal["openai", "azure"]:
         return self._api_type
+
+    @property
+    def base_url(self) -> str | None:
+        return self._base_url
 
     @property
     def max_tokens(self) -> int | None:
@@ -243,6 +268,7 @@ class OpenaiChatModel(ChatModel):
         openai_functions = [schema.dict() for schema in function_schemas]
         response = openai_chatcompletion_create(
             api_type=self.api_type,
+            base_url=self.base_url,
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
             max_tokens=self.max_tokens,
@@ -369,6 +395,7 @@ class OpenaiChatModel(ChatModel):
         openai_functions = [schema.dict() for schema in function_schemas]
         response = await openai_chatcompletion_acreate(
             api_type=self.api_type,
+            base_url=self.base_url,
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
             max_tokens=self.max_tokens,

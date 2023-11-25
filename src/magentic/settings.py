@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     litellm_temperature: float | None = None
     openai_model: str = "gpt-3.5-turbo"
     openai_api_type: Literal["openai", "azure"] = "openai"
+    openai_base_url: str | None = None
     openai_max_tokens: int | None = None
     openai_temperature: float | None = None
 
