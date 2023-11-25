@@ -23,8 +23,8 @@ def get_chat_model() -> ChatModel:
 
             return OpenaiChatModel(
                 model=settings.openai_model,
-                base_url=settings.openai_base_url,
                 api_type=settings.openai_api_type,
+                base_url=settings.openai_base_url,
                 max_tokens=settings.openai_max_tokens,
                 temperature=settings.openai_temperature,
             )
