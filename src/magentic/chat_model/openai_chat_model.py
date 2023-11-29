@@ -90,6 +90,7 @@ def openai_chatcompletion_create(
     model: str,
     messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
+    seed: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -116,6 +117,7 @@ def openai_chatcompletion_create(
         model=model,
         messages=messages,
         max_tokens=max_tokens,
+        seed=seed,
         temperature=temperature,
         stream=True,
         **kwargs,
@@ -129,6 +131,7 @@ async def openai_chatcompletion_acreate(
     model: str,
     messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
+    seed: int | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -154,6 +157,7 @@ async def openai_chatcompletion_acreate(
         model=model,
         messages=messages,
         max_tokens=max_tokens,
+        seed=seed,
         temperature=temperature,
         stream=True,
         **kwargs,
@@ -175,12 +179,14 @@ class OpenaiChatModel(ChatModel):
         api_type: Literal["openai", "azure"] = "openai",
         base_url: str | None = None,
         max_tokens: int | None = None,
+        seed: int | None = None,
         temperature: float | None = None,
     ):
         self._model = model
         self._api_type = api_type
         self._base_url = base_url
         self._max_tokens = max_tokens
+        self._seed = seed
         self._temperature = temperature
 
     @property
@@ -198,6 +204,10 @@ class OpenaiChatModel(ChatModel):
     @property
     def max_tokens(self) -> int | None:
         return self._max_tokens
+
+    @property
+    def seed(self) -> int | None:
+        return self._seed
 
     @property
     def temperature(self) -> float | None:
@@ -272,6 +282,7 @@ class OpenaiChatModel(ChatModel):
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
             max_tokens=self.max_tokens,
+            seed=self.seed,
             temperature=self.temperature,
             functions=openai_functions,
             function_call=(
@@ -399,6 +410,7 @@ class OpenaiChatModel(ChatModel):
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
             max_tokens=self.max_tokens,
+            seed=self.seed,
             temperature=self.temperature,
             functions=openai_functions,
             function_call=(
