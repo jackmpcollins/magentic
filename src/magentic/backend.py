@@ -26,6 +26,7 @@ def get_chat_model() -> ChatModel:
                 api_type=settings.openai_api_type,
                 base_url=settings.openai_base_url,
                 max_tokens=settings.openai_max_tokens,
+                seed=settings.openai_seed,
                 temperature=settings.openai_temperature,
             )
         case _:
