@@ -21,6 +21,7 @@ class Settings(BaseSettings):
     openai_api_type: Literal["openai", "azure"] = "openai"
     openai_base_url: str | None = None
     openai_max_tokens: int | None = None
+    openai_seed: int | None = None
     openai_temperature: float | None = None
 
 

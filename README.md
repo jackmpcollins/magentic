@@ -353,6 +353,7 @@ The following environment variables can be set.
 | MAGENTIC_OPENAI_API_TYPE     | Allowed options: "openai", "azure"     | azure                  |
 | MAGENTIC_OPENAI_BASE_URL     | Base URL for an OpenAI-compatible API  | http://localhost:8080  |
 | MAGENTIC_OPENAI_MAX_TOKENS   | OpenAI max number of generated tokens  | 1024                   |
+| MAGENTIC_OPENAI_SEED         | Seed for deterministic sampling        | 42                     |
 | MAGENTIC_OPENAI_TEMPERATURE  | OpenAI temperature                     | 0.5                    |
 
 When using the `openai` backend, setting the `MAGENTIC_OPENAI_BASE_URL` environment variable or using `OpenaiChatModel(..., base_url="http://localhost:8080")` in code allows you to use `magentic` with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LiteLLM OpenAI Proxy Server](https://docs.litellm.ai/docs/proxy_server), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support function calling then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
