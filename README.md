@@ -350,6 +350,7 @@ The following environment variables can be set.
 | MAGENTIC_LITELLM_MAX_TOKENS  | LiteLLM max number of generated tokens | 1024                   |
 | MAGENTIC_LITELLM_TEMPERATURE | LiteLLM temperature                    | 0.5                    |
 | MAGENTIC_OPENAI_MODEL        | OpenAI model                           | gpt-4                  |
+| MAGENTIC_OPENAI_API_KEY      | OpenAI API key to be used by magentic  | sk-...                 |
 | MAGENTIC_OPENAI_API_TYPE     | Allowed options: "openai", "azure"     | azure                  |
 | MAGENTIC_OPENAI_BASE_URL     | Base URL for an OpenAI-compatible API  | http://localhost:8080  |
 | MAGENTIC_OPENAI_MAX_TOKENS   | OpenAI max number of generated tokens  | 1024                   |
