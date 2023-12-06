@@ -135,7 +135,7 @@ def prompt(
     """
 
     def decorator(
-        func: Callable[P, Awaitable[R]] | Callable[P, R]
+        func: Callable[P, Awaitable[R]] | Callable[P, R],
     ) -> AsyncPromptFunction[P, R] | PromptFunction[P, R]:
         func_signature = inspect.signature(func)
 
