@@ -174,7 +174,7 @@ def chatprompt(
     """
 
     def decorator(
-        func: Callable[P, Awaitable[R]] | Callable[P, R]
+        func: Callable[P, Awaitable[R]] | Callable[P, R],
     ) -> AsyncChatPromptFunction[P, R] | ChatPromptFunction[P, R]:
         func_signature = inspect.signature(func)
 
