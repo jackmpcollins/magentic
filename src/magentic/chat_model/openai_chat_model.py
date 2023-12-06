@@ -85,6 +85,7 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
 
 
 def openai_chatcompletion_create(
+    api_key: str | None,
     api_type: Literal["openai", "azure"],
     base_url: str | None,
     model: str,
@@ -95,7 +96,9 @@ def openai_chatcompletion_create(
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> Iterator[ChatCompletionChunk]:
-    client_kwargs: dict[str, Any] = {}
+    client_kwargs: dict[str, Any] = {
+        "api_key": api_key,
+    }
     if api_type == "openai" and base_url:
         client_kwargs["base_url"] = base_url
 
@@ -126,6 +129,7 @@ def openai_chatcompletion_create(
 
 
 async def openai_chatcompletion_acreate(
+    api_key: str | None,
     api_type: Literal["openai", "azure"],
     base_url: str | None,
     model: str,
@@ -136,7 +140,9 @@ async def openai_chatcompletion_acreate(
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> AsyncIterator[ChatCompletionChunk]:
-    client_kwargs: dict[str, Any] = {}
+    client_kwargs: dict[str, Any] = {
+        "api_key": api_key,
+    }
     if api_type == "openai" and base_url:
         client_kwargs["base_url"] = base_url
 
@@ -176,6 +182,7 @@ class OpenaiChatModel(ChatModel):
         self,
         model: str,
         *,
+        api_key: str | None = None,
         api_type: Literal["openai", "azure"] = "openai",
         base_url: str | None = None,
         max_tokens: int | None = None,
@@ -183,6 +190,7 @@ class OpenaiChatModel(ChatModel):
         temperature: float | None = None,
     ):
         self._model = model
+        self._api_key = api_key
         self._api_type = api_type
         self._base_url = base_url
         self._max_tokens = max_tokens
@@ -192,6 +200,10 @@ class OpenaiChatModel(ChatModel):
     @property
     def model(self) -> str:
         return self._model
+
+    @property
+    def api_key(self) -> str | None:
+        return self._api_key
 
     @property
     def api_type(self) -> Literal["openai", "azure"]:
@@ -277,6 +289,7 @@ class OpenaiChatModel(ChatModel):
 
         openai_functions = [schema.dict() for schema in function_schemas]
         response = openai_chatcompletion_create(
+            api_key=self.api_key,
             api_type=self.api_type,
             base_url=self.base_url,
             model=self.model,
@@ -405,6 +418,7 @@ class OpenaiChatModel(ChatModel):
 
         openai_functions = [schema.dict() for schema in function_schemas]
         response = await openai_chatcompletion_acreate(
+            api_key=self.api_key,
             api_type=self.api_type,
             base_url=self.base_url,
             model=self.model,
