@@ -93,6 +93,7 @@ def openai_chatcompletion_create(
     max_tokens: int | None = None,
     seed: int | None = None,
     temperature: float | None = None,
+    stop: list[str] | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> Iterator[ChatCompletionChunk]:
@@ -123,6 +124,7 @@ def openai_chatcompletion_create(
         seed=seed,
         temperature=temperature,
         stream=True,
+        stop=stop,
         **kwargs,
     )
     return response
@@ -266,6 +268,7 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
+        stop: Iterable[str] | None = None,
     ) -> (
         AssistantMessage[FunctionCall[FuncR]]
         | AssistantMessage[R]
@@ -297,6 +300,7 @@ class OpenaiChatModel(ChatModel):
             max_tokens=self.max_tokens,
             seed=self.seed,
             temperature=self.temperature,
+            stop=stop,
             functions=openai_functions,
             function_call=(
                 {"name": openai_functions[0]["name"]}

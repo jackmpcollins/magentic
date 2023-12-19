@@ -1,3 +1,4 @@
+import copy
 import inspect
 from functools import update_wrapper
 from typing import (
@@ -36,6 +37,7 @@ class BasePromptFunction(Generic[P, R]):
         parameters: Sequence[inspect.Parameter],
         return_type: type[R],
         functions: list[Callable[..., Any]] | None = None,
+        stop: list[str] | None = None,
         model: ChatModel | None = None,
     ):
         self._signature = inspect.Signature(
@@ -44,6 +46,7 @@ class BasePromptFunction(Generic[P, R]):
         )
         self._template = template
         self._functions = functions or []
+        self._stop = stop
         self._model = model
 
         self._return_types = [
@@ -55,6 +58,10 @@ class BasePromptFunction(Generic[P, R]):
     @property
     def functions(self) -> list[Callable[..., Any]]:
         return self._functions.copy()
+
+    @property
+    def stop(self) -> list[str] | None:
+        return copy.copy(self._stop)
 
     @property
     def model(self) -> ChatModel:
@@ -78,6 +85,7 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
         """Query the LLM with the formatted prompt template."""
         message = self.model.complete(
             messages=[UserMessage(content=self.format(*args, **kwargs))],
+            stop=self._stop,
             functions=self._functions,
             output_types=self._return_types,
         )
@@ -116,6 +124,7 @@ class PromptDecorator(Protocol):
 def prompt(
     template: str,
     functions: list[Callable[..., Any]] | None = None,
+    stop: list[str] | None = None,
     model: ChatModel | None = None,
 ) -> PromptDecorator:
     """Convert a function into an LLM prompt template.
@@ -155,6 +164,7 @@ def prompt(
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
             functions=functions,
+            stop=stop,
             model=model,
         )
         return cast(PromptFunction[P, R], update_wrapper(prompt_function, func))  # type: ignore[redundant-cast]
