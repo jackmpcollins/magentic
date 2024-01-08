@@ -92,8 +92,8 @@ def openai_chatcompletion_create(
     messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
     seed: int | None = None,
-    temperature: float | None = None,
     stop: list[str] | None = None,
+    temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> Iterator[ChatCompletionChunk]:
@@ -122,9 +122,9 @@ def openai_chatcompletion_create(
         messages=messages,
         max_tokens=max_tokens,
         seed=seed,
-        temperature=temperature,
-        stream=True,
         stop=stop,
+        stream=True,
+        temperature=temperature,
         **kwargs,
     )
     return response
@@ -299,8 +299,8 @@ class OpenaiChatModel(ChatModel):
             messages=[message_to_openai_message(m) for m in messages],
             max_tokens=self.max_tokens,
             seed=self.seed,
-            temperature=self.temperature,
             stop=stop,
+            temperature=self.temperature,
             functions=openai_functions,
             function_call=(
                 {"name": openai_functions[0]["name"]}
