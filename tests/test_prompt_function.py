@@ -2,11 +2,13 @@
 
 from inspect import getdoc
 from typing import Awaitable
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pydantic import BaseModel
 
 from magentic.chat_model.base import StructuredOutputError
+from magentic.chat_model.message import AssistantMessage, UserMessage
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.function_call import FunctionCall
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
@@ -20,6 +22,27 @@ def test_promptfunction_format():
         ...
 
     assert func.format("arg") == "Test arg."
+
+
+def test_promptfunction_call():
+    mock_model = Mock()
+    mock_model.complete.return_value = AssistantMessage(content="Hello!")
+
+    @prompt(
+        "Hello {name}.",
+        stop=["stop"],
+        model=mock_model,
+    )
+    def say_hello(name: str) -> str | bool:
+        ...
+
+    assert say_hello("World") == "Hello!"
+    assert mock_model.complete.call_count == 1
+    assert mock_model.complete.call_args.kwargs["messages"] == [
+        UserMessage("Hello World.")
+    ]
+    assert mock_model.complete.call_args.kwargs["output_types"] == [str, bool]
+    assert mock_model.complete.call_args.kwargs["stop"] == ["stop"]
 
 
 @pytest.mark.openai
@@ -130,6 +153,28 @@ def test_decorator_raise_structured_output_error():
     with pytest.raises(StructuredOutputError):
         # The model will return a math expression, not an integer
         days_between("Jan 4th 2019", "Jul 3rd 2019")
+
+
+@pytest.mark.asyncio
+async def test_async_promptfunction_call():
+    mock_model = AsyncMock()
+    mock_model.acomplete.return_value = AssistantMessage(content="Hello!")
+
+    @prompt(
+        "Hello {name}.",
+        stop=["stop"],
+        model=mock_model,
+    )
+    async def say_hello(name: str) -> str | bool:
+        ...
+
+    assert await say_hello("World") == "Hello!"
+    assert mock_model.acomplete.call_count == 1
+    assert mock_model.acomplete.call_args.kwargs["messages"] == [
+        UserMessage("Hello World.")
+    ]
+    assert mock_model.acomplete.call_args.kwargs["output_types"] == [str, bool]
+    assert mock_model.acomplete.call_args.kwargs["stop"] == ["stop"]
 
 
 @pytest.mark.asyncio
