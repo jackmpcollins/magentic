@@ -101,6 +101,7 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
             messages=[UserMessage(content=self.format(*args, **kwargs))],
             functions=self._functions,
             output_types=self._return_types,
+            stop=self._stop,
         )
         return cast(R, message.content)
 
@@ -154,6 +155,7 @@ def prompt(
                 parameters=list(func_signature.parameters.values()),
                 return_type=func_signature.return_annotation,
                 functions=functions,
+                stop=stop,
                 model=model,
             )
             async_prompt_function = update_wrapper(async_prompt_function, func)
