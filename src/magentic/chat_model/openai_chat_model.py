@@ -233,6 +233,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: None = ...,
         output_types: None = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[str]:
         ...
 
@@ -242,6 +244,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]],
         output_types: None = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
         ...
 
@@ -251,6 +255,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: None = ...,
         output_types: Iterable[type[R]] = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[R]:
         ...
 
@@ -260,6 +266,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]],
         output_types: Iterable[type[R]],
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
         ...
 
@@ -268,7 +276,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
-        stop: Iterable[str] | None = None,
+        *,
+        stop: list[str] | None = None,
     ) -> (
         AssistantMessage[FunctionCall[FuncR]]
         | AssistantMessage[R]

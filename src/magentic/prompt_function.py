@@ -85,9 +85,9 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
         """Query the LLM with the formatted prompt template."""
         message = self.model.complete(
             messages=[UserMessage(content=self.format(*args, **kwargs))],
-            stop=self._stop,
             functions=self._functions,
             output_types=self._return_types,
+            stop=self._stop,
         )
         return cast(R, message.content)
 

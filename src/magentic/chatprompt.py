@@ -54,8 +54,8 @@ class BaseChatPromptFunction(Generic[P, R]):
         )
         self._messages = messages
         self._functions = functions or []
-        self._model = model
         self._stop = stop
+        self._model = model
 
         self._return_types = [
             type_
@@ -99,8 +99,8 @@ class ChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
         message = self.model.complete(
             messages=self.format(*args, **kwargs),
             functions=self._functions,
-            stop=self._stop,
             output_types=self._return_types,
+            stop=self._stop,
         )
         return cast(R, message.content)
 
