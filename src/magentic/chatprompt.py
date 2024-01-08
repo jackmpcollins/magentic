@@ -45,6 +45,7 @@ class BaseChatPromptFunction(Generic[P, R]):
         parameters: Sequence[inspect.Parameter],
         return_type: type[R],
         functions: list[Callable[..., Any]] | None = None,
+        stop: list[str] | None = None,
         model: ChatModel | None = None,
     ):
         self._signature = inspect.Signature(
@@ -53,6 +54,7 @@ class BaseChatPromptFunction(Generic[P, R]):
         )
         self._messages = messages
         self._functions = functions or []
+        self._stop = stop
         self._model = model
 
         self._return_types = [
@@ -98,6 +100,7 @@ class ChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
             messages=self.format(*args, **kwargs),
             functions=self._functions,
             output_types=self._return_types,
+            stop=self._stop,
         )
         return cast(R, message.content)
 
@@ -111,6 +114,7 @@ class AsyncChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
             messages=self.format(*args, **kwargs),
             functions=self._functions,
             output_types=self._return_types,
+            stop=self._stop,
         )
         return cast(R, message.content)
 
@@ -136,6 +140,7 @@ class ChatPromptDecorator(Protocol):
 def chatprompt(
     *messages: Message[Any],
     functions: list[Callable[..., Any]] | None = None,
+    stop: list[str] | None = None,
     model: ChatModel | None = None,
 ) -> ChatPromptDecorator:
     """Convert a function into an LLM chat prompt template.
@@ -184,6 +189,7 @@ def chatprompt(
                 parameters=list(func_signature.parameters.values()),
                 return_type=func_signature.return_annotation,
                 functions=functions,
+                stop=stop,
                 model=model,
             )
             async_prompt_function = update_wrapper(async_prompt_function, func)
@@ -194,6 +200,7 @@ def chatprompt(
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
             functions=functions,
+            stop=stop,
             model=model,
         )
         return cast(ChatPromptFunction[P, R], update_wrapper(prompt_function, func))  # type: ignore[redundant-cast]

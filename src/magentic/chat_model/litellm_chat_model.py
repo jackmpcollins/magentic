@@ -38,6 +38,7 @@ def litellm_completion(
     messages: list[ChatCompletionMessageParam],
     api_base: str | None = None,
     max_tokens: int | None = None,
+    stop: list[str] | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -60,6 +61,7 @@ def litellm_completion(
     response: CustomStreamWrapper = litellm.completion(  # type: ignore[no-untyped-call,unused-ignore]
         model=model,
         messages=messages,
+        stop=stop,
         stream=True,
         **kwargs,
     )
@@ -71,6 +73,7 @@ async def litellm_acompletion(
     messages: list[ChatCompletionMessageParam],
     api_base: str | None = None,
     max_tokens: int | None = None,
+    stop: list[str] | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -93,6 +96,7 @@ async def litellm_acompletion(
     response: AsyncIterator[ModelResponse] = await litellm.acompletion(  # type: ignore[no-untyped-call,unused-ignore]
         model=model,
         messages=messages,
+        stop=stop,
         stream=True,
         **kwargs,
     )
@@ -141,6 +145,8 @@ class LitellmChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: None = ...,
         output_types: None = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[str]:
         ...
 
@@ -150,6 +156,8 @@ class LitellmChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]],
         output_types: None = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
         ...
 
@@ -159,6 +167,8 @@ class LitellmChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: None = ...,
         output_types: Iterable[type[R]] = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[R]:
         ...
 
@@ -168,6 +178,8 @@ class LitellmChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]],
         output_types: Iterable[type[R]],
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
         ...
 
@@ -176,6 +188,8 @@ class LitellmChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
+        *,
+        stop: list[str] | None = None,
     ) -> (
         AssistantMessage[FunctionCall[FuncR]]
         | AssistantMessage[R]
@@ -203,6 +217,7 @@ class LitellmChatModel(ChatModel):
             messages=[message_to_openai_message(m) for m in messages],
             api_base=self.api_base,
             max_tokens=self.max_tokens,
+            stop=stop,
             temperature=self.temperature,
             functions=openai_functions,
             function_call=(
@@ -262,6 +277,8 @@ class LitellmChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: None = ...,
         output_types: None = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[str]:
         ...
 
@@ -271,6 +288,8 @@ class LitellmChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]],
         output_types: None = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
         ...
 
@@ -280,6 +299,8 @@ class LitellmChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: None = ...,
         output_types: Iterable[type[R]] = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[R]:
         ...
 
@@ -289,6 +310,8 @@ class LitellmChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]],
         output_types: Iterable[type[R]],
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
         ...
 
@@ -297,6 +320,8 @@ class LitellmChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
+        *,
+        stop: list[str] | None = None,
     ) -> (
         AssistantMessage[FunctionCall[FuncR]]
         | AssistantMessage[R]
@@ -324,6 +349,7 @@ class LitellmChatModel(ChatModel):
             messages=[message_to_openai_message(m) for m in messages],
             api_base=self.api_base,
             max_tokens=self.max_tokens,
+            stop=stop,
             temperature=self.temperature,
             functions=openai_functions,
             function_call=(
