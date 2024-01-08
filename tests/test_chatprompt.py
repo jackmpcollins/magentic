@@ -76,6 +76,7 @@ def test_chatpromptfunction_call():
 
     @chatprompt(
         UserMessage("Hello {name}."),
+        stop=["stop"],
         model=mock_model,
     )
     def say_hello(name: str) -> str | bool:
@@ -87,6 +88,7 @@ def test_chatpromptfunction_call():
         UserMessage("Hello World.")
     ]
     assert mock_model.complete.call_args.kwargs["output_types"] == [str, bool]
+    assert mock_model.complete.call_args.kwargs["stop"] == ["stop"]
 
 
 def test_chatprompt_decorator_docstring():
@@ -106,6 +108,7 @@ async def test_asyncchatpromptfunction_call():
 
     @chatprompt(
         UserMessage("Hello {name}."),
+        stop=["stop"],
         model=mock_model,
     )
     async def say_hello(name: str) -> str | bool:
@@ -117,6 +120,7 @@ async def test_asyncchatpromptfunction_call():
         UserMessage("Hello World.")
     ]
     assert mock_model.acomplete.call_args.kwargs["output_types"] == [str, bool]
+    assert mock_model.acomplete.call_args.kwargs["stop"] == ["stop"]
 
 
 @pytest.mark.asyncio

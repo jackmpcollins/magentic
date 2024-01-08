@@ -92,6 +92,7 @@ def openai_chatcompletion_create(
     messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
     seed: int | None = None,
+    stop: list[str] | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -121,8 +122,9 @@ def openai_chatcompletion_create(
         messages=messages,
         max_tokens=max_tokens,
         seed=seed,
-        temperature=temperature,
+        stop=stop,
         stream=True,
+        temperature=temperature,
         **kwargs,
     )
     return response
@@ -136,6 +138,7 @@ async def openai_chatcompletion_acreate(
     messages: list[ChatCompletionMessageParam],
     max_tokens: int | None = None,
     seed: int | None = None,
+    stop: list[str] | None = None,
     temperature: float | None = None,
     functions: list[dict[str, Any]] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
@@ -164,6 +167,7 @@ async def openai_chatcompletion_acreate(
         messages=messages,
         max_tokens=max_tokens,
         seed=seed,
+        stop=stop,
         temperature=temperature,
         stream=True,
         **kwargs,
@@ -231,6 +235,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: None = ...,
         output_types: None = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[str]:
         ...
 
@@ -240,6 +246,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]],
         output_types: None = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
         ...
 
@@ -249,6 +257,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: None = ...,
         output_types: Iterable[type[R]] = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[R]:
         ...
 
@@ -258,6 +268,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]],
         output_types: Iterable[type[R]],
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
         ...
 
@@ -266,6 +278,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
+        *,
+        stop: list[str] | None = None,
     ) -> (
         AssistantMessage[FunctionCall[FuncR]]
         | AssistantMessage[R]
@@ -296,6 +310,7 @@ class OpenaiChatModel(ChatModel):
             messages=[message_to_openai_message(m) for m in messages],
             max_tokens=self.max_tokens,
             seed=self.seed,
+            stop=stop,
             temperature=self.temperature,
             functions=openai_functions,
             function_call=(
@@ -360,6 +375,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: None = ...,
         output_types: None = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[str]:
         ...
 
@@ -369,6 +386,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]],
         output_types: None = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
         ...
 
@@ -378,6 +397,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: None = ...,
         output_types: Iterable[type[R]] = ...,
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[R]:
         ...
 
@@ -387,6 +408,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]],
         output_types: Iterable[type[R]],
+        *,
+        stop: list[str] | None = ...,
     ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
         ...
 
@@ -395,6 +418,8 @@ class OpenaiChatModel(ChatModel):
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
+        *,
+        stop: list[str] | None = None,
     ) -> (
         AssistantMessage[FunctionCall[FuncR]]
         | AssistantMessage[R]
@@ -425,6 +450,7 @@ class OpenaiChatModel(ChatModel):
             messages=[message_to_openai_message(m) for m in messages],
             max_tokens=self.max_tokens,
             seed=self.seed,
+            stop=stop,
             temperature=self.temperature,
             functions=openai_functions,
             function_call=(
