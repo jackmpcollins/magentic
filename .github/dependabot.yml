@@ -17,4 +17,3 @@ updates:
       - "jackmpcollins"
     schedule:
       interval: "weekly"
-    versioning-strategy: "widen"
