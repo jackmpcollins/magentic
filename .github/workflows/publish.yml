@@ -13,7 +13,7 @@ jobs:
     permissions:
       id-token: write # Required for trusted publishing to PyPI
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: pipx install poetry
       - name: Set up Python
         uses: actions/setup-python@v4
