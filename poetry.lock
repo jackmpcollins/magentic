@@ -143,17 +143,6 @@ test = ["anyio[trio]", "coverage[toml] (>=4.5)", "hypothesis (>=4.0)", "mock (>=
 trio = ["trio (<0.22)"]
 
 [[package]]
-name = "appdirs"
-version = "1.4.4"
-description = "A small Python module for determining appropriate platform-specific dirs, e.g. a \"user data dir\"."
-optional = true
-python-versions = "*"
-files = [
-    {file = "appdirs-1.4.4-py2.py3-none-any.whl", hash = "sha256:a841dacd6b99318a741b166adb07e19ee71a274450e68237b4650ca1055ab128"},
-    {file = "appdirs-1.4.4.tar.gz", hash = "sha256:7d5d0167b2b1ba821647616af46a749d1c653740dd0d2415100fe26e27afdf41"},
-]
-
-[[package]]
 name = "appnope"
 version = "0.1.3"
 description = "Disable App Nap on macOS >= 10.9"
@@ -1487,26 +1476,29 @@ files = [
 
 [[package]]
 name = "litellm"
-version = "1.0.0"
+version = "1.18.9"
 description = "Library to easily interface with LLM API providers"
 optional = true
-python-versions = ">=3.8,<4.0"
+python-versions = ">=3.8, !=2.7.*, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*, !=3.7.*"
 files = [
-    {file = "litellm-1.0.0-py3-none-any.whl", hash = "sha256:5cba48aba24ea49ecd99f712aa2843174137c2bcb824ff5a691f9dca9fd7d1f7"},
-    {file = "litellm-1.0.0.tar.gz", hash = "sha256:f67c3dec0cc5608ed4933c02074d415cef02c92c9a0c88ccd803fe91728a54b1"},
+    {file = "litellm-1.18.9-py3-none-any.whl", hash = "sha256:e34ef998cace6649bdccd655097f8822edc450dc3f1a6ae4926caf3aeab0e6d8"},
+    {file = "litellm-1.18.9.tar.gz", hash = "sha256:ec22ee5973f6a367fece3871549d4b074be3856ebe5ee1cec9fcaec0d0091bd0"},
 ]
 
 [package.dependencies]
 aiohttp = "*"
-appdirs = ">=1.4.4,<2.0.0"
-certifi = ">=2023.7.22,<2024.0.0"
 click = "*"
 importlib-metadata = ">=6.8.0"
 jinja2 = ">=3.1.2,<4.0.0"
-openai = "*"
+openai = ">=1.0.0"
 python-dotenv = ">=0.2.0"
+requests = ">=2.31.0,<3.0.0"
 tiktoken = ">=0.4.0"
 tokenizers = "*"
+
+[package.extras]
+extra-proxy = ["streamlit (>=1.29.0,<2.0.0)"]
+proxy = ["backoff", "fastapi (>=0.104.1,<0.105.0)", "gunicorn (>=21.2.0,<22.0.0)", "orjson (>=3.9.7,<4.0.0)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)"]
 
 [[package]]
 name = "markdown-it-py"
