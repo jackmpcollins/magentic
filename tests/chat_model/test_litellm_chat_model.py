@@ -3,6 +3,7 @@ import pytest
 
 from magentic.chat_model.litellm_chat_model import LitellmChatModel
 from magentic.chat_model.message import UserMessage
+from magentic.function_call import FunctionCall
 
 
 @pytest.mark.openai
@@ -26,7 +27,6 @@ def test_litellm_chat_model_complete_ollama():
     assert isinstance(message.content, str)
 
 
-@pytest.mark.skip(reason="Waiting for fix: https://github.com/BerriAI/litellm/pull/813")
 @pytest.mark.anthropic
 def test_litellm_chat_model_complete_anthropic_function_calling_error():
     def sum(a: int, b: int) -> int:
@@ -38,15 +38,20 @@ def test_litellm_chat_model_complete_anthropic_function_calling_error():
         chat_model.complete(messages=[UserMessage("Say hello!")], functions=[sum])
 
 
+@pytest.mark.skip(
+    reason="LiteLLM function calling with streaming is indistinguishable from normal text."
+)
 @pytest.mark.ollama
-def test_litellm_chat_model_complete_ollama_function_calling_error():
+def test_litellm_chat_model_complete_ollama_function_calling():
     def sum(a: int, b: int) -> int:
         """Sum two numbers."""
         return a + b
 
     chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
-    with pytest.raises(litellm.utils.UnsupportedParamsError):
-        chat_model.complete(messages=[UserMessage("Say hello!")], functions=[sum])
+    message = chat_model.complete(
+        messages=[UserMessage("Sum 1 and 2")], functions=[sum]
+    )
+    assert isinstance(message.content, FunctionCall)
 
 
 @pytest.mark.asyncio
