@@ -114,7 +114,7 @@ class PromptDecorator(Protocol):
     """
 
     @overload
-    def __call__(self, func: Callable[P, Awaitable[R]]) -> AsyncPromptFunction[P, R]:  # type: ignore[misc]
+    def __call__(self, func: Callable[P, Awaitable[R]]) -> AsyncPromptFunction[P, R]:  # type: ignore[overload-overlap]
         ...
 
     @overload
