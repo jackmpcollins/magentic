@@ -26,7 +26,6 @@ def test_litellm_chat_model_complete_ollama():
     assert isinstance(message.content, str)
 
 
-@pytest.mark.skip(reason="Waiting for fix: https://github.com/BerriAI/litellm/pull/813")
 @pytest.mark.anthropic
 def test_litellm_chat_model_complete_anthropic_function_calling_error():
     def sum(a: int, b: int) -> int:
