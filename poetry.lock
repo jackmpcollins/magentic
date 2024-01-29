@@ -1476,13 +1476,13 @@ files = [
 
 [[package]]
 name = "litellm"
-version = "1.18.9"
+version = "1.20.1"
 description = "Library to easily interface with LLM API providers"
 optional = true
 python-versions = ">=3.8, !=2.7.*, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*, !=3.5.*, !=3.6.*, !=3.7.*"
 files = [
-    {file = "litellm-1.18.9-py3-none-any.whl", hash = "sha256:e34ef998cace6649bdccd655097f8822edc450dc3f1a6ae4926caf3aeab0e6d8"},
-    {file = "litellm-1.18.9.tar.gz", hash = "sha256:ec22ee5973f6a367fece3871549d4b074be3856ebe5ee1cec9fcaec0d0091bd0"},
+    {file = "litellm-1.20.1-py3-none-any.whl", hash = "sha256:83a63c2fde88d3cd11ba963da79ce18c22deb316bf9579fefea86b3116f743ba"},
+    {file = "litellm-1.20.1.tar.gz", hash = "sha256:cb14c567187e2e6fa06a396111701dfe5a4bd3a0ccebd8104a23d7b87c97b2c4"},
 ]
 
 [package.dependencies]
@@ -1498,7 +1498,7 @@ tokenizers = "*"
 
 [package.extras]
 extra-proxy = ["streamlit (>=1.29.0,<2.0.0)"]
-proxy = ["backoff", "fastapi (>=0.104.1,<0.105.0)", "gunicorn (>=21.2.0,<22.0.0)", "orjson (>=3.9.7,<4.0.0)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)"]
+proxy = ["apscheduler (>=3.10.4,<4.0.0)", "backoff", "fastapi (>=0.104.1,<0.105.0)", "gunicorn (>=21.2.0,<22.0.0)", "orjson (>=3.9.7,<4.0.0)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)"]
 
 [[package]]
 name = "markdown-it-py"
