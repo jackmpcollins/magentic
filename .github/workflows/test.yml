@@ -22,4 +22,4 @@ jobs:
           cache: "poetry"
       - run: poetry install --all-extras
       - run: poetry run mypy .
-      - run: poetry run pytest
+      - run: poetry run pytest tests
