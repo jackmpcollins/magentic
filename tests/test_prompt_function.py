@@ -50,7 +50,6 @@ def test_decorator_return_str():
     @prompt("What is the capital of {country}? Name only. No punctuation.")
     def get_capital(country: str) -> str:
         """This is the docstring."""
-        ...
 
     assert isinstance(get_capital, PromptFunction)
     assert getdoc(get_capital) == "This is the docstring."

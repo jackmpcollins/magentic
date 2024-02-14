@@ -95,7 +95,6 @@ def test_chatprompt_decorator_docstring():
     @chatprompt(UserMessage("This is a user message."))
     def func(one: int) -> str:
         """This is the docstring."""
-        ...
 
     assert isinstance(func, ChatPromptFunction)
     assert getdoc(func) == "This is the docstring."
@@ -128,7 +127,6 @@ async def test_async_chatprompt_decorator_docstring():
     @chatprompt(UserMessage("This is a user message."))
     async def func(one: int) -> str:
         """This is the docstring."""
-        ...
 
     assert isinstance(func, AsyncChatPromptFunction)
     assert getdoc(func) == "This is the docstring."
