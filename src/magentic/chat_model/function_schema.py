@@ -267,8 +267,47 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
 
     def parse_args(self, arguments: Iterable[str]) -> FunctionCall[T]:
         model = self._model.model_validate_json("".join(arguments))
-        args = {attr: getattr(model, attr) for attr in model.model_fields_set}
-        return FunctionCall(self._func, **args)
+        supplied_params = [
+            param
+            for param in inspect.signature(self._func).parameters.values()
+            if param.name in model.model_fields_set
+        ]
+
+        args_positional_only = [
+            getattr(model, param.name)
+            for param in supplied_params
+            if param.kind == param.POSITIONAL_ONLY
+        ]
+        args_positional_or_keyword = [
+            getattr(model, param.name)
+            for param in supplied_params
+            if param.kind == param.POSITIONAL_OR_KEYWORD
+        ]
+        args_var_positional = [
+            arg
+            for param in supplied_params
+            if param.kind == param.VAR_POSITIONAL
+            for arg in getattr(model, param.name)
+        ]
+        args_keyword_only = {
+            param.name: getattr(model, param.name)
+            for param in supplied_params
+            if param.kind == param.KEYWORD_ONLY
+        }
+        args_var_keyword = {
+            name: value
+            for param in supplied_params
+            if param.kind == param.VAR_KEYWORD
+            for name, value in getattr(model, param.name).items()
+        }
+        return FunctionCall(
+            self._func,
+            *args_positional_only,
+            *args_positional_or_keyword,
+            *args_var_positional,
+            **args_keyword_only,
+            **args_var_keyword,
+        )
 
     def serialize_args(self, value: FunctionCall[T]) -> str:
         return cast(
