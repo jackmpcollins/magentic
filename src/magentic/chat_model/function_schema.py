@@ -215,20 +215,41 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
         return value.model_dump_json()
 
 
+def create_model_from_function(func) -> type[BaseModel]:
+    """Create a Pydantic model from a function signature."""
+    fields: dict[str, Any] = {}
+    for param in inspect.signature(func).parameters.values():
+        # *args
+        if param.kind == inspect.Parameter.VAR_POSITIONAL:
+            fields[param.name] = (
+                (list[param.annotation] if param.annotation != inspect._empty else Any),
+                param.default if param.default != inspect._empty else [],
+            )
+            continue
+
+        # **kwargs
+        if param.kind == inspect.Parameter.VAR_KEYWORD:
+            fields[param.name] = (
+                dict[str, param.annotation]
+                if param.annotation != inspect._empty
+                else dict[str, Any],
+                param.default if param.default != inspect._empty else {},
+            )
+            continue
+
+        fields[param.name] = (
+            (param.annotation if param.annotation != inspect._empty else Any),
+            (param.default if param.default != inspect._empty else ...),
+        )
+    return create_model("FuncModel", **fields)
+
+
 class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]):
     """FunctionSchema for FunctionCall."""
 
     def __init__(self, func: Callable[..., T]):
         self._func = func
-        # https://github.com/pydantic/pydantic/issues/3585#issuecomment-1002745763
-        fields: dict[str, Any] = {
-            param.name: (
-                (param.annotation if param.annotation != inspect._empty else Any),
-                (param.default if param.default != inspect._empty else ...),
-            )
-            for param in inspect.signature(func).parameters.values()
-        }
-        self._model = create_model("FuncModel", **fields)
+        self._model = create_model_from_function(func)
 
     @property
     def name(self) -> str:
