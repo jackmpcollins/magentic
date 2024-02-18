@@ -534,7 +534,15 @@ def plus_with_args(a: int, *args: int) -> int:
     return a + sum(args)
 
 
+def plus_with_args_no_type_hints(a, *args) -> int:
+    return a + sum(args)
+
+
 def plus_with_kwargs(a: int, **kwargs: int) -> int:
+    return a + sum(kwargs.values())
+
+
+def plus_with_kwargs_no_type_hints(a, **kwargs) -> int:
     return a + sum(kwargs.values())
 
 
@@ -628,6 +636,25 @@ def plus_with_basemodel(a: IntModel, b: IntModel) -> IntModel:
             },
         ),
         (
+            plus_with_args_no_type_hints,
+            {
+                "name": "plus_with_args_no_type_hints",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "a": {"title": "A"},
+                        "args": {
+                            "default": [],
+                            "items": {},
+                            "title": "Args",
+                            "type": "array",
+                        },
+                    },
+                    "required": ["a"],
+                },
+            },
+        ),
+        (
             plus_with_kwargs,
             {
                 "name": "plus_with_kwargs",
@@ -637,6 +664,24 @@ def plus_with_basemodel(a: IntModel, b: IntModel) -> IntModel:
                         "a": {"title": "A", "type": "integer"},
                         "kwargs": {
                             "additionalProperties": {"type": "integer"},
+                            "default": {},
+                            "title": "Kwargs",
+                            "type": "object",
+                        },
+                    },
+                    "required": ["a"],
+                },
+            },
+        ),
+        (
+            plus_with_kwargs_no_type_hints,
+            {
+                "name": "plus_with_kwargs_no_type_hints",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "a": {"title": "A"},
+                        "kwargs": {
                             "default": {},
                             "title": "Kwargs",
                             "type": "object",
@@ -717,9 +762,19 @@ function_call_function_schema_args_test_cases = [
     (plus_default_value, '{"a": 1}', FunctionCall(plus_default_value, 1)),
     (plus_with_args, '{"a": 1, "args": [2, 3]}', FunctionCall(plus_with_args, 1, 2, 3)),
     (
+        plus_with_args_no_type_hints,
+        '{"a": 1, "args": [2, 3]}',
+        FunctionCall(plus_with_args_no_type_hints, 1, 2, 3),
+    ),
+    (
         plus_with_kwargs,
         '{"a": 1, "kwargs": {"b": 2, "c": 3}}',
         FunctionCall(plus_with_kwargs, 1, b=2, c=3),
+    ),
+    (
+        plus_with_kwargs_no_type_hints,
+        '{"a": 1, "kwargs": {"b": 2, "c": 3}}',
+        FunctionCall(plus_with_kwargs_no_type_hints, 1, b=2, c=3),
     ),
     (
         plus_with_annotated,
