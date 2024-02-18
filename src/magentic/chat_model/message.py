@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Awaitable, Generic, TypeVar, overload
+from typing import Any, Awaitable, Generic, TypeVar, cast, overload
 
 from magentic.function_call import FunctionCall
 
@@ -61,7 +61,9 @@ class AssistantMessage(Message[T], Generic[T]):
 
     def format(self, **kwargs: Any) -> "AssistantMessage[T]":
         if isinstance(self.content, str):
-            return self.with_content(self.content.format(**kwargs))
+            # Cast back to more general type `T` to satisfy mypy
+            content = cast(T, self.content.format(**kwargs))
+            return self.with_content(content)
         return self
 
 
@@ -94,7 +96,9 @@ class FunctionResultMessage(Message[T], Generic[T]):
 
     def format(self, **kwargs: Any) -> "FunctionResultMessage[T]":
         if isinstance(self.content, str):
-            return self.with_content(self.content.format(**kwargs))
+            # Cast back to more general type `T` to sa
+            content = cast(T, self.content.format(**kwargs))
+            return self.with_content(content)
         return self
 
     @classmethod
