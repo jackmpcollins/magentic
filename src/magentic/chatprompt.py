@@ -79,16 +79,10 @@ class BaseChatPromptFunction(Generic[P, R]):
         """Format the message templates with the given arguments."""
         bound_args = self._signature.bind(*args, **kwargs)
         bound_args.apply_defaults()
-
-        messages = []
-        for message_template in self._messages:
-            if isinstance(message_template.content, str):
-                content = message_template.content.format(**bound_args.arguments)
-                messages.append(message_template.with_content(content))
-            else:
-                messages.append(message_template)
-
-        return messages
+        return [
+            message_template.format(**bound_args.arguments)
+            for message_template in self._messages
+        ]
 
 
 class ChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):

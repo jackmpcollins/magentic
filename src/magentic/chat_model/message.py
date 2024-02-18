@@ -28,12 +28,19 @@ class Message(Generic[T], ABC):
     def with_content(self, content: T) -> "Message[T]":
         raise NotImplementedError
 
+    @abstractmethod
+    def format(self, *args, **kwargs) -> "Message[T]":
+        raise NotImplementedError
+
 
 class SystemMessage(Message[str]):
     """A message to the LLM to guide the whole chat."""
 
     def with_content(self, content: str) -> "SystemMessage":
         return SystemMessage(content)
+
+    def format(self, *args, **kwargs) -> "SystemMessage":
+        return self.with_content(self.content.format(*args, **kwargs))
 
 
 class UserMessage(Message[str]):
@@ -42,12 +49,20 @@ class UserMessage(Message[str]):
     def with_content(self, content: str) -> "UserMessage":
         return UserMessage(content)
 
+    def format(self, *args, **kwargs) -> "UserMessage":
+        return self.with_content(self.content.format(*args, **kwargs))
+
 
 class AssistantMessage(Message[T], Generic[T]):
     """A message received from an LLM chat model."""
 
     def with_content(self, content: T) -> "AssistantMessage[T]":
         return AssistantMessage(content)
+
+    def format(self, *args, **kwargs) -> "AssistantMessage[T]":
+        if isinstance(self.content, str):
+            return self.with_content(self.content.format(*args, **kwargs))
+        return self  # TODO: Handle `Placeholder` here?
 
 
 class FunctionResultMessage(Message[T], Generic[T]):
@@ -76,6 +91,11 @@ class FunctionResultMessage(Message[T], Generic[T]):
 
     def with_content(self, content: T) -> "FunctionResultMessage[T]":
         return FunctionResultMessage(content, self._function_call)
+
+    def format(self, *args, **kwargs) -> "FunctionResultMessage[T]":
+        if isinstance(self.content, str):
+            return self.with_content(self.content.format(*args, **kwargs))
+        return self  # TODO: Handle `Placeholder` here?
 
     @classmethod
     def from_function_call(
