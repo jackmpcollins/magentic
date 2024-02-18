@@ -215,22 +215,27 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
         return value.model_dump_json()
 
 
-def create_model_from_function(func) -> type[BaseModel]:
+def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
     """Create a Pydantic model from a function signature."""
+    # https://github.com/pydantic/pydantic/issues/3585#issuecomment-1002745763
     fields: dict[str, Any] = {}
     for param in inspect.signature(func).parameters.values():
         # *args
-        if param.kind == inspect.Parameter.VAR_POSITIONAL:
+        if param.kind is inspect.Parameter.VAR_POSITIONAL:
             fields[param.name] = (
-                (list[param.annotation] if param.annotation != inspect._empty else Any),
+                (
+                    list[param.annotation]  # type: ignore[name-defined]
+                    if param.annotation != inspect._empty
+                    else list[Any]
+                ),
                 param.default if param.default != inspect._empty else [],
             )
             continue
 
         # **kwargs
-        if param.kind == inspect.Parameter.VAR_KEYWORD:
+        if param.kind is inspect.Parameter.VAR_KEYWORD:
             fields[param.name] = (
-                dict[str, param.annotation]
+                dict[str, param.annotation]  # type: ignore[name-defined]
                 if param.annotation != inspect._empty
                 else dict[str, Any],
                 param.default if param.default != inspect._empty else {},
@@ -310,9 +315,7 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         )
 
     def serialize_args(self, value: FunctionCall[T]) -> str:
-        return cast(
-            str, self._model(**value.arguments).model_dump_json(exclude_unset=True)
-        )
+        return self._model(**value.arguments).model_dump_json(exclude_unset=True)
 
 
 def function_schema_for_type(type_: type[Any]) -> BaseFunctionSchema[Any]:
