@@ -116,13 +116,15 @@ def openai_chatcompletion_create(
         kwargs["functions"] = functions
     if function_call:
         kwargs["function_call"] = function_call
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
+    if stop is not None:
+        kwargs["stop"] = stop
 
     response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
         model=model,
         messages=messages,
-        max_tokens=max_tokens,
         seed=seed,
-        stop=stop,
         stream=True,
         temperature=temperature,
         **kwargs,
@@ -161,13 +163,15 @@ async def openai_chatcompletion_acreate(
         kwargs["functions"] = functions
     if function_call:
         kwargs["function_call"] = function_call
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
+    if stop is not None:
+        kwargs["stop"] = stop
 
     response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
         model=model,
         messages=messages,
-        max_tokens=max_tokens,
         seed=seed,
-        stop=stop,
         temperature=temperature,
         stream=True,
         **kwargs,
