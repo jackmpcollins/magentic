@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Awaitable, Generic, TypeVar, overload
+from typing import Any, Awaitable, Generic, TypeVar, overload
 
 from magentic.function_call import FunctionCall
 
@@ -29,7 +29,7 @@ class Message(Generic[T], ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def format(self, *args, **kwargs) -> "Message[T]":
+    def format(self, **kwargs: Any) -> "Message[T]":
         raise NotImplementedError
 
 
@@ -39,8 +39,8 @@ class SystemMessage(Message[str]):
     def with_content(self, content: str) -> "SystemMessage":
         return SystemMessage(content)
 
-    def format(self, *args, **kwargs) -> "SystemMessage":
-        return self.with_content(self.content.format(*args, **kwargs))
+    def format(self, **kwargs: Any) -> "SystemMessage":
+        return self.with_content(self.content.format(**kwargs))
 
 
 class UserMessage(Message[str]):
@@ -49,8 +49,8 @@ class UserMessage(Message[str]):
     def with_content(self, content: str) -> "UserMessage":
         return UserMessage(content)
 
-    def format(self, *args, **kwargs) -> "UserMessage":
-        return self.with_content(self.content.format(*args, **kwargs))
+    def format(self, **kwargs: Any) -> "UserMessage":
+        return self.with_content(self.content.format(**kwargs))
 
 
 class AssistantMessage(Message[T], Generic[T]):
@@ -59,10 +59,10 @@ class AssistantMessage(Message[T], Generic[T]):
     def with_content(self, content: T) -> "AssistantMessage[T]":
         return AssistantMessage(content)
 
-    def format(self, *args, **kwargs) -> "AssistantMessage[T]":
+    def format(self, **kwargs: Any) -> "AssistantMessage[T]":
         if isinstance(self.content, str):
-            return self.with_content(self.content.format(*args, **kwargs))
-        return self  # TODO: Handle `Placeholder` here?
+            return self.with_content(self.content.format(**kwargs))
+        return self
 
 
 class FunctionResultMessage(Message[T], Generic[T]):
@@ -92,10 +92,10 @@ class FunctionResultMessage(Message[T], Generic[T]):
     def with_content(self, content: T) -> "FunctionResultMessage[T]":
         return FunctionResultMessage(content, self._function_call)
 
-    def format(self, *args, **kwargs) -> "FunctionResultMessage[T]":
+    def format(self, **kwargs: Any) -> "FunctionResultMessage[T]":
         if isinstance(self.content, str):
-            return self.with_content(self.content.format(*args, **kwargs))
-        return self  # TODO: Handle `Placeholder` here?
+            return self.with_content(self.content.format(**kwargs))
+        return self
 
     @classmethod
     def from_function_call(
