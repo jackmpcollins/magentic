@@ -215,20 +215,46 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
         return value.model_dump_json()
 
 
+def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
+    """Create a Pydantic model from a function signature."""
+    # https://github.com/pydantic/pydantic/issues/3585#issuecomment-1002745763
+    fields: dict[str, Any] = {}
+    for param in inspect.signature(func).parameters.values():
+        # *args
+        if param.kind is inspect.Parameter.VAR_POSITIONAL:
+            fields[param.name] = (
+                (
+                    list[param.annotation]  # type: ignore[name-defined]
+                    if param.annotation != inspect._empty
+                    else list[Any]
+                ),
+                param.default if param.default != inspect._empty else [],
+            )
+            continue
+
+        # **kwargs
+        if param.kind is inspect.Parameter.VAR_KEYWORD:
+            fields[param.name] = (
+                dict[str, param.annotation]  # type: ignore[name-defined]
+                if param.annotation != inspect._empty
+                else dict[str, Any],
+                param.default if param.default != inspect._empty else {},
+            )
+            continue
+
+        fields[param.name] = (
+            (param.annotation if param.annotation != inspect._empty else Any),
+            (param.default if param.default != inspect._empty else ...),
+        )
+    return create_model("FuncModel", **fields)
+
+
 class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]):
     """FunctionSchema for FunctionCall."""
 
     def __init__(self, func: Callable[..., T]):
         self._func = func
-        # https://github.com/pydantic/pydantic/issues/3585#issuecomment-1002745763
-        fields: dict[str, Any] = {
-            param.name: (
-                (param.annotation if param.annotation != inspect._empty else Any),
-                (param.default if param.default != inspect._empty else ...),
-            )
-            for param in inspect.signature(func).parameters.values()
-        }
-        self._model = create_model("FuncModel", **fields)
+        self._model = create_model_from_function(func)
 
     @property
     def name(self) -> str:
@@ -246,13 +272,50 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
 
     def parse_args(self, arguments: Iterable[str]) -> FunctionCall[T]:
         model = self._model.model_validate_json("".join(arguments))
-        args = {attr: getattr(model, attr) for attr in model.model_fields_set}
-        return FunctionCall(self._func, **args)
+        supplied_params = [
+            param
+            for param in inspect.signature(self._func).parameters.values()
+            if param.name in model.model_fields_set
+        ]
+
+        args_positional_only = [
+            getattr(model, param.name)
+            for param in supplied_params
+            if param.kind == param.POSITIONAL_ONLY
+        ]
+        args_positional_or_keyword = [
+            getattr(model, param.name)
+            for param in supplied_params
+            if param.kind == param.POSITIONAL_OR_KEYWORD
+        ]
+        args_var_positional = [
+            arg
+            for param in supplied_params
+            if param.kind == param.VAR_POSITIONAL
+            for arg in getattr(model, param.name)
+        ]
+        args_keyword_only = {
+            param.name: getattr(model, param.name)
+            for param in supplied_params
+            if param.kind == param.KEYWORD_ONLY
+        }
+        args_var_keyword = {
+            name: value
+            for param in supplied_params
+            if param.kind == param.VAR_KEYWORD
+            for name, value in getattr(model, param.name).items()
+        }
+        return FunctionCall(
+            self._func,
+            *args_positional_only,
+            *args_positional_or_keyword,
+            *args_var_positional,
+            **args_keyword_only,
+            **args_var_keyword,
+        )
 
     def serialize_args(self, value: FunctionCall[T]) -> str:
-        return cast(
-            str, self._model(**value.arguments).model_dump_json(exclude_unset=True)
-        )
+        return self._model(**value.arguments).model_dump_json(exclude_unset=True)
 
 
 def function_schema_for_type(type_: type[Any]) -> BaseFunctionSchema[Any]:
