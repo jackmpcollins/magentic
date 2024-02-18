@@ -534,7 +534,7 @@ def plus_with_args(a: int, *args: int) -> int:
     return a + sum(args)
 
 
-def plus_with_args_no_type_hints(a, *args) -> int:
+def plus_with_args_no_type_hints(a, *args):
     return a + sum(args)
 
 
@@ -542,7 +542,7 @@ def plus_with_kwargs(a: int, **kwargs: int) -> int:
     return a + sum(kwargs.values())
 
 
-def plus_with_kwargs_no_type_hints(a, **kwargs) -> int:
+def plus_with_kwargs_no_type_hints(a, **kwargs):
     return a + sum(kwargs.values())
 
 
