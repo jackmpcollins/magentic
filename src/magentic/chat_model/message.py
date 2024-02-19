@@ -1,15 +1,44 @@
 from abc import ABC, abstractmethod
-from typing import Any, Awaitable, Generic, TypeVar, cast, overload
+from typing import (
+    Any,
+    Awaitable,
+    Generic,
+    TypeVar,
+    cast,
+    get_args,
+    get_origin,
+    overload,
+)
 
 from magentic.function_call import FunctionCall
 
 T = TypeVar("T")
 
 
-class Message(Generic[T], ABC):
+class Placeholder(Generic[T]):
+    def __init__(self, name: str):
+        self.name = name
+
+    def format(self, **kwargs: Any) -> T:
+        value = kwargs[self.name]
+        if not isinstance(value, self._get_type()):
+            msg = f"{self.name} must be of type {self._get_type()}"
+            raise TypeError(msg)
+        return value
+
+    @classmethod
+    def _get_type(cls) -> type[T]:
+        type_ = get_origin(get_args(cls)[0])
+        return cast(type[T], type_)
+
+
+ContentT = TypeVar("ContentT")
+
+
+class Message(Generic[ContentT], ABC):
     """A message sent to or from an LLM chat model."""
 
-    def __init__(self, content: T):
+    def __init__(self, content: ContentT):
         self._content = content
 
     def __eq__(self, other: object) -> bool:
@@ -21,65 +50,91 @@ class Message(Generic[T], ABC):
         return f"{type(self).__name__}({self.content!r})"
 
     @property
-    def content(self) -> T:
+    def content(self) -> ContentT:
         return self._content
 
+    @overload
     @abstractmethod
-    def with_content(self, content: T) -> "Message[T]":
-        raise NotImplementedError
+    def format(self: "Message[str]", **kwargs: Any) -> "Message[str]":
+        ...
+
+    @overload
+    @abstractmethod
+    def format(self: "Message[Placeholder[T]]", **kwargs: Any) -> "Message[T]":
+        ...
+
+    @overload
+    @abstractmethod
+    def format(self: "Message[T]", **kwargs: Any) -> "Message[T]":
+        ...
 
     @abstractmethod
-    def format(self, **kwargs: Any) -> "Message[T]":
+    def format(
+        self: "Message[str] | Message[Placeholder[T]] | Message[T]", **kwargs: Any
+    ) -> "Message[str] | Message[T]":
         raise NotImplementedError
 
 
 class SystemMessage(Message[str]):
     """A message to the LLM to guide the whole chat."""
 
-    def with_content(self, content: str) -> "SystemMessage":
-        return SystemMessage(content)
-
-    def format(self, **kwargs: Any) -> "SystemMessage":
-        return self.with_content(self.content.format(**kwargs))
+    def format(self: "SystemMessage", **kwargs: Any) -> "SystemMessage":
+        return SystemMessage(self.content.format(**kwargs))
 
 
 class UserMessage(Message[str]):
     """A message sent by a user to an LLM chat model."""
 
-    def with_content(self, content: str) -> "UserMessage":
-        return UserMessage(content)
-
     def format(self, **kwargs: Any) -> "UserMessage":
-        return self.with_content(self.content.format(**kwargs))
+        return UserMessage(self.content.format(**kwargs))
 
 
-class AssistantMessage(Message[T], Generic[T]):
+class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
-    def with_content(self, content: T) -> "AssistantMessage[T]":
-        return AssistantMessage(content)
+    @overload
+    def format(self: "AssistantMessage[str]", **kwargs: Any) -> "AssistantMessage[str]":
+        ...
 
-    def format(self, **kwargs: Any) -> "AssistantMessage[T]":
+    @overload
+    def format(
+        self: "AssistantMessage[Placeholder[T]]", **kwargs: Any
+    ) -> "AssistantMessage[T]":
+        ...
+
+    @overload
+    def format(self: "AssistantMessage[T]", **kwargs: Any) -> "AssistantMessage[T]":
+        ...
+
+    def format(
+        self: "AssistantMessage[str] | AssistantMessage[Placeholder[T]] | AssistantMessage[T]",
+        **kwargs: Any,
+    ) -> "AssistantMessage[str] | AssistantMessage[T]":
         if isinstance(self.content, str):
-            # Cast back to more general type `T` to satisfy mypy
-            content = cast(T, self.content.format(**kwargs))
-            return self.with_content(content)
-        return self
+            return AssistantMessage(self.content.format(**kwargs))
+        if isinstance(self.content, Placeholder):
+            content = cast(Placeholder[T], self.content)
+            return AssistantMessage(content.format(**kwargs))
+        return cast(AssistantMessage[T], self)
 
 
-class FunctionResultMessage(Message[T], Generic[T]):
+class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     """A message containing the result of a function call."""
 
     @overload
-    def __init__(self, content: T, function_call: FunctionCall[T]):
+    def __init__(self, content: ContentT, function_call: FunctionCall[ContentT]):
         ...
 
     @overload
-    def __init__(self, content: T, function_call: FunctionCall[Awaitable[T]]):
+    def __init__(
+        self, content: ContentT, function_call: FunctionCall[Awaitable[ContentT]]
+    ):
         ...
 
     def __init__(
-        self, content: T, function_call: FunctionCall[T] | FunctionCall[Awaitable[T]]
+        self,
+        content: ContentT,
+        function_call: FunctionCall[ContentT] | FunctionCall[Awaitable[ContentT]],
     ):
         super().__init__(content)
         self._function_call = function_call
@@ -88,23 +143,53 @@ class FunctionResultMessage(Message[T], Generic[T]):
         return f"{self.__class__.__name__}({self.content!r}, {self._function_call!r})"
 
     @property
-    def function_call(self) -> FunctionCall[T] | FunctionCall[Awaitable[T]]:
+    def function_call(
+        self,
+    ) -> FunctionCall[ContentT] | FunctionCall[Awaitable[ContentT]]:
         return self._function_call
 
-    def with_content(self, content: T) -> "FunctionResultMessage[T]":
-        return FunctionResultMessage(content, self._function_call)
+    @overload
+    def format(
+        self: "FunctionResultMessage[str]", **kwargs: Any
+    ) -> "FunctionResultMessage[str]":
+        ...
 
-    def format(self, **kwargs: Any) -> "FunctionResultMessage[T]":
+    @overload
+    def format(
+        self: "FunctionResultMessage[Placeholder[T]]", **kwargs: Any
+    ) -> "FunctionResultMessage[T]":
+        ...
+
+    @overload
+    def format(
+        self: "FunctionResultMessage[T]", **kwargs: Any
+    ) -> "FunctionResultMessage[T]":
+        ...
+
+    def format(
+        self: "FunctionResultMessage[str] | FunctionResultMessage[Placeholder[T]] | FunctionResultMessage[T]",
+        **kwargs: Any,
+    ) -> "FunctionResultMessage[str] | FunctionResultMessage[T]":
         if isinstance(self.content, str):
-            # Cast back to more general type `T` to sa
-            content = cast(T, self.content.format(**kwargs))
-            return self.with_content(content)
-        return self
+            function_call_str = cast(
+                FunctionCall[str] | FunctionCall[Awaitable[str]], self._function_call
+            )
+            return FunctionResultMessage(
+                self.content.format(**kwargs), function_call_str
+            )
+        if isinstance(self.content, Placeholder):
+            content = cast(Placeholder[T], self.content)
+            function_call_x = cast(
+                FunctionCall[T] | FunctionCall[Awaitable[T]],
+                self._function_call,
+            )
+            return FunctionResultMessage(content.format(**kwargs), function_call_x)
+        return cast(FunctionResultMessage[T], self)
 
     @classmethod
     def from_function_call(
-        cls, function_call: FunctionCall[T]
-    ) -> "FunctionResultMessage[T]":
+        cls, function_call: FunctionCall[ContentT]
+    ) -> "FunctionResultMessage[ContentT]":
         """Create a message containing the result of a function call."""
         return cls(
             content=function_call(),
@@ -113,8 +198,8 @@ class FunctionResultMessage(Message[T], Generic[T]):
 
     @classmethod
     async def afrom_function_call(
-        cls, function_call: FunctionCall[Awaitable[T]]
-    ) -> "FunctionResultMessage[T]":
+        cls, function_call: FunctionCall[Awaitable[ContentT]]
+    ) -> "FunctionResultMessage[ContentT]":
         """Async version of `from_function_call`."""
         return cls(
             content=await function_call(),
