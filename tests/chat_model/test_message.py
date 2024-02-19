@@ -17,6 +17,15 @@ def test_user_message_format():
     assert user_message_formatted == UserMessage("Hello world")
 
 
+def test_assistant_message_format_str():
+    assistant_message = AssistantMessage("Hello {x}")
+    assistant_message_formatted = assistant_message.format(x="world")
+
+    assert_type(assistant_message_formatted, AssistantMessage[str])
+    assert_type(assistant_message_formatted.content, str)
+    assert assistant_message_formatted == AssistantMessage("Hello world")
+
+
 def test_assistant_message_format():
     class Country(BaseModel):
         name: str

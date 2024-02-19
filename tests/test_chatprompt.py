@@ -49,6 +49,7 @@ def test_escape_braces(text):
             [AssistantMessage("Assistant message with {param}.")],
             [AssistantMessage("Assistant message with arg.")],
         ),
+        # Do not format FunctionResultMessage
         (
             [
                 FunctionResultMessage(
@@ -57,7 +58,7 @@ def test_escape_braces(text):
             ],
             [
                 FunctionResultMessage(
-                    "Function result message with arg", function=Mock()
+                    "Function result message with {param}", function=Mock()
                 )
             ],
         ),

@@ -78,7 +78,5 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
         return self._function
 
     def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
-        if isinstance(self.content, str):
-            content = cast(ContentT, self.content.format(**kwargs))
-            return FunctionResultMessage(content, self.function)
+        del kwargs
         return FunctionResultMessage(self.content, self.function)
