@@ -18,6 +18,7 @@ from magentic.chatprompt import (
     chatprompt,
     escape_braces,
 )
+from magentic.function_call import FunctionCall
 
 
 @pytest.mark.parametrize(
@@ -156,3 +157,20 @@ def test_chatprompt_readme_example():
 
     movie_quote = get_movie_quote("Iron Man")
     assert isinstance(movie_quote, Quote)
+
+
+@pytest.mark.openai
+def test_chatprompt_with_function_call_and_result():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    @chatprompt(
+        UserMessage("Use the plus function to add 1 and 2."),
+        AssistantMessage(FunctionCall(plus, 1, 2)),
+        FunctionResultMessage(3, plus),
+    )
+    def do_math() -> str:
+        ...
+
+    output = do_math()
+    assert isinstance(output, str)
