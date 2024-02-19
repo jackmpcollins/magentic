@@ -46,18 +46,12 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
 
 @message_to_openai_message.register
 def _(message: SystemMessage) -> ChatCompletionMessageParam:
-    return {
-        "role": OpenaiMessageRole.SYSTEM.value,
-        "content": message.content,
-    }
+    return {"role": OpenaiMessageRole.SYSTEM.value, "content": message.content}
 
 
 @message_to_openai_message.register
 def _(message: UserMessage) -> ChatCompletionMessageParam:
-    return {
-        "role": OpenaiMessageRole.USER.value,
-        "content": message.content,
-    }
+    return {"role": OpenaiMessageRole.USER.value, "content": message.content}
 
 
 @message_to_openai_message.register(AssistantMessage)
