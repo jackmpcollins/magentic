@@ -106,9 +106,10 @@ class Chat:
             msg = "Last message is not a function call."
             raise TypeError(msg)
 
-        output = last_message.content()
+        function_call = last_message.content
+        output = function_call()
         return self.add_message(
-            FunctionResultMessage(content=output, function_call=last_message.content)
+            FunctionResultMessage(content=output, function=function_call.function)
         )
 
     async def aexec_function_call(self: Self) -> Self:
@@ -122,10 +123,11 @@ class Chat:
             msg = "Last message is not a function call."
             raise TypeError(msg)
 
-        output = last_message.content()
+        function_call = last_message.content
+        output = function_call()
         if inspect.isawaitable(output):
             output = await output
 
         return self.add_message(
-            FunctionResultMessage(content=output, function_call=last_message.content)
+            FunctionResultMessage(content=output, function=function_call.function)
         )

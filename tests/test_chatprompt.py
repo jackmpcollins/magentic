@@ -51,12 +51,12 @@ def test_escape_braces(text):
         (
             [
                 FunctionResultMessage(
-                    "Function result message with {param}", function_call=Mock()
+                    "Function result message with {param}", function=Mock()
                 )
             ],
             [
                 FunctionResultMessage(
-                    "Function result message with arg", function_call=Mock()
+                    "Function result message with arg", function=Mock()
                 )
             ],
         ),
