@@ -69,6 +69,7 @@ ignore = [
    "COM",  # flake8-commas
     "FA",  # flake8-future-annotations
    "INP",  # flake8-no-pep420
+"PIE790",  # flake8-pie: Unnecessary `...` literal
    "SLF",  # flake8-self
    "ARG",  # flake8-unused-arguments
     "TD",  # flake8-todos
