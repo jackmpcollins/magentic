@@ -5,7 +5,6 @@ from typing import (
     Generic,
     TypeVar,
     cast,
-    get_args,
     get_origin,
     overload,
 )
@@ -16,20 +15,16 @@ T = TypeVar("T")
 
 
 class Placeholder(Generic[T]):
-    def __init__(self, name: str):
+    def __init__(self, type_: type[T], name: str):
+        self.type_ = type_
         self.name = name
 
     def format(self, **kwargs: Any) -> T:
         value = kwargs[self.name]
-        if not isinstance(value, self._get_type()):
-            msg = f"{self.name} must be of type {self._get_type()}"
+        if not isinstance(value, get_origin(self.type_) or self.type_):
+            msg = f"{self.name} must be of type {self.type_}"
             raise TypeError(msg)
-        return value
-
-    @classmethod
-    def _get_type(cls) -> type[T]:
-        type_ = get_origin(get_args(cls)[0])
-        return cast(type[T], type_)
+        return cast(T, value)
 
 
 ContentT = TypeVar("ContentT")
