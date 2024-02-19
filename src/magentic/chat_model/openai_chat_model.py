@@ -41,6 +41,7 @@ class OpenaiMessageRole(Enum):
 @singledispatch
 def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessageParam:
     """Convert a Message to an OpenAI message."""
+    # TODO: Add instructions for registering new Message type to this error message
     raise NotImplementedError(type(message))
 
 

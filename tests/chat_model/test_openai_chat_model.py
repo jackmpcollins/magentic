@@ -6,6 +6,7 @@ import pytest
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
+    Message,
     SystemMessage,
     UserMessage,
 )
@@ -54,6 +55,16 @@ def plus(a: int, b: int) -> int:
 )
 def test_message_to_openai_message(message, expected_openai_message):
     assert message_to_openai_message(message) == expected_openai_message
+
+
+def test_message_to_openai_message_raises():
+    class CustomMessage(Message[str]):
+        def format(self, **kwargs):
+            del kwargs
+            return CustomMessage(self.content)
+
+    with pytest.raises(NotImplementedError):
+        message_to_openai_message(CustomMessage("Hello"))
 
 
 @pytest.mark.openai
