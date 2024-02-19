@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
-from typing import Awaitable, Callable, Generic, TypeVar, overload
+from typing import Any, Awaitable, Callable, Generic, TypeVar, cast, overload
 
-T = TypeVar("T")
+ContentT = TypeVar("ContentT")
 
 
-class Message(Generic[T], ABC):
+class Message(Generic[ContentT], ABC):
     """A message sent to or from an LLM chat model."""
 
-    def __init__(self, content: T):
+    def __init__(self, content: ContentT):
         self._content = content
 
     def __eq__(self, other: object) -> bool:
@@ -19,48 +19,53 @@ class Message(Generic[T], ABC):
         return f"{type(self).__name__}({self.content!r})"
 
     @property
-    def content(self) -> T:
+    def content(self) -> ContentT:
         return self._content
 
     @abstractmethod
-    def with_content(self, content: T) -> "Message[T]":
+    def format(self, **kwargs: Any) -> "Message[Any]":
         raise NotImplementedError
 
 
 class SystemMessage(Message[str]):
     """A message to the LLM to guide the whole chat."""
 
-    def with_content(self, content: str) -> "SystemMessage":
-        return SystemMessage(content)
+    def format(self, **kwargs: Any) -> "SystemMessage":
+        return SystemMessage(self.content.format(**kwargs))
 
 
 class UserMessage(Message[str]):
     """A message sent by a user to an LLM chat model."""
 
-    def with_content(self, content: str) -> "UserMessage":
-        return UserMessage(content)
+    def format(self, **kwargs: Any) -> "UserMessage":
+        return UserMessage(self.content.format(**kwargs))
 
 
-class AssistantMessage(Message[T], Generic[T]):
+class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
-    def with_content(self, content: T) -> "AssistantMessage[T]":
-        return AssistantMessage(content)
+    def format(self, **kwargs: Any) -> "AssistantMessage[ContentT]":
+        if isinstance(self.content, str):
+            content = cast(ContentT, self.content.format(**kwargs))
+            return AssistantMessage(content)
+        return AssistantMessage(self.content)
 
 
-class FunctionResultMessage(Message[T], Generic[T]):
+class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     """A message containing the result of a function call."""
 
     @overload
-    def __init__(self, content: T, function: Callable[..., Awaitable[T]]):
+    def __init__(self, content: ContentT, function: Callable[..., Awaitable[ContentT]]):
         ...
 
     @overload
-    def __init__(self, content: T, function: Callable[..., T]):
+    def __init__(self, content: ContentT, function: Callable[..., ContentT]):
         ...
 
     def __init__(
-        self, content: T, function: Callable[..., Awaitable[T]] | Callable[..., T]
+        self,
+        content: ContentT,
+        function: Callable[..., Awaitable[ContentT]] | Callable[..., ContentT],
     ):
         super().__init__(content)
         self._function = function
@@ -69,8 +74,9 @@ class FunctionResultMessage(Message[T], Generic[T]):
         return f"{self.__class__.__name__}({self.content!r}, {self._function!r})"
 
     @property
-    def function(self) -> Callable[..., Awaitable[T]] | Callable[..., T]:
+    def function(self) -> Callable[..., Awaitable[ContentT]] | Callable[..., ContentT]:
         return self._function
 
-    def with_content(self, content: T) -> "FunctionResultMessage[T]":
-        return FunctionResultMessage(content, self._function)
+    def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
+        del kwargs
+        return FunctionResultMessage(self.content, self.function)

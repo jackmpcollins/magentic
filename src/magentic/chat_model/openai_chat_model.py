@@ -1,5 +1,6 @@
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
+from functools import singledispatch
 from itertools import chain
 from typing import Any, Literal, TypeVar, cast, overload
 
@@ -37,51 +38,55 @@ class OpenaiMessageRole(Enum):
     USER = "user"
 
 
+@singledispatch
 def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessageParam:
     """Convert a Message to an OpenAI message."""
-    if isinstance(message, SystemMessage):
-        return {
-            "role": OpenaiMessageRole.SYSTEM.value,
-            "content": message.content,
-        }
+    # TODO: Add instructions for registering new Message type to this error message
+    raise NotImplementedError(type(message))
 
-    if isinstance(message, UserMessage):
-        return {
-            "role": OpenaiMessageRole.USER.value,
-            "content": message.content,
-        }
 
-    if isinstance(message, AssistantMessage):
-        if isinstance(message.content, str):
-            return {
-                "role": OpenaiMessageRole.ASSISTANT.value,
-                "content": message.content,
-            }
+@message_to_openai_message.register
+def _(message: SystemMessage) -> ChatCompletionMessageParam:
+    return {"role": OpenaiMessageRole.SYSTEM.value, "content": message.content}
 
-        function_schema: BaseFunctionSchema[Any]
-        if isinstance(message.content, FunctionCall):
-            function_schema = FunctionCallFunctionSchema(message.content.function)
-        else:
-            function_schema = function_schema_for_type(type(message.content))
 
+@message_to_openai_message.register
+def _(message: UserMessage) -> ChatCompletionMessageParam:
+    return {"role": OpenaiMessageRole.USER.value, "content": message.content}
+
+
+@message_to_openai_message.register(AssistantMessage)
+def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
+    if isinstance(message.content, str):
         return {
             "role": OpenaiMessageRole.ASSISTANT.value,
-            "content": None,
-            "function_call": {
-                "name": function_schema.name,
-                "arguments": function_schema.serialize_args(message.content),
-            },
+            "content": message.content,
         }
 
-    if isinstance(message, FunctionResultMessage):
+    function_schema: BaseFunctionSchema[Any]
+    if isinstance(message.content, FunctionCall):
+        function_schema = FunctionCallFunctionSchema(message.content.function)
+    else:
         function_schema = function_schema_for_type(type(message.content))
-        return {
-            "role": OpenaiMessageRole.FUNCTION.value,
-            "name": FunctionCallFunctionSchema(message.function).name,
-            "content": function_schema.serialize_args(message.content),
-        }
 
-    raise NotImplementedError(type(message))
+    return {
+        "role": OpenaiMessageRole.ASSISTANT.value,
+        "content": None,
+        "function_call": {
+            "name": function_schema.name,
+            "arguments": function_schema.serialize_args(message.content),
+        },
+    }
+
+
+@message_to_openai_message.register(FunctionResultMessage)
+def _(message: FunctionResultMessage[Any]) -> ChatCompletionMessageParam:
+    function_schema = function_schema_for_type(type(message.content))
+    return {
+        "role": OpenaiMessageRole.FUNCTION.value,
+        "name": FunctionCallFunctionSchema(message.function).name,
+        "content": function_schema.serialize_args(message.content),
+    }
 
 
 def openai_chatcompletion_create(
@@ -116,13 +121,15 @@ def openai_chatcompletion_create(
         kwargs["functions"] = functions
     if function_call:
         kwargs["function_call"] = function_call
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
+    if stop is not None:
+        kwargs["stop"] = stop
 
     response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
         model=model,
         messages=messages,
-        max_tokens=max_tokens,
         seed=seed,
-        stop=stop,
         stream=True,
         temperature=temperature,
         **kwargs,
@@ -161,13 +168,15 @@ async def openai_chatcompletion_acreate(
         kwargs["functions"] = functions
     if function_call:
         kwargs["function_call"] = function_call
+    if max_tokens is not None:
+        kwargs["max_tokens"] = max_tokens
+    if stop is not None:
+        kwargs["stop"] = stop
 
     response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
         model=model,
         messages=messages,
-        max_tokens=max_tokens,
         seed=seed,
-        stop=stop,
         temperature=temperature,
         stream=True,
         **kwargs,
