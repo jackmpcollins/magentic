@@ -47,32 +47,15 @@ class Message(Generic[ContentT], ABC):
     def content(self) -> ContentT:
         return self._content
 
-    @overload
     @abstractmethod
-    def format(self: "Message[str]", **kwargs: Any) -> "Message[str]":
-        ...
-
-    @overload
-    @abstractmethod
-    def format(self: "Message[Placeholder[T]]", **kwargs: Any) -> "Message[T]":
-        ...
-
-    @overload
-    @abstractmethod
-    def format(self: "Message[T]", **kwargs: Any) -> "Message[T]":
-        ...
-
-    @abstractmethod
-    def format(
-        self: "Message[str] | Message[Placeholder[T]] | Message[T]", **kwargs: Any
-    ) -> "Message[str] | Message[T]":
+    def format(self, **kwargs: Any) -> "Message[Any]":
         raise NotImplementedError
 
 
 class SystemMessage(Message[str]):
     """A message to the LLM to guide the whole chat."""
 
-    def format(self: "SystemMessage", **kwargs: Any) -> "SystemMessage":
+    def format(self, **kwargs: Any) -> "SystemMessage":
         return SystemMessage(self.content.format(**kwargs))
 
 
@@ -138,40 +121,6 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     def function(self) -> Callable[..., Awaitable[ContentT]] | Callable[..., ContentT]:
         return self._function
 
-    @overload
-    def format(
-        self: "FunctionResultMessage[str]", **kwargs: Any
-    ) -> "FunctionResultMessage[str]":
-        ...
-
-    @overload
-    def format(
-        self: "FunctionResultMessage[Placeholder[T]]", **kwargs: Any
-    ) -> "FunctionResultMessage[T]":
-        ...
-
-    @overload
-    def format(
-        self: "FunctionResultMessage[T]", **kwargs: Any
-    ) -> "FunctionResultMessage[T]":
-        ...
-
-    def format(
-        self: "FunctionResultMessage[str] | FunctionResultMessage[Placeholder[T]] | FunctionResultMessage[T]",
-        **kwargs: Any,
-    ) -> "FunctionResultMessage[str] | FunctionResultMessage[T]":
-        if isinstance(self.content, str):
-            function_call_str = cast(
-                Callable[..., str] | Callable[..., Awaitable[str]], self.function
-            )
-            return FunctionResultMessage(
-                self.content.format(**kwargs), function_call_str
-            )
-        if isinstance(self.content, Placeholder):
-            content = cast(Placeholder[T], self.content)
-            function_call_x = cast(
-                Callable[..., T] | Callable[..., Awaitable[T]],
-                self.function,
-            )
-            return FunctionResultMessage(content.format(**kwargs), function_call_x)
-        return cast(FunctionResultMessage[T], self)
+    def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
+        del kwargs
+        return FunctionResultMessage(self.content, self.function)
