@@ -54,15 +54,15 @@ class FunctionResultMessage(Message[T], Generic[T]):
     """A message containing the result of a function call."""
 
     @overload
-    def __init__(self, content: T, function_call: FunctionCall[T]):
-        ...
-
-    @overload
     def __init__(self, content: T, function_call: FunctionCall[Awaitable[T]]):
         ...
 
+    @overload
+    def __init__(self, content: T, function_call: FunctionCall[T]):
+        ...
+
     def __init__(
-        self, content: T, function_call: FunctionCall[T] | FunctionCall[Awaitable[T]]
+        self, content: T, function_call: FunctionCall[Awaitable[T]] | FunctionCall[T]
     ):
         super().__init__(content)
         self._function_call = function_call
@@ -71,28 +71,8 @@ class FunctionResultMessage(Message[T], Generic[T]):
         return f"{self.__class__.__name__}({self.content!r}, {self._function_call!r})"
 
     @property
-    def function_call(self) -> FunctionCall[T] | FunctionCall[Awaitable[T]]:
+    def function_call(self) -> FunctionCall[Awaitable[T]] | FunctionCall[T]:
         return self._function_call
 
     def with_content(self, content: T) -> "FunctionResultMessage[T]":
         return FunctionResultMessage(content, self._function_call)
-
-    @classmethod
-    def from_function_call(
-        cls, function_call: FunctionCall[T]
-    ) -> "FunctionResultMessage[T]":
-        """Create a message containing the result of a function call."""
-        return cls(
-            content=function_call(),
-            function_call=function_call,
-        )
-
-    @classmethod
-    async def afrom_function_call(
-        cls, function_call: FunctionCall[Awaitable[T]]
-    ) -> "FunctionResultMessage[T]":
-        """Async version of `from_function_call`."""
-        return cls(
-            content=await function_call(),
-            function_call=function_call,
-        )
