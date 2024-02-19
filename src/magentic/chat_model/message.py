@@ -1,7 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Awaitable, Generic, TypeVar, overload
-
-from magentic.function_call import FunctionCall
+from typing import Awaitable, Callable, Generic, TypeVar, overload
 
 T = TypeVar("T")
 
@@ -54,45 +52,25 @@ class FunctionResultMessage(Message[T], Generic[T]):
     """A message containing the result of a function call."""
 
     @overload
-    def __init__(self, content: T, function_call: FunctionCall[T]):
+    def __init__(self, content: T, function: Callable[..., Awaitable[T]]):
         ...
 
     @overload
-    def __init__(self, content: T, function_call: FunctionCall[Awaitable[T]]):
+    def __init__(self, content: T, function: Callable[..., T]):
         ...
 
     def __init__(
-        self, content: T, function_call: FunctionCall[T] | FunctionCall[Awaitable[T]]
+        self, content: T, function: Callable[..., Awaitable[T]] | Callable[..., T]
     ):
         super().__init__(content)
-        self._function_call = function_call
+        self._function = function
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.content!r}, {self._function_call!r})"
+        return f"{self.__class__.__name__}({self.content!r}, {self._function!r})"
 
     @property
-    def function_call(self) -> FunctionCall[T] | FunctionCall[Awaitable[T]]:
-        return self._function_call
+    def function(self) -> Callable[..., Awaitable[T]] | Callable[..., T]:
+        return self._function
 
     def with_content(self, content: T) -> "FunctionResultMessage[T]":
-        return FunctionResultMessage(content, self._function_call)
-
-    @classmethod
-    def from_function_call(
-        cls, function_call: FunctionCall[T]
-    ) -> "FunctionResultMessage[T]":
-        """Create a message containing the result of a function call."""
-        return cls(
-            content=function_call(),
-            function_call=function_call,
-        )
-
-    @classmethod
-    async def afrom_function_call(
-        cls, function_call: FunctionCall[Awaitable[T]]
-    ) -> "FunctionResultMessage[T]":
-        """Async version of `from_function_call`."""
-        return cls(
-            content=await function_call(),
-            function_call=function_call,
-        )
+        return FunctionResultMessage(content, self._function)

@@ -3,8 +3,57 @@ import os
 import openai
 import pytest
 
-from magentic.chat_model.message import UserMessage
-from magentic.chat_model.openai_chat_model import OpenaiChatModel
+from magentic.chat_model.message import (
+    AssistantMessage,
+    FunctionResultMessage,
+    SystemMessage,
+    UserMessage,
+)
+from magentic.chat_model.openai_chat_model import (
+    OpenaiChatModel,
+    message_to_openai_message,
+)
+from magentic.function_call import FunctionCall
+
+
+def plus(a: int, b: int) -> int:
+    return a + b
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_openai_message"),
+    [
+        (SystemMessage("Hello"), {"role": "system", "content": "Hello"}),
+        (UserMessage("Hello"), {"role": "user", "content": "Hello"}),
+        (AssistantMessage("Hello"), {"role": "assistant", "content": "Hello"}),
+        (
+            AssistantMessage(42),
+            {
+                "role": "assistant",
+                "content": None,
+                "function_call": {"name": "return_int", "arguments": '{"value":42}'},
+            },
+        ),
+        (
+            AssistantMessage(FunctionCall(plus, 1, 2)),
+            {
+                "role": "assistant",
+                "content": None,
+                "function_call": {"name": "plus", "arguments": '{"a":1,"b":2}'},
+            },
+        ),
+        (
+            FunctionResultMessage(3, plus),
+            {
+                "role": "function",
+                "name": "plus",
+                "content": '{"value":3}',
+            },
+        ),
+    ],
+)
+def test_message_to_openai_message(message, expected_openai_message):
+    assert message_to_openai_message(message) == expected_openai_message
 
 
 @pytest.mark.openai

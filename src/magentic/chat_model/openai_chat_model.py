@@ -77,7 +77,7 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
         function_schema = function_schema_for_type(type(message.content))
         return {
             "role": OpenaiMessageRole.FUNCTION.value,
-            "name": function_schema.name,
+            "name": FunctionCallFunctionSchema(message.function).name,
             "content": function_schema.serialize_args(message.content),
         }
 
