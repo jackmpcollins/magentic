@@ -1,30 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Generic,
-    TypeVar,
-    cast,
-    get_origin,
-    overload,
-)
-
-T = TypeVar("T")
-
-
-class Placeholder(Generic[T]):
-    def __init__(self, type_: type[T], name: str):
-        self.type_ = type_
-        self.name = name
-
-    def format(self, **kwargs: Any) -> T:
-        value = kwargs[self.name]
-        if not isinstance(value, get_origin(self.type_) or self.type_):
-            msg = f"{self.name} must be of type {self.type_}"
-            raise TypeError(msg)
-        return cast(T, value)
-
+from typing import Any, Awaitable, Callable, Generic, TypeVar, cast, overload
 
 ContentT = TypeVar("ContentT")
 
@@ -69,30 +44,11 @@ class UserMessage(Message[str]):
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
-    @overload
-    def format(self: "AssistantMessage[str]", **kwargs: Any) -> "AssistantMessage[str]":
-        ...
-
-    @overload
-    def format(
-        self: "AssistantMessage[Placeholder[T]]", **kwargs: Any
-    ) -> "AssistantMessage[T]":
-        ...
-
-    @overload
-    def format(self: "AssistantMessage[T]", **kwargs: Any) -> "AssistantMessage[T]":
-        ...
-
-    def format(
-        self: "AssistantMessage[str] | AssistantMessage[Placeholder[T]] | AssistantMessage[T]",
-        **kwargs: Any,
-    ) -> "AssistantMessage[str] | AssistantMessage[T]":
+    def format(self, **kwargs: Any) -> "AssistantMessage[ContentT]":
         if isinstance(self.content, str):
-            return AssistantMessage(self.content.format(**kwargs))
-        if isinstance(self.content, Placeholder):
-            content = cast(Placeholder[T], self.content)
-            return AssistantMessage(content.format(**kwargs))
-        return cast(AssistantMessage[T], self)
+            content = cast(ContentT, self.content.format(**kwargs))
+            return AssistantMessage(content)
+        return AssistantMessage(self.content)
 
 
 class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
@@ -122,5 +78,7 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
         return self._function
 
     def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
-        del kwargs
+        if isinstance(self.content, str):
+            content = cast(ContentT, self.content.format(**kwargs))
+            return FunctionResultMessage(content, self.function)
         return FunctionResultMessage(self.content, self.function)
