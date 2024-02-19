@@ -18,6 +18,7 @@ from magentic.chatprompt import (
     chatprompt,
     escape_braces,
 )
+from magentic.function_call import FunctionCall
 
 
 @pytest.mark.parametrize(
@@ -51,12 +52,12 @@ def test_escape_braces(text):
         (
             [
                 FunctionResultMessage(
-                    "Function result message with {param}", function_call=Mock()
+                    "Function result message with {param}", function=Mock()
                 )
             ],
             [
                 FunctionResultMessage(
-                    "Function result message with arg", function_call=Mock()
+                    "Function result message with arg", function=Mock()
                 )
             ],
         ),
@@ -95,6 +96,7 @@ def test_chatprompt_decorator_docstring():
     @chatprompt(UserMessage("This is a user message."))
     def func(one: int) -> str:
         """This is the docstring."""
+        ...
 
     assert isinstance(func, ChatPromptFunction)
     assert getdoc(func) == "This is the docstring."
@@ -127,6 +129,7 @@ async def test_async_chatprompt_decorator_docstring():
     @chatprompt(UserMessage("This is a user message."))
     async def func(one: int) -> str:
         """This is the docstring."""
+        ...
 
     assert isinstance(func, AsyncChatPromptFunction)
     assert getdoc(func) == "This is the docstring."
@@ -154,3 +157,20 @@ def test_chatprompt_readme_example():
 
     movie_quote = get_movie_quote("Iron Man")
     assert isinstance(movie_quote, Quote)
+
+
+@pytest.mark.openai
+def test_chatprompt_with_function_call_and_result():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    @chatprompt(
+        UserMessage("Use the plus function to add 1 and 2."),
+        AssistantMessage(FunctionCall(plus, 1, 2)),
+        FunctionResultMessage(3, plus),
+    )
+    def do_math() -> str:
+        ...
+
+    output = do_math()
+    assert isinstance(output, str)

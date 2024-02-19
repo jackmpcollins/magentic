@@ -2,14 +2,13 @@ from abc import ABC, abstractmethod
 from typing import (
     Any,
     Awaitable,
+    Callable,
     Generic,
     TypeVar,
     cast,
     get_origin,
     overload,
 )
-
-from magentic.function_call import FunctionCall
 
 T = TypeVar("T")
 
@@ -117,31 +116,27 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     """A message containing the result of a function call."""
 
     @overload
-    def __init__(self, content: ContentT, function_call: FunctionCall[ContentT]):
+    def __init__(self, content: ContentT, function: Callable[..., Awaitable[ContentT]]):
         ...
 
     @overload
-    def __init__(
-        self, content: ContentT, function_call: FunctionCall[Awaitable[ContentT]]
-    ):
+    def __init__(self, content: ContentT, function: Callable[..., ContentT]):
         ...
 
     def __init__(
         self,
         content: ContentT,
-        function_call: FunctionCall[ContentT] | FunctionCall[Awaitable[ContentT]],
+        function: Callable[..., Awaitable[ContentT]] | Callable[..., ContentT],
     ):
         super().__init__(content)
-        self._function_call = function_call
+        self._function = function
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.content!r}, {self._function_call!r})"
+        return f"{self.__class__.__name__}({self.content!r}, {self._function!r})"
 
     @property
-    def function_call(
-        self,
-    ) -> FunctionCall[ContentT] | FunctionCall[Awaitable[ContentT]]:
-        return self._function_call
+    def function(self) -> Callable[..., Awaitable[ContentT]] | Callable[..., ContentT]:
+        return self._function
 
     @overload
     def format(
@@ -167,7 +162,7 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     ) -> "FunctionResultMessage[str] | FunctionResultMessage[T]":
         if isinstance(self.content, str):
             function_call_str = cast(
-                FunctionCall[str] | FunctionCall[Awaitable[str]], self._function_call
+                Callable[..., str] | Callable[..., Awaitable[str]], self.function
             )
             return FunctionResultMessage(
                 self.content.format(**kwargs), function_call_str
@@ -175,28 +170,8 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
         if isinstance(self.content, Placeholder):
             content = cast(Placeholder[T], self.content)
             function_call_x = cast(
-                FunctionCall[T] | FunctionCall[Awaitable[T]],
-                self._function_call,
+                Callable[..., T] | Callable[..., Awaitable[T]],
+                self.function,
             )
             return FunctionResultMessage(content.format(**kwargs), function_call_x)
         return cast(FunctionResultMessage[T], self)
-
-    @classmethod
-    def from_function_call(
-        cls, function_call: FunctionCall[ContentT]
-    ) -> "FunctionResultMessage[ContentT]":
-        """Create a message containing the result of a function call."""
-        return cls(
-            content=function_call(),
-            function_call=function_call,
-        )
-
-    @classmethod
-    async def afrom_function_call(
-        cls, function_call: FunctionCall[Awaitable[ContentT]]
-    ) -> "FunctionResultMessage[ContentT]":
-        """Async version of `from_function_call`."""
-        return cls(
-            content=await function_call(),
-            function_call=function_call,
-        )
