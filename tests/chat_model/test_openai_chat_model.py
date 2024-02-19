@@ -2,6 +2,7 @@ import os
 
 import openai
 import pytest
+from openai.types.chat import ChatCompletionMessageParam
 
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -65,6 +66,15 @@ def test_message_to_openai_message_raises():
 
     with pytest.raises(NotImplementedError):
         message_to_openai_message(CustomMessage("Hello"))
+
+    @message_to_openai_message.register
+    def _(message: CustomMessage) -> ChatCompletionMessageParam:
+        return {"role": "user", "content": message.content}
+
+    assert message_to_openai_message(CustomMessage("Hello")) == {
+        "role": "user",
+        "content": "Hello",
+    }
 
 
 @pytest.mark.openai
