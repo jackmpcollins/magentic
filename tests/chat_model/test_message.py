@@ -4,8 +4,19 @@ from typing_extensions import assert_type
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
+    Placeholder,
     UserMessage,
 )
+
+
+def test_placeholder():
+    class Country(BaseModel):
+        name: str
+
+    placeholder = Placeholder(Country, "country")
+
+    assert_type(placeholder, Placeholder[Country])
+    assert placeholder.name == "country"
 
 
 def test_user_message_format():
