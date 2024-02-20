@@ -23,7 +23,7 @@ class MultipartUserMessage(Message[Sequence[PartContentT]], Generic[PartContentT
     @staticmethod
     def _format_content_item(item: PartContentT, **kwargs: Any) -> PartContentT:
         if isinstance(item, str):
-            # Cast back to ContentT to satisfy mypy
+            # Cast back to more general type to satisfy mypy
             return cast(PartContentT, item.format(**kwargs))
         return item
 
