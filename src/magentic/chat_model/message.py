@@ -77,10 +77,25 @@ class UserMessage(Message[str]):
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
-    def format(self, **kwargs: Any) -> "AssistantMessage[ContentT]":
+    @overload
+    def format(
+        self: "AssistantMessage[Placeholder[T]]", **kwargs: Any
+    ) -> "AssistantMessage[T]":
+        ...
+
+    @overload
+    def format(self: "AssistantMessage[T]", **kwargs: Any) -> "AssistantMessage[T]":
+        ...
+
+    def format(
+        self: "AssistantMessage[str] | AssistantMessage[Placeholder[T]] | AssistantMessage[T]",
+        **kwargs: Any,
+    ) -> "AssistantMessage[str] | AssistantMessage[T]":
         if isinstance(self.content, str):
-            content = cast(ContentT, self.content.format(**kwargs))
-            return AssistantMessage(content)
+            return AssistantMessage(self.content.format(**kwargs))
+        if isinstance(self.content, Placeholder):
+            content = cast(Placeholder[T], self.content)
+            return AssistantMessage(content.format(**kwargs))
         return AssistantMessage(self.content)
 
 

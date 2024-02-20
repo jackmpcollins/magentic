@@ -37,12 +37,12 @@ def test_assistant_message_format_str():
     assert assistant_message_formatted == AssistantMessage("Hello world")
 
 
-def test_assistant_message_format():
+def test_assistant_message_format_placeholder():
     class Country(BaseModel):
         name: str
 
-    assistant_message = AssistantMessage(Country(name="USA"))
-    assistant_message_formatted = assistant_message.format(foo="bar")
+    assistant_message = AssistantMessage(Placeholder(Country, "country"))
+    assistant_message_formatted = assistant_message.format(country=Country(name="USA"))
 
     assert_type(assistant_message_formatted, AssistantMessage[Country])
     assert_type(assistant_message_formatted.content, Country)
