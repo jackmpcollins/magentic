@@ -47,7 +47,7 @@ def prompt_chain(
                     async_prompt_function, *args, **kwargs
                 ).asubmit()
                 num_calls = 0
-                while isinstance(chat.messages[-1].content, FunctionCall):
+                while isinstance(chat.last_message.content, FunctionCall):
                     if max_calls is not None and num_calls >= max_calls:
                         msg = (
                             f"Function {func.__name__} reached limit of"
@@ -57,7 +57,7 @@ def prompt_chain(
                     chat = await chat.aexec_function_call()
                     chat = await chat.asubmit()
                     num_calls += 1
-                return chat.messages[-1].content
+                return chat.last_message.content
 
             return cast(Callable[P, R], awrapper)
 
@@ -73,7 +73,7 @@ def prompt_chain(
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
             num_calls = 0
-            while isinstance(chat.messages[-1].content, FunctionCall):
+            while isinstance(chat.last_message.content, FunctionCall):
                 if max_calls is not None and num_calls >= max_calls:
                     msg = (
                         f"Function {func.__name__} reached limit of"
@@ -82,7 +82,7 @@ def prompt_chain(
                     raise MaxFunctionCallsError(msg)
                 chat = chat.exec_function_call().submit()
                 num_calls += 1
-            return cast(R, chat.messages[-1].content)
+            return cast(R, chat.last_message.content)
 
         return wrapper
 

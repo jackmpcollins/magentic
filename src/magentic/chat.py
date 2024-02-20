@@ -61,6 +61,10 @@ class Chat:
         return self._messages.copy()
 
     @property
+    def last_message(self) -> Message[Any]:
+        return self._messages[-1]
+
+    @property
     def model(self) -> ChatModel:
         return self._model or get_chat_model()
 
@@ -101,12 +105,11 @@ class Chat:
 
     def exec_function_call(self: Self) -> Self:
         """If the last message is a function call, execute it and add the result."""
-        last_message = self._messages[-1]
-        if not isinstance(last_message.content, FunctionCall):
+        if not isinstance(self.last_message.content, FunctionCall):
             msg = "Last message is not a function call."
             raise TypeError(msg)
 
-        function_call = last_message.content
+        function_call = self.last_message.content
         output = function_call()
         return self.add_message(
             FunctionResultMessage(content=output, function=function_call.function)
@@ -118,12 +121,11 @@ class Chat:
         Additionally, if the result of the function is awaitable, await it
         before adding the message.
         """
-        last_message = self._messages[-1]
-        if not isinstance(last_message.content, FunctionCall):
+        if not isinstance(self.last_message.content, FunctionCall):
             msg = "Last message is not a function call."
             raise TypeError(msg)
 
-        function_call = last_message.content
+        function_call = self.last_message.content
         output = function_call()
         if inspect.isawaitable(output):
             output = await output
