@@ -16,18 +16,18 @@ class ImageUrl(BaseModel):
     detail: Literal["auto", "low", "high"] = "auto"
 
 
-ContentT = TypeVar("ContentT", bound=Sequence[str | ImageUrl])
+PartContentT = TypeVar("PartContentT", bound=str | ImageUrl)
 
 
-class MultipartUserMessage(Message[Sequence[ContentT]], Generic[ContentT]):
+class MultipartUserMessage(Message[Sequence[PartContentT]], Generic[PartContentT]):
     @staticmethod
-    def _format_content_item(item: ContentT, **kwargs: Any) -> ContentT:
+    def _format_content_item(item: PartContentT, **kwargs: Any) -> PartContentT:
         if isinstance(item, str):
             # Cast back to ContentT to satisfy mypy
-            return cast(ContentT, item.format(**kwargs))
+            return cast(PartContentT, item.format(**kwargs))
         return item
 
-    def format(self, **kwargs: Any) -> "MultipartUserMessage[ContentT]":
+    def format(self, **kwargs: Any) -> "MultipartUserMessage[PartContentT]":
         content = [self._format_content_item(item, **kwargs) for item in self.content]
         return MultipartUserMessage(content)
 
