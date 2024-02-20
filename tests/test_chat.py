@@ -31,6 +31,11 @@ def test_chat_add_message():
     assert chat2.messages == [UserMessage(content="Hello")]
 
 
+def test_chat_last_message():
+    chat = Chat([UserMessage(content="one"), UserMessage(content="two")])
+    assert chat.last_message == UserMessage(content="two")
+
+
 @pytest.mark.openai
 def test_chat_submit():
     chat1 = Chat(

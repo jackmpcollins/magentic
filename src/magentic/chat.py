@@ -65,6 +65,10 @@ class Chat:
         return self._messages[-1]
 
     @property
+    def last_message(self) -> Message[Any]:
+        return self._messages[-1]
+
+    @property
     def model(self) -> ChatModel:
         return self._model or get_chat_model()
 
