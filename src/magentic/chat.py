@@ -58,11 +58,7 @@ class Chat:
 
     @property
     def messages(self) -> list[Message[Any]]:
-        return self._messages
-
-    @property
-    def last_message(self) -> Message[Any]:
-        return self._messages[-1]
+        return self._messages.copy()
 
     @property
     def last_message(self) -> Message[Any]:
