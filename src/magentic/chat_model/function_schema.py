@@ -2,6 +2,7 @@ import inspect
 import typing
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Callable, Iterable
+from functools import singledispatch
 from typing import Any, Generic, TypeVar, cast, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter, create_model
@@ -11,7 +12,7 @@ from magentic.streaming import (
     aiter_streamed_json_array,
     iter_streamed_json_array,
 )
-from magentic.typing import is_origin_abstract, is_origin_subclass, name_type
+from magentic.typing import is_origin_abstract, name_type
 
 T = TypeVar("T")
 
@@ -51,10 +52,35 @@ class BaseFunctionSchema(ABC, Generic[T]):
         ...
 
 
+# Use the singledispatch registry to map classes to FunctionSchemas
+# because this handles subclass resolution for us.
+@singledispatch
+def _function_schema_registry(type_: type[Any]) -> BaseFunctionSchema[T]:
+    msg = f"No FunctionSchema registered for type {type_}"
+    raise TypeError(msg)
+
+
+def register_function_schema(
+    type_: type[Any],
+) -> Callable[
+    [Callable[[type[T]], BaseFunctionSchema[T]]],
+    Callable[[type[T]], BaseFunctionSchema[T]],
+]:
+    """Register a new FunctionSchema for the given type."""
+    return _function_schema_registry.register(type_)  # type: ignore[unused-ignore,return-value]
+
+
+def function_schema_for_type(type_: type[T]) -> BaseFunctionSchema[T]:
+    """Create a FunctionSchema for the given type."""
+    function_schema_cls = _function_schema_registry.dispatch(get_origin(type_) or type_)
+    return function_schema_cls(type_)
+
+
 class Output(BaseModel, Generic[T]):
     value: T
 
 
+@register_function_schema(object)
 class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
     """The most generic FunctionSchema that should work for most types supported by pydantic."""
 
@@ -84,6 +110,7 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
 IterableT = TypeVar("IterableT", bound=Iterable[Any])
 
 
+@register_function_schema(Iterable)
 class IterableFunctionSchema(BaseFunctionSchema[IterableT], Generic[IterableT]):
     """FunctionSchema for types that are iterable. Can parse LLM output as a stream."""
 
@@ -120,6 +147,7 @@ class IterableFunctionSchema(BaseFunctionSchema[IterableT], Generic[IterableT]):
 AsyncIterableT = TypeVar("AsyncIterableT", bound=AsyncIterable[Any])
 
 
+@register_function_schema(AsyncIterable)
 class AsyncIterableFunctionSchema(
     BaseFunctionSchema[AsyncIterableT], Generic[AsyncIterableT]
 ):
@@ -164,6 +192,7 @@ class AsyncIterableFunctionSchema(
         raise NotImplementedError
 
 
+@register_function_schema(dict)
 class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
     """FunctionSchema for dict."""
 
@@ -191,6 +220,7 @@ class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
 BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
 
+@register_function_schema(BaseModel)
 class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT]):
     """FunctionSchema for pydantic BaseModel."""
 
@@ -316,20 +346,3 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
 
     def serialize_args(self, value: FunctionCall[T]) -> str:
         return self._model(**value.arguments).model_dump_json(exclude_unset=True)
-
-
-def function_schema_for_type(type_: type[Any]) -> BaseFunctionSchema[Any]:
-    """Create a FunctionSchema for the given type."""
-    if is_origin_subclass(type_, BaseModel):
-        return BaseModelFunctionSchema(type_)
-
-    if is_origin_subclass(type_, dict):
-        return DictFunctionSchema(type_)
-
-    if is_origin_subclass(type_, Iterable):
-        return IterableFunctionSchema(type_)
-
-    if is_origin_subclass(type_, AsyncIterable):
-        return AsyncIterableFunctionSchema(type_)
-
-    return AnyFunctionSchema(type_)
