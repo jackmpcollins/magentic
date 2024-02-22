@@ -184,7 +184,7 @@ async def openai_chatcompletion_acreate(
     return response
 
 
-T = TypeVar("T")
+BeseFunctionSchemaT = TypeVar("BeseFunctionSchemaT", bound=BaseFunctionSchema[Any])
 R = TypeVar("R")
 FuncR = TypeVar("FuncR")
 
@@ -242,8 +242,8 @@ class OpenaiChatModel(ChatModel):
     @staticmethod
     def _select_function_schema(
         chunk: ChatCompletionChunk,
-        function_schemas: list[BaseFunctionSchema[T]],
-    ) -> BaseFunctionSchema[T] | None:
+        function_schemas: list[BeseFunctionSchemaT],
+    ) -> BeseFunctionSchemaT | None:
         """Select the function schema based on the first response chunk."""
         if not chunk.choices[0].delta.function_call:
             return None
@@ -360,14 +360,13 @@ class OpenaiChatModel(ChatModel):
         function_schema = self._select_function_schema(first_chunk, function_schemas)
         if function_schema:
             try:
-                return AssistantMessage(
-                    function_schema.parse_args(
-                        chunk.choices[0].delta.function_call.arguments
-                        for chunk in response
-                        if chunk.choices[0].delta.function_call
-                        and chunk.choices[0].delta.function_call.arguments is not None
-                    )
+                content = function_schema.parse_args(
+                    chunk.choices[0].delta.function_call.arguments
+                    for chunk in response
+                    if chunk.choices[0].delta.function_call
+                    and chunk.choices[0].delta.function_call.arguments is not None
                 )
+                return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
@@ -387,8 +386,8 @@ class OpenaiChatModel(ChatModel):
             if chunk.choices[0].delta.content is not None
         )
         if streamed_str_in_output_types:
-            return cast(AssistantMessage[R], AssistantMessage(streamed_str))
-        return cast(AssistantMessage[R], AssistantMessage(str(streamed_str)))
+            return AssistantMessage(streamed_str)  # type: ignore[return-value]
+        return AssistantMessage(str(streamed_str))
 
     @overload
     async def acomplete(
@@ -491,14 +490,13 @@ class OpenaiChatModel(ChatModel):
         function_schema = self._select_function_schema(first_chunk, function_schemas)
         if function_schema:
             try:
-                return AssistantMessage(
-                    await function_schema.aparse_args(
-                        chunk.choices[0].delta.function_call.arguments
-                        async for chunk in response
-                        if chunk.choices[0].delta.function_call
-                        and chunk.choices[0].delta.function_call.arguments is not None
-                    )
+                content = await function_schema.aparse_args(
+                    chunk.choices[0].delta.function_call.arguments
+                    async for chunk in response
+                    if chunk.choices[0].delta.function_call
+                    and chunk.choices[0].delta.function_call.arguments is not None
                 )
+                return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
@@ -518,7 +516,5 @@ class OpenaiChatModel(ChatModel):
             if chunk.choices[0].delta.content is not None
         )
         if async_streamed_str_in_output_types:
-            return cast(AssistantMessage[R], AssistantMessage(async_streamed_str))
-        return cast(
-            AssistantMessage[R], AssistantMessage(await async_streamed_str.to_string())
-        )
+            return AssistantMessage(async_streamed_str)  # type: ignore[return-value]
+        return AssistantMessage(await async_streamed_str.to_string())
