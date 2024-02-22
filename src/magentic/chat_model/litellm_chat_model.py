@@ -218,7 +218,7 @@ class LitellmChatModel(ChatModel):
     ):
         """Request an LLM message."""
         if output_types is None:
-            output_types = cast(Iterable[type[R]], [str])
+            output_types = [] if functions else cast(list[type[R]], [str])
 
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
@@ -342,7 +342,7 @@ class LitellmChatModel(ChatModel):
     ):
         """Async version of `complete`."""
         if output_types is None:
-            output_types = cast(Iterable[type[R]], [str])
+            output_types = [] if functions else cast(list[type[R]], [str])
 
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
