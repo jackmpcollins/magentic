@@ -55,7 +55,7 @@ class BaseFunctionSchema(ABC, Generic[T]):
 # Use the singledispatch registry to map classes to FunctionSchemas
 # because this handles subclass resolution for us.
 @singledispatch
-def _function_schema_registry(type_: type[Any]) -> BaseFunctionSchema[T]:
+def _function_schema_registry(type_: type[T]) -> BaseFunctionSchema[T]:
     msg = f"No FunctionSchema registered for type {type_}"
     raise TypeError(msg)
 
