@@ -307,7 +307,7 @@ class OpenaiChatModel(ChatModel):
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
-        output_types: Iterable[type[R | str]] | None = None,
+        output_types: Iterable[type[R]] | None = None,
         *,
         stop: list[str] | None = None,
     ) -> (
@@ -317,7 +317,7 @@ class OpenaiChatModel(ChatModel):
     ):
         """Request an LLM message."""
         if output_types is None:
-            output_types = [str]
+            output_types = cast(Iterable[type[R]], [str])
 
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
@@ -438,7 +438,7 @@ class OpenaiChatModel(ChatModel):
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., FuncR]] | None = None,
-        output_types: Iterable[type[R | str]] | None = None,
+        output_types: Iterable[type[R]] | None = None,
         *,
         stop: list[str] | None = None,
     ) -> (
@@ -448,7 +448,7 @@ class OpenaiChatModel(ChatModel):
     ):
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [str]
+            output_types = cast(Iterable[type[R]], [str])
 
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
