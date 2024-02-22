@@ -184,6 +184,7 @@ async def openai_chatcompletion_acreate(
     return response
 
 
+T = TypeVar("T")
 R = TypeVar("R")
 FuncR = TypeVar("FuncR")
 
@@ -237,6 +238,26 @@ class OpenaiChatModel(ChatModel):
     @property
     def temperature(self) -> float | None:
         return self._temperature
+
+    @staticmethod
+    def _select_function_schema(
+        chunk: ChatCompletionChunk,
+        function_schemas: list[BaseFunctionSchema[T]],
+    ) -> BaseFunctionSchema[T] | None:
+        """Select the function schema based on the first response chunk."""
+        if not chunk.choices[0].delta.function_call:
+            return None
+
+        function_name = chunk.choices[0].delta.function_call.name
+        if function_name is None:
+            msg = f"OpenAI function call name is None. Chunk: {chunk.model_dump_json()}"
+            raise ValueError(msg)
+
+        function_schema_by_name = {
+            function_schema.name: function_schema
+            for function_schema in function_schemas
+        }
+        return function_schema_by_name[function_name]
 
     @overload
     def complete(
@@ -335,18 +356,9 @@ class OpenaiChatModel(ChatModel):
             first_chunk = next(response)
 
         response = chain([first_chunk], response)  # Replace first chunk
-        first_chunk_delta = first_chunk.choices[0].delta
 
-        if first_chunk_delta.function_call:
-            function_schema_by_name = {
-                function_schema.name: function_schema
-                for function_schema in function_schemas
-            }
-            function_name = first_chunk_delta.function_call.name
-            if function_name is None:
-                msg = "OpenAI function call name is None"
-                raise ValueError(msg)
-            function_schema = function_schema_by_name[function_name]
+        function_schema = self._select_function_schema(first_chunk, function_schemas)
+        if function_schema:
             try:
                 return AssistantMessage(
                     function_schema.parse_args(
@@ -475,18 +487,9 @@ class OpenaiChatModel(ChatModel):
             first_chunk = await anext(response)
 
         response = achain(async_iter([first_chunk]), response)  # Replace first chunk
-        first_chunk_delta = first_chunk.choices[0].delta
 
-        if first_chunk_delta.function_call:
-            function_schema_by_name = {
-                function_schema.name: function_schema
-                for function_schema in function_schemas
-            }
-            function_name = first_chunk_delta.function_call.name
-            if function_name is None:
-                msg = "OpenAI function call name is None"
-                raise ValueError(msg)
-            function_schema = function_schema_by_name[function_name]
+        function_schema = self._select_function_schema(first_chunk, function_schemas)
+        if function_schema:
             try:
                 return AssistantMessage(
                     await function_schema.aparse_args(

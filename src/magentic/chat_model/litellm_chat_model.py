@@ -16,6 +16,7 @@ from pydantic import ValidationError
 
 from magentic.chat_model.base import ChatModel, StructuredOutputError
 from magentic.chat_model.function_schema import (
+    BaseFunctionSchema,
     FunctionCallFunctionSchema,
     function_schema_for_type,
 )
@@ -103,6 +104,7 @@ async def litellm_acompletion(
     return response
 
 
+T = TypeVar("T")
 R = TypeVar("R")
 FuncR = TypeVar("FuncR")
 
@@ -138,6 +140,25 @@ class LitellmChatModel(ChatModel):
     @property
     def temperature(self) -> float | None:
         return self._temperature
+
+    @staticmethod
+    def _select_function_schema(
+        chunk: ModelResponse, function_schemas: list[BaseFunctionSchema[T]]
+    ) -> BaseFunctionSchema[T] | None:
+        """Select the function schema based on the first response chunk."""
+        if not chunk.choices[0].delta.get("function_call", None):
+            return None
+
+        function_name: str | None = chunk.choices[0].delta.function_call.name
+        if function_name is None:
+            msg = f"LiteLLM function call name is None. Chunk: {chunk.json()}"
+            raise ValueError(msg)
+
+        function_schema_by_name = {
+            function_schema.name: function_schema
+            for function_schema in function_schemas
+        }
+        return function_schema_by_name[function_name]
 
     @overload
     def complete(
@@ -229,17 +250,9 @@ class LitellmChatModel(ChatModel):
 
         first_chunk = next(response)
         response = chain([first_chunk], response)  # Replace first chunk
-        first_chunk_delta = first_chunk.choices[0].delta
 
-        if function_call := first_chunk_delta.get("function_call", None):
-            function_schema_by_name = {
-                function_schema.name: function_schema
-                for function_schema in function_schemas
-            }
-            if function_call.name is None:
-                msg = "OpenAI function call name is None"
-                raise ValueError(msg)
-            function_schema = function_schema_by_name[function_call.name]
+        function_schema = self._select_function_schema(first_chunk, function_schemas)
+        if function_schema:
             try:
                 return AssistantMessage(
                     function_schema.parse_args(
@@ -361,17 +374,9 @@ class LitellmChatModel(ChatModel):
 
         first_chunk = await anext(response)
         response = achain(async_iter([first_chunk]), response)  # Replace first chunk
-        first_chunk_delta = first_chunk.choices[0].delta
 
-        if function_call := first_chunk_delta.get("function_call", None):
-            function_schema_by_name = {
-                function_schema.name: function_schema
-                for function_schema in function_schemas
-            }
-            if function_call.name is None:
-                msg = "OpenAI function call name is None"
-                raise ValueError(msg)
-            function_schema = function_schema_by_name[function_call.name]
+        function_schema = self._select_function_schema(first_chunk, function_schemas)
+        if function_schema:
             try:
                 return AssistantMessage(
                     await function_schema.aparse_args(
