@@ -12,6 +12,7 @@ from magentic.chat_model.base import ChatModel, StructuredOutputError
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
+    async_function_schema_for_type,
     function_schema_for_type,
 )
 from magentic.chat_model.message import (
@@ -450,7 +451,7 @@ class OpenaiChatModel(ChatModel):
             output_types = [] if functions else cast(list[type[R]], [str])
 
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
-            function_schema_for_type(type_)
+            async_function_schema_for_type(type_)
             for type_ in output_types
             if not is_origin_subclass(type_, (str, AsyncStreamedStr))
         ]
