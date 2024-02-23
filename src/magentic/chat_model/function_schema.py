@@ -40,40 +40,79 @@ class BaseFunctionSchema(ABC, Generic[T]):
             schema["description"] = self.description
         return schema
 
+
+class AsyncFunctionSchema(BaseFunctionSchema[T], Generic[T]):
+    @abstractmethod
+    async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
+        ...
+
+    @abstractmethod
+    async def aserialize_args(self, value: T) -> str:
+        ...
+
+
+class FunctionSchema(AsyncFunctionSchema[T], Generic[T]):
     @abstractmethod
     def parse_args(self, arguments: Iterable[str]) -> T:
         ...
-
-    async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
-        return self.parse_args([arg async for arg in arguments])
 
     @abstractmethod
     def serialize_args(self, value: T) -> str:
         ...
 
+    async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
+        return self.parse_args([chunk async for chunk in arguments])
+
+    async def aserialize_args(self, value: T) -> str:
+        return self.serialize_args(value)
+
 
 # Use the singledispatch registry to map classes to FunctionSchemas
 # because this handles subclass resolution for us.
 @singledispatch
-def _function_schema_registry(type_: type[T]) -> BaseFunctionSchema[T]:
+def _async_function_schema_registry(type_: type[T]) -> AsyncFunctionSchema[T]:
     msg = f"No FunctionSchema registered for type {type_}"
     raise TypeError(msg)
 
 
-def register_function_schema(
-    type_: type[Any],
-) -> Callable[
-    [Callable[[type[T]], BaseFunctionSchema[T]]],
-    Callable[[type[T]], BaseFunctionSchema[T]],
-]:
-    """Register a new FunctionSchema for the given type."""
-    return _function_schema_registry.register(type_)  # type: ignore[unused-ignore,return-value]
+def async_function_schema_for_type(type_: type[T]) -> AsyncFunctionSchema[T]:
+    """Create a FunctionSchema for the given type."""
+    function_schema_cls = _async_function_schema_registry.dispatch(
+        get_origin(type_) or type_
+    )
+    return function_schema_cls(type_)
 
 
-def function_schema_for_type(type_: type[T]) -> BaseFunctionSchema[T]:
+@singledispatch
+def _function_schema_registry(type_: type[T]) -> FunctionSchema[T]:
+    msg = f"No FunctionSchema registered for type {type_}"
+    raise TypeError(msg)
+
+
+def function_schema_for_type(type_: type[T]) -> FunctionSchema[T]:
     """Create a FunctionSchema for the given type."""
     function_schema_cls = _function_schema_registry.dispatch(get_origin(type_) or type_)
     return function_schema_cls(type_)
+
+
+TypeFunctionSchemaT = TypeVar(
+    "TypeFunctionSchemaT", bound=type[BaseFunctionSchema[Any]]
+)
+
+
+def register_function_schema(
+    type_: type[Any],
+) -> Callable[[TypeFunctionSchemaT], TypeFunctionSchemaT]:
+    """Register a new FunctionSchema for the given type."""
+
+    def _register(cls: TypeFunctionSchemaT) -> TypeFunctionSchemaT:
+        if issubclass(cls, AsyncFunctionSchema):
+            _async_function_schema_registry.register(type_, cls)
+        if issubclass(cls, FunctionSchema):
+            _function_schema_registry.register(type_, cls)
+        return cls  # type: ignore[return-value]
+
+    return _register
 
 
 class Output(BaseModel, Generic[T]):
@@ -81,7 +120,7 @@ class Output(BaseModel, Generic[T]):
 
 
 @register_function_schema(object)
-class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
+class AnyFunctionSchema(FunctionSchema[T], Generic[T]):
     """The most generic FunctionSchema that should work for most types supported by pydantic."""
 
     def __init__(self, output_type: type[T]):
@@ -111,7 +150,7 @@ IterableT = TypeVar("IterableT", bound=Iterable[Any])
 
 
 @register_function_schema(Iterable)
-class IterableFunctionSchema(BaseFunctionSchema[IterableT], Generic[IterableT]):
+class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
     """FunctionSchema for types that are iterable. Can parse LLM output as a stream."""
 
     def __init__(self, output_type: type[IterableT]):
@@ -149,7 +188,7 @@ AsyncIterableT = TypeVar("AsyncIterableT", bound=AsyncIterable[Any])
 
 @register_function_schema(AsyncIterable)
 class AsyncIterableFunctionSchema(
-    BaseFunctionSchema[AsyncIterableT], Generic[AsyncIterableT]
+    AsyncFunctionSchema[AsyncIterableT], Generic[AsyncIterableT]
 ):
     """FunctionSchema for types that are async iterable. Can parse LLM output as a stream."""
 
@@ -172,9 +211,6 @@ class AsyncIterableFunctionSchema(
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: Iterable[str]) -> AsyncIterableT:
-        raise NotImplementedError
-
     async def aparse_args(self, arguments: AsyncIterable[str]) -> AsyncIterableT:
         aiter_items = (
             self._item_type_adapter.validate_json(item)
@@ -188,12 +224,12 @@ class AsyncIterableFunctionSchema(
 
         raise NotImplementedError
 
-    def serialize_args(self, value: AsyncIterableT) -> str:
-        raise NotImplementedError
+    async def aserialize_args(self, value: AsyncIterableT) -> str:
+        return self._model(value=[chunk async for chunk in value]).model_dump_json()
 
 
 @register_function_schema(dict)
-class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
+class DictFunctionSchema(FunctionSchema[T], Generic[T]):
     """FunctionSchema for dict."""
 
     def __init__(self, output_type: type[T]):
@@ -221,7 +257,7 @@ BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
 
 @register_function_schema(BaseModel)
-class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT]):
+class BaseModelFunctionSchema(FunctionSchema[BaseModelT], Generic[BaseModelT]):
     """FunctionSchema for pydantic BaseModel."""
 
     def __init__(self, model: type[BaseModelT]):
@@ -279,7 +315,7 @@ def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
     return create_model("FuncModel", **fields)
 
 
-class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]):
+class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
     """FunctionSchema for FunctionCall."""
 
     def __init__(self, func: Callable[..., T]):
