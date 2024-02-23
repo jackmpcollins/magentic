@@ -234,7 +234,7 @@ class DictFunctionSchema(FunctionSchema[T], Generic[T]):
 
     def __init__(self, output_type: type[T]):
         self._output_type = output_type
-        self._type_adapter: TypeAdapter[T] = TypeAdapter(output_type)
+        self._type_adapter = TypeAdapter(output_type)
 
     @property
     def name(self) -> str:
