@@ -59,16 +59,13 @@ def _(message: UserMessage) -> ChatCompletionMessageParam:
 @message_to_openai_message.register(AssistantMessage)
 def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     if isinstance(message.content, str):
-        return {
-            "role": OpenaiMessageRole.ASSISTANT.value,
-            "content": message.content,
-        }
+        return {"role": OpenaiMessageRole.ASSISTANT.value, "content": message.content}
 
-    function_schema: BaseFunctionSchema[Any]
-    if isinstance(message.content, FunctionCall):
-        function_schema = FunctionCallFunctionSchema(message.content.function)
-    else:
-        function_schema = function_schema_for_type(type(message.content))
+    function_schema = (
+        FunctionCallFunctionSchema(message.content.function)
+        if isinstance(message.content, FunctionCall)
+        else function_schema_for_type(type(message.content))
+    )
 
     return {
         "role": OpenaiMessageRole.ASSISTANT.value,
