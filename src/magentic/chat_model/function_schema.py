@@ -106,6 +106,10 @@ def register_function_schema(
     """Register a new FunctionSchema for the given type."""
 
     def _register(cls: TypeFunctionSchemaT) -> TypeFunctionSchemaT:
+        if cls.__abstractmethods__:
+            msg = f"FunctionSchema {cls} has not implemented abstract methods: {cls.__abstractmethods__}"
+            raise TypeError(msg)
+
         if issubclass(cls, AsyncFunctionSchema):
             _async_function_schema_registry.register(type_, cls)
         if issubclass(cls, FunctionSchema):
