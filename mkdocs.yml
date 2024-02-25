@@ -5,6 +5,26 @@ site_url: https://magentic.dev/
 
 theme:
   name: material
+  palette:
+    - media: "(prefers-color-scheme)"
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: purple
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: purple
+      accent: yellow
+  features:
+    - content.action.edit
+    - content.code.copy
+    - content.code.select
+    - content.tooltips
+    - navigation.expand
+    - navigation.indexes
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.instant.progress
+    - search.suggest
 
 repo_name: jackmpcollins/magentic
 repo_url: https://github.com/jackmpcollins/magentic
@@ -15,3 +35,17 @@ validation:
   omitted_files: warn
   absolute_links: warn
   unrecognized_links: warn
+
+nav:
+  - Overview: index.md
+
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true
+      title: Page contents
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      pygments_lang_class: true
+  - pymdownx.extra
