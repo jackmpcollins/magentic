@@ -20,6 +20,10 @@ T = TypeVar("T")
 class BaseFunctionSchema(ABC, Generic[T]):
     """Converts a Python object to the JSON Schema that represents it as a function for the LLM."""
 
+    # Allow any arguments to avoid error passing type to subclasses without __init__
+    def __init__(self, *args: Any, **kwargs: Any):
+        ...
+
     @property
     @abstractmethod
     def name(self) -> str:
