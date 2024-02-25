@@ -53,7 +53,7 @@ class BaseFunctionSchema(ABC, Generic[T]):
 
 class AsyncFunctionSchema(BaseFunctionSchema[T], Generic[T]):
     @abstractmethod
-    async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
+    async def aparse_args(self, chunks: AsyncIterable[str]) -> T:
         """Parse an async iterable of string chunks into the function arguments."""
         ...
 
@@ -65,7 +65,7 @@ class AsyncFunctionSchema(BaseFunctionSchema[T], Generic[T]):
 
 class FunctionSchema(AsyncFunctionSchema[T], Generic[T]):
     @abstractmethod
-    def parse_args(self, arguments: Iterable[str]) -> T:
+    def parse_args(self, chunks: Iterable[str]) -> T:
         """Parse an iterable of string chunks into the function arguments."""
         ...
 
@@ -74,9 +74,9 @@ class FunctionSchema(AsyncFunctionSchema[T], Generic[T]):
         """Serialize the function arguments into a JSON string."""
         ...
 
-    async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
+    async def aparse_args(self, chunks: AsyncIterable[str]) -> T:
         """Parse an async iterable of string chunks into the function arguments."""
-        return self.parse_args([chunk async for chunk in arguments])
+        return self.parse_args([chunk async for chunk in chunks])
 
     async def aserialize_args(self, value: T) -> str:
         """Serialize the function arguments into a JSON string."""
@@ -159,8 +159,9 @@ class AnyFunctionSchema(FunctionSchema[T], Generic[T]):
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: Iterable[str]) -> T:
-        return self._model.model_validate_json("".join(arguments)).value
+    def parse_args(self, chunks: Iterable[str]) -> T:
+        args_json = "".join(chunks)
+        return self._model.model_validate_json(args_json).value
 
     def serialize_args(self, value: T) -> str:
         return self._model(value=value).model_dump_json()
@@ -192,10 +193,10 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: Iterable[str]) -> IterableT:
+    def parse_args(self, chunks: Iterable[str]) -> IterableT:
         iter_items = (
             self._item_type_adapter.validate_json(item)
-            for item in iter_streamed_json_array(arguments)
+            for item in iter_streamed_json_array(chunks)
         )
         return self._model.model_validate({"value": iter_items}).value
 
@@ -231,10 +232,10 @@ class AsyncIterableFunctionSchema(
         model_schema.pop("description", None)
         return model_schema
 
-    async def aparse_args(self, arguments: AsyncIterable[str]) -> AsyncIterableT:
+    async def aparse_args(self, chunks: AsyncIterable[str]) -> AsyncIterableT:
         aiter_items = (
             self._item_type_adapter.validate_json(item)
-            async for item in aiter_streamed_json_array(arguments)
+            async for item in aiter_streamed_json_array(chunks)
         )
         if (get_origin(self._output_type) or self._output_type) in (
             typing.AsyncIterable,
@@ -266,8 +267,9 @@ class DictFunctionSchema(FunctionSchema[T], Generic[T]):
         model_schema["properties"] = model_schema.get("properties", {})
         return model_schema
 
-    def parse_args(self, arguments: Iterable[str]) -> T:
-        return self._type_adapter.validate_json("".join(arguments))
+    def parse_args(self, chunks: Iterable[str]) -> T:
+        args_json = "".join(chunks)
+        return self._type_adapter.validate_json(args_json)
 
     def serialize_args(self, value: T) -> str:
         return self._type_adapter.dump_json(value).decode()
@@ -294,8 +296,9 @@ class BaseModelFunctionSchema(FunctionSchema[BaseModelT], Generic[BaseModelT]):
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: Iterable[str]) -> BaseModelT:
-        return self._model.model_validate_json("".join(arguments))
+    def parse_args(self, chunks: Iterable[str]) -> BaseModelT:
+        args_json = "".join(chunks)
+        return self._model.model_validate_json(args_json)
 
     def serialize_args(self, value: BaseModelT) -> str:
         return value.model_dump_json()
@@ -356,8 +359,9 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
         schema.pop("title", None)
         return schema
 
-    def parse_args(self, arguments: Iterable[str]) -> FunctionCall[T]:
-        model = self._model.model_validate_json("".join(arguments))
+    def parse_args(self, chunks: Iterable[str]) -> FunctionCall[T]:
+        args_json = "".join(chunks)
+        model = self._model.model_validate_json(args_json)
         supplied_params = [
             param
             for param in inspect.signature(self._func).parameters.values()
