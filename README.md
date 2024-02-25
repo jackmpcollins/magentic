@@ -300,7 +300,7 @@ print(len(out), time_elapsed, len(out) / time_elapsed)
 - The `functions` argument to `@prompt` can contain async/coroutine functions. When the corresponding `FunctionCall` objects are called the result must be awaited.
 - The `Annotated` type annotation can be used to provide descriptions and other metadata for function parameters. See [the pydantic documentation on using `Field` to describe function arguments](https://docs.pydantic.dev/latest/usage/validation_decorator/#using-field-to-describe-function-arguments).
 - The `@prompt` and `@prompt_chain` decorators also accept a `model` argument. You can pass an instance of `OpenaiChatModel` to use GPT4 or configure a different temperature. See below.
-- Register other types to use the in return annotations by following [the example notebook for a Pandas DataFrame](examples/custom_function_schemas/register_dataframe_function_schema.ipynb).
+- Register other types to use as return type annotations in `@prompt` functions by following [the example notebook for a Pandas DataFrame](examples/custom_function_schemas/register_dataframe_function_schema.ipynb).
 
 ## Backend/LLM Configuration
 
