@@ -2,7 +2,7 @@ import types
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, TypeVar, overload
+from typing import Any, TypeVar, overload
 
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -13,10 +13,9 @@ from magentic.function_call import FunctionCall
 R = TypeVar("R")
 FuncR = TypeVar("FuncR")
 
-if TYPE_CHECKING:
-    _chat_model_context: ContextVar["ChatModel" | None]
-
-_chat_model_context = ContextVar("chat_model", default=None)
+_chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
+    "chat_model", default=None
+)
 
 
 class StructuredOutputError(Exception):

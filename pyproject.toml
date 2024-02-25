@@ -44,6 +44,7 @@ ruff = "*"
 
 [tool.poetry.group.examples.dependencies]
 jupyter = "*"
+pandas = "^2.2.1"
 wikipedia = "*"
 
 [tool.pytest.ini_options]
