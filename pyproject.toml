@@ -42,6 +42,10 @@ pytest-clarity = "*"
 pytest-cov = "*"
 ruff = "*"
 
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.5.3"
+mkdocs-material = "^9.5.11"
+
 [tool.poetry.group.examples.dependencies]
 jupyter = "*"
 pandas = "^2.2.1"
