@@ -19,3 +19,7 @@ repos:
     rev: "1.16.0"
     hooks:
       - id: blacken-docs
+        additional_dependencies:
+          # New versions move ... inline with def
+          # https://github.com/psf/black/releases/tag/24.1.0
+          - black<24.1.0
