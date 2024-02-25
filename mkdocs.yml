@@ -1,0 +1,17 @@
+site_name: Magentic
+site_description: Seamlessly integrate LLMs as Python functions
+strict: true
+site_url: https://magentic.dev/
+
+theme:
+  name: material
+
+repo_name: jackmpcollins/magentic
+repo_url: https://github.com/jackmpcollins/magentic
+edit_uri: edit/main/docs/
+
+# https://www.mkdocs.org/user-guide/configuration/#validation
+validation:
+  omitted_files: warn
+  absolute_links: warn
+  unrecognized_links: warn
