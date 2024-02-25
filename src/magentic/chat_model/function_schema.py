@@ -27,15 +27,21 @@ class BaseFunctionSchema(ABC, Generic[T]):
     @property
     @abstractmethod
     def name(self) -> str:
+        """The name of the function.
+
+        Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+        """
         ...
 
     @property
     def description(self) -> str | None:
+        """A description of what the function does."""
         return None
 
     @property
     @abstractmethod
     def parameters(self) -> dict[str, Any]:
+        """The parameters the functions accepts as a JSON Schema object."""
         ...
 
     def dict(self) -> dict[str, Any]:
@@ -48,26 +54,32 @@ class BaseFunctionSchema(ABC, Generic[T]):
 class AsyncFunctionSchema(BaseFunctionSchema[T], Generic[T]):
     @abstractmethod
     async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
+        """Parse an async iterable of string chunks into the function arguments."""
         ...
 
     @abstractmethod
     async def aserialize_args(self, value: T) -> str:
+        """Serialize the function arguments into a JSON string."""
         ...
 
 
 class FunctionSchema(AsyncFunctionSchema[T], Generic[T]):
     @abstractmethod
     def parse_args(self, arguments: Iterable[str]) -> T:
+        """Parse an iterable of string chunks into the function arguments."""
         ...
 
     @abstractmethod
     def serialize_args(self, value: T) -> str:
+        """Serialize the function arguments into a JSON string."""
         ...
 
     async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
+        """Parse an async iterable of string chunks into the function arguments."""
         return self.parse_args([chunk async for chunk in arguments])
 
     async def aserialize_args(self, value: T) -> str:
+        """Serialize the function arguments into a JSON string."""
         return self.serialize_args(value)
 
 
