@@ -1,4 +1,4 @@
-# Backend/LLM Configuration
+# LLM Configuration
 
 Currently two backends are available
 

@@ -1,4 +1,4 @@
-# Usage with Type Checking
+# Type Checking
 
 Many type checkers will raise warnings or errors for functions with the `@prompt` decorator due to the function having no body or return value. There are several ways to deal with these.
 

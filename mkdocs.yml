@@ -56,12 +56,11 @@ validation:
 
 nav:
   - Overview: index.md
-  - Configuration:
-      - configuration.md
-      - usage-with-type-checking.md
   - chat-prompting.md
   - asyncio.md
   - streaming.md
+  - configuration.md
+  - type-checking.md
   - Examples:
       - examples/registering_custom_type.ipynb
       - examples/retrieval_augmented_generation.ipynb
