@@ -1,0 +1,10 @@
+/* Hide "In" labels */
+.jp-InputArea-prompt,
+.jp-InputPrompt {
+  display: none !important;
+}
+
+/* Hide "Out" labels */
+.jp-OutputPrompt {
+  display: none !important;
+}
