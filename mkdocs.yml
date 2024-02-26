@@ -3,6 +3,10 @@ site_description: Seamlessly integrate LLMs as Python functions
 strict: true
 site_url: https://magentic.dev/
 
+repo_name: jackmpcollins/magentic
+repo_url: https://github.com/jackmpcollins/magentic
+edit_uri: edit/main/docs/
+
 theme:
   name: material
   palette:
@@ -26,9 +30,21 @@ theme:
     - navigation.instant.progress
     - search.suggest
 
-repo_name: jackmpcollins/magentic
-repo_url: https://github.com/jackmpcollins/magentic
-edit_uri: edit/main/docs/
+plugins:
+  - mkdocs-jupyter:
+      # ignore_h1_titles: true
+      execute: false
+
+markdown_extensions:
+  - tables
+  - toc:
+      permalink: true
+      title: Page contents
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      pygments_lang_class: true
+  - pymdownx.extra
 
 # https://www.mkdocs.org/user-guide/configuration/#validation
 validation:
@@ -44,14 +60,3 @@ nav:
   - chat-prompting.md
   - asyncio.md
   - streaming.md
-
-markdown_extensions:
-  - tables
-  - toc:
-      permalink: true
-      title: Page contents
-  - admonition
-  - pymdownx.details
-  - pymdownx.highlight:
-      pygments_lang_class: true
-  - pymdownx.extra
