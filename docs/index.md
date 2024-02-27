@@ -10,8 +10,6 @@ Easily integrate Large Language Models into your Python code. Simply use the `@p
 - **Compatible:** Use `@prompt` functions as normal functions, including with decorators like `@lru_cache`.
 - **Type Annotated:** Works with linters and IDEs.
 
-<!-- Continue reading for sample usage, or go straight to the [examples directory](examples/). -->
-
 ## Installation
 
 ```sh
