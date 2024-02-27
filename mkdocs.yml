@@ -46,7 +46,7 @@ markdown_extensions:
   - pymdownx.extra
 
 extra_css:
-  - css/hide-jupyter-io-labels.css
+  - css/jupyter-notebook.css
 
 extra:
   analytics:
