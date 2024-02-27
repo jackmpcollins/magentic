@@ -98,6 +98,9 @@ mark-parentheses = false
 known-first-party = ["magentic"]
 
 [tool.ruff.lint.per-file-ignores]
+"docs/examples/*" = [
+  "T20",  # flake8-print
+]
 "examples/*" = [
   "T20",  # flake8-print
 ]
