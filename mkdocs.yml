@@ -33,6 +33,7 @@ plugins:
   - mkdocs-jupyter:
       # ignore_h1_titles: true
       execute: false
+  - search
 
 markdown_extensions:
   - tables
