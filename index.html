@@ -158,6 +158,45 @@
     
     
     
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
     
       <div class="md-header__source">
         <a href="https://github.com/jackmpcollins/magentic" title="Go to repository" class="md-source" data-md-component="source">
@@ -288,6 +327,39 @@
       Usage
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      @prompt
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functioncall" class="md-nav__link">
+    <span class="md-ellipsis">
+      FunctionCall
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prompt_chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      @prompt_chain
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -550,6 +622,39 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Usage">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      @prompt
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#functioncall" class="md-nav__link">
+    <span class="md-ellipsis">
+      FunctionCall
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#prompt_chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      @prompt_chain
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -593,6 +698,7 @@
 </code></pre></div>
 <p>Configure your OpenAI API key by setting the <code>OPENAI_API_KEY</code> environment variable or using <code>openai.api_key = "sk-..."</code>. See the <a href="https://github.com/openai/openai-python#usage">OpenAI Python library documentation</a> for more information.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
+<h3 id="prompt">@prompt<a class="headerlink" href="#prompt" title="Permanent link">&para;</a></h3>
 <p>The <code>@prompt</code> decorator allows you to define a template for a Large Language Model (LLM) prompt as a Python function. When this function is called, the arguments are inserted into the template, then this prompt is sent to an LLM which generates the function output.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
 
@@ -625,6 +731,7 @@
 <span class="n">create_superhero</span><span class="p">(</span><span class="s2">&quot;Garden Man&quot;</span><span class="p">)</span>
 <span class="c1"># Superhero(name=&#39;Garden Man&#39;, age=30, power=&#39;Control over plants&#39;, enemies=[&#39;Pollution Man&#39;, &#39;Concrete Woman&#39;])</span>
 </code></pre></div>
+<h3 id="functioncall">FunctionCall<a class="headerlink" href="#functioncall" title="Permanent link">&para;</a></h3>
 <p>An LLM can also decide to call functions. In this case the <code>@prompt</code>-decorated function returns a <code>FunctionCall</code> object which can be called to execute the function using the arguments provided by the LLM.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
 
@@ -649,6 +756,7 @@
 <span class="n">output</span><span class="p">()</span>
 <span class="c1"># &#39;Preheating to 350 F with mode bake&#39;</span>
 </code></pre></div>
+<h3 id="prompt_chain">@prompt_chain<a class="headerlink" href="#prompt_chain" title="Permanent link">&para;</a></h3>
 <p>Sometimes the LLM requires making one or more function calls to generate a final answer. The <code>@prompt_chain</code> decorator will resolve <code>FunctionCall</code> objects automatically and pass the output back to the LLM to continue until the final answer is reached.</p>
 <p>In the following example, when <code>describe_weather</code> is called the LLM first calls the <code>get_current_weather</code> function, then uses the result of this to formulate its final answer which gets returned.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt_chain</span>
