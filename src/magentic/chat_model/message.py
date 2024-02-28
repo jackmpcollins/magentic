@@ -88,11 +88,11 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
         ...
 
     def format(
-        self: "AssistantMessage[str] | AssistantMessage[Placeholder[T]] | AssistantMessage[T]",
-        **kwargs: Any,
-    ) -> "AssistantMessage[str] | AssistantMessage[T]":
+        self: "AssistantMessage[Placeholder[T]] | AssistantMessage[T]", **kwargs: Any
+    ) -> "AssistantMessage[T]":
         if isinstance(self.content, str):
-            return AssistantMessage(self.content.format(**kwargs))
+            formatted_content = cast(T, self.content.format(**kwargs))
+            return AssistantMessage(formatted_content)
         if isinstance(self.content, Placeholder):
             content = cast(Placeholder[T], self.content)
             return AssistantMessage(content.format(**kwargs))
