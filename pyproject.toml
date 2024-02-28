@@ -22,6 +22,7 @@ description = "Seamlessly integrate LLMs as Python functions"
 license = "MIT"
 authors = ["Jack Collins"]
 readme = "README.md"
+homepage = "https://magentic.dev/"
 repository = "https://github.com/jackmpcollins/magentic"
 
 [tool.poetry.dependencies]
