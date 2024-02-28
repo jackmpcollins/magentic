@@ -22,6 +22,7 @@ description = "Seamlessly integrate LLMs as Python functions"
 license = "MIT"
 authors = ["Jack Collins"]
 readme = "README.md"
+homepage = "https://magentic.dev/"
 repository = "https://github.com/jackmpcollins/magentic"
 
 [tool.poetry.dependencies]
@@ -42,8 +43,14 @@ pytest-clarity = "*"
 pytest-cov = "*"
 ruff = "*"
 
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.5.3"
+mkdocs-jupyter = "^0.24.6"
+mkdocs-material = "^9.5.11"
+
 [tool.poetry.group.examples.dependencies]
 jupyter = "*"
+pandas = "^2.2.1"
 wikipedia = "*"
 
 [tool.pytest.ini_options]
@@ -92,6 +99,9 @@ mark-parentheses = false
 known-first-party = ["magentic"]
 
 [tool.ruff.lint.per-file-ignores]
+"docs/examples/*" = [
+  "T20",  # flake8-print
+]
 "examples/*" = [
   "T20",  # flake8-print
 ]

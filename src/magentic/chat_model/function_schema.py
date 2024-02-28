@@ -2,6 +2,7 @@ import inspect
 import typing
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Callable, Iterable
+from functools import singledispatch
 from typing import Any, Generic, TypeVar, cast, get_args, get_origin
 
 from pydantic import BaseModel, TypeAdapter, create_model
@@ -11,7 +12,7 @@ from magentic.streaming import (
     aiter_streamed_json_array,
     iter_streamed_json_array,
 )
-from magentic.typing import is_origin_abstract, is_origin_subclass, name_type
+from magentic.typing import is_origin_abstract, name_type
 
 T = TypeVar("T")
 
@@ -19,18 +20,28 @@ T = TypeVar("T")
 class BaseFunctionSchema(ABC, Generic[T]):
     """Converts a Python object to the JSON Schema that represents it as a function for the LLM."""
 
+    # Allow any arguments to avoid error passing type to subclasses without __init__
+    def __init__(self, *args: Any, **kwargs: Any):
+        ...
+
     @property
     @abstractmethod
     def name(self) -> str:
+        """The name of the function.
+
+        Must be a-z, A-Z, 0-9, or contain underscores and dashes, with a maximum length of 64.
+        """
         ...
 
     @property
     def description(self) -> str | None:
+        """A description of what the function does."""
         return None
 
     @property
     @abstractmethod
     def parameters(self) -> dict[str, Any]:
+        """The parameters the functions accepts as a JSON Schema object."""
         ...
 
     def dict(self) -> dict[str, Any]:
@@ -39,23 +50,97 @@ class BaseFunctionSchema(ABC, Generic[T]):
             schema["description"] = self.description
         return schema
 
+
+class AsyncFunctionSchema(BaseFunctionSchema[T], Generic[T]):
     @abstractmethod
-    def parse_args(self, arguments: Iterable[str]) -> T:
+    async def aparse_args(self, chunks: AsyncIterable[str]) -> T:
+        """Parse an async iterable of string chunks into the function arguments."""
         ...
 
-    async def aparse_args(self, arguments: AsyncIterable[str]) -> T:
-        return self.parse_args([arg async for arg in arguments])
+    @abstractmethod
+    async def aserialize_args(self, value: T) -> str:
+        """Serialize the function arguments into a JSON string."""
+        ...
+
+
+class FunctionSchema(AsyncFunctionSchema[T], Generic[T]):
+    @abstractmethod
+    def parse_args(self, chunks: Iterable[str]) -> T:
+        """Parse an iterable of string chunks into the function arguments."""
+        ...
 
     @abstractmethod
     def serialize_args(self, value: T) -> str:
+        """Serialize the function arguments into a JSON string."""
         ...
+
+    async def aparse_args(self, chunks: AsyncIterable[str]) -> T:
+        """Parse an async iterable of string chunks into the function arguments."""
+        return self.parse_args([chunk async for chunk in chunks])
+
+    async def aserialize_args(self, value: T) -> str:
+        """Serialize the function arguments into a JSON string."""
+        return self.serialize_args(value)
+
+
+# Use the singledispatch registry to map classes to FunctionSchemas
+# because this handles subclass resolution for us.
+@singledispatch
+def _async_function_schema_registry(type_: type[T]) -> AsyncFunctionSchema[T]:
+    msg = f"No FunctionSchema registered for type {type_}"
+    raise TypeError(msg)
+
+
+def async_function_schema_for_type(type_: type[T]) -> AsyncFunctionSchema[T]:
+    """Create a FunctionSchema for the given type."""
+    function_schema_cls = _async_function_schema_registry.dispatch(
+        get_origin(type_) or type_
+    )
+    return function_schema_cls(type_)
+
+
+@singledispatch
+def _function_schema_registry(type_: type[T]) -> FunctionSchema[T]:
+    msg = f"No FunctionSchema registered for type {type_}"
+    raise TypeError(msg)
+
+
+def function_schema_for_type(type_: type[T]) -> FunctionSchema[T]:
+    """Create a FunctionSchema for the given type."""
+    function_schema_cls = _function_schema_registry.dispatch(get_origin(type_) or type_)
+    return function_schema_cls(type_)
+
+
+TypeFunctionSchemaT = TypeVar(
+    "TypeFunctionSchemaT", bound=type[BaseFunctionSchema[Any]]
+)
+
+
+def register_function_schema(
+    type_: type[Any],
+) -> Callable[[TypeFunctionSchemaT], TypeFunctionSchemaT]:
+    """Register a new FunctionSchema for the given type."""
+
+    def _register(cls: TypeFunctionSchemaT) -> TypeFunctionSchemaT:
+        if cls.__abstractmethods__:
+            msg = f"FunctionSchema {cls} has not implemented abstract methods: {cls.__abstractmethods__}"
+            raise TypeError(msg)
+
+        if issubclass(cls, AsyncFunctionSchema):
+            _async_function_schema_registry.register(type_, cls)
+        if issubclass(cls, FunctionSchema):
+            _function_schema_registry.register(type_, cls)
+        return cls  # type: ignore[return-value]
+
+    return _register
 
 
 class Output(BaseModel, Generic[T]):
     value: T
 
 
-class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
+@register_function_schema(object)
+class AnyFunctionSchema(FunctionSchema[T], Generic[T]):
     """The most generic FunctionSchema that should work for most types supported by pydantic."""
 
     def __init__(self, output_type: type[T]):
@@ -74,8 +159,9 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: Iterable[str]) -> T:
-        return self._model.model_validate_json("".join(arguments)).value
+    def parse_args(self, chunks: Iterable[str]) -> T:
+        args_json = "".join(chunks)
+        return self._model.model_validate_json(args_json).value
 
     def serialize_args(self, value: T) -> str:
         return self._model(value=value).model_dump_json()
@@ -84,7 +170,8 @@ class AnyFunctionSchema(BaseFunctionSchema[T], Generic[T]):
 IterableT = TypeVar("IterableT", bound=Iterable[Any])
 
 
-class IterableFunctionSchema(BaseFunctionSchema[IterableT], Generic[IterableT]):
+@register_function_schema(Iterable)
+class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
     """FunctionSchema for types that are iterable. Can parse LLM output as a stream."""
 
     def __init__(self, output_type: type[IterableT]):
@@ -106,10 +193,10 @@ class IterableFunctionSchema(BaseFunctionSchema[IterableT], Generic[IterableT]):
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: Iterable[str]) -> IterableT:
+    def parse_args(self, chunks: Iterable[str]) -> IterableT:
         iter_items = (
             self._item_type_adapter.validate_json(item)
-            for item in iter_streamed_json_array(arguments)
+            for item in iter_streamed_json_array(chunks)
         )
         return self._model.model_validate({"value": iter_items}).value
 
@@ -120,8 +207,9 @@ class IterableFunctionSchema(BaseFunctionSchema[IterableT], Generic[IterableT]):
 AsyncIterableT = TypeVar("AsyncIterableT", bound=AsyncIterable[Any])
 
 
+@register_function_schema(AsyncIterable)
 class AsyncIterableFunctionSchema(
-    BaseFunctionSchema[AsyncIterableT], Generic[AsyncIterableT]
+    AsyncFunctionSchema[AsyncIterableT], Generic[AsyncIterableT]
 ):
     """FunctionSchema for types that are async iterable. Can parse LLM output as a stream."""
 
@@ -144,13 +232,10 @@ class AsyncIterableFunctionSchema(
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: Iterable[str]) -> AsyncIterableT:
-        raise NotImplementedError
-
-    async def aparse_args(self, arguments: AsyncIterable[str]) -> AsyncIterableT:
+    async def aparse_args(self, chunks: AsyncIterable[str]) -> AsyncIterableT:
         aiter_items = (
             self._item_type_adapter.validate_json(item)
-            async for item in aiter_streamed_json_array(arguments)
+            async for item in aiter_streamed_json_array(chunks)
         )
         if (get_origin(self._output_type) or self._output_type) in (
             typing.AsyncIterable,
@@ -160,16 +245,17 @@ class AsyncIterableFunctionSchema(
 
         raise NotImplementedError
 
-    def serialize_args(self, value: AsyncIterableT) -> str:
-        raise NotImplementedError
+    async def aserialize_args(self, value: AsyncIterableT) -> str:
+        return self._model(value=[chunk async for chunk in value]).model_dump_json()
 
 
-class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
+@register_function_schema(dict)
+class DictFunctionSchema(FunctionSchema[T], Generic[T]):
     """FunctionSchema for dict."""
 
     def __init__(self, output_type: type[T]):
         self._output_type = output_type
-        self._type_adapter: TypeAdapter[T] = TypeAdapter(output_type)
+        self._type_adapter = TypeAdapter(output_type)
 
     @property
     def name(self) -> str:
@@ -181,8 +267,9 @@ class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
         model_schema["properties"] = model_schema.get("properties", {})
         return model_schema
 
-    def parse_args(self, arguments: Iterable[str]) -> T:
-        return self._type_adapter.validate_json("".join(arguments))
+    def parse_args(self, chunks: Iterable[str]) -> T:
+        args_json = "".join(chunks)
+        return self._type_adapter.validate_json(args_json)
 
     def serialize_args(self, value: T) -> str:
         return self._type_adapter.dump_json(value).decode()
@@ -191,7 +278,8 @@ class DictFunctionSchema(BaseFunctionSchema[T], Generic[T]):
 BaseModelT = TypeVar("BaseModelT", bound=BaseModel)
 
 
-class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT]):
+@register_function_schema(BaseModel)
+class BaseModelFunctionSchema(FunctionSchema[BaseModelT], Generic[BaseModelT]):
     """FunctionSchema for pydantic BaseModel."""
 
     def __init__(self, model: type[BaseModelT]):
@@ -208,8 +296,9 @@ class BaseModelFunctionSchema(BaseFunctionSchema[BaseModelT], Generic[BaseModelT
         model_schema.pop("description", None)
         return model_schema
 
-    def parse_args(self, arguments: Iterable[str]) -> BaseModelT:
-        return self._model.model_validate_json("".join(arguments))
+    def parse_args(self, chunks: Iterable[str]) -> BaseModelT:
+        args_json = "".join(chunks)
+        return self._model.model_validate_json(args_json)
 
     def serialize_args(self, value: BaseModelT) -> str:
         return value.model_dump_json()
@@ -249,7 +338,7 @@ def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
     return create_model("FuncModel", **fields)
 
 
-class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]):
+class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
     """FunctionSchema for FunctionCall."""
 
     def __init__(self, func: Callable[..., T]):
@@ -270,8 +359,9 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
         schema.pop("title", None)
         return schema
 
-    def parse_args(self, arguments: Iterable[str]) -> FunctionCall[T]:
-        model = self._model.model_validate_json("".join(arguments))
+    def parse_args(self, chunks: Iterable[str]) -> FunctionCall[T]:
+        args_json = "".join(chunks)
+        model = self._model.model_validate_json(args_json)
         supplied_params = [
             param
             for param in inspect.signature(self._func).parameters.values()
@@ -316,20 +406,3 @@ class FunctionCallFunctionSchema(BaseFunctionSchema[FunctionCall[T]], Generic[T]
 
     def serialize_args(self, value: FunctionCall[T]) -> str:
         return self._model(**value.arguments).model_dump_json(exclude_unset=True)
-
-
-def function_schema_for_type(type_: type[Any]) -> BaseFunctionSchema[Any]:
-    """Create a FunctionSchema for the given type."""
-    if is_origin_subclass(type_, BaseModel):
-        return BaseModelFunctionSchema(type_)
-
-    if is_origin_subclass(type_, dict):
-        return DictFunctionSchema(type_)
-
-    if is_origin_subclass(type_, Iterable):
-        return IterableFunctionSchema(type_)
-
-    if is_origin_subclass(type_, AsyncIterable):
-        return AsyncIterableFunctionSchema(type_)
-
-    return AnyFunctionSchema(type_)

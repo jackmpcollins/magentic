@@ -1,0 +1,82 @@
+/* Jupyter Notebook Custom CSS */
+
+/* Hide "In" labels */
+.jp-InputPrompt,
+.jp-InputArea-prompt {
+  display: none !important;
+}
+
+/* Hide "Out" labels */
+.jp-OutputPrompt,
+.jp-OutputArea-prompt {
+  display: none !important;
+}
+
+/* Add background to cell outputs */
+.jp-OutputArea.jp-Cell-outputArea {
+  background: var(--md-code-bg-color) !important;
+}
+
+/* Make dataframes match code background color */
+.dataframe {
+  background: var(--md-code-bg-color);
+}
+.dataframe tbody tr:nth-child(odd) {
+  background-color: var(--md-code-bg-color) !important;
+}
+
+/* Make Jupyter code highlighting the same as regular code highlighting */
+
+.highlight-ipynb,
+.highlight-ipynb :is(.o, .ow) {
+  background: var(--md-code-bg-color) !important;
+  color: var(--md-code-hl-operator-color) !important;
+}
+
+.highlight-ipynb .p {
+  color: var(--md-code-hl-punctuation-color) !important;
+}
+
+.highlight-ipynb :is(.cpf, .l, .s, .sb, .sc, .s2, .si, .s1, .ss) {
+  color: var(--md-code-hl-string-color) !important;
+}
+
+.highlight-ipynb :is(.cp, .se, .sh, .sr, .sx) {
+  color: var(--md-code-hl-special-color) !important;
+}
+
+.highlight-ipynb :is(.m, .mb, .mf, .mh, .mi, .il, .mo) {
+  color: var(--md-code-hl-number-color) !important;
+}
+
+.highlight-ipynb :is(.k, .kd, .kn, .kp, .kr, .kt) {
+  color: var(--md-code-hl-keyword-color) !important;
+}
+
+.highlight-ipynb :is(.kc, .n) {
+  color: var(--md-code-hl-name-color) !important;
+}
+
+.highlight-ipynb :is(.no, .nb, .bp) {
+  color: var(--md-code-hl-constant-color) !important;
+}
+
+.highlight-ipynb :is(.nc, .ne, .nf, .nn) {
+  color: var(--md-code-hl-function-color) !important;
+}
+
+.highlight-ipynb :is(.nd, .ni, .nl, .nt) {
+  color: var(--md-code-hl-keyword-color) !important;
+}
+
+.highlight-ipynb :is(.c, .cm, .c1, .ch, .cs, .sd) {
+  color: var(--md-code-hl-comment-color) !important;
+}
+
+.highlight-ipynb :is(.na, .nv, .vc, .vg, .vi) {
+  color: var(--md-code-hl-variable-color) !important;
+}
+
+.highlight-ipynb :is(.ge, .gr, .gh, .go, .gp, .gs, .gu, .gt) {
+  color: var(--md-code-hl-generic-color) !important;
+}

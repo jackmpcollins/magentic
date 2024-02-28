@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
+    Placeholder,
     SystemMessage,
     UserMessage,
 )
@@ -70,6 +71,19 @@ def test_chatpromptfunction_format(message_templates, expected_messages):
         ...
 
     assert func.format(param="arg") == expected_messages
+
+
+def test_chatpromptfunction_format_with_placeholder():
+    class Country(BaseModel):
+        name: str
+
+    @chatprompt(
+        AssistantMessage(Placeholder(Country, "country")),
+    )
+    def func(country: Country) -> str:
+        ...
+
+    assert func.format(Country(name="USA")) == [AssistantMessage(Country(name="USA"))]
 
 
 def test_chatpromptfunction_call():
