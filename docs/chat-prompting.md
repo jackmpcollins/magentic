@@ -74,3 +74,48 @@ get_similar_quote(
 ```
 
 `Placeholder` can also be utilized in the `format` method of custom `Message` subclasses to provide an explicit way of inserting values from the function arguments. For example, see `UserImageMessage` in (TODO: link to GPT-vision page).
+
+## FunctionCall
+
+The content of an `AssistantMessage` can be a `FunctionCall`. This can be used to demonstrate to the LLM when/how it should call a function.
+
+```python
+from magentic import (
+    chatprompt,
+    AssistantMessage,
+    FunctionCall,
+    UserMessage,
+    SystemMessage,
+)
+
+
+def change_music_volume(increment: int):
+    """Change music volume level. Min 1, max 10."""
+    print(f"Music volume change: {increment}")
+
+
+def order_food(food: str, amount: int):
+    """Order food."""
+    print(f"Ordered {amount} {food}")
+
+
+@chatprompt(
+    SystemMessage(
+        "You are hosting a party and must keep the guests happy."
+        "Call functions as needed. Do not respond directly."
+    ),
+    UserMessage("It's pretty loud in here!"),
+    AssistantMessage(FunctionCall(change_music_volume, -2)),
+    UserMessage("{request}"),
+    functions=[change_music_volume, order_food],
+)
+def adjust_for_guest(request: str) -> FunctionCall[None]:
+    ...
+
+
+func = adjust_for_guest("Do you have any more food?")
+func()
+# Ordered 3 pizza
+```
+
+To include the result of calling the function in the messages use a `FunctionResultMessage`.
