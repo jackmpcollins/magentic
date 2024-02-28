@@ -26,6 +26,8 @@ Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variab
 
 ## Usage
 
+### @prompt
+
 The `@prompt` decorator allows you to define a template for a Large Language Model (LLM) prompt as a Python function. When this function is called, the arguments are inserted into the template, then this prompt is sent to an LLM which generates the function output.
 
 ```python
@@ -64,6 +66,8 @@ create_superhero("Garden Man")
 # Superhero(name='Garden Man', age=30, power='Control over plants', enemies=['Pollution Man', 'Concrete Woman'])
 ```
 
+### FunctionCall
+
 An LLM can also decide to call functions. In this case the `@prompt`-decorated function returns a `FunctionCall` object which can be called to execute the function using the arguments provided by the LLM.
 
 ```python
@@ -90,6 +94,8 @@ output = configure_oven("cookies!")
 output()
 # 'Preheating to 350 F with mode bake'
 ```
+
+### @prompt_chain
 
 Sometimes the LLM requires making one or more function calls to generate a final answer. The `@prompt_chain` decorator will resolve `FunctionCall` objects automatically and pass the output back to the LLM to continue until the final answer is reached.
 
