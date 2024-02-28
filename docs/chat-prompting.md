@@ -1,11 +1,9 @@
 # Chat Prompting
 
-The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages as a template rather than a single text prompt. This can be used to provide a system message or for few-shot prompting where you provide example responses to guide the model's output. Format fields denoted by curly braces `{example}` will be filled in all messages - use the `escape_braces` function to prevent a string being used as a template.
+The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages as a template rather than a single text prompt. This can be used to provide a system message or for few-shot prompting where you provide example responses to guide the model's output. Format fields denoted by curly braces `{example}` will be filled in all messages (except `FunctionResultMessage`).
 
 ```python
 from magentic import chatprompt, AssistantMessage, SystemMessage, UserMessage
-from magentic.chatprompt import escape_braces
-
 from pydantic import BaseModel
 
 
@@ -31,6 +29,18 @@ def get_movie_quote(movie: str) -> Quote:
 
 get_movie_quote("Iron Man")
 # Quote(quote='I am Iron Man.', character='Tony Stark')
+```
+
+To prevent curly braces from being interpreted as format fields, use the `escape_braces` function to escape them in strings.
+
+```python
+from magentic.chatprompt import escape_braces
+
+string_with_braces = "Curly braces like {example} will be filled in!"
+escaped_string = escape_braces(string_with_braces)
+# 'Curly braces {{example}} will be filled in!'
+escaped_string.format(example="test")
+# 'Curly braces {example} will be filled in!'
 ```
 
 ## Placeholder
