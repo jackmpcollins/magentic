@@ -13,30 +13,30 @@ T = TypeVar("T")
 ImageContentT = TypeVar("ImageContentT")
 
 
-class ImageUserMessage(Message[ImageContentT], Generic[ImageContentT]):
+class UserImageMessage(Message[ImageContentT], Generic[ImageContentT]):
     @overload
     def format(
-        self: "ImageUserMessage[Placeholder[T]]", **kwargs: Any
-    ) -> "ImageUserMessage[T]":
+        self: "UserImageMessage[Placeholder[T]]", **kwargs: Any
+    ) -> "UserImageMessage[T]":
         ...
 
     @overload
-    def format(self: "ImageUserMessage[T]", **kwargs: Any) -> "ImageUserMessage[T]":
+    def format(self: "UserImageMessage[T]", **kwargs: Any) -> "UserImageMessage[T]":
         ...
 
     def format(
-        self: "ImageUserMessage[Placeholder[T]] | ImageUserMessage[T]",
+        self: "UserImageMessage[Placeholder[T]] | UserImageMessage[T]",
         **kwargs: Any,
-    ) -> "ImageUserMessage[T]":
+    ) -> "UserImageMessage[T]":
         """Format the message using the given function arguments."""
         if isinstance(self.content, Placeholder):
-            return ImageUserMessage(self.content.format(**kwargs))
-        return ImageUserMessage(self.content)
+            return UserImageMessage(self.content.format(**kwargs))
+        return UserImageMessage(self.content)
 
 
-@message_to_openai_message.register(ImageUserMessage)
+@message_to_openai_message.register(UserImageMessage)
 def _(
-    message: ImageUserMessage[bytes] | ImageUserMessage[str],
+    message: UserImageMessage[bytes] | UserImageMessage[str],
 ) -> ChatCompletionMessageParam:
     if isinstance(message.content, bytes):
         base64_image = base64.b64encode(message.content).decode("utf-8")
