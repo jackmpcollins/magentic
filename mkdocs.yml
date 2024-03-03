@@ -78,6 +78,7 @@ nav:
   - chat-prompting.md
   - asyncio.md
   - streaming.md
+  - vision.md
   - configuration.md
   - type-checking.md
   - Examples:

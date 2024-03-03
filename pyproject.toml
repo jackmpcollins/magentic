@@ -10,6 +10,7 @@ strict = true
 
 [[tool.mypy.overrides]]
 module = [
+    "filetype",
     "litellm",
     "litellm.utils",
 ]
@@ -27,6 +28,7 @@ repository = "https://github.com/jackmpcollins/magentic"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
+filetype = "*"
 litellm = {version = ">=1.0.0", optional = true}
 openai = ">=1.0"
 pydantic = ">=2.0.0"

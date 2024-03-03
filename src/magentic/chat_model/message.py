@@ -57,6 +57,7 @@ class Message(Generic[ContentT], ABC):
 
     @abstractmethod
     def format(self, **kwargs: Any) -> "Message[Any]":
+        """Format the message using the provided substitutions."""
         raise NotImplementedError
 
 

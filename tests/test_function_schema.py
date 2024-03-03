@@ -362,10 +362,13 @@ async def test_async_iterable_function_schema_aparse_args(
     ("type_", "expected_args_str", "args"),
     async_iterable_function_schema_args_test_cases,
 )
+@pytest.mark.asyncio
 async def test_async_iterable_function_schema_aserialize_args(
     type_, expected_args_str, args
 ):
-    serialized_args = await AsyncIterableFunctionSchema(type_).aserialize_args(args)
+    serialized_args = await AsyncIterableFunctionSchema(type_).aserialize_args(
+        async_iter(args)
+    )
     assert json.loads(serialized_args) == json.loads(expected_args_str)
 
 
