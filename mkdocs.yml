@@ -79,6 +79,7 @@ nav:
   - asyncio.md
   - streaming.md
   - vision.md
+  - formatting.md
   - configuration.md
   - type-checking.md
   - Examples:
