@@ -3,8 +3,12 @@ from pathlib import Path
 import pytest
 from typing_extensions import assert_type
 
-from magentic.chat_model.message import Placeholder
-from magentic.chat_model.openai_chat_model import message_to_openai_message
+from magentic.chat_model.message import Placeholder, UserMessage
+from magentic.chat_model.openai_chat_model import (
+    OpenaiChatModel,
+    message_to_openai_message,
+)
+from magentic.chatprompt import chatprompt
 from magentic.vision import UserImageMessage
 
 
@@ -79,3 +83,17 @@ def test_message_to_openai_message_user_image_message_bytes_png(image_bytes_png)
             }
         ],
     }
+
+
+@pytest.mark.openai
+def test_chatprompt_with_user_image_message(image_bytes_jpg):
+    @chatprompt(
+        UserMessage("Describe this image in one word."),
+        UserImageMessage(image_bytes_jpg),
+        model=OpenaiChatModel("gpt-4-vision-preview"),
+    )
+    def describe_image() -> str:
+        ...
+
+    output = describe_image()
+    assert isinstance(output, str)
