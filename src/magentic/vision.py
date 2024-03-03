@@ -14,6 +14,8 @@ ImageContentT = TypeVar("ImageContentT")
 
 
 class UserImageMessage(Message[ImageContentT], Generic[ImageContentT]):
+    """A message containing an image sent by a user to an LLM chat model."""
+
     @overload
     def format(
         self: "UserImageMessage[Placeholder[T]]", **kwargs: Any
@@ -28,7 +30,7 @@ class UserImageMessage(Message[ImageContentT], Generic[ImageContentT]):
         self: "UserImageMessage[Placeholder[T]] | UserImageMessage[T]",
         **kwargs: Any,
     ) -> "UserImageMessage[T]":
-        """Format the message using the given function arguments."""
+        """Format the message using the provided substitutions."""
         if isinstance(self.content, Placeholder):
             return UserImageMessage(self.content.format(**kwargs))
         return UserImageMessage(self.content)
