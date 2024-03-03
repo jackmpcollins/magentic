@@ -9,7 +9,7 @@ from magentic.chat_model.openai_chat_model import (
     message_to_openai_message,
 )
 
-T = TypeVar("T")
+T = TypeVar("T", bytes, str)
 ImageContentT = TypeVar("ImageContentT")
 
 
