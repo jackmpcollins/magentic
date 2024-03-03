@@ -1,6 +1,7 @@
 import base64
 from typing import Any, Generic, TypeVar, overload
 
+import filetype
 from openai.types.chat import ChatCompletionMessageParam
 
 from magentic.chat_model.message import Message, Placeholder
@@ -41,8 +42,9 @@ def _(
     message: UserImageMessage[bytes] | UserImageMessage[str],
 ) -> ChatCompletionMessageParam:
     if isinstance(message.content, bytes):
+        mime_type = filetype.guess_mime(message.content)
         base64_image = base64.b64encode(message.content).decode("utf-8")
-        url = f"data:image/jpeg;base64,{base64_image}"
+        url = f"data:{mime_type};base64,{base64_image}"
     elif isinstance(message.content, str):
         url = message.content
     else:
