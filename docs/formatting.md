@@ -2,7 +2,7 @@
 
 ## The `format` Method
 
-Functions created using magentic decorators expose a `format` method that accepts the same parameters as the function itself but returns the completed prompt that will be sent to the model. For `@prompt` this is a string, and for `@chatprompt` this is a list of `Message` objects. The `format` method can be used to test that the final prompt created by a magentic function is formatted as expected.
+Functions created using magentic decorators expose a `format` method that accepts the same parameters as the function itself but returns the completed prompt that will be sent to the model. For `@prompt` this method returns a string, and for `@chatprompt` it returns a list of `Message` objects. The `format` method can be used to test that the final prompt created by a magentic function is formatted as expected.
 
 ```python
 from magentic import prompt
