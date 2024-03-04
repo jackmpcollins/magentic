@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://magentic.dev/type-checking/">
+        <link rel="canonical" href="https://magentic.dev/formatting/">
       
       
-        <link rel="prev" href="../configuration/">
+        <link rel="prev" href="../chat-prompting/">
       
       
-        <link rel="next" href="../examples/registering_custom_type/">
+        <link rel="next" href="../asyncio/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Type Checking - Magentic</title>
+        <title>Formatting - Magentic</title>
       
     
     
@@ -88,7 +88,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#type-checking" class="md-skip">
+        <a href="#formatting" class="md-skip">
           Skip to content
         </a>
       
@@ -124,7 +124,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Type Checking
+              Formatting
             
           </span>
         </div>
@@ -304,10 +304,30 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../formatting/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Formatting
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -316,6 +336,55 @@
   
 
       </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="Page contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Page contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-format-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      The format Method
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classes-for-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Classes for Formatting
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Formatting
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -404,19 +473,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../type-checking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -425,7 +485,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -559,6 +618,41 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Page contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-format-method" class="md-nav__link">
+    <span class="md-ellipsis">
+      The format Method
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#classes-for-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Classes for Formatting
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#custom-formatting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Custom Formatting
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -572,7 +666,7 @@
                   
 
   
-    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/type-checking.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/formatting.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
     </a>
@@ -580,25 +674,83 @@
   
 
 
-<h1 id="type-checking">Type Checking<a class="headerlink" href="#type-checking" title="Permanent link">&para;</a></h1>
-<p>Many type checkers will raise warnings or errors for functions with the <code>@prompt</code> decorator due to the function having no body or return value. There are several ways to deal with these.</p>
-<ol>
-<li>Disable the check globally for the type checker. For example in mypy by disabling error code <code>empty-body</code>.
-   <div class="language-toml highlight"><pre><span></span><code><span class="c1"># pyproject.toml</span>
-<span class="k">[tool.mypy]</span>
-<span class="n">disable_error_code</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;empty-body&quot;</span><span class="p">]</span>
-</code></pre></div></li>
-<li>Make the function body <code>...</code> (this does not satisfy mypy) or <code>raise</code>.
-   <div class="language-python highlight"><pre><span></span><code><span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Choose a color&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">random_color</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<h1 id="formatting">Formatting<a class="headerlink" href="#formatting" title="Permanent link">&para;</a></h1>
+<h2 id="the-format-method">The <code>format</code> Method<a class="headerlink" href="#the-format-method" title="Permanent link">&para;</a></h2>
+<p>Functions created using magentic decorators expose a <code>format</code> method that accepts the same parameters as the function itself but returns the completed prompt that will be sent to the model. For <code>@prompt</code> this method returns a string, and for <code>@chatprompt</code> it returns a list of <code>Message</code> objects. The <code>format</code> method can be used to test that the final prompt created by a magentic function is formatted as expected.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Write a short poem about </span><span class="si">{topic}</span><span class="s2">.&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">create_poem</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
     <span class="o">...</span>
-</code></pre></div></li>
-<li>Use comment <code># type: ignore[empty-body]</code> on each function. In this case you can add a docstring instead of <code>...</code>.
-   <div class="language-python highlight"><pre><span></span><code><span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Choose a color&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">random_color</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>  <span class="c1"># type: ignore[empty-body]</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a random color.&quot;&quot;&quot;</span>
-</code></pre></div></li>
-</ol>
+
+
+<span class="n">create_poem</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;fruit&quot;</span><span class="p">)</span>
+<span class="c1"># &#39;Write a short poem about fruit.&#39;</span>
+</code></pre></div>
+<h2 id="classes-for-formatting">Classes for Formatting<a class="headerlink" href="#classes-for-formatting" title="Permanent link">&para;</a></h2>
+<p>By default, when a list is used in a prompt template string it is formatted using its Python representation.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
+<span class="kn">from</span> <span class="nn">magentic.formatting</span> <span class="kn">import</span> <span class="n">BulletedList</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Continue the list:</span><span class="se">\n</span><span class="si">{items}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_next_items</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+    <span class="o">...</span>
+
+
+<span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;apple&quot;</span><span class="p">,</span> <span class="s2">&quot;banana&quot;</span><span class="p">,</span> <span class="s2">&quot;cherry&quot;</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">get_next_items</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">))</span>
+<span class="c1"># Continue the list:</span>
+<span class="c1"># [&#39;apple&#39;, &#39;banana&#39;, &#39;cherry&#39;]</span>
+</code></pre></div>
+<p>However, the LLM might respond better to a prompt in which the list is formatted more clearly or the items are numbered. The <code>BulletedList</code>, <code>NumberedList</code>, <code>BulletedDict</code> and <code>NumberedDict</code> classes are provided to enable this.</p>
+<p>For example, to modify the above prompt to contain a numbered list of the items, the <code>NumberedList</code> class can be used. This behaves exactly like a regular Python <code>list</code> except for how it appears when inserted into a formatted string. This class can also be used as the type annotation for <code>items</code> parameter to ensure that this prompt always contains a numbered list.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
+<span class="kn">from</span> <span class="nn">magentic.formatting</span> <span class="kn">import</span> <span class="n">NumberedList</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Continue the list:</span><span class="se">\n</span><span class="si">{items}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="hll"><span class="k">def</span> <span class="nf">get_next_items</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">NumberedList</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
+</span>    <span class="o">...</span>
+
+
+<span class="hll"><span class="n">items</span> <span class="o">=</span> <span class="n">NumberedList</span><span class="p">([</span><span class="s2">&quot;apple&quot;</span><span class="p">,</span> <span class="s2">&quot;banana&quot;</span><span class="p">,</span> <span class="s2">&quot;cherry&quot;</span><span class="p">])</span>
+</span><span class="nb">print</span><span class="p">(</span><span class="n">get_next_items</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">))</span>
+<span class="c1"># Continue the list:</span>
+<span class="c1"># 1. apple</span>
+<span class="c1"># 2. banana</span>
+<span class="c1"># 3. cherry</span>
+</code></pre></div>
+<h2 id="custom-formatting">Custom Formatting<a class="headerlink" href="#custom-formatting" title="Permanent link">&para;</a></h2>
+<p>When objects are inserted into formatted strings in Python, the <code>__format__</code> method is called. By defining or modifying this method you can control how an object is converted to a string in the prompt. If you own the class you can modify the <code>__format__</code> method directly. Otherwise for third-party classes you will need to create a subcless.</p>
+<p>Here's an example of how to represent a dictionary as a bulleted list.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">TypeVar</span>
+
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
+
+<span class="n">K</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;K&quot;</span><span class="p">)</span>
+<span class="n">V</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;V&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">BulletedDict</span><span class="p">(</span><span class="nb">dict</span><span class="p">[</span><span class="n">K</span><span class="p">,</span> <span class="n">V</span><span class="p">]):</span>
+    <span class="k">def</span> <span class="fm">__format__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">format_spec</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="c1"># Here, you could use &#39;format_spec&#39; to customize the formatting further if needed</span>
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;- </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">items</span><span class="p">())</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Identify the odd one out:</span><span class="se">\n</span><span class="si">{items}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">find_odd_one_out</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">BulletedDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="o">...</span>
+
+
+<span class="n">items</span> <span class="o">=</span> <span class="n">BulletedDict</span><span class="p">({</span><span class="s2">&quot;sky&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;grass&quot;</span><span class="p">:</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;sun&quot;</span><span class="p">:</span> <span class="s2">&quot;purple&quot;</span><span class="p">})</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">find_odd_one_out</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">items</span><span class="p">))</span>
+<span class="c1"># Identify the odd one out:</span>
+<span class="c1"># - sky: blue</span>
+<span class="c1"># - grass: green</span>
+<span class="c1"># - sun: purple</span>
+</code></pre></div>
 
 
 
