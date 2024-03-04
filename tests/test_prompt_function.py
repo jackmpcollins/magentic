@@ -24,6 +24,18 @@ def test_promptfunction_format():
     assert func.format("arg") == "Test arg."
 
 
+def test_promptfunction_format_custom_type():
+    class CustomType:
+        def __format__(self, __format_spec: str) -> str:
+            return "custom"
+
+    @prompt("Test {param}.")
+    def func(param: CustomType) -> str:
+        ...
+
+    assert func.format(CustomType()) == "Test custom."
+
+
 def test_promptfunction_call():
     mock_model = Mock()
     mock_model.complete.return_value = AssistantMessage(content="Hello!")

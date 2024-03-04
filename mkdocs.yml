@@ -76,6 +76,7 @@ validation:
 nav:
   - Overview: index.md
   - chat-prompting.md
+  - formatting.md
   - asyncio.md
   - streaming.md
   - vision.md
