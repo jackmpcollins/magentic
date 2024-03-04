@@ -44,6 +44,9 @@ class BaseFunctionSchema(ABC, Generic[T]):
         """The parameters the functions accepts as a JSON Schema object."""
         ...
 
+    def tool_dict(self) -> dict[str, Any]:
+        return {"type": "function", "function": self.dict()}
+
     def dict(self) -> dict[str, Any]:
         schema = {"name": self.name, "parameters": self.parameters}
         if self.description:

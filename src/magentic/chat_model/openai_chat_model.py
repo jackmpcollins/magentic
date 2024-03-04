@@ -97,8 +97,8 @@ def openai_chatcompletion_create(
     seed: int | None = None,
     stop: list[str] | None = None,
     temperature: float | None = None,
-    functions: list[dict[str, Any]] | None = None,
-    function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
+    tools: list[dict[str, Any]] | None = None,
+    tool_choice: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> Iterator[ChatCompletionChunk]:
     client_kwargs: dict[str, Any] = {
         "api_key": api_key,
@@ -115,14 +115,14 @@ def openai_chatcompletion_create(
     # `openai.OpenAI().chat.completions.create` doesn't accept `None` for some args
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
-    if functions:
-        kwargs["functions"] = functions
-    if function_call:
-        kwargs["function_call"] = function_call
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
     if stop is not None:
         kwargs["stop"] = stop
+    if tools:
+        kwargs["tools"] = tools
+    if tool_choice:
+        kwargs["tool_choice"] = tool_choice
 
     response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
         model=model,
@@ -145,8 +145,8 @@ async def openai_chatcompletion_acreate(
     seed: int | None = None,
     stop: list[str] | None = None,
     temperature: float | None = None,
-    functions: list[dict[str, Any]] | None = None,
-    function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
+    tools: list[dict[str, Any]] | None = None,
+    tool_choice: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> AsyncIterator[ChatCompletionChunk]:
     client_kwargs: dict[str, Any] = {
         "api_key": api_key,
@@ -162,14 +162,14 @@ async def openai_chatcompletion_acreate(
     # `openai.AsyncOpenAI().chat.completions.create` doesn't accept `None` for some args
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
-    if functions:
-        kwargs["functions"] = functions
-    if function_call:
-        kwargs["function_call"] = function_call
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
     if stop is not None:
         kwargs["stop"] = stop
+    if tools:
+        kwargs["tools"] = tools
+    if tool_choice:
+        kwargs["tool_choice"] = tool_choice
 
     response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
         model=model,
@@ -243,11 +243,11 @@ class OpenaiChatModel(ChatModel):
         function_schemas: list[BeseFunctionSchemaT],
     ) -> BeseFunctionSchemaT | None:
         """Select the function schema based on the first response chunk."""
-        if not chunk.choices[0].delta.function_call:
+        if not chunk.choices[0].delta.tool_calls:
             return None
 
-        function_name = chunk.choices[0].delta.function_call.name
-        if function_name is None:
+        function = chunk.choices[0].delta.tool_calls[0].function
+        if function is None or function.name is None:
             msg = f"OpenAI function call name is None. Chunk: {chunk.model_dump_json()}"
             raise ValueError(msg)
 
@@ -255,7 +255,7 @@ class OpenaiChatModel(ChatModel):
             function_schema.name: function_schema
             for function_schema in function_schemas
         }
-        return function_schema_by_name[function_name]
+        return function_schema_by_name[function.name]
 
     @overload
     def complete(
@@ -329,7 +329,7 @@ class OpenaiChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
-        openai_functions = [schema.dict() for schema in function_schemas]
+        openai_tools = [schema.tool_dict() for schema in function_schemas]
         response = openai_chatcompletion_create(
             api_key=self.api_key,
             api_type=self.api_type,
@@ -340,10 +340,13 @@ class OpenaiChatModel(ChatModel):
             seed=self.seed,
             stop=stop,
             temperature=self.temperature,
-            functions=openai_functions,
-            function_call=(
-                {"name": openai_functions[0]["name"]}
-                if len(openai_functions) == 1 and not allow_string_output
+            tools=openai_tools,
+            tool_choice=(
+                {
+                    "type": "function",
+                    "function": {"name": openai_tools[0]["function"]["name"]},
+                }
+                if len(openai_tools) == 1 and not allow_string_output
                 else None
             ),
         )
@@ -359,10 +362,12 @@ class OpenaiChatModel(ChatModel):
         if function_schema:
             try:
                 content = function_schema.parse_args(
-                    chunk.choices[0].delta.function_call.arguments
+                    chunk.choices[0].delta.tool_calls[0].function.arguments
                     for chunk in response
-                    if chunk.choices[0].delta.function_call
-                    and chunk.choices[0].delta.function_call.arguments is not None
+                    if chunk.choices[0].delta.tool_calls
+                    and chunk.choices[0].delta.tool_calls[0].function
+                    and chunk.choices[0].delta.tool_calls[0].function.arguments
+                    is not None
                 )
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
@@ -459,7 +464,7 @@ class OpenaiChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        openai_functions = [schema.dict() for schema in function_schemas]
+        openai_tools = [schema.tool_dict() for schema in function_schemas]
         response = await openai_chatcompletion_acreate(
             api_key=self.api_key,
             api_type=self.api_type,
@@ -470,10 +475,13 @@ class OpenaiChatModel(ChatModel):
             seed=self.seed,
             stop=stop,
             temperature=self.temperature,
-            functions=openai_functions,
-            function_call=(
-                {"name": openai_functions[0]["name"]}
-                if len(openai_functions) == 1 and not allow_string_output
+            tools=openai_tools,
+            tool_choice=(
+                {
+                    "type": "function",
+                    "function": {"name": openai_tools[0]["function"]["name"]},
+                }
+                if len(openai_tools) == 1 and not allow_string_output
                 else None
             ),
         )
@@ -489,10 +497,12 @@ class OpenaiChatModel(ChatModel):
         if function_schema:
             try:
                 content = await function_schema.aparse_args(
-                    chunk.choices[0].delta.function_call.arguments
+                    chunk.choices[0].delta.tool_calls[0].function.arguments
                     async for chunk in response
-                    if chunk.choices[0].delta.function_call
-                    and chunk.choices[0].delta.function_call.arguments is not None
+                    if chunk.choices[0].delta.tool_calls
+                    and chunk.choices[0].delta.tool_calls[0].function
+                    and chunk.choices[0].delta.tool_calls[0].function.arguments
+                    is not None
                 )
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
