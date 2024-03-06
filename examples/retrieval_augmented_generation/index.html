@@ -1089,14 +1089,12 @@ from magentic import prompt, prompt_chain</div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="nd">@prompt</span><span class="p">(</span>
     <span class="s2">"Tell me about </span><span class="si">{topic}</span><span class="s2"> in simple terms. If you do not know, just say 'I do not know'."</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">explain_standard</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">explain_standard</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2">@prompt(
     "Tell me about {topic} in simple terms. If you do not know, just say 'I do not know'."
 )
-def explain_standard(topic: str) -&gt; str:
-    ...</div>
+def explain_standard(topic: str) -&gt; str: ...</div>
 </div>
 </div>
 </div>
@@ -1280,8 +1278,7 @@ def explain_standard(topic: str) -&gt; str:
 <span class="sd">{context}</span>
 <span class="sd">"""</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">explain_using_context</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">explain_using_context</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="k">def</span> <span class="nf">explain_using_wikipedia_context</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1300,8 +1297,7 @@ context
 {context}
 """
 )
-def explain_using_context(topic: str, context) -&gt; str:
-    ...
+def explain_using_context(topic: str, context) -&gt; str: ...
 
 
 def explain_using_wikipedia_context(topic: str) -&gt; str:
@@ -1366,8 +1362,7 @@ explain_using_wikipedia_context("Wagner Coup")</div>
     <span class="s2">"Tell me about </span><span class="si">{topic}</span><span class="s2"> in simple terms. Only query wikipedia if you do not already know about </span><span class="si">{topic}</span><span class="s2">."</span><span class="p">,</span>
     <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">wikipedia_summary</span><span class="p">],</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">explain_using_function_calling</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">explain_using_function_calling</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="n">explain_using_function_calling</span><span class="p">(</span><span class="s2">"Wagner Coup"</span><span class="p">)</span>
@@ -1381,8 +1376,7 @@ explain_using_wikipedia_context("Wagner Coup")</div>
     "Tell me about {topic} in simple terms. Only query wikipedia if you do not already know about {topic}.",
     functions=[wikipedia_summary],
 )
-def explain_using_function_calling(topic: str) -&gt; str:
-    ...
+def explain_using_function_calling(topic: str) -&gt; str: ...
 
 
 explain_using_function_calling("Wagner Coup")</div>
@@ -1498,8 +1492,7 @@ explain_using_function_calling("Wagner Coup")</div>
 </clipboard-copy>
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="nd">@prompt</span><span class="p">(</span><span class="s2">"Tell me about </span><span class="si">{topic}</span><span class="s2"> in simple terms. If you do not know, return null."</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">explain_or_none</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">explain_or_none</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="k">def</span> <span class="nf">explain_final</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
@@ -1513,8 +1506,7 @@ explain_using_function_calling("Wagner Coup")</div>
 <span class="n">explain_final</span><span class="p">(</span><span class="s2">"Wagner Coup"</span><span class="p">)</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-9">@prompt("Tell me about {topic} in simple terms. If you do not know, return null.")
-def explain_or_none(topic: str) -&gt; str | None:
-    ...
+def explain_or_none(topic: str) -&gt; str | None: ...
 
 
 def explain_final(topic: str) -&gt; str:

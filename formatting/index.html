@@ -681,8 +681,7 @@
 
 
 <span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Write a short poem about </span><span class="si">{topic}</span><span class="s2">.&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">create_poem</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">create_poem</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="n">create_poem</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s2">&quot;fruit&quot;</span><span class="p">)</span>
@@ -695,8 +694,7 @@
 
 
 <span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Continue the list:</span><span class="se">\n</span><span class="si">{items}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">get_next_items</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">get_next_items</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
 
 
 <span class="n">items</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;apple&quot;</span><span class="p">,</span> <span class="s2">&quot;banana&quot;</span><span class="p">,</span> <span class="s2">&quot;cherry&quot;</span><span class="p">]</span>
@@ -711,13 +709,12 @@
 
 
 <span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Continue the list:</span><span class="se">\n</span><span class="si">{items}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="hll"><span class="k">def</span> <span class="nf">get_next_items</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">NumberedList</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-</span>    <span class="o">...</span>
+<span class="hll"><span class="k">def</span> <span class="nf">get_next_items</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">NumberedList</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
+</span>
 
-
-<span class="hll"><span class="n">items</span> <span class="o">=</span> <span class="n">NumberedList</span><span class="p">([</span><span class="s2">&quot;apple&quot;</span><span class="p">,</span> <span class="s2">&quot;banana&quot;</span><span class="p">,</span> <span class="s2">&quot;cherry&quot;</span><span class="p">])</span>
-</span><span class="nb">print</span><span class="p">(</span><span class="n">get_next_items</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">))</span>
-<span class="c1"># Continue the list:</span>
+<span class="n">items</span> <span class="o">=</span> <span class="n">NumberedList</span><span class="p">([</span><span class="s2">&quot;apple&quot;</span><span class="p">,</span> <span class="s2">&quot;banana&quot;</span><span class="p">,</span> <span class="s2">&quot;cherry&quot;</span><span class="p">])</span>
+<span class="hll"><span class="nb">print</span><span class="p">(</span><span class="n">get_next_items</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">items</span><span class="o">=</span><span class="n">items</span><span class="p">))</span>
+</span><span class="c1"># Continue the list:</span>
 <span class="c1"># 1. apple</span>
 <span class="c1"># 2. banana</span>
 <span class="c1"># 3. cherry</span>
@@ -740,8 +737,7 @@
 
 
 <span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Identify the odd one out:</span><span class="se">\n</span><span class="si">{items}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">find_odd_one_out</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">BulletedDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">find_odd_one_out</span><span class="p">(</span><span class="n">items</span><span class="p">:</span> <span class="n">BulletedDict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="n">items</span> <span class="o">=</span> <span class="n">BulletedDict</span><span class="p">({</span><span class="s2">&quot;sky&quot;</span><span class="p">:</span> <span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;grass&quot;</span><span class="p">:</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;sun&quot;</span><span class="p">:</span> <span class="s2">&quot;purple&quot;</span><span class="p">})</span>

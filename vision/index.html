@@ -687,7 +687,7 @@
 <p>For more information visit the <a href="https://platform.openai.com/docs/guides/vision">OpenAI Vision API documentation</a>.</p>
 <h2 id="userimagemessage">UserImageMessage<a class="headerlink" href="#userimagemessage" title="Permanent link">&para;</a></h2>
 <p>The <code>UserImageMessage</code> can be used with <code>@chatprompt</code> alongside other messages. The LLM must be set to OpenAI's GPT4 Vision model <code>OpenaiChatModel("gpt-4-vision-preview")</code>. This can be done by passing the <code>model</code> parameter to <code>@chatprompt</code>, or through the other methods of <a href="../configuration/">configuration</a>.</p>
-<div class="language-Python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">UserMessage</span>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">UserMessage</span>
 <span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
 
 
@@ -699,8 +699,7 @@
     <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">),</span>
     <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4-vision-preview&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2000</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">describe_image</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="n">describe_image</span><span class="p">()</span>
@@ -708,7 +707,7 @@
 </code></pre></div>
 <h2 id="placeholder">Placeholder<a class="headerlink" href="#placeholder" title="Permanent link">&para;</a></h2>
 <p>To provide the image as a function parameter, use <code>Placeholder</code>. This substitutes a function argument into the message when the function is called.</p>
-<div class="language-Python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
 <span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
 
 
@@ -720,8 +719,7 @@
 <span class="hll">    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">)),</span>
 </span>    <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4-vision-preview&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2000</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="n">describe_image</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">)</span>
@@ -748,8 +746,7 @@
     <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="s2">&quot;image_bytes&quot;</span><span class="p">)),</span>
     <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4-vision-preview&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2000</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="n">image_bytes</span> <span class="o">=</span> <span class="n">url_to_bytes</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">)</span>

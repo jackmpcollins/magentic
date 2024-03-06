@@ -590,8 +590,7 @@
 </code></pre></div></li>
 <li>Make the function body <code>...</code> (this does not satisfy mypy) or <code>raise</code>.
    <div class="language-python highlight"><pre><span></span><code><span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Choose a color&quot;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">random_color</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">random_color</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 </code></pre></div></li>
 <li>Use comment <code># type: ignore[empty-body]</code> on each function. In this case you can add a docstring instead of <code>...</code>.
    <div class="language-python highlight"><pre><span></span><code><span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Choose a color&quot;</span><span class="p">)</span>

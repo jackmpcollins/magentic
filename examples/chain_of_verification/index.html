@@ -1050,8 +1050,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 
 
 <span class="nd">@prompt</span><span class="p">(</span><span class="s2">"</span><span class="si">{query}</span><span class="s2">"</span><span class="p">)</span>
-<span class="k">async</span> <span class="k">def</span> <span class="nf">answer_query</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">answer_query</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="nd">@prompt</span><span class="p">(</span>
@@ -1062,8 +1061,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="sd">Provide specific questions to verify the facts in the above response as related to the query.</span>
 <span class="sd">"""</span>
 <span class="p">)</span>
-<span class="k">async</span> <span class="k">def</span> <span class="nf">generate_verification_questions</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-    <span class="o">...</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">generate_verification_questions</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">response</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
 
 
 <span class="nd">@prompt</span><span class="p">(</span>
@@ -1074,8 +1072,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 
 <span class="sd">{query}"""</span>
 <span class="p">)</span>
-<span class="k">async</span> <span class="k">def</span> <span class="nf">answer_query_with_context</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">answer_query_with_context</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-1"># Define the prompts
 
@@ -1085,8 +1082,7 @@ from magentic import prompt
 
 
 @prompt("{query}")
-async def answer_query(query: str) -&gt; str:
-    ...
+async def answer_query(query: str) -&gt; str: ...
 
 
 @prompt(
@@ -1097,8 +1093,7 @@ Response: {response}
 Provide specific questions to verify the facts in the above response as related to the query.
 """
 )
-async def generate_verification_questions(query: str, response: str) -&gt; list[str]:
-    ...
+async def generate_verification_questions(query: str, response: str) -&gt; list[str]: ...
 
 
 @prompt(
@@ -1109,8 +1104,7 @@ Given the above context, what is the answer to the following question?
 
 {query}"""
 )
-async def answer_query_with_context(query: str, context: str) -&gt; str:
-    ...</div>
+async def answer_query_with_context(query: str, context: str) -&gt; str: ...</div>
 </div>
 </div>
 </div>

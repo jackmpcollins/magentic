@@ -727,8 +727,7 @@
     <span class="p">),</span>
     <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;What is your favorite quote from </span><span class="si">{movie}</span><span class="s2">?&quot;</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">get_movie_quote</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Quote</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">get_movie_quote</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Quote</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="n">get_movie_quote</span><span class="p">(</span><span class="s2">&quot;Iron Man&quot;</span><span class="p">)</span>
@@ -760,8 +759,7 @@
     <span class="n">AssistantMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="n">Quote</span><span class="p">,</span> <span class="s2">&quot;quote&quot;</span><span class="p">)),</span>
     <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;What is a similar quote from the same movie?&quot;</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">get_similar_quote</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">quote</span><span class="p">:</span> <span class="n">Quote</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Quote</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">get_similar_quote</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">quote</span><span class="p">:</span> <span class="n">Quote</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Quote</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="n">get_similar_quote</span><span class="p">(</span>
@@ -802,8 +800,7 @@
     <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{request}</span><span class="s2">&quot;</span><span class="p">),</span>
     <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">change_music_volume</span><span class="p">,</span> <span class="n">order_food</span><span class="p">],</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">adjust_for_guest</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span>
-    <span class="o">...</span>
+<span class="k">def</span> <span class="nf">adjust_for_guest</span><span class="p">(</span><span class="n">request</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">[</span><span class="kc">None</span><span class="p">]:</span> <span class="o">...</span>
 
 
 <span class="n">func</span> <span class="o">=</span> <span class="n">adjust_for_guest</span><span class="p">(</span><span class="s2">&quot;Do you have any more food?&quot;</span><span class="p">)</span>

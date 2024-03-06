@@ -590,13 +590,11 @@
 
 
 <span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;List ten presidents of the United States&quot;</span><span class="p">)</span>
-<span class="k">async</span> <span class="k">def</span> <span class="nf">iter_presidents</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span>
-    <span class="o">...</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">iter_presidents</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">AsyncIterable</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
 
 
 <span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Tell me more about </span><span class="si">{topic}</span><span class="s2">&quot;</span><span class="p">)</span>
-<span class="k">async</span> <span class="k">def</span> <span class="nf">tell_me_more_about</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="o">...</span>
+<span class="k">async</span> <span class="k">def</span> <span class="nf">tell_me_more_about</span><span class="p">(</span><span class="n">topic</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="c1"># For each president listed, generate a description concurrently</span>
