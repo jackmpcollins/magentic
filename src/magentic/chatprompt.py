@@ -162,8 +162,7 @@ def chatprompt(
     >>>     ),
     >>>     UserMessage("What is your favorite quote from {movie}?"),
     >>> )
-    >>> def get_movie_quote(movie: str) -> Quote:
-    >>>     ...
+    >>> def get_movie_quote(movie: str) -> Quote: ...
     >>>
     >>>
     >>> get_movie_quote("Iron Man")
