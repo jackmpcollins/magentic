@@ -16,7 +16,7 @@ For more information visit the [OpenAI Vision API documentation](https://platfor
 
 The `UserImageMessage` can be used with `@chatprompt` alongside other messages. The LLM must be set to OpenAI's GPT4 Vision model `OpenaiChatModel("gpt-4-vision-preview")`. This can be done by passing the `model` parameter to `@chatprompt`, or through the other methods of [configuration](configuration.md).
 
-```Python
+```python
 from magentic import chatprompt, OpenaiChatModel, UserMessage
 from magentic.vision import UserImageMessage
 
@@ -29,8 +29,7 @@ IMAGE_URL_WOODEN_BOARDWALK = "https://upload.wikimedia.org/wikipedia/commons/thu
     UserImageMessage(IMAGE_URL_WOODEN_BOARDWALK),
     model=OpenaiChatModel("gpt-4-vision-preview", max_tokens=2000),
 )
-def describe_image() -> str:
-    ...
+def describe_image() -> str: ...
 
 
 describe_image()
@@ -41,7 +40,7 @@ describe_image()
 
 To provide the image as a function parameter, use `Placeholder`. This substitutes a function argument into the message when the function is called.
 
-```Python hl_lines="10"
+```python hl_lines="10"
 from magentic import chatprompt, OpenaiChatModel, Placeholder, UserMessage
 from magentic.vision import UserImageMessage
 
@@ -54,8 +53,7 @@ IMAGE_URL_WOODEN_BOARDWALK = "https://upload.wikimedia.org/wikipedia/commons/thu
     UserImageMessage(Placeholder(str, "image_url")),
     model=OpenaiChatModel("gpt-4-vision-preview", max_tokens=2000),
 )
-def describe_image(image_url: str) -> str:
-    ...
+def describe_image(image_url: str) -> str: ...
 
 
 describe_image(IMAGE_URL_WOODEN_BOARDWALK)
@@ -86,8 +84,7 @@ def url_to_bytes(url: str) -> bytes:
     UserImageMessage(Placeholder(bytes, "image_bytes")),
     model=OpenaiChatModel("gpt-4-vision-preview", max_tokens=2000),
 )
-def describe_image(image_bytes: bytes) -> str:
-    ...
+def describe_image(image_bytes: bytes) -> str: ...
 
 
 image_bytes = url_to_bytes(IMAGE_URL_WOODEN_BOARDWALK)

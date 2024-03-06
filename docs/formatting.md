@@ -9,8 +9,7 @@ from magentic import prompt
 
 
 @prompt("Write a short poem about {topic}.")
-def create_poem(topic: str) -> str:
-    ...
+def create_poem(topic: str) -> str: ...
 
 
 create_poem.format("fruit")
@@ -27,8 +26,7 @@ from magentic.formatting import BulletedList
 
 
 @prompt("Continue the list:\n{items}")
-def get_next_items(items: list[str]) -> list[str]:
-    ...
+def get_next_items(items: list[str]) -> list[str]: ...
 
 
 items = ["apple", "banana", "cherry"]
@@ -47,8 +45,7 @@ from magentic.formatting import NumberedList
 
 
 @prompt("Continue the list:\n{items}")
-def get_next_items(items: NumberedList[str]) -> list[str]:
-    ...
+def get_next_items(items: NumberedList[str]) -> list[str]: ...
 
 
 items = NumberedList(["apple", "banana", "cherry"])
@@ -81,8 +78,7 @@ class BulletedDict(dict[K, V]):
 
 
 @prompt("Identify the odd one out:\n{items}")
-def find_odd_one_out(items: BulletedDict[str, str]) -> str:
-    ...
+def find_odd_one_out(items: BulletedDict[str, str]) -> str: ...
 
 
 items = BulletedDict({"sky": "blue", "grass": "green", "sun": "purple"})

@@ -7,8 +7,7 @@ from magentic import prompt, StreamedStr
 
 
 @prompt("Tell me about {country}")
-def describe_country(country: str) -> StreamedStr:
-    ...
+def describe_country(country: str) -> StreamedStr: ...
 
 
 # Print the chunks while they are being received
@@ -69,8 +68,7 @@ class Superhero(BaseModel):
 
 
 @prompt("Create a Superhero team named {name}.")
-def create_superhero_team(name: str) -> Iterable[Superhero]:
-    ...
+def create_superhero_team(name: str) -> Iterable[Superhero]: ...
 
 
 start_time = time()

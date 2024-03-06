@@ -38,12 +38,13 @@ pydantic-settings = ">=2.0.0"
 litellm = ["litellm"]
 
 [tool.poetry.group.dev.dependencies]
+blacken-docs = "^1.16.0"
 mypy = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-clarity = "*"
 pytest-cov = "*"
-ruff = "*"
+ruff = "^0.3.0"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.5.3"

@@ -20,12 +20,10 @@ class UserImageMessage(Message[ImageContentT], Generic[ImageContentT]):
     @overload
     def format(
         self: "UserImageMessage[Placeholder[T]]", **kwargs: Any
-    ) -> "UserImageMessage[T]":
-        ...
+    ) -> "UserImageMessage[T]": ...
 
     @overload
-    def format(self: "UserImageMessage[T]", **kwargs: Any) -> "UserImageMessage[T]":
-        ...
+    def format(self: "UserImageMessage[T]", **kwargs: Any) -> "UserImageMessage[T]": ...
 
     def format(
         self: "UserImageMessage[Placeholder[T]] | UserImageMessage[T]",

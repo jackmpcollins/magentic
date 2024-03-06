@@ -123,12 +123,10 @@ class ChatPromptDecorator(Protocol):
     @overload
     def __call__(  # type: ignore[overload-overlap]
         self, func: Callable[P, Awaitable[R]]
-    ) -> AsyncChatPromptFunction[P, R]:
-        ...
+    ) -> AsyncChatPromptFunction[P, R]: ...
 
     @overload
-    def __call__(self, func: Callable[P, R]) -> ChatPromptFunction[P, R]:
-        ...
+    def __call__(self, func: Callable[P, R]) -> ChatPromptFunction[P, R]: ...
 
 
 def chatprompt(
@@ -164,8 +162,7 @@ def chatprompt(
     >>>     ),
     >>>     UserMessage("What is your favorite quote from {movie}?"),
     >>> )
-    >>> def get_movie_quote(movie: str) -> Quote:
-    >>>     ...
+    >>> def get_movie_quote(movie: str) -> Quote: ...
     >>>
     >>>
     >>> get_movie_quote("Iron Man")
