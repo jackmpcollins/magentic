@@ -18,16 +18,14 @@ from magentic.chat_model.litellm_chat_model import LitellmChatModel
 
 
 @prompt("Say hello")
-def say_hello() -> str:
-    ...
+def say_hello() -> str: ...
 
 
 @prompt(
     "Say hello",
     model=LitellmChatModel("ollama/llama2"),
 )
-def say_hello_litellm() -> str:
-    ...
+def say_hello_litellm() -> str: ...
 
 
 say_hello()  # Uses env vars or default settings

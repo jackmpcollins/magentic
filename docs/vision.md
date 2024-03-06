@@ -86,8 +86,7 @@ def url_to_bytes(url: str) -> bytes:
     UserImageMessage(Placeholder(bytes, "image_bytes")),
     model=OpenaiChatModel("gpt-4-vision-preview", max_tokens=2000),
 )
-def describe_image(image_bytes: bytes) -> str:
-    ...
+def describe_image(image_bytes: bytes) -> str: ...
 
 
 image_bytes = url_to_bytes(IMAGE_URL_WOODEN_BOARDWALK)
