@@ -18,8 +18,7 @@ from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 def test_promptfunction_format():
     @prompt("Test {param}.")
-    def func(param: str) -> str:
-        ...
+    def func(param: str) -> str: ...
 
     assert func.format("arg") == "Test arg."
 
@@ -30,8 +29,7 @@ def test_promptfunction_format_custom_type():
             return "custom"
 
     @prompt("Test {param}.")
-    def func(param: CustomType) -> str:
-        ...
+    def func(param: CustomType) -> str: ...
 
     assert func.format(CustomType()) == "Test custom."
 
@@ -45,8 +43,7 @@ def test_promptfunction_call():
         stop=["stop"],
         model=mock_model,
     )
-    def say_hello(name: str) -> str | bool:
-        ...
+    def say_hello(name: str) -> str | bool: ...
 
     assert say_hello("World") == "Hello!"
     assert mock_model.complete.call_count == 1
@@ -72,8 +69,7 @@ def test_decorator_return_str():
 @pytest.mark.openai
 def test_decorator_return_bool():
     @prompt("True if {capital} is the capital of {country}.")
-    def is_capital(capital: str, country: str) -> bool:
-        ...
+    def is_capital(capital: str, country: str) -> bool: ...
 
     assert is_capital("Dublin", "Ireland") is True
 
@@ -81,8 +77,7 @@ def test_decorator_return_bool():
 @pytest.mark.openai
 def test_decorator_return_bool_str():
     @prompt("{text}")
-    def query(text: str) -> bool | str:
-        ...
+    def query(text: str) -> bool | str: ...
 
     output = query("Reply to me with just the word hello.")
     assert isinstance(output, str)
@@ -93,8 +88,7 @@ def test_decorator_return_bool_str():
 @pytest.mark.openai
 def test_decorator_return_dict():
     @prompt('Return the mapping {{"one": 1, "two": 2}}')
-    def return_mapping() -> dict[str, int]:
-        ...
+    def return_mapping() -> dict[str, int]: ...
 
     mapping = return_mapping()
     assert isinstance(mapping, dict)
@@ -110,8 +104,7 @@ def test_decorator_return_pydantic_model():
         country: str
 
     @prompt("What is the capital of {country}?")
-    def get_capital(country: str) -> CapitalCity:
-        ...
+    def get_capital(country: str) -> CapitalCity: ...
 
     output = get_capital("Ireland")
     assert isinstance(output, CapitalCity)
@@ -124,8 +117,7 @@ def test_decorator_input_pydantic_model():
         country: str
 
     @prompt("Is this capital-country pair correct? {pair} Just answer True or False.")
-    def check_capital(pair: CapitalCity) -> bool:
-        ...
+    def check_capital(pair: CapitalCity) -> bool: ...
 
     assert check_capital(CapitalCity(capital="Dublin", country="Ireland"))
 
@@ -136,8 +128,7 @@ def test_decorator_return_function_call():
         return a + b
 
     @prompt("Sum {a} and {b}", functions=[plus])
-    def sum_ab(a: int, b: int) -> FunctionCall[int]:
-        ...
+    def sum_ab(a: int, b: int) -> FunctionCall[int]: ...
 
     output = sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
@@ -148,8 +139,7 @@ def test_decorator_return_function_call():
 @pytest.mark.openai
 def test_decorator_return_streamed_str():
     @prompt("What is the capital of {country}?")
-    def get_capital(country: str) -> StreamedStr:
-        ...
+    def get_capital(country: str) -> StreamedStr: ...
 
     output = get_capital("Ireland")
     assert isinstance(output, StreamedStr)
@@ -158,8 +148,7 @@ def test_decorator_return_streamed_str():
 @pytest.mark.openai
 def test_decorator_raise_structured_output_error():
     @prompt("How many days between {start_date} and {end_date}? Do out the math.")
-    def days_between(start_date: str, end_date: str) -> int:
-        ...
+    def days_between(start_date: str, end_date: str) -> int: ...
 
     with pytest.raises(StructuredOutputError):
         # The model will return a math expression, not an integer
@@ -176,8 +165,7 @@ async def test_async_promptfunction_call():
         stop=["stop"],
         model=mock_model,
     )
-    async def say_hello(name: str) -> str | bool:
-        ...
+    async def say_hello(name: str) -> str | bool: ...
 
     assert await say_hello("World") == "Hello!"
     assert mock_model.acomplete.call_count == 1
@@ -192,8 +180,7 @@ async def test_async_promptfunction_call():
 @pytest.mark.openai
 async def test_async_decorator_return_str():
     @prompt("What is the capital of {country}? Name only. No punctuation.")
-    async def get_capital(country: str) -> str:
-        ...
+    async def get_capital(country: str) -> str: ...
 
     assert isinstance(get_capital, AsyncPromptFunction)
     output = await get_capital("Ireland")
@@ -204,8 +191,7 @@ async def test_async_decorator_return_str():
 @pytest.mark.openai
 async def test_async_decorator_return_async_streamed_str():
     @prompt("What is the capital of {country}?")
-    async def get_capital(country: str) -> AsyncStreamedStr:
-        ...
+    async def get_capital(country: str) -> AsyncStreamedStr: ...
 
     output = await get_capital("Ireland")
     assert isinstance(output, AsyncStreamedStr)
@@ -218,8 +204,7 @@ async def test_async_decorator_return_function_call():
         return a + b
 
     @prompt("Sum {a} and {b}", functions=[plus])
-    async def sum_ab(a: int, b: int) -> FunctionCall[int]:
-        ...
+    async def sum_ab(a: int, b: int) -> FunctionCall[int]: ...
 
     output = await sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
@@ -234,8 +219,7 @@ async def test_async_decorator_return_async_function_call():
         return a + b
 
     @prompt("Sum {a} and {b}", functions=[async_plus])
-    async def sum_ab(a: int, b: int) -> FunctionCall[Awaitable[int]]:
-        ...
+    async def sum_ab(a: int, b: int) -> FunctionCall[Awaitable[int]]: ...
 
     output = await sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
@@ -244,15 +228,13 @@ async def test_async_decorator_return_async_function_call():
 
 def test_decorator_with_context_manager():
     @prompt("Say hello")
-    def say_hello() -> str:
-        ...
+    def say_hello() -> str: ...
 
     @prompt(
         "Say hello",
         model=OpenaiChatModel("gpt-4", temperature=1),
     )
-    def say_hello_gpt4() -> str:
-        ...
+    def say_hello_gpt4() -> str: ...
 
     assert say_hello.model.model == get_settings().openai_model  # type: ignore[attr-defined]
 

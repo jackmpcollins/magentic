@@ -118,8 +118,7 @@ class PromptDecorator(Protocol):
         ...
 
     @overload
-    def __call__(self, func: Callable[P, R]) -> PromptFunction[P, R]:
-        ...
+    def __call__(self, func: Callable[P, R]) -> PromptFunction[P, R]: ...
 
 
 def prompt(

@@ -265,8 +265,7 @@ class OpenaiChatModel(ChatModel):
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]:
-        ...
+    ) -> AssistantMessage[str]: ...
 
     @overload
     def complete(
@@ -276,8 +275,7 @@ class OpenaiChatModel(ChatModel):
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
-        ...
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
 
     @overload
     def complete(
@@ -287,8 +285,7 @@ class OpenaiChatModel(ChatModel):
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]:
-        ...
+    ) -> AssistantMessage[R]: ...
 
     @overload
     def complete(
@@ -298,8 +295,7 @@ class OpenaiChatModel(ChatModel):
         output_types: Iterable[type[R]],
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
-        ...
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
 
     def complete(
         self,
@@ -395,8 +391,7 @@ class OpenaiChatModel(ChatModel):
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]:
-        ...
+    ) -> AssistantMessage[str]: ...
 
     @overload
     async def acomplete(
@@ -406,8 +401,7 @@ class OpenaiChatModel(ChatModel):
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
-        ...
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
 
     @overload
     async def acomplete(
@@ -417,8 +411,7 @@ class OpenaiChatModel(ChatModel):
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]:
-        ...
+    ) -> AssistantMessage[R]: ...
 
     @overload
     async def acomplete(
@@ -428,8 +421,7 @@ class OpenaiChatModel(ChatModel):
         output_types: Iterable[type[R]],
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
-        ...
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
 
     async def acomplete(
         self,

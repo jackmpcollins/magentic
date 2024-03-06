@@ -34,8 +34,7 @@ class ChatModel(ABC):
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]:
-        ...
+    ) -> AssistantMessage[str]: ...
 
     @overload
     @abstractmethod
@@ -46,8 +45,7 @@ class ChatModel(ABC):
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
-        ...
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
 
     @overload
     @abstractmethod
@@ -58,8 +56,7 @@ class ChatModel(ABC):
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]:
-        ...
+    ) -> AssistantMessage[R]: ...
 
     @overload
     @abstractmethod
@@ -70,8 +67,7 @@ class ChatModel(ABC):
         output_types: Iterable[type[R]],
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
-        ...
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
 
     @abstractmethod
     def complete(
@@ -98,8 +94,7 @@ class ChatModel(ABC):
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]:
-        ...
+    ) -> AssistantMessage[str]: ...
 
     @overload
     @abstractmethod
@@ -110,8 +105,7 @@ class ChatModel(ABC):
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]:
-        ...
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
 
     @overload
     @abstractmethod
@@ -122,8 +116,7 @@ class ChatModel(ABC):
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]:
-        ...
+    ) -> AssistantMessage[R]: ...
 
     @overload
     @abstractmethod
@@ -134,8 +127,7 @@ class ChatModel(ABC):
         output_types: Iterable[type[R]],
         *,
         stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]:
-        ...
+    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
 
     @abstractmethod
     async def acomplete(

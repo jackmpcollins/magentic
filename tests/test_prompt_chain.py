@@ -22,8 +22,7 @@ def test_prompt_chain():
         template="What's the weather like in {city}?",
         functions=[get_current_weather],
     )
-    def describe_weather(city: str) -> str:
-        ...
+    def describe_weather(city: str) -> str: ...
 
     output = describe_weather("Boston")
     assert isinstance(output, str)
@@ -42,8 +41,7 @@ def test_prompt_chain_max_calls():
         model=mock_model,
         max_calls=1,
     )
-    def make_function_call() -> str:
-        ...
+    def make_function_call() -> str: ...
 
     with pytest.raises(MaxFunctionCallsError):
         make_function_call()
@@ -67,8 +65,7 @@ async def test_async_prompt_chain():
         template="What's the weather like in {city}?",
         functions=[get_current_weather],
     )
-    async def describe_weather(city: str) -> str:
-        ...
+    async def describe_weather(city: str) -> str: ...
 
     output = await describe_weather("Boston")
     assert isinstance(output, str)
@@ -88,8 +85,7 @@ async def test_async_prompt_chain_max_calls():
         model=mock_model,
         max_calls=1,
     )
-    async def make_function_call() -> str:
-        ...
+    async def make_function_call() -> str: ...
 
     with pytest.raises(MaxFunctionCallsError):
         await make_function_call()
