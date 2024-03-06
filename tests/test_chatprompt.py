@@ -67,8 +67,7 @@ def test_escape_braces(text):
 )
 def test_chatpromptfunction_format(message_templates, expected_messages):
     @chatprompt(*message_templates)
-    def func(param: str) -> str:
-        ...
+    def func(param: str) -> str: ...
 
     assert func.format(param="arg") == expected_messages
 
@@ -80,8 +79,7 @@ def test_chatpromptfunction_format_with_placeholder():
     @chatprompt(
         AssistantMessage(Placeholder(Country, "country")),
     )
-    def func(country: Country) -> str:
-        ...
+    def func(country: Country) -> str: ...
 
     assert func.format(Country(name="USA")) == [AssistantMessage(Country(name="USA"))]
 
@@ -95,8 +93,7 @@ def test_chatpromptfunction_call():
         stop=["stop"],
         model=mock_model,
     )
-    def say_hello(name: str) -> str | bool:
-        ...
+    def say_hello(name: str) -> str | bool: ...
 
     assert say_hello("World") == "Hello!"
     assert mock_model.complete.call_count == 1
@@ -127,8 +124,7 @@ async def test_asyncchatpromptfunction_call():
         stop=["stop"],
         model=mock_model,
     )
-    async def say_hello(name: str) -> str | bool:
-        ...
+    async def say_hello(name: str) -> str | bool: ...
 
     assert await say_hello("World") == "Hello!"
     assert mock_model.acomplete.call_count == 1
@@ -167,8 +163,7 @@ def test_chatprompt_readme_example():
         ),
         UserMessage("What is your favorite quote from {movie}?"),
     )
-    def get_movie_quote(movie: str) -> Quote:
-        ...
+    def get_movie_quote(movie: str) -> Quote: ...
 
     movie_quote = get_movie_quote("Iron Man")
     assert isinstance(movie_quote, Quote)
@@ -184,8 +179,7 @@ def test_chatprompt_with_function_call_and_result():
         AssistantMessage(FunctionCall(plus, 1, 2)),
         FunctionResultMessage(3, plus),
     )
-    def do_math() -> str:
-        ...
+    def do_math() -> str: ...
 
     output = do_math()
     assert isinstance(output, str)

@@ -25,8 +25,7 @@ class Quote(BaseModel):
     ),
     UserMessage("What is your favorite quote from {movie}?"),
 )
-def get_movie_quote(movie: str) -> Quote:
-    ...
+def get_movie_quote(movie: str) -> Quote: ...
 
 
 get_movie_quote("Iron Man")
@@ -66,8 +65,7 @@ class Quote(BaseModel):
     AssistantMessage(Placeholder(Quote, "quote")),
     UserMessage("What is a similar quote from the same movie?"),
 )
-def get_similar_quote(movie: str, quote: Quote) -> Quote:
-    ...
+def get_similar_quote(movie: str, quote: Quote) -> Quote: ...
 
 
 get_similar_quote(
@@ -113,8 +111,7 @@ def order_food(food: str, amount: int):
     UserMessage("{request}"),
     functions=[change_music_volume, order_food],
 )
-def adjust_for_guest(request: str) -> FunctionCall[None]:
-    ...
+def adjust_for_guest(request: str) -> FunctionCall[None]: ...
 
 
 func = adjust_for_guest("Do you have any more food?")

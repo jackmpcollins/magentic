@@ -52,7 +52,6 @@ Congratulations on your impressive score of 33/100 on the France quiz! Who needs
 
 """
 
-
 import asyncio
 
 from pydantic import BaseModel
@@ -71,8 +70,7 @@ class Question(BaseModel):
     # Increase temperature to try generate unique questions
     model=OpenaiChatModel("gpt-3.5-turbo", temperature=1),
 )
-async def generate_question(topic: str, difficulty: int) -> Question:
-    ...
+async def generate_question(topic: str, difficulty: int) -> Question: ...
 
 
 @prompt(
@@ -81,16 +79,14 @@ Question: {question.question}
 Answer: {question.answer}
 User Answer: {user_answer}"""
 )
-def is_answer_correct(question: Question, user_answer: str) -> bool:
-    ...
+def is_answer_correct(question: Question, user_answer: str) -> bool: ...
 
 
 @prompt(
     "Create a short and funny message of celebration or encouragment for someone who"
     " scored {score}/100 on a quiz about {topic}."
 )
-def create_encouragement_message(score: int, topic: str) -> str:
-    ...
+def create_encouragement_message(score: int, topic: str) -> str: ...
 
 
 async def main() -> None:

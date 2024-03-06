@@ -118,8 +118,7 @@ class PromptDecorator(Protocol):
         ...
 
     @overload
-    def __call__(self, func: Callable[P, R]) -> PromptFunction[P, R]:
-        ...
+    def __call__(self, func: Callable[P, R]) -> PromptFunction[P, R]: ...
 
 
 def prompt(
@@ -137,8 +136,7 @@ def prompt(
     Examples
     --------
     >>> @prompt("Add more dudeness to: {phrase}")
-    >>> def dudeify(phrase: str) -> str:
-    >>>     ...  # No function body as this is never executed
+    >>> def dudeify(phrase: str) -> str: ...  # No function body as this is never executed
     >>>
     >>> dudeify("Hello, how are you?")
     "Hey, dude! What's up? How's it going, my man?"

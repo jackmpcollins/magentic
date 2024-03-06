@@ -92,8 +92,7 @@ def test_chatprompt_with_user_image_message(image_bytes_jpg):
         UserImageMessage(image_bytes_jpg),
         model=OpenaiChatModel("gpt-4-vision-preview"),
     )
-    def describe_image() -> str:
-        ...
+    def describe_image() -> str: ...
 
     output = describe_image()
     assert isinstance(output, str)

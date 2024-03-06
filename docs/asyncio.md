@@ -11,13 +11,11 @@ from magentic import prompt
 
 
 @prompt("List ten presidents of the United States")
-async def iter_presidents() -> AsyncIterable[str]:
-    ...
+async def iter_presidents() -> AsyncIterable[str]: ...
 
 
 @prompt("Tell me more about {topic}")
-async def tell_me_more_about(topic: str) -> str:
-    ...
+async def tell_me_more_about(topic: str) -> str: ...
 
 
 # For each president listed, generate a description concurrently

@@ -49,7 +49,6 @@ Hey pizza enthusiast! Congrats on scoring 66/100 on the pizza quiz! You may not 
 
 """
 
-
 from pydantic import BaseModel
 
 from magentic import prompt
@@ -61,8 +60,7 @@ class Question(BaseModel):
 
 
 @prompt("Generate {num} quiz questions about {topic}")
-def generate_questions(topic: str, num: int) -> list[Question]:
-    ...
+def generate_questions(topic: str, num: int) -> list[Question]: ...
 
 
 @prompt(
@@ -71,16 +69,14 @@ Question: {question.question}
 Answer: {question.answer}
 User Answer: {user_answer}"""
 )
-def is_answer_correct(question: Question, user_answer: str) -> bool:
-    ...
+def is_answer_correct(question: Question, user_answer: str) -> bool: ...
 
 
 @prompt(
     "Create a short and funny message of celebration or encouragment for someone who"
     " scored {score}/100 on a quiz about {topic}."
 )
-def create_encouragement_message(score: int, topic: str) -> str:
-    ...
+def create_encouragement_message(score: int, topic: str) -> str: ...
 
 
 topic = input("Enter a topic for a quiz: ")
