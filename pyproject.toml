@@ -10,6 +10,7 @@ strict = true
 
 [[tool.mypy.overrides]]
 module = [
+    "filetype",
     "litellm",
     "litellm.utils",
 ]
@@ -17,15 +18,17 @@ ignore_missing_imports = true
 
 [tool.poetry]
 name = "magentic"
-version = "0.15.0"
+version = "0.17.0"
 description = "Seamlessly integrate LLMs as Python functions"
 license = "MIT"
 authors = ["Jack Collins"]
 readme = "README.md"
+homepage = "https://magentic.dev/"
 repository = "https://github.com/jackmpcollins/magentic"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
+filetype = "*"
 litellm = {version = ">=1.0.0", optional = true}
 openai = ">=1.0"
 pydantic = ">=2.0.0"
@@ -35,12 +38,18 @@ pydantic-settings = ">=2.0.0"
 litellm = ["litellm"]
 
 [tool.poetry.group.dev.dependencies]
+blacken-docs = "^1.16.0"
 mypy = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-clarity = "*"
 pytest-cov = "*"
-ruff = "*"
+ruff = "^0.3.0"
+
+[tool.poetry.group.docs.dependencies]
+mkdocs = "^1.5.3"
+mkdocs-jupyter = "^0.24.6"
+mkdocs-material = "^9.5.11"
 
 [tool.poetry.group.examples.dependencies]
 jupyter = "*"
@@ -93,6 +102,9 @@ mark-parentheses = false
 known-first-party = ["magentic"]
 
 [tool.ruff.lint.per-file-ignores]
+"docs/examples/*" = [
+  "T20",  # flake8-print
+]
 "examples/*" = [
   "T20",  # flake8-print
 ]

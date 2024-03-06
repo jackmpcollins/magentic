@@ -17,8 +17,7 @@ def test_chat_from_prompt():
         return a + b
 
     @prompt("What is {a} plus {b}?", functions=[plus])
-    def add_text_numbers(a: str, b: str) -> int:
-        ...
+    def add_text_numbers(a: str, b: str) -> int: ...
 
     chat = Chat.from_prompt(add_text_numbers, "one", "two")
     assert chat.messages == [UserMessage(content="What is one plus two?")]
