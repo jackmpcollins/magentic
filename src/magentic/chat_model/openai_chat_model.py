@@ -87,6 +87,17 @@ def _(message: FunctionResultMessage[Any]) -> ChatCompletionMessageParam:
     }
 
 
+class FunctionToolSchema:
+    def __init__(self, function_schema: BaseFunctionSchema[Any]):
+        self._function_schema = function_schema
+
+    def as_tool_choice(self):
+        return {"type": "function", "function": {"name": self._function_schema.name}}
+
+    def to_dict(self):
+        return {"type": "function", "function": self._function_schema.dict()}
+
+
 def openai_chatcompletion_create(
     api_key: str | None,
     api_type: Literal["openai", "azure"],
@@ -318,6 +329,7 @@ class OpenaiChatModel(ChatModel):
             for type_ in output_types
             if not is_origin_subclass(type_, (str, StreamedStr))
         ]
+        tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
         streamed_str_in_output_types = any(
@@ -325,7 +337,6 @@ class OpenaiChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
-        openai_tools = [schema.tool_dict() for schema in function_schemas]
         response = openai_chatcompletion_create(
             api_key=self.api_key,
             api_type=self.api_type,
@@ -336,13 +347,10 @@ class OpenaiChatModel(ChatModel):
             seed=self.seed,
             stop=stop,
             temperature=self.temperature,
-            tools=openai_tools,
+            tools=[schema.to_dict() for schema in tool_schemas],
             tool_choice=(
-                {
-                    "type": "function",
-                    "function": {"name": openai_tools[0]["function"]["name"]},
-                }
-                if len(openai_tools) == 1 and not allow_string_output
+                tool_schemas[0].as_tool_choice()
+                if len(tool_schemas) == 1 and not allow_string_output
                 else None
             ),
         )
@@ -449,6 +457,7 @@ class OpenaiChatModel(ChatModel):
             for type_ in output_types
             if not is_origin_subclass(type_, (str, AsyncStreamedStr))
         ]
+        tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
         async_streamed_str_in_output_types = any(
@@ -456,7 +465,6 @@ class OpenaiChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        openai_tools = [schema.tool_dict() for schema in function_schemas]
         response = await openai_chatcompletion_acreate(
             api_key=self.api_key,
             api_type=self.api_type,
@@ -467,13 +475,10 @@ class OpenaiChatModel(ChatModel):
             seed=self.seed,
             stop=stop,
             temperature=self.temperature,
-            tools=openai_tools,
+            tools=[schema.to_dict() for schema in tool_schemas],
             tool_choice=(
-                {
-                    "type": "function",
-                    "function": {"name": openai_tools[0]["function"]["name"]},
-                }
-                if len(openai_tools) == 1 and not allow_string_output
+                tool_schemas[0].as_tool_choice()
+                if len(tool_schemas) == 1 and not allow_string_output
                 else None
             ),
         )
