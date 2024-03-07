@@ -4,6 +4,7 @@ from typing import Any, Literal, TypeVar, cast, overload
 
 from litellm.utils import CustomStreamWrapper, ModelResponse
 from openai.types.chat import ChatCompletionMessageParam
+from openai.types.shared_params import FunctionDefinition
 
 from magentic.chat_model.openai_chat_model import message_to_openai_message
 
@@ -42,7 +43,7 @@ def litellm_completion(
     max_tokens: int | None = None,
     stop: list[str] | None = None,
     temperature: float | None = None,
-    functions: list[dict[str, Any]] | None = None,
+    functions: list[FunctionDefinition] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> CustomStreamWrapper:
     """Type-annotated version of `litellm.completion`."""
@@ -77,7 +78,7 @@ async def litellm_acompletion(
     max_tokens: int | None = None,
     stop: list[str] | None = None,
     temperature: float | None = None,
-    functions: list[dict[str, Any]] | None = None,
+    functions: list[FunctionDefinition] | None = None,
     function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
 ) -> AsyncIterator[ModelResponse]:
     """Type-annotated version of `litellm.acompletion`."""

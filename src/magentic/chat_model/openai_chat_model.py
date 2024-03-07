@@ -5,7 +5,12 @@ from itertools import chain
 from typing import Any, Literal, TypeVar, cast, overload
 
 import openai
-from openai.types.chat import ChatCompletionChunk, ChatCompletionMessageParam
+from openai.types.chat import (
+    ChatCompletionChunk,
+    ChatCompletionMessageParam,
+    ChatCompletionToolChoiceOptionParam,
+    ChatCompletionToolParam,
+)
 from pydantic import ValidationError
 
 from magentic.chat_model.base import ChatModel, StructuredOutputError
@@ -91,10 +96,10 @@ class FunctionToolSchema:
     def __init__(self, function_schema: BaseFunctionSchema[Any]):
         self._function_schema = function_schema
 
-    def as_tool_choice(self):
+    def as_tool_choice(self) -> ChatCompletionToolChoiceOptionParam:
         return {"type": "function", "function": {"name": self._function_schema.name}}
 
-    def to_dict(self):
+    def to_dict(self) -> ChatCompletionToolParam:
         return {"type": "function", "function": self._function_schema.dict()}
 
 
@@ -108,8 +113,8 @@ def openai_chatcompletion_create(
     seed: int | None = None,
     stop: list[str] | None = None,
     temperature: float | None = None,
-    tools: list[dict[str, Any]] | None = None,
-    tool_choice: Literal["auto", "none"] | dict[str, Any] | None = None,
+    tools: list[ChatCompletionToolParam] | None = None,
+    tool_choice: ChatCompletionToolChoiceOptionParam | None = None,
 ) -> Iterator[ChatCompletionChunk]:
     client_kwargs: dict[str, Any] = {
         "api_key": api_key,
@@ -156,8 +161,8 @@ async def openai_chatcompletion_acreate(
     seed: int | None = None,
     stop: list[str] | None = None,
     temperature: float | None = None,
-    tools: list[dict[str, Any]] | None = None,
-    tool_choice: Literal["auto", "none"] | dict[str, Any] | None = None,
+    tools: list[ChatCompletionToolParam] | None = None,
+    tool_choice: ChatCompletionToolChoiceOptionParam | None = None,
 ) -> AsyncIterator[ChatCompletionChunk]:
     client_kwargs: dict[str, Any] = {
         "api_key": api_key,
