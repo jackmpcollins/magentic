@@ -35,8 +35,7 @@ from magentic import prompt
 
 
 @prompt('Add more "dude"ness to: {phrase}')
-def dudeify(phrase: str) -> str:
-    ...  # No function body as this is never executed
+def dudeify(phrase: str) -> str: ...  # No function body as this is never executed
 
 
 dudeify("Hello, how are you?")
@@ -58,8 +57,7 @@ class Superhero(BaseModel):
 
 
 @prompt("Create a Superhero named {name}.")
-def create_superhero(name: str) -> Superhero:
-    ...
+def create_superhero(name: str) -> Superhero: ...
 
 
 create_superhero("Garden Man")
@@ -85,8 +83,7 @@ def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]) -> 
     "Prepare the oven so I can make {food}",
     functions=[activate_oven],
 )
-def configure_oven(food: str) -> FunctionCall[str]:
-    ...
+def configure_oven(food: str) -> FunctionCall[str]: ...
 
 
 output = configure_oven("cookies!")
@@ -120,8 +117,7 @@ def get_current_weather(location, unit="fahrenheit"):
     "What's the weather like in {city}?",
     functions=[get_current_weather],
 )
-def describe_weather(city: str) -> str:
-    ...
+def describe_weather(city: str) -> str: ...
 
 
 describe_weather("Boston")

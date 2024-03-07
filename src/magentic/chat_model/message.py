@@ -81,12 +81,10 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
     @overload
     def format(
         self: "AssistantMessage[Placeholder[T]]", **kwargs: Any
-    ) -> "AssistantMessage[T]":
-        ...
+    ) -> "AssistantMessage[T]": ...
 
     @overload
-    def format(self: "AssistantMessage[T]", **kwargs: Any) -> "AssistantMessage[T]":
-        ...
+    def format(self: "AssistantMessage[T]", **kwargs: Any) -> "AssistantMessage[T]": ...
 
     def format(
         self: "AssistantMessage[Placeholder[T]] | AssistantMessage[T]", **kwargs: Any
@@ -104,12 +102,12 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     """A message containing the result of a function call."""
 
     @overload
-    def __init__(self, content: ContentT, function: Callable[..., Awaitable[ContentT]]):
-        ...
+    def __init__(
+        self, content: ContentT, function: Callable[..., Awaitable[ContentT]]
+    ): ...
 
     @overload
-    def __init__(self, content: ContentT, function: Callable[..., ContentT]):
-        ...
+    def __init__(self, content: ContentT, function: Callable[..., ContentT]): ...
 
     def __init__(
         self,
