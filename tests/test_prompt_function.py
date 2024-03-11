@@ -137,6 +137,19 @@ def test_decorator_return_function_call():
 
 
 @pytest.mark.openai
+def test_decorator_ignore_multiple_tool_calls():
+    """Test that when the model makes multiple tool calls, only the first is used."""
+
+    @prompt(
+        "Return the numbers 1 to 5, and also the numbers 6 to 10.",
+        model=OpenaiChatModel("gpt-4-1106-preview"),
+    )
+    def get_list() -> list[int] | bool: ...
+
+    assert get_list() == [1, 2, 3, 4, 5]
+
+
+@pytest.mark.openai
 def test_decorator_return_streamed_str():
     @prompt("What is the capital of {country}?")
     def get_capital(country: str) -> StreamedStr: ...
