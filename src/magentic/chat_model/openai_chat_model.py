@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch
-from itertools import chain
+from itertools import chain, takewhile
 from typing import Any, Generic, Literal, TypeVar, cast, overload
 
 import openai
@@ -36,6 +36,7 @@ from magentic.streaming import (
     StreamedStr,
     achain,
     async_iter,
+    atakewhile,
 )
 from magentic.typing import is_origin_subclass
 
@@ -426,7 +427,13 @@ class OpenaiChatModel(ChatModel):
             # TODO: if MultiFunctionCall in output_types ...
             tool_schema = self._select_tool_schema(first_chunk, tool_schemas)
             try:
-                content = tool_schema.parse_response(response)
+                # Take only the first tool_call, silently ignore extra chunks
+                content = tool_schema.parse_response(
+                    takewhile(
+                        lambda chunk: chunk.choices[0].delta.tool_calls[0].index == 0,  # type: ignore[index]
+                        response,
+                    )
+                )
                 return AssistantMessage(content)
             except ValidationError as e:
                 msg = (
@@ -556,7 +563,13 @@ class OpenaiChatModel(ChatModel):
             # TODO: if MultiFunctionCall in output_types ...
             tool_schema = self._select_tool_schema(first_chunk, tool_schemas)
             try:
-                content = await tool_schema.aparse_response(response)
+                # Take only the first tool_call, silently ignore extra chunks
+                content = await tool_schema.aparse_response(
+                    atakewhile(
+                        lambda chunk: chunk.choices[0].delta.tool_calls[0].index == 0,  # type: ignore[index]
+                        response,
+                    )
+                )
                 return AssistantMessage(content)
             except ValidationError as e:
                 msg = (
