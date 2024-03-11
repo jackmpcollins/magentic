@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterable, Iterable
 from dataclasses import dataclass
 from itertools import chain, dropwhile
-from typing import AsyncIterator, Iterator, TypeVar
+from typing import AsyncIterator, Callable, Iterator, TypeVar
 
 T = TypeVar("T")
 
@@ -17,6 +17,16 @@ async def achain(*aiterables: AsyncIterable[T]) -> AsyncIterator[T]:
     for aiterable in aiterables:
         async for item in aiterable:
             yield item
+
+
+async def atakewhile(
+    predicate: Callable[[T], bool], aiterable: AsyncIterable[T]
+) -> AsyncIterator[T]:
+    """Async version of `itertools.takewhile`."""
+    async for item in aiterable:
+        if not predicate(item):
+            break
+        yield item
 
 
 @dataclass
