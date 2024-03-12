@@ -4,6 +4,8 @@ import pytest
 
 from magentic import AsyncStreamedStr, StreamedStr
 from magentic.streaming import (
+    CachedAsyncIterable,
+    CachedIterable,
     aiter_streamed_json_array,
     async_iter,
     atakewhile,
@@ -50,6 +52,35 @@ def test_iter_streamed_json_array(input, expected):
 @pytest.mark.asyncio
 async def test_aiter_streamed_json_array(input, expected):
     assert [x async for x in aiter_streamed_json_array(async_iter(input))] == expected
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    [
+        ([1, 2, 3], [1, 2, 3]),
+        (iter([1, 2, 3]), [1, 2, 3]),
+        (range(3), [0, 1, 2]),
+    ],
+)
+def test_iter_cached_iterable(input, expected):
+    cached_iterable = CachedIterable(input)
+    assert list(cached_iterable) == list(expected)
+    assert list(cached_iterable) == list(expected)
+
+
+@pytest.mark.parametrize(
+    ("input", "expected"),
+    [
+        ([1, 2, 3], [1, 2, 3]),
+        (iter([1, 2, 3]), [1, 2, 3]),
+        (range(3), [0, 1, 2]),
+    ],
+)
+@pytest.mark.asyncio
+async def test_aiter_cached_async_iterable(input, expected):
+    cached_aiterable = CachedAsyncIterable(async_iter(input))
+    assert [x async for x in cached_aiterable] == list(expected)
+    assert [x async for x in cached_aiterable] == list(expected)
 
 
 def test_streamed_str_iter():
