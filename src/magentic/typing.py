@@ -3,6 +3,7 @@ import types
 from collections.abc import Mapping, Sequence
 from typing import (
     Any,
+    Iterable,
     TypeGuard,
     TypeVar,
     Union,
@@ -37,6 +38,13 @@ def is_origin_subclass(
     if type_ is Any:
         return False
     return issubclass(get_origin(type_) or type_, cls_or_tuple)
+
+
+def is_any_origin_subclass(
+    types: Iterable[type], cls_or_tuple: TypeT | tuple[TypeT, ...]
+) -> bool:
+    """Check if any of the unsubscripted types is a subclass of the given class(es)."""
+    return any(is_origin_subclass(type_, cls_or_tuple) for type_ in types)
 
 
 def name_type(type_: type) -> str:

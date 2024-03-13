@@ -38,7 +38,7 @@ from magentic.streaming import (
     async_iter,
     atakewhile,
 )
-from magentic.typing import is_origin_subclass
+from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
 
 class OpenaiMessageRole(Enum):
@@ -372,10 +372,8 @@ class OpenaiChatModel(ChatModel):
         ]
         tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
 
-        str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
-        streamed_str_in_output_types = any(
-            is_origin_subclass(cls, StreamedStr) for cls in output_types
-        )
+        str_in_output_types = is_any_origin_subclass(output_types, str)
+        streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
         response = openai_chatcompletion_create(
@@ -508,9 +506,9 @@ class OpenaiChatModel(ChatModel):
         ]
         tool_schemas = [AsyncFunctionToolSchema(schema) for schema in function_schemas]
 
-        str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
-        async_streamed_str_in_output_types = any(
-            is_origin_subclass(cls, AsyncStreamedStr) for cls in output_types
+        str_in_output_types = is_any_origin_subclass(output_types, str)
+        async_streamed_str_in_output_types = is_any_origin_subclass(
+            output_types, AsyncStreamedStr
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
