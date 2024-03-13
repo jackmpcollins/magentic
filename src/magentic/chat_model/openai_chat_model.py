@@ -404,7 +404,10 @@ class OpenaiChatModel(ChatModel):
                 # Take only the first tool_call, silently ignore extra chunks
                 content = tool_schema.parse_response(
                     takewhile(
-                        lambda chunk: chunk.choices[0].delta.tool_calls[0].index == 0,  # type: ignore[index]
+                        lambda chunk: bool(
+                            chunk.choices[0].delta.tool_calls
+                            and chunk.choices[0].delta.tool_calls[0].index == 0
+                        ),
                         response,
                     )
                 )
@@ -516,7 +519,10 @@ class OpenaiChatModel(ChatModel):
                 # Take only the first tool_call, silently ignore extra chunks
                 content = await tool_schema.aparse_response(
                     atakewhile(
-                        lambda chunk: chunk.choices[0].delta.tool_calls[0].index == 0,  # type: ignore[index]
+                        lambda chunk: bool(
+                            chunk.choices[0].delta.tool_calls
+                            and chunk.choices[0].delta.tool_calls[0].index == 0
+                        ),
                         response,
                     )
                 )
