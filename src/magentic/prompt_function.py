@@ -17,8 +17,7 @@ from typing import (
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import UserMessage
-from magentic.function_call import FunctionCall
-from magentic.typing import is_origin_subclass, split_union_type
+from magentic.typing import split_union_type
 
 P = ParamSpec("P")
 # TODO: Make `R` type Union of all possible return types except FunctionCall ?
@@ -49,11 +48,7 @@ class BasePromptFunction(Generic[P, R]):
         self._stop = stop
         self._model = model
 
-        self._return_types = [
-            type_
-            for type_ in split_union_type(return_type)
-            if not is_origin_subclass(type_, FunctionCall)
-        ]
+        self._return_types = list(split_union_type(return_type))
 
     @property
     def functions(self) -> list[Callable[..., Any]]:
@@ -89,7 +84,7 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
             output_types=self._return_types,
             stop=self._stop,
         )
-        return cast(R, message.content)
+        return message.content
 
 
 class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
@@ -103,7 +98,7 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
             output_types=self._return_types,
             stop=self._stop,
         )
-        return cast(R, message.content)
+        return message.content
 
 
 class PromptDecorator(Protocol):

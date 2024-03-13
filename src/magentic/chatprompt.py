@@ -96,7 +96,7 @@ class ChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
             output_types=self._return_types,
             stop=self._stop,
         )
-        return cast(R, message.content)
+        return message.content
 
 
 class AsyncChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
@@ -110,7 +110,7 @@ class AsyncChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
             output_types=self._return_types,
             stop=self._stop,
         )
-        return cast(R, message.content)
+        return message.content
 
 
 class ChatPromptDecorator(Protocol):

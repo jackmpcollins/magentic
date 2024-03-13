@@ -239,7 +239,6 @@ async def openai_chatcompletion_acreate(
 # TODO: Generalize this to BaseToolSchema when that is created
 BeseToolSchemaT = TypeVar("BeseToolSchemaT", bound=BaseFunctionToolSchema[Any])
 R = TypeVar("R")
-FuncR = TypeVar("FuncR")
 
 
 class OpenaiChatModel(ChatModel):
@@ -313,7 +312,7 @@ class OpenaiChatModel(ChatModel):
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
@@ -323,52 +322,29 @@ class OpenaiChatModel(ChatModel):
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
-
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
     ) -> AssistantMessage[R]: ...
 
-    @overload
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: Iterable[type[R]],
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
-
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]] | None = None,
+        functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[R]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> (
-        AssistantMessage[FunctionCall[FuncR]]
-        | AssistantMessage[R]
-        | AssistantMessage[str]
-    ):
+    ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Request an LLM message."""
         if output_types is None:
             output_types = [] if functions else cast(list[type[R]], [str])
 
+        # TODO: Check that Function calls types match functions
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, StreamedStr))
+            if not is_origin_subclass(type_, (str, StreamedStr, FunctionCall))
         ]
         tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
 
@@ -447,7 +423,7 @@ class OpenaiChatModel(ChatModel):
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
@@ -457,44 +433,20 @@ class OpenaiChatModel(ChatModel):
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
-
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
     ) -> AssistantMessage[R]: ...
 
-    @overload
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: Iterable[type[R]],
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
-
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]] | None = None,
+        functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[R]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> (
-        AssistantMessage[FunctionCall[FuncR]]
-        | AssistantMessage[R]
-        | AssistantMessage[str]
-    ):
+    ) -> AssistantMessage[R] | AssistantMessage[str]:
         """Async version of `complete`."""
         if output_types is None:
             output_types = [] if functions else cast(list[type[R]], [str])
@@ -502,7 +454,7 @@ class OpenaiChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             async_function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, AsyncStreamedStr))
+            if not is_origin_subclass(type_, (str, AsyncStreamedStr, FunctionCall))
         ]
         tool_schemas = [AsyncFunctionToolSchema(schema) for schema in function_schemas]
 

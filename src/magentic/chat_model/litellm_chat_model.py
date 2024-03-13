@@ -108,7 +108,6 @@ async def litellm_acompletion(
 
 BeseFunctionSchemaT = TypeVar("BeseFunctionSchemaT", bound=BaseFunctionSchema[Any])
 R = TypeVar("R")
-FuncR = TypeVar("FuncR")
 
 
 class LitellmChatModel(ChatModel):
@@ -166,7 +165,7 @@ class LitellmChatModel(ChatModel):
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
@@ -176,44 +175,20 @@ class LitellmChatModel(ChatModel):
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
-
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
     ) -> AssistantMessage[R]: ...
 
-    @overload
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: Iterable[type[R]],
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
-
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]] | None = None,
+        functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[R]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> (
-        AssistantMessage[FunctionCall[FuncR]]
-        | AssistantMessage[R]
-        | AssistantMessage[str]
-    ):
+    ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Request an LLM message."""
         if output_types is None:
             output_types = [] if functions else cast(list[type[R]], [str])
@@ -221,7 +196,7 @@ class LitellmChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, StreamedStr))
+            if not is_origin_subclass(type_, (str, StreamedStr, FunctionCall))
         ]
 
         str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
@@ -285,7 +260,7 @@ class LitellmChatModel(ChatModel):
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
@@ -295,44 +270,20 @@ class LitellmChatModel(ChatModel):
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
-
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
     ) -> AssistantMessage[R]: ...
 
-    @overload
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: Iterable[type[R]],
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
-
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]] | None = None,
+        functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[R]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> (
-        AssistantMessage[FunctionCall[FuncR]]
-        | AssistantMessage[R]
-        | AssistantMessage[str]
-    ):
+    ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Async version of `complete`."""
         if output_types is None:
             output_types = [] if functions else cast(list[type[R]], [str])
@@ -340,7 +291,7 @@ class LitellmChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             async_function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, AsyncStreamedStr))
+            if not is_origin_subclass(type_, (str, AsyncStreamedStr, FunctionCall))
         ]
 
         str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)

@@ -8,10 +8,8 @@ from magentic.chat_model.message import (
     AssistantMessage,
     Message,
 )
-from magentic.function_call import FunctionCall
 
 R = TypeVar("R")
-FuncR = TypeVar("FuncR")
 
 _chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
     "chat_model", default=None
@@ -30,7 +28,7 @@ class ChatModel(ABC):
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
@@ -41,47 +39,21 @@ class ChatModel(ABC):
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
-
-    @overload
-    @abstractmethod
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
     ) -> AssistantMessage[R]: ...
 
-    @overload
     @abstractmethod
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: Iterable[type[R]],
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
-
-    @abstractmethod
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]] | None = None,
+        functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> (
-        AssistantMessage[FunctionCall[FuncR]]
-        | AssistantMessage[R]
-        | AssistantMessage[str]
-    ):
+    ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Request an LLM message."""
         ...
 
@@ -90,7 +62,7 @@ class ChatModel(ABC):
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
@@ -101,47 +73,21 @@ class ChatModel(ABC):
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
-
-    @overload
-    @abstractmethod
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
     ) -> AssistantMessage[R]: ...
 
-    @overload
     @abstractmethod
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: Iterable[type[R]],
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
-
-    @abstractmethod
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]] | None = None,
+        functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[R | str]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> (
-        AssistantMessage[FunctionCall[FuncR]]
-        | AssistantMessage[R]
-        | AssistantMessage[str]
-    ):
+    ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Async version of `complete`."""
         ...
 
