@@ -1,5 +1,21 @@
+import asyncio
 import inspect
-from typing import Any, Callable, Generic, ParamSpec, TypeVar
+from typing import (
+    Any,
+    AsyncIterable,
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    Generic,
+    Iterable,
+    Iterator,
+    ParamSpec,
+    Tuple,
+    TypeVar,
+    cast,
+)
+
+from magentic.streaming import CachedAsyncIterable, CachedIterable
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -47,3 +63,47 @@ class FunctionCall(Generic[T]):
         signature = inspect.signature(self._function)
         bound_args = signature.bind(*self._args, **self._kwargs)
         return bound_args.arguments.copy()
+
+
+class ParallelFunctionCall(Generic[T]):
+    """A collection of FunctionCalls that can be made concurrently."""
+
+    def __init__(self, function_calls: Iterable[FunctionCall[T]]):
+        self._function_calls = CachedIterable(function_calls)
+
+    def __call__(self) -> tuple[T, ...]:
+        return tuple(function_call() for function_call in self._function_calls)
+
+    def __iter__(self) -> Iterator[FunctionCall[T]]:
+        yield from self._function_calls
+
+
+class AsyncParallelFunctionCall(Generic[T]):
+    """Async version of `ParallelFunctionCall`."""
+
+    def __init__(self, function_calls: AsyncIterable[FunctionCall[Awaitable[T] | T]]):
+        self._function_calls = CachedAsyncIterable(function_calls)
+
+    async def __call__(self) -> Tuple[T, ...]:
+        tasks_and_results: list[asyncio.Task[T] | T] = []
+        async for function_call in self._function_calls:
+            result = function_call()
+            if inspect.iscoroutine(result):
+                tasks_and_results.append(asyncio.create_task(result))
+            else:
+                result = cast(T, result)
+                tasks_and_results.append(result)
+
+        tasks = [task for task in tasks_and_results if isinstance(task, asyncio.Task)]
+        await asyncio.gather(*tasks)
+        results = [
+            task_or_result.result()
+            if isinstance(task_or_result, asyncio.Task)
+            else task_or_result
+            for task_or_result in tasks_and_results
+        ]
+        return tuple(results)
+
+    async def __aiter__(self) -> AsyncIterator[FunctionCall[Awaitable[T] | T]]:
+        async for function_call in self._function_calls:
+            yield function_call
