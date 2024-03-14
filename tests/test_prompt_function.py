@@ -10,7 +10,11 @@ from pydantic import BaseModel
 from magentic.chat_model.base import StructuredOutputError
 from magentic.chat_model.message import AssistantMessage, UserMessage
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
-from magentic.function_call import FunctionCall
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
 from magentic.settings import get_settings
 from magentic.streaming import AsyncStreamedStr, StreamedStr
@@ -137,6 +141,23 @@ def test_decorator_return_function_call():
 
 
 @pytest.mark.openai
+def test_decorator_return_parallel_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    async def minus(a: int, b: int) -> int:
+        return a - b
+
+    @prompt("Sum {a} and {b}. Also subtract {a} from {b}.", functions=[plus, minus])
+    def plau_and_minus(a: int, b: int) -> ParallelFunctionCall[int]: ...
+
+    output = plau_and_minus(2, 3)
+    assert isinstance(output, ParallelFunctionCall)
+    func_result = output()
+    assert len(func_result) == 2
+
+
+@pytest.mark.openai
 def test_decorator_ignore_multiple_tool_calls():
     """Test that when the model makes multiple tool calls, only the first is used."""
 
@@ -237,6 +258,24 @@ async def test_async_decorator_return_async_function_call():
     output = await sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
     assert isinstance(await output(), int)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_decorator_return_async_parallel_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    def minus(a: int, b: int) -> int:
+        return a - b
+
+    @prompt("Sum {a} and {b}. Also subtract {a} from {b}.", functions=[plus, minus])
+    async def plau_and_minus(a: int, b: int) -> AsyncParallelFunctionCall[int]: ...
+
+    output = await plau_and_minus(2, 3)
+    assert isinstance(output, AsyncParallelFunctionCall)
+    func_result = await output()
+    assert len(func_result) == 2
 
 
 def test_decorator_with_context_manager():
