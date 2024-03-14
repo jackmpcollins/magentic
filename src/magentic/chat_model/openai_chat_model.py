@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch
-from itertools import chain, takewhile
+from itertools import chain, groupby, takewhile
 from typing import Any, Generic, Literal, TypeVar, cast, overload
 
 import openai
@@ -30,11 +30,16 @@ from magentic.chat_model.message import (
     SystemMessage,
     UserMessage,
 )
-from magentic.function_call import FunctionCall
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
     achain,
+    agroupby,
     async_iter,
     atakewhile,
 )
@@ -119,25 +124,52 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
 
 
 class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
-    def parse_response(self, response: Iterator[ChatCompletionChunk]) -> T:
-        # TODO: Create generator here that raises error or warns if multiple tool_calls
+    def parse_tool_call(self, chunks: Iterator[ChoiceDeltaToolCall]) -> T:
         return self._function_schema.parse_args(
-            chunk.choices[0].delta.tool_calls[0].function.arguments
-            for chunk in response
-            if chunk.choices[0].delta.tool_calls
-            and chunk.choices[0].delta.tool_calls[0].function
-            and chunk.choices[0].delta.tool_calls[0].function.arguments is not None
+            chunk.function.arguments
+            for chunk in chunks
+            if chunk.function and chunk.function.arguments is not None
         )
 
 
 class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
-    async def aparse_response(self, response: AsyncIterator[ChatCompletionChunk]) -> T:
+    async def aparse_tool_call(self, chunks: AsyncIterator[ChoiceDeltaToolCall]) -> T:
         return await self._function_schema.aparse_args(
-            chunk.choices[0].delta.tool_calls[0].function.arguments
-            async for chunk in response
+            chunk.function.arguments
+            async for chunk in chunks
+            if chunk.function and chunk.function.arguments is not None
+        )
+
+
+def _iter_streamed_tool_calls(
+    response: Iterator[ChatCompletionChunk],
+) -> Iterator[Iterator[ChoiceDeltaToolCall]]:
+    response = takewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
+    for _, tool_call_chunks in groupby(
+        response,
+        lambda chunk: chunk.choices[0].delta.tool_calls
+        and chunk.choices[0].delta.tool_calls[0].index,
+    ):
+        yield (
+            chunk.choices[0].delta.tool_calls[0]
+            for chunk in tool_call_chunks
             if chunk.choices[0].delta.tool_calls
-            and chunk.choices[0].delta.tool_calls[0].function
-            and chunk.choices[0].delta.tool_calls[0].function.arguments is not None
+        )
+
+
+async def _aiter_streamed_tool_calls(
+    response: AsyncIterator[ChatCompletionChunk],
+) -> AsyncIterator[AsyncIterator[ChoiceDeltaToolCall]]:
+    response = atakewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
+    async for _, tool_call_chunks in agroupby(
+        response,
+        lambda chunk: chunk.choices[0].delta.tool_calls
+        and chunk.choices[0].delta.tool_calls[0].index,
+    ):
+        yield (
+            chunk.choices[0].delta.tool_calls[0]
+            async for chunk in tool_call_chunks
+            if chunk.choices[0].delta.tool_calls
         )
 
 
@@ -293,14 +325,9 @@ class OpenaiChatModel(ChatModel):
 
     @staticmethod
     def _select_tool_schema(
-        chunk: ChatCompletionChunk, tools_schemas: list[BeseToolSchemaT]
+        tool_call: ChoiceDeltaToolCall, tools_schemas: list[BeseToolSchemaT]
     ) -> BeseToolSchemaT:
         """Select the tool schema based on the response chunk."""
-        if not chunk.choices[0].delta.tool_calls:
-            msg = "No tool calls in chunk"
-            raise ValueError(msg)
-
-        tool_call = chunk.choices[0].delta.tool_calls[0]
         for tool_schema in tools_schemas:
             if tool_schema.matches(tool_call):
                 return tool_schema
@@ -344,7 +371,9 @@ class OpenaiChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, StreamedStr, FunctionCall))
+            if not is_origin_subclass(
+                type_, (str, StreamedStr, FunctionCall, ParallelFunctionCall)
+            )
         ]
         tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
 
@@ -379,7 +408,7 @@ class OpenaiChatModel(ChatModel):
             and first_chunk.choices[0].delta.tool_calls is None
         ):
             first_chunk = next(response)
-        response = chain([first_chunk], response)  # Replace chunk containing content
+        response = chain([first_chunk], response)
 
         if first_chunk.choices[0].delta.content is not None:
             if not allow_string_output:
@@ -398,20 +427,25 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage(str(streamed_str))
 
         if first_chunk.choices[0].delta.tool_calls is not None:
-            # TODO: if MultiFunctionCall in output_types ...
-            tool_schema = self._select_tool_schema(first_chunk, tool_schemas)
+            if is_any_origin_subclass(output_types, ParallelFunctionCall):
+                content = ParallelFunctionCall(
+                    self._select_tool_schema(
+                        next(tool_call_chunks), tool_schemas
+                    ).parse_tool_call(tool_call_chunks)
+                    for tool_call_chunks in _iter_streamed_tool_calls(response)
+                )
+                return AssistantMessage(content)  # type: ignore[return-value]
+
+            tool_schema = self._select_tool_schema(
+                first_chunk.choices[0].delta.tool_calls[0], tool_schemas
+            )
             try:
                 # Take only the first tool_call, silently ignore extra chunks
-                content = tool_schema.parse_response(
-                    takewhile(
-                        lambda chunk: bool(
-                            chunk.choices[0].delta.tool_calls
-                            and chunk.choices[0].delta.tool_calls[0].index == 0
-                        ),
-                        response,
-                    )
+                # TODO: Create generator here that raises error or warns if multiple tool_calls
+                content = tool_schema.parse_tool_call(
+                    next(_iter_streamed_tool_calls(response))
                 )
-                return AssistantMessage(content)
+                return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
@@ -494,7 +528,7 @@ class OpenaiChatModel(ChatModel):
             and first_chunk.choices[0].delta.tool_calls is None
         ):
             first_chunk = await anext(response)
-        response = achain(async_iter([first_chunk]), response)  # Replace first chunk
+        response = achain(async_iter([first_chunk]), response)
 
         if first_chunk.choices[0].delta.content is not None:
             if not allow_string_output:
@@ -513,20 +547,24 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage(await async_streamed_str.to_string())
 
         if first_chunk.choices[0].delta.tool_calls is not None:
-            # TODO: if MultiFunctionCall in output_types ...
-            tool_schema = self._select_tool_schema(first_chunk, tool_schemas)
+            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+                content = AsyncParallelFunctionCall(
+                    await self._select_tool_schema(
+                        await anext(tool_call_chunks), tool_schemas
+                    ).aparse_tool_call(tool_call_chunks)
+                    async for tool_call_chunks in _aiter_streamed_tool_calls(response)
+                )
+                return AssistantMessage(content)  # type: ignore[return-value]
+
+            tool_schema = self._select_tool_schema(
+                first_chunk.choices[0].delta.tool_calls[0], tool_schemas
+            )
             try:
                 # Take only the first tool_call, silently ignore extra chunks
-                content = await tool_schema.aparse_response(
-                    atakewhile(
-                        lambda chunk: bool(
-                            chunk.choices[0].delta.tool_calls
-                            and chunk.choices[0].delta.tool_calls[0].index == 0
-                        ),
-                        response,
-                    )
+                content = await tool_schema.aparse_tool_call(
+                    await anext(_aiter_streamed_tool_calls(response))
                 )
-                return AssistantMessage(content)
+                return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
