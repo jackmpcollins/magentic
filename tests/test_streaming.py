@@ -6,6 +6,7 @@ from magentic import AsyncStreamedStr, StreamedStr
 from magentic.streaming import (
     CachedAsyncIterable,
     CachedIterable,
+    agroupby,
     aiter_streamed_json_array,
     async_iter,
     atakewhile,
@@ -31,6 +32,20 @@ async def test_async_iter():
 @pytest.mark.asyncio
 async def test_atakewhile(predicate, input, expected):
     assert [x async for x in atakewhile(predicate, input)] == expected
+
+
+@pytest.mark.parametrize(
+    ("aiterable", "key", "expected"),
+    [
+        (async_iter([1, 1]), lambda x: x, [(1, [1, 1])]),
+        (async_iter([1, 1, 2]), lambda x: x, [(1, [1, 1]), (2, [2])]),
+    ],
+)
+@pytest.mark.asyncio
+async def test_agroupby(aiterable, key, expected):
+    assert [
+        (k, [x async for x in g]) async for k, g in agroupby(aiterable, key)
+    ] == expected
 
 
 iter_streamed_json_array_test_cases = [

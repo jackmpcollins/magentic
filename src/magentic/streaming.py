@@ -20,13 +20,38 @@ async def achain(*aiterables: AsyncIterable[T]) -> AsyncIterator[T]:
 
 
 async def atakewhile(
-    predicate: Callable[[T], bool], aiterable: AsyncIterable[T]
+    predicate: Callable[[T], object], aiterable: AsyncIterable[T]
 ) -> AsyncIterator[T]:
     """Async version of `itertools.takewhile`."""
     async for item in aiterable:
         if not predicate(item):
             break
         yield item
+
+
+async def agroupby(
+    aiterable: AsyncIterable[T], key: Callable[[T], object]
+) -> AsyncIterator[tuple[object, AsyncIterator[T]]]:
+    """Async version of `itertools.groupby`."""
+    aiterator = aiter(aiterable)
+    transition = [await anext(aiterator)]
+
+    async def agroup(
+        aiterator: AsyncIterator[T], group_key: object
+    ) -> AsyncIterator[T]:
+        async for item in aiterator:
+            if key(item) != group_key:
+                transition.append(item)
+                return
+            yield item
+
+    while transition:
+        transition_item = transition.pop()
+        group_key = key(transition_item)
+        yield (
+            group_key,
+            agroup(achain(async_iter([transition_item]), aiterator), group_key),
+        )
 
 
 @dataclass
