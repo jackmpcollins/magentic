@@ -45,7 +45,7 @@ def plus(a: int, b: int) -> int:
             },
         ),
         (
-            FunctionResultMessage(3, plus),
+            FunctionResultMessage(3, FunctionCall(plus, 1, 2)),
             {
                 "role": "function",
                 "name": "plus",

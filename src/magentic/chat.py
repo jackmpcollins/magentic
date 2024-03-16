@@ -112,7 +112,7 @@ class Chat:
         function_call = self.last_message.content
         output = function_call()
         return self.add_message(
-            FunctionResultMessage(content=output, function=function_call.function)
+            FunctionResultMessage(content=output, function_call=function_call)
         )
 
     async def aexec_function_call(self: Self) -> Self:
@@ -131,5 +131,5 @@ class Chat:
             output = await output
 
         return self.add_message(
-            FunctionResultMessage(content=output, function=function_call.function)
+            FunctionResultMessage(content=output, function_call=function_call)
         )
