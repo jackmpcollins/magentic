@@ -49,7 +49,6 @@ from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
 class OpenaiMessageRole(Enum):
     ASSISTANT = "assistant"
-    FUNCTION = "function"
     SYSTEM = "system"
     TOOL = "tool"
     USER = "user"
