@@ -143,6 +143,37 @@ def _(message: FunctionResultMessage[Any]) -> ChatCompletionMessageParam:
     }
 
 
+def _add_missing_tool_calls_responses(
+    messages: list[ChatCompletionMessageParam],
+) -> list[ChatCompletionMessageParam]:
+    """Add null responses for tool calls without a response.
+
+    This is required by OpenAI's API.
+    "An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'."
+    """
+    new_messages: list[ChatCompletionMessageParam] = []
+    current_tool_call_responses: set[str] = set()
+    for message in reversed(messages):
+        if tool_call_id := message.get("tool_call_id"):
+            current_tool_call_responses.add(tool_call_id)  # type: ignore[arg-type]
+        elif tool_calls := message.get("tool_calls"):
+            for tool_call in tool_calls:  # type: ignore[attr-defined]
+                if tool_call["id"] not in current_tool_call_responses:
+                    new_messages.append(
+                        {
+                            "role": OpenaiMessageRole.TOOL.value,
+                            "tool_call_id": tool_call["id"],
+                            "content": "null",
+                        }
+                    )
+                    current_tool_call_responses.add(tool_call["id"])
+            current_tool_call_responses = set()
+
+        new_messages.append(message)
+
+    return list(reversed(new_messages))
+
+
 T = TypeVar("T")
 BaseFunctionSchemaT = TypeVar("BaseFunctionSchemaT", bound=BaseFunctionSchema[Any])
 
@@ -428,7 +459,9 @@ class OpenaiChatModel(ChatModel):
             api_type=self.api_type,
             base_url=self.base_url,
             model=self.model,
-            messages=[message_to_openai_message(m) for m in messages],
+            messages=_add_missing_tool_calls_responses(
+                [message_to_openai_message(m) for m in messages]
+            ),
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
@@ -548,7 +581,9 @@ class OpenaiChatModel(ChatModel):
             api_type=self.api_type,
             base_url=self.base_url,
             model=self.model,
-            messages=[message_to_openai_message(m) for m in messages],
+            messages=_add_missing_tool_calls_responses(
+                [message_to_openai_message(m) for m in messages]
+            ),
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
