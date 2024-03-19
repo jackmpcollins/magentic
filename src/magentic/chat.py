@@ -9,8 +9,13 @@ from magentic.chat_model.message import (
     Message,
     UserMessage,
 )
-from magentic.function_call import FunctionCall
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 from magentic.prompt_function import BasePromptFunction
+from magentic.streaming import async_iter, azip
 
 P = ParamSpec("P")
 Self = TypeVar("Self", bound="Chat")
@@ -105,31 +110,49 @@ class Chat:
 
     def exec_function_call(self: Self) -> Self:
         """If the last message is a function call, execute it and add the result."""
-        if not isinstance(self.last_message.content, FunctionCall):
-            msg = "Last message is not a function call."
-            raise TypeError(msg)
+        if isinstance(self.last_message.content, FunctionCall):
+            function_call = self.last_message.content
+            result = function_call()
+            return self.add_message(
+                FunctionResultMessage(content=result, function_call=function_call)
+            )
 
-        function_call = self.last_message.content
-        output = function_call()
-        return self.add_message(
-            FunctionResultMessage(content=output, function_call=function_call)
-        )
+        if isinstance(self.last_message.content, ParallelFunctionCall):
+            parallel_function_call = self.last_message.content
+            chat = self
+            for result, function_call in zip(
+                parallel_function_call(), parallel_function_call
+            ):
+                chat = chat.add_message(
+                    FunctionResultMessage(content=result, function_call=function_call)
+                )
+            return chat
+
+        msg = "Last message is not a function call."
+        raise TypeError(msg)
 
     async def aexec_function_call(self: Self) -> Self:
-        """Async version of `exec_function_call`.
+        """Async version of `exec_function_call`."""
+        if isinstance(self.last_message.content, FunctionCall):
+            function_call = self.last_message.content
+            result = function_call()
+            if inspect.isawaitable(result):
+                result = await result
+            return self.add_message(
+                FunctionResultMessage(content=result, function_call=function_call)
+            )
 
-        Additionally, if the result of the function is awaitable, await it
-        before adding the message.
-        """
-        if not isinstance(self.last_message.content, FunctionCall):
-            msg = "Last message is not a function call."
-            raise TypeError(msg)
+        if isinstance(self.last_message.content, AsyncParallelFunctionCall):
+            async_parallel_function_call = self.last_message.content
+            chat = self
+            async for result, function_call in azip(
+                async_iter(await async_parallel_function_call()),
+                async_parallel_function_call,
+            ):
+                chat = chat.add_message(
+                    FunctionResultMessage(content=result, function_call=function_call)
+                )
+            return chat
 
-        function_call = self.last_message.content
-        output = function_call()
-        if inspect.isawaitable(output):
-            output = await output
-
-        return self.add_message(
-            FunctionResultMessage(content=output, function_call=function_call)
-        )
+        msg = "Last message is not a function call."
+        raise TypeError(msg)

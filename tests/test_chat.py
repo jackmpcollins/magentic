@@ -6,8 +6,13 @@ from magentic.chat_model.message import (
     FunctionResultMessage,
     UserMessage,
 )
-from magentic.function_call import FunctionCall
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 from magentic.prompt_function import prompt
+from magentic.streaming import async_iter
 
 
 def test_chat_from_prompt():
@@ -74,6 +79,27 @@ def test_exec_function_call():
     assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
 
 
+def test_exec_function_call_parallel_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    chat = Chat(
+        messages=[
+            UserMessage(content="What is 1 plus 2? And 3 plus 4?"),
+            AssistantMessage(
+                content=ParallelFunctionCall(
+                    [FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)]
+                )
+            ),
+        ],
+        functions=[plus],
+    )
+    chat = chat.exec_function_call()
+    assert len(chat.messages) == 4
+    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
+    assert chat.messages[3] == FunctionResultMessage(7, FunctionCall(plus, 3, 4))
+
+
 def test_exec_function_call_raises():
     def plus(a: int, b: int) -> int:
         return a + b
@@ -118,6 +144,28 @@ async def test_aexec_function_call_not_async_function():
     chat = await chat.aexec_function_call()
     assert len(chat.messages) == 3
     assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
+
+
+@pytest.mark.asyncio
+async def test_aexec_function_call_async_parallel_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    chat = Chat(
+        messages=[
+            UserMessage(content="What is 1 plus 2? And 3 plus 4?"),
+            AssistantMessage(
+                content=AsyncParallelFunctionCall(
+                    async_iter([FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)])
+                )
+            ),
+        ],
+        functions=[plus],
+    )
+    chat = await chat.aexec_function_call()
+    assert len(chat.messages) == 4
+    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
+    assert chat.messages[3] == FunctionResultMessage(7, FunctionCall(plus, 3, 4))
 
 
 @pytest.mark.asyncio
