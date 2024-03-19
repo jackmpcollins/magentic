@@ -3,6 +3,7 @@ from enum import Enum
 from functools import singledispatch
 from itertools import chain, groupby, takewhile
 from typing import Any, Generic, Literal, TypeVar, cast, overload
+from uuid import uuid4
 
 import openai
 from openai.types.chat import (
@@ -50,6 +51,7 @@ class OpenaiMessageRole(Enum):
     ASSISTANT = "assistant"
     FUNCTION = "function"
     SYSTEM = "system"
+    TOOL = "tool"
     USER = "user"
 
 
@@ -75,19 +77,59 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     if isinstance(message.content, str):
         return {"role": OpenaiMessageRole.ASSISTANT.value, "content": message.content}
 
-    function_schema = (
-        FunctionCallFunctionSchema(message.content.function)
-        if isinstance(message.content, FunctionCall)
-        else function_schema_for_type(type(message.content))
-    )
+    function_schema: FunctionSchema[Any]
 
+    if isinstance(message.content, FunctionCall):
+        function_schema = FunctionCallFunctionSchema(message.content.function)
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": message.content._unique_id,
+                    "type": "function",
+                    "function": {
+                        "name": function_schema.name,
+                        "arguments": function_schema.serialize_args(message.content),
+                    },
+                }
+            ],
+        }
+
+    if isinstance(message.content, ParallelFunctionCall):
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": function_call._unique_id,
+                    "type": "function",
+                    "function": {
+                        "name": FunctionCallFunctionSchema(function_call.function).name,
+                        "arguments": FunctionCallFunctionSchema(
+                            function_call.function
+                        ).serialize_args(function_call),
+                    },
+                }
+                for function_call in message.content
+            ],
+        }
+
+    function_schema = function_schema_for_type(type(message.content))
     return {
         "role": OpenaiMessageRole.ASSISTANT.value,
         "content": None,
-        "function_call": {
-            "name": function_schema.name,
-            "arguments": function_schema.serialize_args(message.content),
-        },
+        "tool_calls": [
+            {
+                # Can be random because no result will be inserted back into the chat
+                "id": str(uuid4()),
+                "type": "function",
+                "function": {
+                    "name": function_schema.name,
+                    "arguments": function_schema.serialize_args(message.content),
+                },
+            }
+        ],
     }
 
 
@@ -95,8 +137,8 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
 def _(message: FunctionResultMessage[Any]) -> ChatCompletionMessageParam:
     function_schema = function_schema_for_type(type(message.content))
     return {
-        "role": OpenaiMessageRole.FUNCTION.value,
-        "name": FunctionCallFunctionSchema(message.function_call.function).name,
+        "role": OpenaiMessageRole.TOOL.value,
+        "tool_call_id": message.function_call._unique_id,
         "content": function_schema.serialize_args(message.content),
     }
 

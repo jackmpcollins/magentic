@@ -14,6 +14,7 @@ from typing import (
     TypeVar,
     cast,
 )
+from uuid import uuid4
 
 from magentic.streaming import CachedAsyncIterable, CachedIterable
 
@@ -31,6 +32,9 @@ class FunctionCall(Generic[T]):
         self._function = function
         self._args = args
         self._kwargs = kwargs
+
+        # Used to correlate function call with result on serialization
+        self._unique_id = str(uuid4())
 
     def __call__(self) -> T:
         return self._function(*self._args, **self._kwargs)
