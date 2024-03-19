@@ -181,12 +181,11 @@ def test_decorator_return_streamed_str():
 
 @pytest.mark.openai
 def test_decorator_raise_structured_output_error():
-    @prompt("How many days between {start_date} and {end_date}? Do out the math.")
-    def days_between(start_date: str, end_date: str) -> int: ...
+    @prompt("Tell me a short joke.")
+    def should_return_int_or_bool() -> int | bool: ...
 
     with pytest.raises(StructuredOutputError):
-        # The model will return a math expression, not an integer
-        days_between("Jan 4th 2019", "Jul 3rd 2019")
+        should_return_int_or_bool()
 
 
 @pytest.mark.asyncio

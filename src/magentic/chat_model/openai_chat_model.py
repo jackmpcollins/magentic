@@ -490,7 +490,7 @@ class OpenaiChatModel(ChatModel):
                     "String was returned by model but not expected. You may need to update"
                     " your prompt to encourage the model to return a specific type."
                 )
-                raise ValueError(msg)
+                raise StructuredOutputError(msg)
             streamed_str = StreamedStr(
                 chunk.choices[0].delta.content
                 for chunk in response
@@ -612,7 +612,7 @@ class OpenaiChatModel(ChatModel):
                     "String was returned by model but not expected. You may need to update"
                     " your prompt to encourage the model to return a specific type."
                 )
-                raise ValueError(msg)
+                raise StructuredOutputError(msg)
             async_streamed_str = AsyncStreamedStr(
                 chunk.choices[0].delta.content
                 async for chunk in response
