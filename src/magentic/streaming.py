@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import AsyncIterable, Iterable
 from dataclasses import dataclass
 from itertools import chain, dropwhile
@@ -10,6 +11,18 @@ async def async_iter(iterable: Iterable[T]) -> AsyncIterator[T]:
     """Get an AsyncIterator for an Iterable."""
     for item in iterable:
         yield item
+
+
+async def azip(*aiterables: AsyncIterable[T]) -> AsyncIterator[tuple[T, ...]]:
+    """Async version of `zip`."""
+    aiterators = [aiter(aiterable) for aiterable in aiterables]
+    try:
+        while True:
+            yield tuple(
+                await asyncio.gather(*(anext(aiterator) for aiterator in aiterators))
+            )
+    except StopAsyncIteration:
+        return
 
 
 async def achain(*aiterables: AsyncIterable[T]) -> AsyncIterator[T]:

@@ -10,6 +10,7 @@ from magentic.streaming import (
     aiter_streamed_json_array,
     async_iter,
     atakewhile,
+    azip,
     iter_streamed_json_array,
 )
 
@@ -19,6 +20,18 @@ async def test_async_iter():
     output = async_iter(["Hello", " World"])
     assert isinstance(output, AsyncIterator)
     assert [chunk async for chunk in output] == ["Hello", " World"]
+
+
+@pytest.mark.parametrize(
+    ("aiterable", "expected"),
+    [
+        (azip(async_iter([1, 2, 3])), [(1,), (2,), (3,)]),
+        (azip(async_iter([1, 2, 3]), async_iter([4, 5, 6])), [(1, 4), (2, 5), (3, 6)]),
+    ],
+)
+@pytest.mark.asyncio
+async def test_azip(aiterable, expected):
+    assert [x async for x in aiterable] == expected
 
 
 @pytest.mark.parametrize(
