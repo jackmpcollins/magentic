@@ -149,9 +149,9 @@ def test_decorator_return_parallel_function_call():
         return a - b
 
     @prompt("Sum {a} and {b}. Also subtract {a} from {b}.", functions=[plus, minus])
-    def plau_and_minus(a: int, b: int) -> ParallelFunctionCall[int]: ...
+    def plus_and_minus(a: int, b: int) -> ParallelFunctionCall[int]: ...
 
-    output = plau_and_minus(2, 3)
+    output = plus_and_minus(2, 3)
     assert isinstance(output, ParallelFunctionCall)
     func_result = output()
     assert len(func_result) == 2
@@ -269,9 +269,9 @@ async def test_decorator_return_async_parallel_function_call():
         return a - b
 
     @prompt("Sum {a} and {b}. Also subtract {a} from {b}.", functions=[plus, minus])
-    async def plau_and_minus(a: int, b: int) -> AsyncParallelFunctionCall[int]: ...
+    async def plus_and_minus(a: int, b: int) -> AsyncParallelFunctionCall[int]: ...
 
-    output = await plau_and_minus(2, 3)
+    output = await plus_and_minus(2, 3)
     assert isinstance(output, AsyncParallelFunctionCall)
     func_result = await output()
     assert len(func_result) == 2
