@@ -1,4 +1,3 @@
-import litellm
 import pytest
 
 from magentic.chat_model.litellm_chat_model import LitellmChatModel
@@ -15,7 +14,7 @@ def test_litellm_chat_model_complete_openai():
 
 @pytest.mark.anthropic
 def test_litellm_chat_model_complete_anthropic():
-    chat_model = LitellmChatModel("claude-2")
+    chat_model = LitellmChatModel("anthropic/claude-3-haiku-20240307")
     message = chat_model.complete(messages=[UserMessage("Say hello!")])
     assert isinstance(message.content, str)
 
@@ -28,21 +27,25 @@ def test_litellm_chat_model_complete_ollama():
 
 
 @pytest.mark.anthropic
-def test_litellm_chat_model_complete_anthropic_function_calling_error():
+def test_litellm_chat_model_complete_anthropic_function_call():
     def sum(a: int, b: int) -> int:
         """Sum two numbers."""
         return a + b
 
-    chat_model = LitellmChatModel("claude-2")
-    with pytest.raises(litellm.exceptions.ServiceUnavailableError):
-        chat_model.complete(messages=[UserMessage("Say hello!")], functions=[sum])
+    chat_model = LitellmChatModel("anthropic/claude-3-haiku-20240307")
+    message = chat_model.complete(
+        messages=[UserMessage("Use the tool to sum 1 and 2")],
+        functions=[sum],
+        output_types=[FunctionCall[int]],
+    )
+    assert isinstance(message.content, FunctionCall)
 
 
 @pytest.mark.skip(
     reason="LiteLLM function calling with streaming is indistinguishable from normal text."
 )
 @pytest.mark.ollama
-def test_litellm_chat_model_complete_ollama_function_calling():
+def test_litellm_chat_model_complete_ollama_function_call():
     def sum(a: int, b: int) -> int:
         """Sum two numbers."""
         return a + b
@@ -65,6 +68,6 @@ async def test_litellm_chat_model_acomplete_openai():
 @pytest.mark.asyncio
 @pytest.mark.anthropic
 async def test_litellm_chat_model_acomplete_anthropic():
-    chat_model = LitellmChatModel("claude-2")
+    chat_model = LitellmChatModel("anthropic/claude-3-haiku-20240307")
     message = await chat_model.acomplete(messages=[UserMessage("Say hello!")])
     assert isinstance(message.content, str)
