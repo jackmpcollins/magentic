@@ -36,7 +36,7 @@ def test_litellm_chat_model_complete_anthropic_function_call():
     message = chat_model.complete(
         messages=[UserMessage("Use the tool to sum 1 and 2")],
         functions=[sum],
-        output_types=[FunctionCall[int]],
+        output_types=[FunctionCall[int]],  # type: ignore[misc]
     )
     assert isinstance(message.content, FunctionCall)
 
