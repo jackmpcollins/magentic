@@ -16,7 +16,7 @@
         <link rel="prev" href="..">
       
       
-        <link rel="next" href="../formatting/">
+        <link rel="next" href="../function-calling/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -376,10 +376,39 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#functionresultmessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      FunctionResultMessage
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
       
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../function-calling/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Function Calling
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -520,10 +549,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_9" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
         
           
-          <label class="md-nav__link" for="__nav_9" id="__nav_9_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -534,8 +563,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_9_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_9">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_10">
             <span class="md-nav__icon md-icon"></span>
             Examples
           </label>
@@ -681,6 +710,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#functionresultmessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      FunctionResultMessage
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -780,7 +818,7 @@
 <span class="p">)</span>
 
 
-<span class="k">def</span> <span class="nf">change_music_volume</span><span class="p">(</span><span class="n">increment</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+<span class="k">def</span> <span class="nf">change_music_volume</span><span class="p">(</span><span class="n">increment</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Change music volume level. Min 1, max 10.&quot;&quot;&quot;</span>
     <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Music volume change: </span><span class="si">{</span><span class="n">increment</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 
@@ -807,7 +845,37 @@
 <span class="n">func</span><span class="p">()</span>
 <span class="c1"># Ordered 3 pizza</span>
 </code></pre></div>
-<p>To include the result of calling the function in the messages use a <code>FunctionResultMessage</code>.</p>
+<h2 id="functionresultmessage">FunctionResultMessage<a class="headerlink" href="#functionresultmessage" title="Permanent link">&para;</a></h2>
+<p>To include the result of calling the function in the messages use a <code>FunctionResultMessage</code>. This takes a <code>FunctionCall</code> instance as its second argument. The same <code>FunctionCall</code> instance must be passed to an <code>AssistantMessage</code> and the corresponding <code>FunctionResultMessage</code> so that the result can be correctly linked back to the function call that created it.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">chatprompt</span><span class="p">,</span>
+    <span class="n">AssistantMessage</span><span class="p">,</span>
+    <span class="n">FunctionCall</span><span class="p">,</span>
+    <span class="n">FunctionResultMessage</span><span class="p">,</span>
+    <span class="n">UserMessage</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">plus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+
+<span class="n">plus_1_2</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">plus</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+
+<span class="nd">@chatprompt</span><span class="p">(</span>
+    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Use the plus function to add 1 and 2.&quot;</span><span class="p">),</span>
+    <span class="n">AssistantMessage</span><span class="p">(</span><span class="n">plus_1_2</span><span class="p">),</span>
+    <span class="n">FunctionResultMessage</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">plus_1_2</span><span class="p">),</span>
+    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Now add 4 to the result.&quot;</span><span class="p">),</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">plus</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">do_math</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span> <span class="o">...</span>
+
+
+<span class="n">do_math</span><span class="p">()</span>
+<span class="c1"># FunctionCall(&lt;function plus at 0x10a0829e0&gt;, 3, 4)</span>
+</code></pre></div>
 
 
 

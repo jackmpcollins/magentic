@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://magentic.dev/vision/">
+        <link rel="canonical" href="https://magentic.dev/function-calling/">
       
       
-        <link rel="prev" href="../streaming/">
+        <link rel="prev" href="../chat-prompting/">
       
       
-        <link rel="next" href="../configuration/">
+        <link rel="next" href="../formatting/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Vision - Magentic</title>
+        <title>Function Calling - Magentic</title>
       
     
     
@@ -88,7 +88,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#vision" class="md-skip">
+        <a href="#function-calling" class="md-skip">
           Skip to content
         </a>
       
@@ -124,7 +124,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Vision
+              Function Calling
             
           </span>
         </div>
@@ -304,10 +304,30 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../function-calling/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Function Calling
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -316,6 +336,55 @@
   
 
       </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="Page contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Page contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#functioncall" class="md-nav__link">
+    <span class="md-ellipsis">
+      FunctionCall
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#prompt_chain" class="md-nav__link">
+    <span class="md-ellipsis">
+      @prompt_chain
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#parallelfunctioncall" class="md-nav__link">
+    <span class="md-ellipsis">
+      ParallelFunctionCall
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -384,30 +453,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Vision
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../vision/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -416,55 +465,6 @@
   
 
       </a>
-      
-        
-
-  
-
-<nav class="md-nav md-nav--secondary" aria-label="Page contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Page contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#userimagemessage" class="md-nav__link">
-    <span class="md-ellipsis">
-      UserImageMessage
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#placeholder" class="md-nav__link">
-    <span class="md-ellipsis">
-      Placeholder
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bytes" class="md-nav__link">
-    <span class="md-ellipsis">
-      bytes
-    </span>
-  </a>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -645,27 +645,27 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#userimagemessage" class="md-nav__link">
+  <a href="#functioncall" class="md-nav__link">
     <span class="md-ellipsis">
-      UserImageMessage
+      FunctionCall
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#placeholder" class="md-nav__link">
+  <a href="#prompt_chain" class="md-nav__link">
     <span class="md-ellipsis">
-      Placeholder
+      @prompt_chain
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#bytes" class="md-nav__link">
+  <a href="#parallelfunctioncall" class="md-nav__link">
     <span class="md-ellipsis">
-      bytes
+      ParallelFunctionCall
     </span>
   </a>
   
@@ -686,7 +686,7 @@
                   
 
   
-    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/vision.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/function-calling.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
     </a>
@@ -694,84 +694,139 @@
   
 
 
-<h1 id="vision">Vision<a class="headerlink" href="#vision" title="Permanent link">&para;</a></h1>
-<p>GPT-4 Vision can be used with magentic by using the <code>UserImageMessage</code> message type. This allows the LLM to accept images as input. Currently this is only supported with the OpenAI backend (<code>OpenaiChatModel</code> with <code>"gpt-4-vision-preview"</code>).</p>
-<div class="admonition note">
-<p class="admonition-title">Return types</p>
-<p>GPT-4 Vision currently does not support function-calling/tools so functions using <code>@chatprompt</code> can only return <code>str</code>, <code>StreamedStr</code>, or <code>AsyncStreamedStr</code>.</p>
-</div>
-<div class="admonition tip">
-<p class="admonition-title"><code>max_tokens</code></p>
-<p>By default <code>max_tokens</code> has a low value, so you will likely need to increase it.</p>
-</div>
-<p>For more information visit the <a href="https://platform.openai.com/docs/guides/vision">OpenAI Vision API documentation</a>.</p>
-<h2 id="userimagemessage">UserImageMessage<a class="headerlink" href="#userimagemessage" title="Permanent link">&para;</a></h2>
-<p>The <code>UserImageMessage</code> can be used with <code>@chatprompt</code> alongside other messages. The LLM must be set to OpenAI's GPT4 Vision model <code>OpenaiChatModel("gpt-4-vision-preview")</code>. This can be done by passing the <code>model</code> parameter to <code>@chatprompt</code>, or through the other methods of <a href="../configuration/">configuration</a>.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<h1 id="function-calling">Function Calling<a class="headerlink" href="#function-calling" title="Permanent link">&para;</a></h1>
+<h2 id="functioncall">FunctionCall<a class="headerlink" href="#functioncall" title="Permanent link">&para;</a></h2>
+<p>A <code>FunctionCall</code> combines a function with a set of arguments, ready to be called.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">FunctionCall</span>
 
 
-<span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
+<span class="k">def</span> <span class="nf">plus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
 
 
-<span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">),</span>
-    <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4-vision-preview&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2000</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
-
-
-<span class="n">describe_image</span><span class="p">()</span>
-<span class="c1"># &#39;A wooden boardwalk meanders through a lush green meadow under a blue sky with wispy clouds.&#39;</span>
+<span class="n">plus_1_2</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">plus</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">plus_1_2</span><span class="p">()</span>
+<span class="c1"># 3</span>
 </code></pre></div>
-<h2 id="placeholder">Placeholder<a class="headerlink" href="#placeholder" title="Permanent link">&para;</a></h2>
-<p>To provide the image as a function parameter, use <code>Placeholder</code>. This substitutes a function argument into the message when the function is called.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<p>The <code>@prompt</code> decorator has a <code>functions</code> parameter which provides the LLM with a list of Python functions that it can decide to call. If the LLM chooses to use a function, the decorated function will return a <code>FunctionCall</code> which you can then call to execute that function with the inputs provided by the LLM. This gives you the opportunity to validate the arguments that the LLM provided before the function is called.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">FunctionCall</span>
 
 
-<span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
+<span class="k">def</span> <span class="nf">activate_oven</span><span class="p">(</span><span class="n">temperature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;broil&quot;</span><span class="p">,</span> <span class="s2">&quot;bake&quot;</span><span class="p">,</span> <span class="s2">&quot;roast&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn the oven on with the provided settings.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Preheating to </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2"> F with mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span>
 
 
-<span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-<span class="hll">    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">)),</span>
-</span>    <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4-vision-preview&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2000</span><span class="p">),</span>
+<span class="nd">@prompt</span><span class="p">(</span>
+    <span class="s2">&quot;Prepare the oven so I can make </span><span class="si">{food}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">activate_oven</span><span class="p">],</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+<span class="k">def</span> <span class="nf">configure_oven</span><span class="p">(</span><span class="n">food</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
 
 
-<span class="n">describe_image</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">)</span>
-<span class="c1"># &#39;A wooden boardwalk meanders through lush green wetlands under a partly cloudy blue sky.&#39;</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">configure_oven</span><span class="p">(</span><span class="s2">&quot;cookies!&quot;</span><span class="p">)</span>
+<span class="c1"># FunctionCall(&lt;function activate_oven at 0x1105a6200&gt;, temperature=350, mode=&#39;bake&#39;)</span>
+<span class="n">output</span><span class="p">()</span>
+<span class="c1"># &#39;Preheating to 350 F with mode bake&#39;</span>
 </code></pre></div>
-<h2 id="bytes">bytes<a class="headerlink" href="#bytes" title="Permanent link">&para;</a></h2>
-<p><code>UserImageMessage</code> can also accept <code>bytes</code> as input. Like <code>str</code>, this can be passed directly or via <code>Placeholder</code>.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
-
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<h2 id="prompt_chain">@prompt_chain<a class="headerlink" href="#prompt_chain" title="Permanent link">&para;</a></h2>
+<p>In some cases, you need the model to perform multiple function calls to reach a final answer. The <code>@prompt_chain</code> decorator will execute function calls automatically, append the result to the list of messages, and query the LLM again until a final answer is reached.</p>
+<p>In the following example, when <code>describe_weather</code> is called the LLM first calls the <code>get_current_weather</code> function, then uses the result of this to formulate its final answer which gets returned.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt_chain</span>
 
 
-<span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
+<span class="k">def</span> <span class="nf">get_current_weather</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;fahrenheit&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current weather in a given location&quot;&quot;&quot;</span>
+    <span class="c1"># Pretend to query an API</span>
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="n">location</span><span class="p">,</span>
+        <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">unit</span><span class="p">,</span>
+        <span class="s2">&quot;forecast&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sunny&quot;</span><span class="p">,</span> <span class="s2">&quot;windy&quot;</span><span class="p">],</span>
+    <span class="p">}</span>
 
 
-<span class="k">def</span> <span class="nf">url_to_bytes</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the content of a URL as bytes.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
+<span class="nd">@prompt_chain</span><span class="p">(</span>
+    <span class="s2">&quot;What&#39;s the weather like in </span><span class="si">{city}</span><span class="s2">?&quot;</span><span class="p">,</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">get_current_weather</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">describe_weather</span><span class="p">(</span><span class="n">city</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+
+
+<span class="n">describe_weather</span><span class="p">(</span><span class="s2">&quot;Boston&quot;</span><span class="p">)</span>
+<span class="c1"># &#39;The current weather in Boston is 72°F and it is sunny and windy.&#39;</span>
+</code></pre></div>
+<p>LLM-powered functions created using <code>@prompt</code> and <code>@prompt_chain</code> can be supplied as <code>functions</code> to other <code>@prompt</code>/<code>@prompt_chain</code> decorators, just like regular python functions!</p>
+<h2 id="parallelfunctioncall">ParallelFunctionCall<a class="headerlink" href="#parallelfunctioncall" title="Permanent link">&para;</a></h2>
+<p>The most recent LLMs support "parallel function calling". This allows the model to call multiple functions at once. These functions can be executed concurrently, avoiding having to make several serial queries to the model.</p>
+<p>You can use <code>ParallelFunctionCall</code> (and <code>AsyncParallelFunctionCall</code>) as a return annotation to indicate that you expect the LLM to make one or more function calls. The returned <code>ParallelFunctionCall</code> is a container of <code>FunctionCall</code> instances. When called, it returns a tuple of their results.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">ParallelFunctionCall</span>
+
+
+<span class="k">def</span> <span class="nf">plus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+
+<span class="k">def</span> <span class="nf">minus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span>
+    <span class="s2">&quot;Sum </span><span class="si">{a}</span><span class="s2"> and </span><span class="si">{b}</span><span class="s2">. Also subtract </span><span class="si">{a}</span><span class="s2"> from </span><span class="si">{b}</span><span class="s2">.&quot;</span><span class="p">,</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">plus</span><span class="p">,</span> <span class="n">minus</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">plus_and_minus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParallelFunctionCall</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span> <span class="o">...</span>
+
+
+<span class="n">output</span> <span class="o">=</span> <span class="n">plus_and_minus</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+<span class="c1"># &gt; [FunctionCall(&lt;function plus at 0x106b8f010&gt;, 2, 3), FunctionCall(&lt;function minus at 0x106b8ef80&gt;, 3, 2)]</span>
+<span class="n">output</span><span class="p">()</span>
+<span class="c1"># (5, 1)</span>
+</code></pre></div>
+<p>As with <code>FunctionCall</code> and other objects, <code>ParallelFunctionCall</code> can be used with <code>@chatprompt</code> for few-shot prompting. In other words, to demonstrate to the LLM how/when it should use functions.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">chatprompt</span><span class="p">,</span>
+    <span class="n">AssistantMessage</span><span class="p">,</span>
+    <span class="n">FunctionCall</span><span class="p">,</span>
+    <span class="n">FunctionResultMessage</span><span class="p">,</span>
+    <span class="n">ParallelFunctionCall</span><span class="p">,</span>
+    <span class="n">UserMessage</span><span class="p">,</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">plus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+
+<span class="k">def</span> <span class="nf">minus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+
+
+<span class="n">plus_1_2</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">plus</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+<span class="n">minus_2_1</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">minus</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
 
 <span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="s2">&quot;image_bytes&quot;</span><span class="p">)),</span>
-    <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4-vision-preview&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2000</span><span class="p">),</span>
+    <span class="n">UserMessage</span><span class="p">(</span>
+        <span class="s2">&quot;Sum 1 and 2. Also subtract 1 from 2.&quot;</span><span class="p">,</span>
+    <span class="p">),</span>
+    <span class="n">AssistantMessage</span><span class="p">(</span><span class="n">ParallelFunctionCall</span><span class="p">([</span><span class="n">plus_1_2</span><span class="p">,</span> <span class="n">minus_2_1</span><span class="p">])),</span>
+    <span class="n">FunctionResultMessage</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">plus_1_2</span><span class="p">),</span>
+    <span class="n">FunctionResultMessage</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">minus_2_1</span><span class="p">),</span>
+    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Now add 4 to both results.&quot;</span><span class="p">),</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">plus</span><span class="p">,</span> <span class="n">minus</span><span class="p">],</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+<span class="k">def</span> <span class="nf">do_math</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ParallelFunctionCall</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span> <span class="o">...</span>
 
 
-<span class="n">image_bytes</span> <span class="o">=</span> <span class="n">url_to_bytes</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">)</span>
-<span class="n">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">)</span>
-<span class="c1"># &#39;The image shows a wooden boardwalk extending through a lush green wetland with a backdrop of blue skies and scattered clouds.&#39;</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">do_math</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
+<span class="c1"># &gt; [FunctionCall(&lt;function plus at 0x10c3584c0&gt;, 3, 4), FunctionCall(&lt;function plus at 0x10c3584c0&gt;, 1, 4)]</span>
+<span class="n">output</span><span class="p">()</span>
+<span class="c1"># (7, 5)</span>
 </code></pre></div>
 
 
