@@ -91,7 +91,7 @@ from magentic import (
 )
 
 
-def change_music_volume(increment: int):
+def change_music_volume(increment: int) -> int:
     """Change music volume level. Min 1, max 10."""
     print(f"Music volume change: {increment}")
 
@@ -119,4 +119,37 @@ func()
 # Ordered 3 pizza
 ```
 
-To include the result of calling the function in the messages use a `FunctionResultMessage`.
+## FunctionResultMessage
+
+To include the result of calling the function in the messages use a `FunctionResultMessage`. This takes a `FunctionCall` instance as its second argument. The same `FunctionCall` instance must be passed to an `AssistantMessage` and the corresponding `FunctionResultMessage` so that the result can be correctly linked back to the function call that created it.
+
+```python
+from magentic import (
+    chatprompt,
+    AssistantMessage,
+    FunctionCall,
+    FunctionResultMessage,
+    UserMessage,
+)
+
+
+def plus(a: int, b: int) -> int:
+    return a + b
+
+
+plus_1_2 = FunctionCall(plus, 1, 2)
+
+
+@chatprompt(
+    UserMessage("Use the plus function to add 1 and 2."),
+    AssistantMessage(plus_1_2),
+    FunctionResultMessage(3, plus_1_2),
+    UserMessage("Now add 4 to the result."),
+    functions=[plus],
+)
+def do_math() -> FunctionCall[int]: ...
+
+
+do_math()
+# FunctionCall(<function plus at 0x10a0829e0>, 3, 4)
+```
