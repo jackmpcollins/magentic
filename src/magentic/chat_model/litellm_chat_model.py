@@ -45,7 +45,7 @@ try:
     import litellm
     from litellm.utils import CustomStreamWrapper, ModelResponse
 except ImportError as error:
-    msg = "To use LitellmChatModel you must install the `litellm` package."
+    msg = "To use LitellmChatModel you must install the `litellm` package using `pip install magentic[litellm]`."
     raise ImportError(msg) from error
 
 
