@@ -1,4 +1,5 @@
 import os
+from unittest.mock import ANY
 
 import openai
 import pytest
@@ -15,7 +16,7 @@ from magentic.chat_model.openai_chat_model import (
     OpenaiChatModel,
     message_to_openai_message,
 )
-from magentic.function_call import FunctionCall
+from magentic.function_call import FunctionCall, ParallelFunctionCall
 
 
 def plus(a: int, b: int) -> int:
@@ -33,7 +34,13 @@ def plus(a: int, b: int) -> int:
             {
                 "role": "assistant",
                 "content": None,
-                "function_call": {"name": "return_int", "arguments": '{"value":42}'},
+                "tool_calls": [
+                    {
+                        "id": ANY,
+                        "type": "function",
+                        "function": {"name": "return_int", "arguments": '{"value":42}'},
+                    }
+                ],
             },
         ),
         (
@@ -41,14 +48,43 @@ def plus(a: int, b: int) -> int:
             {
                 "role": "assistant",
                 "content": None,
-                "function_call": {"name": "plus", "arguments": '{"a":1,"b":2}'},
+                "tool_calls": [
+                    {
+                        "id": ANY,
+                        "type": "function",
+                        "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
+                    }
+                ],
             },
         ),
         (
-            FunctionResultMessage(3, plus),
+            AssistantMessage(
+                ParallelFunctionCall(
+                    [FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)]
+                )
+            ),
             {
-                "role": "function",
-                "name": "plus",
+                "role": "assistant",
+                "content": None,
+                "tool_calls": [
+                    {
+                        "id": ANY,
+                        "type": "function",
+                        "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
+                    },
+                    {
+                        "id": ANY,
+                        "type": "function",
+                        "function": {"name": "plus", "arguments": '{"a":3,"b":4}'},
+                    },
+                ],
+            },
+        ),
+        (
+            FunctionResultMessage(3, FunctionCall(plus, 1, 2)),
+            {
+                "role": "tool",
+                "tool_call_id": ANY,
                 "content": '{"value":3}',
             },
         ),

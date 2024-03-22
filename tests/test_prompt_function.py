@@ -10,7 +10,11 @@ from pydantic import BaseModel
 from magentic.chat_model.base import StructuredOutputError
 from magentic.chat_model.message import AssistantMessage, UserMessage
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
-from magentic.function_call import FunctionCall
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction, prompt
 from magentic.settings import get_settings
 from magentic.streaming import AsyncStreamedStr, StreamedStr
@@ -79,9 +83,9 @@ def test_decorator_return_bool_str():
     @prompt("{text}")
     def query(text: str) -> bool | str: ...
 
-    output = query("Reply to me with just the word hello.")
+    output = query("Reply to me with just the word 'hello'. Do not use the tool.")
     assert isinstance(output, str)
-    output = query("Use the function to return the value True.")
+    output = query("Use the tool/function to return the value True.")
     assert isinstance(output, bool)
 
 
@@ -137,6 +141,37 @@ def test_decorator_return_function_call():
 
 
 @pytest.mark.openai
+def test_decorator_return_parallel_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    def minus(a: int, b: int) -> int:
+        return a - b
+
+    @prompt("Sum {a} and {b}. Also subtract {a} from {b}.", functions=[plus, minus])
+    def plus_and_minus(a: int, b: int) -> ParallelFunctionCall[int]: ...
+
+    output = plus_and_minus(2, 3)
+    assert isinstance(output, ParallelFunctionCall)
+    func_result = output()
+    assert len(func_result) == 2
+
+
+@pytest.mark.openai
+def test_decorator_ignore_multiple_tool_calls():
+    """Test that when the model makes multiple tool calls, only the first is used."""
+
+    # Provide two return types so that `tool_choice` does not force a single tool call
+    @prompt(
+        "Return the numbers 1 to 5, and also the numbers 6 to 10.",
+        model=OpenaiChatModel("gpt-4-1106-preview"),
+    )
+    def get_list() -> list[int] | bool: ...
+
+    assert get_list() == [1, 2, 3, 4, 5]
+
+
+@pytest.mark.openai
 def test_decorator_return_streamed_str():
     @prompt("What is the capital of {country}?")
     def get_capital(country: str) -> StreamedStr: ...
@@ -147,12 +182,11 @@ def test_decorator_return_streamed_str():
 
 @pytest.mark.openai
 def test_decorator_raise_structured_output_error():
-    @prompt("How many days between {start_date} and {end_date}? Do out the math.")
-    def days_between(start_date: str, end_date: str) -> int: ...
+    @prompt("Tell me a short joke.")
+    def should_return_int_or_bool() -> int | bool: ...
 
     with pytest.raises(StructuredOutputError):
-        # The model will return a math expression, not an integer
-        days_between("Jan 4th 2019", "Jul 3rd 2019")
+        should_return_int_or_bool()
 
 
 @pytest.mark.asyncio
@@ -224,6 +258,24 @@ async def test_async_decorator_return_async_function_call():
     output = await sum_ab(2, 3)
     assert isinstance(output, FunctionCall)
     assert isinstance(await output(), int)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_decorator_return_async_parallel_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    async def minus(a: int, b: int) -> int:
+        return a - b
+
+    @prompt("Sum {a} and {b}. Also subtract {a} from {b}.", functions=[plus, minus])
+    async def plus_and_minus(a: int, b: int) -> AsyncParallelFunctionCall[int]: ...
+
+    output = await plus_and_minus(2, 3)
+    assert isinstance(output, AsyncParallelFunctionCall)
+    func_result = await output()
+    assert len(func_result) == 2
 
 
 def test_decorator_with_context_manager():

@@ -18,7 +18,7 @@ ignore_missing_imports = true
 
 [tool.poetry]
 name = "magentic"
-version = "0.17.0"
+version = "0.18.0a0"
 description = "Seamlessly integrate LLMs as Python functions"
 license = "MIT"
 authors = ["Jack Collins"]
@@ -29,7 +29,7 @@ repository = "https://github.com/jackmpcollins/magentic"
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
 filetype = "*"
-litellm = {version = ">=1.0.0", optional = true}
+litellm = {version = ">=1.31.6", optional = true}
 openai = ">=1.0"
 pydantic = ">=2.0.0"
 pydantic-settings = ">=2.0.0"
