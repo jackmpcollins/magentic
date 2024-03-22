@@ -7,7 +7,11 @@ from magentic.chat_model.message import (
 )
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.chatprompt import chatprompt
-from magentic.function_call import FunctionCall
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 from magentic.prompt_chain import prompt_chain
 from magentic.prompt_function import prompt
 from magentic.streaming import AsyncStreamedStr, StreamedStr
@@ -20,7 +24,9 @@ __all__ = [
     "UserMessage",
     "OpenaiChatModel",
     "chatprompt",
+    "AsyncParallelFunctionCall",
     "FunctionCall",
+    "ParallelFunctionCall",
     "prompt_chain",
     "prompt",
     "AsyncStreamedStr",
