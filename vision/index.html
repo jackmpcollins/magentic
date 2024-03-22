@@ -758,8 +758,11 @@
 
 <span class="k">def</span> <span class="nf">url_to_bytes</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the content of a URL as bytes.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
 
+    <span class="c1"># A custom user-agent is necessary to comply with Wikimedia user-agent policy</span>
+    <span class="c1"># https://meta.wikimedia.org/wiki/User-Agent_policy</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;User-Agent&#39;</span><span class="p">:</span> <span class="s1">&#39;MagenticExampleBot (https://magentic.dev/)&#39;</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
 
 <span class="nd">@chatprompt</span><span class="p">(</span>
     <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
