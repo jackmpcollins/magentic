@@ -145,7 +145,7 @@ def test_decorator_return_parallel_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    async def minus(a: int, b: int) -> int:
+    def minus(a: int, b: int) -> int:
         return a - b
 
     @prompt("Sum {a} and {b}. Also subtract {a} from {b}.", functions=[plus, minus])
@@ -266,7 +266,7 @@ async def test_decorator_return_async_parallel_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    def minus(a: int, b: int) -> int:
+    async def minus(a: int, b: int) -> int:
         return a - b
 
     @prompt("Sum {a} and {b}. Also subtract {a} from {b}.", functions=[plus, minus])
