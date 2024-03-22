@@ -161,6 +161,7 @@ def test_decorator_return_parallel_function_call():
 def test_decorator_ignore_multiple_tool_calls():
     """Test that when the model makes multiple tool calls, only the first is used."""
 
+    # Provide two return types so that `tool_choice` does not force a single tool call
     @prompt(
         "Return the numbers 1 to 5, and also the numbers 6 to 10.",
         model=OpenaiChatModel("gpt-4-1106-preview"),
