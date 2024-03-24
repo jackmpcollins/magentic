@@ -39,14 +39,14 @@ jobs:
       - if: github.event.inputs.anthropic
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: poetry run pytest -m 'anthropic' -vv tests/
+        run: poetry run pytest -vv tests/ -m 'anthropic'
       - if: github.event.inputs.litellm_openai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_ORGANIZATION: ${{ secrets.OPENAI_ORGANIZATION }}
-        run: poetry run pytest -m 'litellm_openai' -vv tests/
+        run: poetry run pytest -vv tests/ -m 'litellm_openai'
       - if: github.event.inputs.openai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_ORGANIZATION: ${{ secrets.OPENAI_ORGANIZATION }}
-        run: poetry run pytest -m 'openai' -vv tests/
+        run: poetry run pytest -vv tests/ -m 'openai'
