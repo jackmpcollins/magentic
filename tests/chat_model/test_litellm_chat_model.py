@@ -43,13 +43,6 @@ def test_litellm_chat_model_complete_anthropic(
     assert isinstance(message.content, expected_output_type)
 
 
-@pytest.mark.ollama
-def test_litellm_chat_model_complete_ollama():
-    chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
-    message = chat_model.complete(messages=[UserMessage("Say hello!")])
-    assert isinstance(message.content, str)
-
-
 @pytest.mark.anthropic
 def test_litellm_chat_model_complete_anthropic_function_call():
     def sum(a: int, b: int) -> int:
@@ -63,6 +56,19 @@ def test_litellm_chat_model_complete_anthropic_function_call():
         output_types=[FunctionCall[int]],  # type: ignore[misc]
     )
     assert isinstance(message.content, FunctionCall)
+
+
+@pytest.mark.parametrize(
+    ("prompt", "output_types", "expected_output_type"),
+    [("Say hello!", [str], str)],
+)
+@pytest.mark.ollama
+def test_litellm_chat_model_complete_ollama(prompt, output_types, expected_output_type):
+    chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
+    message = chat_model.complete(
+        messages=[UserMessage(prompt)], output_types=output_types
+    )
+    assert isinstance(message.content, expected_output_type)
 
 
 @pytest.mark.skip(
@@ -117,6 +123,22 @@ async def test_litellm_chat_model_acomplete_anthropic(
     prompt, output_types, expected_output_type
 ):
     chat_model = LitellmChatModel("anthropic/claude-3-haiku-20240307")
+    message = await chat_model.acomplete(
+        messages=[UserMessage(prompt)], output_types=output_types
+    )
+    assert isinstance(message.content, expected_output_type)
+
+
+@pytest.mark.parametrize(
+    ("prompt", "output_types", "expected_output_type"),
+    [("Say hello!", [str], str)],
+)
+@pytest.mark.asyncio
+@pytest.mark.ollama
+async def test_litellm_chat_model_acomplete_ollama(
+    prompt, output_types, expected_output_type
+):
+    chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
     message = await chat_model.acomplete(
         messages=[UserMessage(prompt)], output_types=output_types
     )
