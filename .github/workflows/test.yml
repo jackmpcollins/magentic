@@ -45,10 +45,10 @@ jobs:
       - if: inputs.litellm_openai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_ORGANIZATION: ${{ secrets.OPENAI_ORGANIZATION }}
+          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
         run: poetry run pytest -vv tests/ -m 'litellm_openai'
       - if: inputs.openai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-          OPENAI_ORGANIZATION: ${{ secrets.OPENAI_ORGANIZATION }}
+          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
         run: poetry run pytest -vv tests/ -m 'openai'
