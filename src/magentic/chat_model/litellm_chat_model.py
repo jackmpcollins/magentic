@@ -240,13 +240,13 @@ class LitellmChatModel(ChatModel):
             return AssistantMessage(str(streamed_str))
 
         if first_chunk.choices[0].delta.tool_calls is not None:
-            if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                content = ParallelFunctionCall(
-                    parse_streamed_tool_calls(response, tool_schemas)
-                )
-                return AssistantMessage(content)  # type: ignore[return-value]
-
             try:
+                if is_any_origin_subclass(output_types, ParallelFunctionCall):
+                    content = ParallelFunctionCall(
+                        parse_streamed_tool_calls(response, tool_schemas)
+                    )
+                    return AssistantMessage(content)  # type: ignore[return-value]
+
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
                 content = next(parse_streamed_tool_calls(response, tool_schemas))
@@ -349,13 +349,13 @@ class LitellmChatModel(ChatModel):
             return AssistantMessage(await async_streamed_str.to_string())
 
         if first_chunk.choices[0].delta.tool_calls is not None:
-            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                content = AsyncParallelFunctionCall(
-                    aparse_streamed_tool_calls(response, tool_schemas)
-                )
-                return AssistantMessage(content)  # type: ignore[return-value]
-
             try:
+                if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+                    content = AsyncParallelFunctionCall(
+                        aparse_streamed_tool_calls(response, tool_schemas)
+                    )
+                    return AssistantMessage(content)  # type: ignore[return-value]
+
                 # Take only the first tool_call, silently ignore extra chunks
                 content = await anext(
                     aparse_streamed_tool_calls(response, tool_schemas)
