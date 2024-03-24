@@ -139,6 +139,22 @@ async def test_litellm_chat_model_acomplete_anthropic(
     assert isinstance(message.content, expected_output_type)
 
 
+@pytest.mark.asyncio
+@pytest.mark.anthropic
+async def test_litellm_chat_model_acomplete_anthropic_function_call():
+    def plus(a: int, b: int) -> int:
+        """Sum two numbers."""
+        return a + b
+
+    chat_model = LitellmChatModel("anthropic/claude-3-haiku-20240307")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Use the tool to sum 1 and 2")],
+        functions=[plus],
+        output_types=[FunctionCall[int]],  # type: ignore[misc]
+    )
+    assert isinstance(message.content, FunctionCall)
+
+
 @pytest.mark.parametrize(
     ("prompt", "output_types", "expected_output_type"),
     [("Say hello!", [str], str)],
