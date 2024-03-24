@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator, Callable, Iterable, Iterator
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch
 from itertools import chain, groupby, takewhile
@@ -196,7 +196,7 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
 
 
 class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
-    def parse_tool_call(self, chunks: Iterator[ChoiceDeltaToolCall]) -> T:
+    def parse_tool_call(self, chunks: Iterable[ChoiceDeltaToolCall]) -> T:
         return self._function_schema.parse_args(
             chunk.function.arguments
             for chunk in chunks
@@ -205,7 +205,7 @@ class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
 
 
 class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
-    async def aparse_tool_call(self, chunks: AsyncIterator[ChoiceDeltaToolCall]) -> T:
+    async def aparse_tool_call(self, chunks: AsyncIterable[ChoiceDeltaToolCall]) -> T:
         return await self._function_schema.aparse_args(
             chunk.function.arguments
             async for chunk in chunks
@@ -214,8 +214,9 @@ class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
 
 
 def _iter_streamed_tool_calls(
-    response: Iterator[ChatCompletionChunk],
+    response: Iterable[ChatCompletionChunk],
 ) -> Iterator[Iterator[ChoiceDeltaToolCall]]:
+    """Group tool_call chunks into separate iterators."""
     response = takewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
     for _, tool_call_chunks in groupby(
         response,
@@ -230,8 +231,9 @@ def _iter_streamed_tool_calls(
 
 
 async def _aiter_streamed_tool_calls(
-    response: AsyncIterator[ChatCompletionChunk],
+    response: AsyncIterable[ChatCompletionChunk],
 ) -> AsyncIterator[AsyncIterator[ChoiceDeltaToolCall]]:
+    """Async version of `_iter_streamed_tool_calls`."""
     response = atakewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
     async for _, tool_call_chunks in agroupby(
         response,
