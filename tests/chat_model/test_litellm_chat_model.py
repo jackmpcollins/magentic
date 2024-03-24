@@ -83,7 +83,7 @@ def test_litellm_chat_model_complete_anthropic_parallel_function_call():
             )
         ],
         functions=[plus, minus],
-        output_types=[ParallelFunctionCall[int]],  # type: ignore[misc]
+        output_types=[ParallelFunctionCall[int]],
     )
     assert isinstance(message.content, ParallelFunctionCall)
     # Claude does not return multiple tool calls, so this returns a single function call
@@ -196,7 +196,7 @@ async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_ca
             )
         ],
         functions=[plus, minus],
-        output_types=[AsyncParallelFunctionCall[int]],  # type: ignore[misc]
+        output_types=[AsyncParallelFunctionCall[int]],
     )
     assert isinstance(message.content, AsyncParallelFunctionCall)
     # Claude does not return multiple tool calls, so this returns a single function call
