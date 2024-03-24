@@ -1,17 +1,26 @@
-from collections.abc import AsyncIterator, Callable, Iterable, Iterator
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch
-from itertools import chain
-from typing import Any, Literal, TypeVar, cast, overload
+from itertools import chain, groupby, takewhile
+from typing import Any, Generic, Literal, TypeVar, cast, overload
+from uuid import uuid4
 
 import openai
-from openai.types.chat import ChatCompletionChunk, ChatCompletionMessageParam
+from openai.types.chat import (
+    ChatCompletionChunk,
+    ChatCompletionMessageParam,
+    ChatCompletionToolChoiceOptionParam,
+    ChatCompletionToolParam,
+)
+from openai.types.chat.chat_completion_chunk import ChoiceDeltaToolCall
 from pydantic import ValidationError
 
 from magentic.chat_model.base import ChatModel, StructuredOutputError
 from magentic.chat_model.function_schema import (
+    AsyncFunctionSchema,
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
+    FunctionSchema,
     async_function_schema_for_type,
     function_schema_for_type,
 )
@@ -22,20 +31,26 @@ from magentic.chat_model.message import (
     SystemMessage,
     UserMessage,
 )
-from magentic.function_call import FunctionCall
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
     achain,
+    agroupby,
     async_iter,
+    atakewhile,
 )
-from magentic.typing import is_origin_subclass
+from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
 
 class OpenaiMessageRole(Enum):
     ASSISTANT = "assistant"
-    FUNCTION = "function"
     SYSTEM = "system"
+    TOOL = "tool"
     USER = "user"
 
 
@@ -61,19 +76,59 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     if isinstance(message.content, str):
         return {"role": OpenaiMessageRole.ASSISTANT.value, "content": message.content}
 
-    function_schema = (
-        FunctionCallFunctionSchema(message.content.function)
-        if isinstance(message.content, FunctionCall)
-        else function_schema_for_type(type(message.content))
-    )
+    function_schema: FunctionSchema[Any]
 
+    if isinstance(message.content, FunctionCall):
+        function_schema = FunctionCallFunctionSchema(message.content.function)
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": message.content._unique_id,
+                    "type": "function",
+                    "function": {
+                        "name": function_schema.name,
+                        "arguments": function_schema.serialize_args(message.content),
+                    },
+                }
+            ],
+        }
+
+    if isinstance(message.content, ParallelFunctionCall):
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": None,
+            "tool_calls": [
+                {
+                    "id": function_call._unique_id,
+                    "type": "function",
+                    "function": {
+                        "name": FunctionCallFunctionSchema(function_call.function).name,
+                        "arguments": FunctionCallFunctionSchema(
+                            function_call.function
+                        ).serialize_args(function_call),
+                    },
+                }
+                for function_call in message.content
+            ],
+        }
+
+    function_schema = function_schema_for_type(type(message.content))
     return {
         "role": OpenaiMessageRole.ASSISTANT.value,
         "content": None,
-        "function_call": {
-            "name": function_schema.name,
-            "arguments": function_schema.serialize_args(message.content),
-        },
+        "tool_calls": [
+            {
+                # Can be random because no result will be inserted back into the chat
+                "id": str(uuid4()),
+                "type": "function",
+                "function": {
+                    "name": function_schema.name,
+                    "arguments": function_schema.serialize_args(message.content),
+                },
+            }
+        ],
     }
 
 
@@ -81,10 +136,155 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
 def _(message: FunctionResultMessage[Any]) -> ChatCompletionMessageParam:
     function_schema = function_schema_for_type(type(message.content))
     return {
-        "role": OpenaiMessageRole.FUNCTION.value,
-        "name": FunctionCallFunctionSchema(message.function).name,
+        "role": OpenaiMessageRole.TOOL.value,
+        "tool_call_id": message.function_call._unique_id,
         "content": function_schema.serialize_args(message.content),
     }
+
+
+def _add_missing_tool_calls_responses(
+    messages: list[ChatCompletionMessageParam],
+) -> list[ChatCompletionMessageParam]:
+    """Add null responses for tool calls without a response.
+
+    This is required by OpenAI's API.
+    "An assistant message with 'tool_calls' must be followed by tool messages responding to each 'tool_call_id'."
+    """
+    new_messages: list[ChatCompletionMessageParam] = []
+    current_tool_call_responses: set[str] = set()
+    for message in reversed(messages):
+        if tool_call_id := message.get("tool_call_id"):
+            current_tool_call_responses.add(tool_call_id)  # type: ignore[arg-type]
+        elif tool_calls := message.get("tool_calls"):
+            for tool_call in tool_calls:  # type: ignore[attr-defined]
+                if tool_call["id"] not in current_tool_call_responses:
+                    new_messages.append(
+                        {
+                            "role": OpenaiMessageRole.TOOL.value,
+                            "tool_call_id": tool_call["id"],
+                            "content": "null",
+                        }
+                    )
+                    current_tool_call_responses.add(tool_call["id"])
+            current_tool_call_responses = set()
+
+        new_messages.append(message)
+
+    return list(reversed(new_messages))
+
+
+T = TypeVar("T")
+BaseFunctionSchemaT = TypeVar("BaseFunctionSchemaT", bound=BaseFunctionSchema[Any])
+
+
+class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
+    def __init__(self, function_schema: BaseFunctionSchemaT):
+        self._function_schema = function_schema
+
+    def as_tool_choice(self) -> ChatCompletionToolChoiceOptionParam:
+        return {"type": "function", "function": {"name": self._function_schema.name}}
+
+    def to_dict(self) -> ChatCompletionToolParam:
+        return {"type": "function", "function": self._function_schema.dict()}
+
+    def matches(self, tool_call: ChoiceDeltaToolCall) -> bool:
+        return bool(
+            tool_call.type == "function"
+            and tool_call.function
+            and self._function_schema.name == tool_call.function.name
+        )
+
+
+# TODO: Generalize this to BaseToolSchema when that is created
+BeseToolSchemaT = TypeVar("BeseToolSchemaT", bound=BaseFunctionToolSchema[Any])
+
+
+def select_tool_schema(
+    tool_call: ChoiceDeltaToolCall, tools_schemas: list[BeseToolSchemaT]
+) -> BeseToolSchemaT:
+    """Select the tool schema based on the response chunk."""
+    for tool_schema in tools_schemas:
+        if tool_schema.matches(tool_call):
+            return tool_schema
+
+    msg = f"Unknown tool call: {tool_call.model_dump_json()}"
+    raise ValueError(msg)
+
+
+class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
+    def parse_tool_call(self, chunks: Iterable[ChoiceDeltaToolCall]) -> T:
+        return self._function_schema.parse_args(
+            chunk.function.arguments
+            for chunk in chunks
+            if chunk.function and chunk.function.arguments is not None
+        )
+
+
+class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
+    async def aparse_tool_call(self, chunks: AsyncIterable[ChoiceDeltaToolCall]) -> T:
+        return await self._function_schema.aparse_args(
+            chunk.function.arguments
+            async for chunk in chunks
+            if chunk.function and chunk.function.arguments is not None
+        )
+
+
+def _iter_streamed_tool_calls(
+    response: Iterable[ChatCompletionChunk],
+) -> Iterator[Iterator[ChoiceDeltaToolCall]]:
+    """Group tool_call chunks into separate iterators."""
+    response = takewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
+    for _, tool_call_chunks in groupby(
+        response,
+        lambda chunk: chunk.choices[0].delta.tool_calls
+        and chunk.choices[0].delta.tool_calls[0].index,
+    ):
+        yield (
+            chunk.choices[0].delta.tool_calls[0]
+            for chunk in tool_call_chunks
+            if chunk.choices[0].delta.tool_calls
+        )
+
+
+def parse_streamed_tool_calls(
+    response: Iterable[ChatCompletionChunk],
+    tool_schemas: list[FunctionToolSchema[T]],
+) -> Iterator[T]:
+    for tool_call_chunks in _iter_streamed_tool_calls(response):
+        first_chunk = next(tool_call_chunks)
+        tool_schema = select_tool_schema(first_chunk, tool_schemas)
+        tool_call = tool_schema.parse_tool_call(chain([first_chunk], tool_call_chunks))
+        yield tool_call
+
+
+async def _aiter_streamed_tool_calls(
+    response: AsyncIterable[ChatCompletionChunk],
+) -> AsyncIterator[AsyncIterator[ChoiceDeltaToolCall]]:
+    """Async version of `_iter_streamed_tool_calls`."""
+    response = atakewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
+    async for _, tool_call_chunks in agroupby(
+        response,
+        lambda chunk: chunk.choices[0].delta.tool_calls
+        and chunk.choices[0].delta.tool_calls[0].index,
+    ):
+        yield (
+            chunk.choices[0].delta.tool_calls[0]
+            async for chunk in tool_call_chunks
+            if chunk.choices[0].delta.tool_calls
+        )
+
+
+async def aparse_streamed_tool_calls(
+    response: AsyncIterable[ChatCompletionChunk],
+    tool_schemas: list[AsyncFunctionToolSchema[T]],
+) -> AsyncIterator[T]:
+    async for tool_call_chunks in _aiter_streamed_tool_calls(response):
+        first_chunk = await anext(tool_call_chunks)
+        tool_schema = select_tool_schema(first_chunk, tool_schemas)
+        tool_call = await tool_schema.aparse_tool_call(
+            achain(async_iter([first_chunk]), tool_call_chunks)
+        )
+        yield tool_call
 
 
 def openai_chatcompletion_create(
@@ -97,8 +297,8 @@ def openai_chatcompletion_create(
     seed: int | None = None,
     stop: list[str] | None = None,
     temperature: float | None = None,
-    functions: list[dict[str, Any]] | None = None,
-    function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
+    tools: list[ChatCompletionToolParam] | None = None,
+    tool_choice: ChatCompletionToolChoiceOptionParam | None = None,
 ) -> Iterator[ChatCompletionChunk]:
     client_kwargs: dict[str, Any] = {
         "api_key": api_key,
@@ -115,14 +315,14 @@ def openai_chatcompletion_create(
     # `openai.OpenAI().chat.completions.create` doesn't accept `None` for some args
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
-    if functions:
-        kwargs["functions"] = functions
-    if function_call:
-        kwargs["function_call"] = function_call
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
     if stop is not None:
         kwargs["stop"] = stop
+    if tools:
+        kwargs["tools"] = tools
+    if tool_choice:
+        kwargs["tool_choice"] = tool_choice
 
     response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
         model=model,
@@ -145,8 +345,8 @@ async def openai_chatcompletion_acreate(
     seed: int | None = None,
     stop: list[str] | None = None,
     temperature: float | None = None,
-    functions: list[dict[str, Any]] | None = None,
-    function_call: Literal["auto", "none"] | dict[str, Any] | None = None,
+    tools: list[ChatCompletionToolParam] | None = None,
+    tool_choice: ChatCompletionToolChoiceOptionParam | None = None,
 ) -> AsyncIterator[ChatCompletionChunk]:
     client_kwargs: dict[str, Any] = {
         "api_key": api_key,
@@ -162,14 +362,14 @@ async def openai_chatcompletion_acreate(
     # `openai.AsyncOpenAI().chat.completions.create` doesn't accept `None` for some args
     # so only pass function args if there are functions
     kwargs: dict[str, Any] = {}
-    if functions:
-        kwargs["functions"] = functions
-    if function_call:
-        kwargs["function_call"] = function_call
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
     if stop is not None:
         kwargs["stop"] = stop
+    if tools:
+        kwargs["tools"] = tools
+    if tool_choice:
+        kwargs["tool_choice"] = tool_choice
 
     response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
         model=model,
@@ -182,9 +382,7 @@ async def openai_chatcompletion_acreate(
     return response
 
 
-BeseFunctionSchemaT = TypeVar("BeseFunctionSchemaT", bound=BaseFunctionSchema[Any])
 R = TypeVar("R")
-FuncR = TypeVar("FuncR")
 
 
 class OpenaiChatModel(ChatModel):
@@ -237,31 +435,11 @@ class OpenaiChatModel(ChatModel):
     def temperature(self) -> float | None:
         return self._temperature
 
-    @staticmethod
-    def _select_function_schema(
-        chunk: ChatCompletionChunk,
-        function_schemas: list[BeseFunctionSchemaT],
-    ) -> BeseFunctionSchemaT | None:
-        """Select the function schema based on the first response chunk."""
-        if not chunk.choices[0].delta.function_call:
-            return None
-
-        function_name = chunk.choices[0].delta.function_call.name
-        if function_name is None:
-            msg = f"OpenAI function call name is None. Chunk: {chunk.model_dump_json()}"
-            raise ValueError(msg)
-
-        function_schema_by_name = {
-            function_schema.name: function_schema
-            for function_schema in function_schemas
-        }
-        return function_schema_by_name[function_name]
-
     @overload
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
@@ -271,95 +449,95 @@ class OpenaiChatModel(ChatModel):
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
-
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
     ) -> AssistantMessage[R]: ...
 
-    @overload
     def complete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: Iterable[type[R]],
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
-
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]] | None = None,
+        functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[R]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> (
-        AssistantMessage[FunctionCall[FuncR]]
-        | AssistantMessage[R]
-        | AssistantMessage[str]
-    ):
+    ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Request an LLM message."""
         if output_types is None:
             output_types = [] if functions else cast(list[type[R]], [str])
 
+        # TODO: Check that Function calls types match functions
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, StreamedStr))
+            if not is_origin_subclass(
+                type_, (str, StreamedStr, FunctionCall, ParallelFunctionCall)
+            )
         ]
+        tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
 
-        str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
-        streamed_str_in_output_types = any(
-            is_origin_subclass(cls, StreamedStr) for cls in output_types
-        )
+        str_in_output_types = is_any_origin_subclass(output_types, str)
+        streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
-        openai_functions = [schema.dict() for schema in function_schemas]
         response = openai_chatcompletion_create(
             api_key=self.api_key,
             api_type=self.api_type,
             base_url=self.base_url,
             model=self.model,
-            messages=[message_to_openai_message(m) for m in messages],
+            messages=_add_missing_tool_calls_responses(
+                [message_to_openai_message(m) for m in messages]
+            ),
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
             temperature=self.temperature,
-            functions=openai_functions,
-            function_call=(
-                {"name": openai_functions[0]["name"]}
-                if len(openai_functions) == 1 and not allow_string_output
+            tools=[schema.to_dict() for schema in tool_schemas],
+            tool_choice=(
+                tool_schemas[0].as_tool_choice()
+                if len(tool_schemas) == 1 and not allow_string_output
                 else None
             ),
         )
 
-        # Azure OpenAI sends a chunk with empty choices first
         first_chunk = next(response)
+        # Azure OpenAI sends a chunk with empty choices first
         if len(first_chunk.choices) == 0:
             first_chunk = next(response)
+        if (
+            first_chunk.choices[0].delta.content is None
+            and first_chunk.choices[0].delta.tool_calls is None
+        ):
+            first_chunk = next(response)
+        response = chain([first_chunk], response)
 
-        response = chain([first_chunk], response)  # Replace first chunk
-
-        function_schema = self._select_function_schema(first_chunk, function_schemas)
-        if function_schema:
-            try:
-                content = function_schema.parse_args(
-                    chunk.choices[0].delta.function_call.arguments
-                    for chunk in response
-                    if chunk.choices[0].delta.function_call
-                    and chunk.choices[0].delta.function_call.arguments is not None
+        if first_chunk.choices[0].delta.content is not None:
+            if not allow_string_output:
+                msg = (
+                    "String was returned by model but not expected. You may need to update"
+                    " your prompt to encourage the model to return a specific type."
                 )
+                raise StructuredOutputError(msg)
+            streamed_str = StreamedStr(
+                chunk.choices[0].delta.content
+                for chunk in response
+                if chunk.choices[0].delta.content is not None
+            )
+            if streamed_str_in_output_types:
+                return AssistantMessage(streamed_str)  # type: ignore[return-value]
+            return AssistantMessage(str(streamed_str))
+
+        if first_chunk.choices[0].delta.tool_calls is not None:
+            try:
+                if is_any_origin_subclass(output_types, ParallelFunctionCall):
+                    content = ParallelFunctionCall(
+                        parse_streamed_tool_calls(response, tool_schemas)
+                    )
+                    return AssistantMessage(content)  # type: ignore[return-value]
+                # Take only the first tool_call, silently ignore extra chunks
+                # TODO: Create generator here that raises error or warns if multiple tool_calls
+                content = next(parse_streamed_tool_calls(response, tool_schemas))
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
@@ -368,26 +546,14 @@ class OpenaiChatModel(ChatModel):
                 )
                 raise StructuredOutputError(msg) from e
 
-        if not allow_string_output:
-            msg = (
-                "String was returned by model but not expected. You may need to update"
-                " your prompt to encourage the model to return a specific type."
-            )
-            raise ValueError(msg)
-        streamed_str = StreamedStr(
-            chunk.choices[0].delta.content
-            for chunk in response
-            if chunk.choices[0].delta.content is not None
-        )
-        if streamed_str_in_output_types:
-            return AssistantMessage(streamed_str)  # type: ignore[return-value]
-        return AssistantMessage(str(streamed_str))
+        msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
+        raise ValueError(msg)
 
     @overload
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: None = ...,
         *,
         stop: list[str] | None = ...,
@@ -397,44 +563,20 @@ class OpenaiChatModel(ChatModel):
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[str]: ...
-
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: None = ...,
+        functions: Any = ...,
         output_types: Iterable[type[R]] = ...,
         *,
         stop: list[str] | None = ...,
     ) -> AssistantMessage[R]: ...
 
-    @overload
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]],
-        output_types: Iterable[type[R]],
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[FunctionCall[FuncR]] | AssistantMessage[R]: ...
-
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Iterable[Callable[..., FuncR]] | None = None,
+        functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[R]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> (
-        AssistantMessage[FunctionCall[FuncR]]
-        | AssistantMessage[R]
-        | AssistantMessage[str]
-    ):
+    ) -> AssistantMessage[R] | AssistantMessage[str]:
         """Async version of `complete`."""
         if output_types is None:
             output_types = [] if functions else cast(list[type[R]], [str])
@@ -442,49 +584,74 @@ class OpenaiChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             async_function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, AsyncStreamedStr))
+            if not is_origin_subclass(type_, (str, AsyncStreamedStr, FunctionCall))
         ]
+        tool_schemas = [AsyncFunctionToolSchema(schema) for schema in function_schemas]
 
-        str_in_output_types = any(is_origin_subclass(cls, str) for cls in output_types)
-        async_streamed_str_in_output_types = any(
-            is_origin_subclass(cls, AsyncStreamedStr) for cls in output_types
+        str_in_output_types = is_any_origin_subclass(output_types, str)
+        async_streamed_str_in_output_types = is_any_origin_subclass(
+            output_types, AsyncStreamedStr
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        openai_functions = [schema.dict() for schema in function_schemas]
         response = await openai_chatcompletion_acreate(
             api_key=self.api_key,
             api_type=self.api_type,
             base_url=self.base_url,
             model=self.model,
-            messages=[message_to_openai_message(m) for m in messages],
+            messages=_add_missing_tool_calls_responses(
+                [message_to_openai_message(m) for m in messages]
+            ),
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
             temperature=self.temperature,
-            functions=openai_functions,
-            function_call=(
-                {"name": openai_functions[0]["name"]}
-                if len(openai_functions) == 1 and not allow_string_output
+            tools=[schema.to_dict() for schema in tool_schemas],
+            tool_choice=(
+                tool_schemas[0].as_tool_choice()
+                if len(tool_schemas) == 1 and not allow_string_output
                 else None
             ),
         )
 
-        # Azure OpenAI sends a chunk with empty choices first
         first_chunk = await anext(response)
+        # Azure OpenAI sends a chunk with empty choices first
         if len(first_chunk.choices) == 0:
             first_chunk = await anext(response)
+        if (
+            first_chunk.choices[0].delta.content is None
+            and first_chunk.choices[0].delta.tool_calls is None
+        ):
+            first_chunk = await anext(response)
+        response = achain(async_iter([first_chunk]), response)
 
-        response = achain(async_iter([first_chunk]), response)  # Replace first chunk
+        if first_chunk.choices[0].delta.content is not None:
+            if not allow_string_output:
+                msg = (
+                    "String was returned by model but not expected. You may need to update"
+                    " your prompt to encourage the model to return a specific type."
+                )
+                raise StructuredOutputError(msg)
+            async_streamed_str = AsyncStreamedStr(
+                chunk.choices[0].delta.content
+                async for chunk in response
+                if chunk.choices[0].delta.content is not None
+            )
+            if async_streamed_str_in_output_types:
+                return AssistantMessage(async_streamed_str)  # type: ignore[return-value]
+            return AssistantMessage(await async_streamed_str.to_string())
 
-        function_schema = self._select_function_schema(first_chunk, function_schemas)
-        if function_schema:
+        if first_chunk.choices[0].delta.tool_calls is not None:
             try:
-                content = await function_schema.aparse_args(
-                    chunk.choices[0].delta.function_call.arguments
-                    async for chunk in response
-                    if chunk.choices[0].delta.function_call
-                    and chunk.choices[0].delta.function_call.arguments is not None
+                if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+                    content = AsyncParallelFunctionCall(
+                        aparse_streamed_tool_calls(response, tool_schemas)
+                    )
+                    return AssistantMessage(content)  # type: ignore[return-value]
+
+                # Take only the first tool_call, silently ignore extra chunks
+                content = await anext(
+                    aparse_streamed_tool_calls(response, tool_schemas)
                 )
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
@@ -494,17 +661,5 @@ class OpenaiChatModel(ChatModel):
                 )
                 raise StructuredOutputError(msg) from e
 
-        if not allow_string_output:
-            msg = (
-                "String was returned by model but not expected. You may need to update"
-                " your prompt to encourage the model to return a specific type."
-            )
-            raise ValueError(msg)
-        async_streamed_str = AsyncStreamedStr(
-            chunk.choices[0].delta.content
-            async for chunk in response
-            if chunk.choices[0].delta.content is not None
-        )
-        if async_streamed_str_in_output_types:
-            return AssistantMessage(async_streamed_str)  # type: ignore[return-value]
-        return AssistantMessage(await async_streamed_str.to_string())
+        msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
+        raise ValueError(msg)

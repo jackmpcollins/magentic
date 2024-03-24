@@ -1,7 +1,8 @@
+import asyncio
 from collections.abc import AsyncIterable, Iterable
 from dataclasses import dataclass
 from itertools import chain, dropwhile
-from typing import AsyncIterator, Iterator, TypeVar
+from typing import AsyncIterator, Callable, Iterator, TypeVar
 
 T = TypeVar("T")
 
@@ -12,11 +13,58 @@ async def async_iter(iterable: Iterable[T]) -> AsyncIterator[T]:
         yield item
 
 
+async def azip(*aiterables: AsyncIterable[T]) -> AsyncIterator[tuple[T, ...]]:
+    """Async version of `zip`."""
+    aiterators = [aiter(aiterable) for aiterable in aiterables]
+    try:
+        while True:
+            yield tuple(
+                await asyncio.gather(*(anext(aiterator) for aiterator in aiterators))
+            )
+    except StopAsyncIteration:
+        return
+
+
 async def achain(*aiterables: AsyncIterable[T]) -> AsyncIterator[T]:
     """Async version of `itertools.chain`."""
     for aiterable in aiterables:
         async for item in aiterable:
             yield item
+
+
+async def atakewhile(
+    predicate: Callable[[T], object], aiterable: AsyncIterable[T]
+) -> AsyncIterator[T]:
+    """Async version of `itertools.takewhile`."""
+    async for item in aiterable:
+        if not predicate(item):
+            break
+        yield item
+
+
+async def agroupby(
+    aiterable: AsyncIterable[T], key: Callable[[T], object]
+) -> AsyncIterator[tuple[object, AsyncIterator[T]]]:
+    """Async version of `itertools.groupby`."""
+    aiterator = aiter(aiterable)
+    transition = [await anext(aiterator)]
+
+    async def agroup(
+        aiterator: AsyncIterator[T], group_key: object
+    ) -> AsyncIterator[T]:
+        async for item in aiterator:
+            if key(item) != group_key:
+                transition.append(item)
+                return
+            yield item
+
+    while transition:
+        transition_item = transition.pop()
+        group_key = key(transition_item)
+        yield (
+            group_key,
+            agroup(achain(async_iter([transition_item]), aiterator), group_key),
+        )
 
 
 @dataclass
@@ -106,18 +154,43 @@ async def aiter_streamed_json_array(chunks: AsyncIterable[str]) -> AsyncIterable
             item_chars.append(char)
 
 
+class CachedIterable(Iterable[T]):
+    """Wraps an Iterable and caches the items after the first iteration."""
+
+    def __init__(self, iterable: Iterable[T]):
+        self._iterator = iter(iterable)
+        self._cached_items: list[T] = []
+
+    def __iter__(self) -> Iterator[T]:
+        yield from self._cached_items
+        for item in self._iterator:
+            self._cached_items.append(item)
+            yield item
+
+
+class CachedAsyncIterable(AsyncIterable[T]):
+    """Async version of `CachedIterable`."""
+
+    def __init__(self, aiterable: AsyncIterable[T]):
+        self._aiterator = aiter(aiterable)
+        self._cached_items: list[T] = []
+
+    async def __aiter__(self) -> AsyncIterator[T]:
+        for item in self._cached_items:
+            yield item
+        async for item in self._aiterator:
+            self._cached_items.append(item)
+            yield item
+
+
 class StreamedStr(Iterable[str]):
     """A string that is generated in chunks."""
 
     def __init__(self, chunks: Iterable[str]):
-        self._chunks = chunks
-        self._cached_chunks: list[str] = []
+        self._chunks = CachedIterable(chunks)
 
     def __iter__(self) -> Iterator[str]:
-        yield from self._cached_chunks
-        for chunk in self._chunks:
-            self._cached_chunks.append(chunk)
-            yield chunk
+        yield from self._chunks
 
     def __str__(self) -> str:
         return "".join(self)
@@ -131,16 +204,10 @@ class AsyncStreamedStr(AsyncIterable[str]):
     """Async version of `StreamedStr`."""
 
     def __init__(self, chunks: AsyncIterable[str]):
-        self._chunks = chunks
-        self._cached_chunks: list[str] = []
+        self._chunks = CachedAsyncIterable(chunks)
 
     async def __aiter__(self) -> AsyncIterator[str]:
-        # Cannot use `yield from` inside an async function
-        # https://peps.python.org/pep-0525/#asynchronous-yield-from
-        for chunk in self._cached_chunks:
-            yield chunk
         async for chunk in self._chunks:
-            self._cached_chunks.append(chunk)
             yield chunk
 
     async def to_string(self) -> str:

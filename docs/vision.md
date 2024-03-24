@@ -76,8 +76,11 @@ IMAGE_URL_WOODEN_BOARDWALK = "https://upload.wikimedia.org/wikipedia/commons/thu
 
 def url_to_bytes(url: str) -> bytes:
     """Get the content of a URL as bytes."""
-    return requests.get(url).content
-
+    
+    # A custom user-agent is necessary to comply with Wikimedia user-agent policy
+    # https://meta.wikimedia.org/wiki/User-Agent_policy
+    headers = {'User-Agent': 'MagenticExampleBot (https://magentic.dev/)'}
+    return requests.get(url, headers=headers).content
 
 @chatprompt(
     UserMessage("Describe the following image in one sentence."),

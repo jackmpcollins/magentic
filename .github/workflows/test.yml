@@ -5,9 +5,23 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      anthropic:
+        description: "Test using Anthropic API"
+        type: boolean
+        default: false
+      litellm_openai:
+        description: "Test using OpenAI API via LiteLLM"
+        type: boolean
+        default: false
+      openai:
+        description: "Test using OpenAI API"
+        type: boolean
+        default: false
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -21,4 +35,20 @@ jobs:
       - run: poetry run ruff check --output-format=github .
       - run: poetry run ruff format --check .
       - run: poetry run mypy .
-      - run: poetry run pytest tests
+      - run: poetry run pytest -vv tests/
+      # Do not use `github.event.inputs` because it converts booleans to strings
+      # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
+      - if: inputs.anthropic
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: poetry run pytest -vv tests/ -m 'anthropic'
+      - if: inputs.litellm_openai
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
+        run: poetry run pytest -vv tests/ -m 'litellm_openai'
+      - if: inputs.openai
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
+        run: poetry run pytest -vv tests/ -m 'openai'

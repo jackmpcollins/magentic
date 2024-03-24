@@ -2,13 +2,14 @@ from abc import ABC, abstractmethod
 from typing import (
     Any,
     Awaitable,
-    Callable,
     Generic,
     TypeVar,
     cast,
     get_origin,
     overload,
 )
+
+from magentic.function_call import FunctionCall
 
 T = TypeVar("T")
 
@@ -103,27 +104,29 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
 
     @overload
     def __init__(
-        self, content: ContentT, function: Callable[..., Awaitable[ContentT]]
+        self, content: ContentT, function_call: FunctionCall[Awaitable[ContentT]]
     ): ...
 
     @overload
-    def __init__(self, content: ContentT, function: Callable[..., ContentT]): ...
+    def __init__(self, content: ContentT, function_call: FunctionCall[ContentT]): ...
 
     def __init__(
         self,
         content: ContentT,
-        function: Callable[..., Awaitable[ContentT]] | Callable[..., ContentT],
+        function_call: FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT],
     ):
         super().__init__(content)
-        self._function = function
+        self._function_call = function_call
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.content!r}, {self._function!r})"
+        return f"{self.__class__.__name__}({self.content!r}, {self._function_call!r})"
 
     @property
-    def function(self) -> Callable[..., Awaitable[ContentT]] | Callable[..., ContentT]:
-        return self._function
+    def function_call(
+        self,
+    ) -> FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT]:
+        return self._function_call
 
     def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
         del kwargs
-        return FunctionResultMessage(self.content, self.function)
+        return FunctionResultMessage(self.content, self._function_call)

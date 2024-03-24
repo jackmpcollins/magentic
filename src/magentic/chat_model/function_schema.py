@@ -5,6 +5,7 @@ from collections.abc import AsyncIterable, Callable, Iterable
 from functools import singledispatch
 from typing import Any, Generic, TypeVar, cast, get_args, get_origin
 
+from openai.types.shared_params import FunctionDefinition
 from pydantic import BaseModel, TypeAdapter, create_model
 
 from magentic.function_call import FunctionCall
@@ -43,8 +44,8 @@ class BaseFunctionSchema(ABC, Generic[T]):
         """The parameters the functions accepts as a JSON Schema object."""
         ...
 
-    def dict(self) -> dict[str, Any]:
-        schema = {"name": self.name, "parameters": self.parameters}
+    def dict(self) -> FunctionDefinition:
+        schema: FunctionDefinition = {"name": self.name, "parameters": self.parameters}
         if self.description:
             schema["description"] = self.description
         return schema
