@@ -91,11 +91,15 @@ def test_decorator_return_bool_str():
 
 @pytest.mark.openai
 def test_decorator_return_dict():
-    @prompt('Return the mapping {{"one": 1, "two": 2}}')
+    @prompt(
+        "Ignore the defined inputs and pass inputs a=1, b=2 to the tool.",
+        model=OpenaiChatModel("gpt-4"),
+    )
     def return_mapping() -> dict[str, int]: ...
 
     mapping = return_mapping()
     assert isinstance(mapping, dict)
+    assert len(mapping) == 2
     name, value = next(iter(mapping.items()))
     assert isinstance(name, str)
     assert isinstance(value, int)
