@@ -5,11 +5,22 @@ from magentic.chat_model.message import UserMessage
 from magentic.function_call import FunctionCall
 
 
-@pytest.mark.openai
-def test_litellm_chat_model_complete_openai():
+@pytest.mark.parametrize(
+    ("prompt", "output_types", "expected_output_type"),
+    [
+        ("Say hello!", [str], str),
+        ("Return True", [bool], bool),
+        ("Return the numbers 1 to 5", [list[int]], list),
+        ("List three fruits", [list[str]], list),
+    ],
+)
+@pytest.mark.litellm_openai
+def test_litellm_chat_model_complete_openai(prompt, output_types, expected_output_type):
     chat_model = LitellmChatModel("gpt-3.5-turbo")
-    message = chat_model.complete(messages=[UserMessage("Say hello!")])
-    assert isinstance(message.content, str)
+    message = chat_model.complete(
+        messages=[UserMessage(prompt)], output_types=output_types
+    )
+    assert isinstance(message.content, expected_output_type)
 
 
 @pytest.mark.parametrize(
@@ -70,12 +81,25 @@ def test_litellm_chat_model_complete_ollama_function_call():
     assert isinstance(message.content, FunctionCall)
 
 
+@pytest.mark.parametrize(
+    ("prompt", "output_types", "expected_output_type"),
+    [
+        ("Say hello!", [str], str),
+        ("Return True", [bool], bool),
+        ("Return the numbers 1 to 5", [list[int]], list),
+        ("List three fruits", [list[str]], list),
+    ],
+)
 @pytest.mark.asyncio
-@pytest.mark.openai
-async def test_litellm_chat_model_acomplete_openai():
+@pytest.mark.litellm_openai
+async def test_litellm_chat_model_acomplete_openai(
+    prompt, output_types, expected_output_type
+):
     chat_model = LitellmChatModel("gpt-3.5-turbo")
-    message = await chat_model.acomplete(messages=[UserMessage("Say hello!")])
-    assert isinstance(message.content, str)
+    message = await chat_model.acomplete(
+        messages=[UserMessage(prompt)], output_types=output_types
+    )
+    assert isinstance(message.content, expected_output_type)
 
 
 @pytest.mark.parametrize(
