@@ -102,9 +102,7 @@ def test_litellm_chat_model_complete_ollama(prompt, output_types, expected_outpu
     assert isinstance(message.content, expected_output_type)
 
 
-@pytest.mark.skip(
-    reason="LiteLLM function calling with streaming is indistinguishable from normal text."
-)
+@pytest.mark.skip(reason="LiteLLM does not parse ollama tool calls")
 @pytest.mark.ollama
 def test_litellm_chat_model_complete_ollama_function_call():
     def plus(a: int, b: int) -> int:
