@@ -12,11 +12,23 @@ def test_litellm_chat_model_complete_openai():
     assert isinstance(message.content, str)
 
 
+@pytest.mark.parametrize(
+    ("prompt", "output_types", "expected_output_type"),
+    [
+        ("Say hello!", [str], str),
+        ("Return True", [bool], bool),
+        ("Return the numbers 1 to 5", [list[int]], list),
+    ],
+)
 @pytest.mark.anthropic
-def test_litellm_chat_model_complete_anthropic():
+def test_litellm_chat_model_complete_anthropic(
+    prompt, output_types, expected_output_type
+):
     chat_model = LitellmChatModel("anthropic/claude-3-haiku-20240307")
-    message = chat_model.complete(messages=[UserMessage("Say hello!")])
-    assert isinstance(message.content, str)
+    message = chat_model.complete(
+        messages=[UserMessage(prompt)], output_types=output_types
+    )
+    assert isinstance(message.content, expected_output_type)
 
 
 @pytest.mark.ollama
@@ -65,9 +77,21 @@ async def test_litellm_chat_model_acomplete_openai():
     assert isinstance(message.content, str)
 
 
+@pytest.mark.parametrize(
+    ("prompt", "output_types", "expected_output_type"),
+    [
+        ("Say hello!", [str], str),
+        ("Return True", [bool], bool),
+        ("Return the numbers 1 to 5", [list[int]], list),
+    ],
+)
 @pytest.mark.asyncio
 @pytest.mark.anthropic
-async def test_litellm_chat_model_acomplete_anthropic():
+async def test_litellm_chat_model_acomplete_anthropic(
+    prompt, output_types, expected_output_type
+):
     chat_model = LitellmChatModel("anthropic/claude-3-haiku-20240307")
-    message = await chat_model.acomplete(messages=[UserMessage("Say hello!")])
-    assert isinstance(message.content, str)
+    message = await chat_model.acomplete(
+        messages=[UserMessage(prompt)], output_types=output_types
+    )
+    assert isinstance(message.content, expected_output_type)
