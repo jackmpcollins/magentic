@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator, Callable, Iterable, Iterator
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch
 from itertools import chain, groupby, takewhile
@@ -195,8 +195,24 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
         )
 
 
+# TODO: Generalize this to BaseToolSchema when that is created
+BeseToolSchemaT = TypeVar("BeseToolSchemaT", bound=BaseFunctionToolSchema[Any])
+
+
+def select_tool_schema(
+    tool_call: ChoiceDeltaToolCall, tools_schemas: list[BeseToolSchemaT]
+) -> BeseToolSchemaT:
+    """Select the tool schema based on the response chunk."""
+    for tool_schema in tools_schemas:
+        if tool_schema.matches(tool_call):
+            return tool_schema
+
+    msg = f"Unknown tool call: {tool_call.model_dump_json()}"
+    raise ValueError(msg)
+
+
 class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
-    def parse_tool_call(self, chunks: Iterator[ChoiceDeltaToolCall]) -> T:
+    def parse_tool_call(self, chunks: Iterable[ChoiceDeltaToolCall]) -> T:
         return self._function_schema.parse_args(
             chunk.function.arguments
             for chunk in chunks
@@ -205,7 +221,7 @@ class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
 
 
 class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
-    async def aparse_tool_call(self, chunks: AsyncIterator[ChoiceDeltaToolCall]) -> T:
+    async def aparse_tool_call(self, chunks: AsyncIterable[ChoiceDeltaToolCall]) -> T:
         return await self._function_schema.aparse_args(
             chunk.function.arguments
             async for chunk in chunks
@@ -214,8 +230,9 @@ class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
 
 
 def _iter_streamed_tool_calls(
-    response: Iterator[ChatCompletionChunk],
+    response: Iterable[ChatCompletionChunk],
 ) -> Iterator[Iterator[ChoiceDeltaToolCall]]:
+    """Group tool_call chunks into separate iterators."""
     response = takewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
     for _, tool_call_chunks in groupby(
         response,
@@ -229,9 +246,21 @@ def _iter_streamed_tool_calls(
         )
 
 
+def parse_streamed_tool_calls(
+    response: Iterable[ChatCompletionChunk],
+    tool_schemas: list[FunctionToolSchema[T]],
+) -> Iterator[T]:
+    for tool_call_chunks in _iter_streamed_tool_calls(response):
+        first_chunk = next(tool_call_chunks)
+        tool_schema = select_tool_schema(first_chunk, tool_schemas)
+        tool_call = tool_schema.parse_tool_call(chain([first_chunk], tool_call_chunks))
+        yield tool_call
+
+
 async def _aiter_streamed_tool_calls(
-    response: AsyncIterator[ChatCompletionChunk],
+    response: AsyncIterable[ChatCompletionChunk],
 ) -> AsyncIterator[AsyncIterator[ChoiceDeltaToolCall]]:
+    """Async version of `_iter_streamed_tool_calls`."""
     response = atakewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
     async for _, tool_call_chunks in agroupby(
         response,
@@ -243,6 +272,19 @@ async def _aiter_streamed_tool_calls(
             async for chunk in tool_call_chunks
             if chunk.choices[0].delta.tool_calls
         )
+
+
+async def aparse_streamed_tool_calls(
+    response: AsyncIterable[ChatCompletionChunk],
+    tool_schemas: list[AsyncFunctionToolSchema[T]],
+) -> AsyncIterator[T]:
+    async for tool_call_chunks in _aiter_streamed_tool_calls(response):
+        first_chunk = await anext(tool_call_chunks)
+        tool_schema = select_tool_schema(first_chunk, tool_schemas)
+        tool_call = await tool_schema.aparse_tool_call(
+            achain(async_iter([first_chunk]), tool_call_chunks)
+        )
+        yield tool_call
 
 
 def openai_chatcompletion_create(
@@ -340,8 +382,6 @@ async def openai_chatcompletion_acreate(
     return response
 
 
-# TODO: Generalize this to BaseToolSchema when that is created
-BeseToolSchemaT = TypeVar("BeseToolSchemaT", bound=BaseFunctionToolSchema[Any])
 R = TypeVar("R")
 
 
@@ -394,18 +434,6 @@ class OpenaiChatModel(ChatModel):
     @property
     def temperature(self) -> float | None:
         return self._temperature
-
-    @staticmethod
-    def _select_tool_schema(
-        tool_call: ChoiceDeltaToolCall, tools_schemas: list[BeseToolSchemaT]
-    ) -> BeseToolSchemaT:
-        """Select the tool schema based on the response chunk."""
-        for tool_schema in tools_schemas:
-            if tool_schema.matches(tool_call):
-                return tool_schema
-
-        msg = f"Unknown tool call: {tool_call.model_dump_json()}"
-        raise ValueError(msg)
 
     @overload
     def complete(
@@ -501,24 +529,15 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage(str(streamed_str))
 
         if first_chunk.choices[0].delta.tool_calls is not None:
-            if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                content = ParallelFunctionCall(
-                    self._select_tool_schema(
-                        next(tool_call_chunks), tool_schemas
-                    ).parse_tool_call(tool_call_chunks)
-                    for tool_call_chunks in _iter_streamed_tool_calls(response)
-                )
-                return AssistantMessage(content)  # type: ignore[return-value]
-
-            tool_schema = self._select_tool_schema(
-                first_chunk.choices[0].delta.tool_calls[0], tool_schemas
-            )
             try:
+                if is_any_origin_subclass(output_types, ParallelFunctionCall):
+                    content = ParallelFunctionCall(
+                        parse_streamed_tool_calls(response, tool_schemas)
+                    )
+                    return AssistantMessage(content)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = tool_schema.parse_tool_call(
-                    next(_iter_streamed_tool_calls(response))
-                )
+                content = next(parse_streamed_tool_calls(response, tool_schemas))
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
@@ -623,22 +642,16 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage(await async_streamed_str.to_string())
 
         if first_chunk.choices[0].delta.tool_calls is not None:
-            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                content = AsyncParallelFunctionCall(
-                    await self._select_tool_schema(
-                        await anext(tool_call_chunks), tool_schemas
-                    ).aparse_tool_call(tool_call_chunks)
-                    async for tool_call_chunks in _aiter_streamed_tool_calls(response)
-                )
-                return AssistantMessage(content)  # type: ignore[return-value]
-
-            tool_schema = self._select_tool_schema(
-                first_chunk.choices[0].delta.tool_calls[0], tool_schemas
-            )
             try:
+                if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+                    content = AsyncParallelFunctionCall(
+                        aparse_streamed_tool_calls(response, tool_schemas)
+                    )
+                    return AssistantMessage(content)  # type: ignore[return-value]
+
                 # Take only the first tool_call, silently ignore extra chunks
-                content = await tool_schema.aparse_tool_call(
-                    await anext(_aiter_streamed_tool_calls(response))
+                content = await anext(
+                    aparse_streamed_tool_calls(response, tool_schemas)
                 )
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:

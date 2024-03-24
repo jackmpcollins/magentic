@@ -1597,13 +1597,13 @@ test-ui = ["calysto-bash"]
 
 [[package]]
 name = "litellm"
-version = "1.32.9"
+version = "1.33.8"
 description = "Library to easily interface with LLM API providers"
 optional = true
 python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,>=3.8"
 files = [
-    {file = "litellm-1.32.9-py3-none-any.whl", hash = "sha256:eb0d1dcd2dfe379b632003a14301f71d3d426a65afcffe5d47abffe24c7c37b5"},
-    {file = "litellm-1.32.9.tar.gz", hash = "sha256:1bf39faa707d8977620592334a385137b0251a65581d7c68cbf9387276ca7d66"},
+    {file = "litellm-1.33.8-py3-none-any.whl", hash = "sha256:7983b96582fba2fabe88a53e1b396e3bbd3baa1576fa357d67df51c419a5824c"},
+    {file = "litellm-1.33.8.tar.gz", hash = "sha256:e7544b884f3669fb7ea6b5e8a2ca5586caed203252efa42c84502b10c5faf5bd"},
 ]
 
 [package.dependencies]
@@ -1618,8 +1618,7 @@ tiktoken = ">=0.4.0"
 tokenizers = "*"
 
 [package.extras]
-extra-proxy = ["streamlit (>=1.29.0,<2.0.0)"]
-proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "argon2-cffi (>=23.1.0,<24.0.0)", "backoff", "fastapi (>=0.104.1,<0.105.0)", "fastapi-sso (>=0.10.0,<0.11.0)", "gunicorn (>=21.2.0,<22.0.0)", "orjson (>=3.9.7,<4.0.0)", "python-multipart (>=0.0.6,<0.0.7)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)"]
+proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "cryptography (==41.0.3)", "fastapi (>=0.109.1,<0.110.0)", "fastapi-sso (>=0.10.0,<0.11.0)", "gunicorn (>=21.2.0,<22.0.0)", "orjson (>=3.9.7,<4.0.0)", "python-multipart (>=0.0.6,<0.0.7)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)"]
 
 [[package]]
 name = "markdown"
@@ -4047,4 +4046,4 @@ litellm = ["litellm"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "494e8504c1173171e6e5b4cac54f82370e97d71d70e5004d585f3d495d832144"
+content-hash = "0247574b569cf4b64f747e91271209ba448975642ed41bf7876692cbfbd4fa3f"
