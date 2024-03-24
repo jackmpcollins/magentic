@@ -18,6 +18,7 @@ def test_litellm_chat_model_complete_openai():
         ("Say hello!", [str], str),
         ("Return True", [bool], bool),
         ("Return the numbers 1 to 5", [list[int]], list),
+        ("List three fruits", [list[str]], list),
     ],
 )
 @pytest.mark.anthropic
@@ -83,6 +84,7 @@ async def test_litellm_chat_model_acomplete_openai():
         ("Say hello!", [str], str),
         ("Return True", [bool], bool),
         ("Return the numbers 1 to 5", [list[int]], list),
+        ("List three fruits", [list[str]], list),
     ],
 )
 @pytest.mark.asyncio
