@@ -2,7 +2,11 @@ import pytest
 
 from magentic.chat_model.litellm_chat_model import LitellmChatModel
 from magentic.chat_model.message import UserMessage
-from magentic.function_call import FunctionCall
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 
 
 @pytest.mark.parametrize(
@@ -61,6 +65,28 @@ def test_litellm_chat_model_complete_anthropic_function_call():
         output_types=[FunctionCall[int]],  # type: ignore[misc]
     )
     assert isinstance(message.content, FunctionCall)
+
+
+@pytest.mark.anthropic
+def test_litellm_chat_model_complete_anthropic_parallel_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    def minus(a: int, b: int) -> int:
+        return a - b
+
+    chat_model = LitellmChatModel("anthropic/claude-3-haiku-20240307")
+    message = chat_model.complete(
+        messages=[
+            UserMessage(
+                "Use the plus tool to sum 1 and 2. Use the minus tool to subtract 1 from 2."
+            )
+        ],
+        functions=[plus, minus],
+        output_types=[ParallelFunctionCall[int]],  # type: ignore[misc]
+    )
+    assert isinstance(message.content, ParallelFunctionCall)
+    # Claude does not return multiple tool calls, so this returns a single function call
 
 
 @pytest.mark.parametrize(
@@ -153,6 +179,29 @@ async def test_litellm_chat_model_acomplete_anthropic_function_call():
         output_types=[FunctionCall[int]],  # type: ignore[misc]
     )
     assert isinstance(message.content, FunctionCall)
+
+
+@pytest.mark.asyncio
+@pytest.mark.anthropic
+async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_call():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    def minus(a: int, b: int) -> int:
+        return a - b
+
+    chat_model = LitellmChatModel("anthropic/claude-3-haiku-20240307")
+    message = await chat_model.acomplete(
+        messages=[
+            UserMessage(
+                "Use the plus tool to sum 1 and 2. Use the minus tool to subtract 1 from 2."
+            )
+        ],
+        functions=[plus, minus],
+        output_types=[AsyncParallelFunctionCall[int]],  # type: ignore[misc]
+    )
+    assert isinstance(message.content, AsyncParallelFunctionCall)
+    # Claude does not return multiple tool calls, so this returns a single function call
 
 
 @pytest.mark.parametrize(
