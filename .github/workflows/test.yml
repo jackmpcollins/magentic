@@ -36,16 +36,18 @@ jobs:
       - run: poetry run ruff format --check .
       - run: poetry run mypy .
       - run: poetry run pytest -vv tests/
-      - if: github.event.inputs.anthropic
+      # Do not use `github.event.inputs` because it converts booleans to strings
+      # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
+      - if: inputs.anthropic
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: poetry run pytest -vv tests/ -m 'anthropic'
-      - if: github.event.inputs.litellm_openai
+      - if: inputs.litellm_openai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_ORGANIZATION: ${{ secrets.OPENAI_ORGANIZATION }}
         run: poetry run pytest -vv tests/ -m 'litellm_openai'
-      - if: github.event.inputs.openai
+      - if: inputs.openai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_ORGANIZATION: ${{ secrets.OPENAI_ORGANIZATION }}
