@@ -21,7 +21,6 @@ from magentic.chat_model.message import (
 )
 from magentic.chat_model.openai_chat_model import (
     AsyncFunctionToolSchema,
-    BaseFunctionToolSchema,
     FunctionToolSchema,
     aparse_streamed_tool_calls,
     message_to_openai_message,
@@ -118,7 +117,6 @@ async def litellm_acompletion(
     return response
 
 
-BeseToolSchemaT = TypeVar("BeseToolSchemaT", bound=BaseFunctionToolSchema[Any])
 R = TypeVar("R")
 
 
