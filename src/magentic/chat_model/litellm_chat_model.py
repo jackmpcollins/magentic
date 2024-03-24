@@ -7,7 +7,6 @@ from openai.types.chat import (
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
 )
-from openai.types.chat.chat_completion_chunk import ChoiceDeltaToolCall
 from pydantic import ValidationError
 
 from magentic.chat_model.base import ChatModel, StructuredOutputError
@@ -24,9 +23,9 @@ from magentic.chat_model.openai_chat_model import (
     AsyncFunctionToolSchema,
     BaseFunctionToolSchema,
     FunctionToolSchema,
-    _aiter_streamed_tool_calls,
-    _iter_streamed_tool_calls,
+    aparse_streamed_tool_calls,
     message_to_openai_message,
+    parse_streamed_tool_calls,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -155,18 +154,6 @@ class LitellmChatModel(ChatModel):
     def temperature(self) -> float | None:
         return self._temperature
 
-    @staticmethod
-    def _select_tool_schema(
-        tool_call: ChoiceDeltaToolCall, tools_schemas: list[BeseToolSchemaT]
-    ) -> BeseToolSchemaT:
-        """Select the tool schema based on the response chunk."""
-        for tool_schema in tools_schemas:
-            if tool_schema.matches(tool_call):
-                return tool_schema
-
-        msg = f"Unknown tool call: {tool_call.model_dump_json()}"
-        raise ValueError(msg)
-
     @overload
     def complete(
         self,
@@ -257,22 +244,14 @@ class LitellmChatModel(ChatModel):
         if first_chunk.choices[0].delta.tool_calls is not None:
             if is_any_origin_subclass(output_types, ParallelFunctionCall):
                 content = ParallelFunctionCall(
-                    self._select_tool_schema(
-                        next(tool_call_chunks), tool_schemas
-                    ).parse_tool_call(tool_call_chunks)
-                    for tool_call_chunks in _iter_streamed_tool_calls(response)
+                    parse_streamed_tool_calls(response, tool_schemas)
                 )
                 return AssistantMessage(content)  # type: ignore[return-value]
 
-            tool_schema = self._select_tool_schema(
-                first_chunk.choices[0].delta.tool_calls[0], tool_schemas
-            )
             try:
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = tool_schema.parse_tool_call(
-                    next(_iter_streamed_tool_calls(response))
-                )
+                content = next(parse_streamed_tool_calls(response, tool_schemas))
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
@@ -374,20 +353,14 @@ class LitellmChatModel(ChatModel):
         if first_chunk.choices[0].delta.tool_calls is not None:
             if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                 content = AsyncParallelFunctionCall(
-                    await self._select_tool_schema(
-                        await anext(tool_call_chunks), tool_schemas
-                    ).aparse_tool_call(tool_call_chunks)
-                    async for tool_call_chunks in _aiter_streamed_tool_calls(response)
+                    aparse_streamed_tool_calls(response, tool_schemas)
                 )
                 return AssistantMessage(content)  # type: ignore[return-value]
 
-            tool_schema = self._select_tool_schema(
-                first_chunk.choices[0].delta.tool_calls[0], tool_schemas
-            )
             try:
                 # Take only the first tool_call, silently ignore extra chunks
-                content = await tool_schema.aparse_tool_call(
-                    await anext(_aiter_streamed_tool_calls(response))
+                content = await anext(
+                    aparse_streamed_tool_calls(response, tool_schemas)
                 )
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
