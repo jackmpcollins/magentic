@@ -2,62 +2,62 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://magentic.dev/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/asyncio/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/chat-prompting/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/configuration/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/formatting/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/function-calling/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/streaming/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/type-checking/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/vision/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/examples/chain_of_verification/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/examples/registering_custom_type/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/examples/retrieval_augmented_generation/</loc>
-         <lastmod>2024-03-22</lastmod>
+         <lastmod>2024-03-24</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
