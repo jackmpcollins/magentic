@@ -4046,4 +4046,4 @@ litellm = ["litellm"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "0247574b569cf4b64f747e91271209ba448975642ed41bf7876692cbfbd4fa3f"
+content-hash = "b7f54bea54b831412aa46d1d0206fbe598724bf32cb906401d1e0016fd1991ba"
