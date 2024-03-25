@@ -189,9 +189,9 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
 
     def matches(self, tool_call: ChoiceDeltaToolCall) -> bool:
         return bool(
-            tool_call.type == "function"
-            and tool_call.function
-            and self._function_schema.name == tool_call.function.name
+            # TODO: Add back tool_call.type == "function" when LiteLLM Mistral fixed
+            # https://github.com/BerriAI/litellm/issues/2645
+            tool_call.function and self._function_schema.name == tool_call.function.name
         )
 
 
