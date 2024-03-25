@@ -317,8 +317,12 @@ def openai_chatcompletion_create(
     kwargs: dict[str, Any] = {}
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
+    if seed is not None:
+        kwargs["seed"] = seed
     if stop is not None:
         kwargs["stop"] = stop
+    if temperature is not None:
+        kwargs["temperature"] = temperature
     if tools:
         kwargs["tools"] = tools
     if tool_choice:
@@ -327,9 +331,7 @@ def openai_chatcompletion_create(
     response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
         model=model,
         messages=messages,
-        seed=seed,
         stream=True,
-        temperature=temperature,
         **kwargs,
     )
     return response
@@ -364,8 +366,12 @@ async def openai_chatcompletion_acreate(
     kwargs: dict[str, Any] = {}
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
+    if seed is not None:
+        kwargs["seed"] = seed
     if stop is not None:
         kwargs["stop"] = stop
+    if temperature is not None:
+        kwargs["temperature"] = temperature
     if tools:
         kwargs["tools"] = tools
     if tool_choice:
@@ -374,8 +380,6 @@ async def openai_chatcompletion_acreate(
     response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
         model=model,
         messages=messages,
-        seed=seed,
-        temperature=temperature,
         stream=True,
         **kwargs,
     )
