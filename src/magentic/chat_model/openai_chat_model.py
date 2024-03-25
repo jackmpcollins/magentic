@@ -510,13 +510,14 @@ class OpenaiChatModel(ChatModel):
         if len(first_chunk.choices) == 0:
             first_chunk = next(response)
         if (
-            first_chunk.choices[0].delta.content is None
-            and first_chunk.choices[0].delta.tool_calls is None
+            # Mistral tool call first chunk has content ""
+            not first_chunk.choices[0].delta.content
+            and not first_chunk.choices[0].delta.tool_calls
         ):
             first_chunk = next(response)
         response = chain([first_chunk], response)
 
-        if first_chunk.choices[0].delta.content is not None:
+        if first_chunk.choices[0].delta.content:
             if not allow_string_output:
                 msg = (
                     "String was returned by model but not expected. You may need to update"
@@ -532,7 +533,7 @@ class OpenaiChatModel(ChatModel):
                 return AssistantMessage(streamed_str)  # type: ignore[return-value]
             return AssistantMessage(str(streamed_str))
 
-        if first_chunk.choices[0].delta.tool_calls is not None:
+        if first_chunk.choices[0].delta.tool_calls:
             try:
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
                     content = ParallelFunctionCall(
@@ -623,13 +624,14 @@ class OpenaiChatModel(ChatModel):
         if len(first_chunk.choices) == 0:
             first_chunk = await anext(response)
         if (
-            first_chunk.choices[0].delta.content is None
-            and first_chunk.choices[0].delta.tool_calls is None
+            # Mistral tool call first chunk has content ""
+            not first_chunk.choices[0].delta.content
+            and not first_chunk.choices[0].delta.tool_calls
         ):
             first_chunk = await anext(response)
         response = achain(async_iter([first_chunk]), response)
 
-        if first_chunk.choices[0].delta.content is not None:
+        if first_chunk.choices[0].delta.content:
             if not allow_string_output:
                 msg = (
                     "String was returned by model but not expected. You may need to update"
@@ -645,7 +647,7 @@ class OpenaiChatModel(ChatModel):
                 return AssistantMessage(async_streamed_str)  # type: ignore[return-value]
             return AssistantMessage(await async_streamed_str.to_string())
 
-        if first_chunk.choices[0].delta.tool_calls is not None:
+        if first_chunk.choices[0].delta.tool_calls:
             try:
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                     content = AsyncParallelFunctionCall(
