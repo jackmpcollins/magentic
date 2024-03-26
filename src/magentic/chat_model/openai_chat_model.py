@@ -317,8 +317,12 @@ def openai_chatcompletion_create(
     kwargs: dict[str, Any] = {}
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
+    if seed is not None:
+        kwargs["seed"] = seed
     if stop is not None:
         kwargs["stop"] = stop
+    if temperature is not None:
+        kwargs["temperature"] = temperature
     if tools:
         kwargs["tools"] = tools
     if tool_choice:
@@ -327,9 +331,7 @@ def openai_chatcompletion_create(
     response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
         model=model,
         messages=messages,
-        seed=seed,
         stream=True,
-        temperature=temperature,
         **kwargs,
     )
     return response
@@ -364,8 +366,12 @@ async def openai_chatcompletion_acreate(
     kwargs: dict[str, Any] = {}
     if max_tokens is not None:
         kwargs["max_tokens"] = max_tokens
+    if seed is not None:
+        kwargs["seed"] = seed
     if stop is not None:
         kwargs["stop"] = stop
+    if temperature is not None:
+        kwargs["temperature"] = temperature
     if tools:
         kwargs["tools"] = tools
     if tool_choice:
@@ -374,8 +380,6 @@ async def openai_chatcompletion_acreate(
     response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
         model=model,
         messages=messages,
-        seed=seed,
-        temperature=temperature,
         stream=True,
         **kwargs,
     )
@@ -506,13 +510,14 @@ class OpenaiChatModel(ChatModel):
         if len(first_chunk.choices) == 0:
             first_chunk = next(response)
         if (
-            first_chunk.choices[0].delta.content is None
-            and first_chunk.choices[0].delta.tool_calls is None
+            # Mistral tool call first chunk has content ""
+            not first_chunk.choices[0].delta.content
+            and not first_chunk.choices[0].delta.tool_calls
         ):
             first_chunk = next(response)
         response = chain([first_chunk], response)
 
-        if first_chunk.choices[0].delta.content is not None:
+        if first_chunk.choices[0].delta.content:
             if not allow_string_output:
                 msg = (
                     "String was returned by model but not expected. You may need to update"
@@ -528,7 +533,7 @@ class OpenaiChatModel(ChatModel):
                 return AssistantMessage(streamed_str)  # type: ignore[return-value]
             return AssistantMessage(str(streamed_str))
 
-        if first_chunk.choices[0].delta.tool_calls is not None:
+        if first_chunk.choices[0].delta.tool_calls:
             try:
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
                     content = ParallelFunctionCall(
@@ -619,13 +624,14 @@ class OpenaiChatModel(ChatModel):
         if len(first_chunk.choices) == 0:
             first_chunk = await anext(response)
         if (
-            first_chunk.choices[0].delta.content is None
-            and first_chunk.choices[0].delta.tool_calls is None
+            # Mistral tool call first chunk has content ""
+            not first_chunk.choices[0].delta.content
+            and not first_chunk.choices[0].delta.tool_calls
         ):
             first_chunk = await anext(response)
         response = achain(async_iter([first_chunk]), response)
 
-        if first_chunk.choices[0].delta.content is not None:
+        if first_chunk.choices[0].delta.content:
             if not allow_string_output:
                 msg = (
                     "String was returned by model but not expected. You may need to update"
@@ -641,7 +647,7 @@ class OpenaiChatModel(ChatModel):
                 return AssistantMessage(async_streamed_str)  # type: ignore[return-value]
             return AssistantMessage(await async_streamed_str.to_string())
 
-        if first_chunk.choices[0].delta.tool_calls is not None:
+        if first_chunk.choices[0].delta.tool_calls:
             try:
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                     content = AsyncParallelFunctionCall(
