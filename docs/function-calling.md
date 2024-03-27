@@ -25,7 +25,10 @@ from typing import Literal
 from magentic import prompt, FunctionCall
 
 
-def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]) -> str:
+def activate_oven(
+    temperature: int,
+    mode: Literal["broil", "bake", "roast"],
+) -> str:
     """Turn the oven on with the provided settings."""
     return f"Preheating to {temperature} F with mode {mode}"
 
@@ -152,4 +155,22 @@ print(list(output))
 # > [FunctionCall(<function plus at 0x10c3584c0>, 3, 4), FunctionCall(<function plus at 0x10c3584c0>, 1, 4)]
 output()
 # (7, 5)
+```
+
+## Annotated Parameters
+
+Like with `BaseModel`, you can use pydantic's `Field` to provide additional information for individual function parameters, such as a description. Here's how you could document for the model that the `temperature` parameter of the `activate_oven` function is measured in Fahrenheit and should be less than 500.
+
+```python hl_lines="7"
+from typing import Annotated, Literal
+
+from pydantic import Field
+
+
+def activate_oven(
+    temperature: Annotated[int, Field(description="Temp in Fahrenheit", lt=500)],
+    mode: Literal["broil", "bake", "roast"],
+) -> str:
+    """Turn the oven on with the provided settings."""
+    return f"Preheating to {temperature} F with mode {mode}"
 ```
