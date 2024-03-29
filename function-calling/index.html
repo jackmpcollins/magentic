@@ -287,6 +287,26 @@
   
   
     <li class="md-nav__item">
+      <a href="../structured-outputs/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Structured Outputs
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../chat-prompting/" class="md-nav__link">
         
   
@@ -376,6 +396,15 @@
   <a href="#parallelfunctioncall" class="md-nav__link">
     <span class="md-ellipsis">
       ParallelFunctionCall
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#annotated-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Annotated Parameters
     </span>
   </a>
   
@@ -525,10 +554,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_10" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_11" >
         
           
-          <label class="md-nav__link" for="__nav_10" id="__nav_10_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_11" id="__nav_11_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -539,8 +568,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_10_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_10">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_11_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_11">
             <span class="md-nav__icon md-icon"></span>
             Examples
           </label>
@@ -671,6 +700,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#annotated-parameters" class="md-nav__link">
+    <span class="md-ellipsis">
+      Annotated Parameters
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -714,7 +752,10 @@
 <span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">FunctionCall</span>
 
 
-<span class="k">def</span> <span class="nf">activate_oven</span><span class="p">(</span><span class="n">temperature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;broil&quot;</span><span class="p">,</span> <span class="s2">&quot;bake&quot;</span><span class="p">,</span> <span class="s2">&quot;roast&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="k">def</span> <span class="nf">activate_oven</span><span class="p">(</span>
+    <span class="n">temperature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;broil&quot;</span><span class="p">,</span> <span class="s2">&quot;bake&quot;</span><span class="p">,</span> <span class="s2">&quot;roast&quot;</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn the oven on with the provided settings.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Preheating to </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2"> F with mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span>
 
@@ -827,6 +868,20 @@
 <span class="c1"># &gt; [FunctionCall(&lt;function plus at 0x10c3584c0&gt;, 3, 4), FunctionCall(&lt;function plus at 0x10c3584c0&gt;, 1, 4)]</span>
 <span class="n">output</span><span class="p">()</span>
 <span class="c1"># (7, 5)</span>
+</code></pre></div>
+<h2 id="annotated-parameters">Annotated Parameters<a class="headerlink" href="#annotated-parameters" title="Permanent link">&para;</a></h2>
+<p>Like with <code>BaseModel</code>, you can use pydantic's <code>Field</code> to provide additional information for individual function parameters, such as a description. Here's how you could document for the model that the <code>temperature</code> parameter of the <code>activate_oven</code> function is measured in Fahrenheit and should be less than 500.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">Field</span>
+
+
+<span class="k">def</span> <span class="nf">activate_oven</span><span class="p">(</span>
+<span class="hll">    <span class="n">temperature</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Temp in Fahrenheit&quot;</span><span class="p">,</span> <span class="n">lt</span><span class="o">=</span><span class="mi">500</span><span class="p">)],</span>
+</span>    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;broil&quot;</span><span class="p">,</span> <span class="s2">&quot;bake&quot;</span><span class="p">,</span> <span class="s2">&quot;roast&quot;</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn the oven on with the provided settings.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Preheating to </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2"> F with mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span>
 </code></pre></div>
 
 

@@ -10,26 +10,28 @@
       
       
       
-        <link rel="canonical" href="https://magentic.dev/">
+        <link rel="canonical" href="https://magentic.dev/structured-outputs/">
       
       
+        <link rel="prev" href="..">
       
-        <link rel="next" href="structured-outputs/">
+      
+        <link rel="next" href="../chat-prompting/">
       
       
-      <link rel="icon" href="assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.5.3, mkdocs-material-9.5.13">
     
     
       
-        <title>Magentic</title>
+        <title>Structured Outputs - Magentic</title>
       
     
     
-      <link rel="stylesheet" href="assets/stylesheets/main.7e359304.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.7e359304.min.css">
       
         
-        <link rel="stylesheet" href="assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -48,9 +50,9 @@
       
     
     
-      <link rel="stylesheet" href="css/jupyter-notebook.css">
+      <link rel="stylesheet" href="../css/jupyter-notebook.css">
     
-    <script>__md_scope=new URL(".",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
   
@@ -86,7 +88,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#overview" class="md-skip">
+        <a href="#structured-outputs" class="md-skip">
           Skip to content
         </a>
       
@@ -102,7 +104,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="." title="Magentic" class="md-header__button md-logo" aria-label="Magentic" data-md-component="logo">
+    <a href=".." title="Magentic" class="md-header__button md-logo" aria-label="Magentic" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -122,7 +124,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Overview
+              Structured Outputs
             
           </span>
         </div>
@@ -235,7 +237,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="." title="Magentic" class="md-nav__button md-logo" aria-label="Magentic" data-md-component="logo">
+    <a href=".." title="Magentic" class="md-nav__button md-logo" aria-label="Magentic" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
@@ -262,6 +264,26 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Overview
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -278,18 +300,18 @@
           
   
   <span class="md-ellipsis">
-    Overview
+    Structured Outputs
   </span>
   
 
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="." class="md-nav__link md-nav__link--active">
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
-    Overview
+    Structured Outputs
   </span>
   
 
@@ -313,46 +335,61 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#pydantic-models" class="md-nav__link">
     <span class="md-ellipsis">
-      Installation
+      Pydantic Models
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pydantic Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using Field
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSON Schema
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Python Types
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage" class="md-nav__link">
+  <a href="#chain-of-thought-prompting" class="md-nav__link">
     <span class="md-ellipsis">
-      Usage
+      Chain-of-Thought Prompting
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Usage">
+    <nav class="md-nav" aria-label="Chain-of-Thought Prompting">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#prompt" class="md-nav__link">
+  <a href="#explained" class="md-nav__link">
     <span class="md-ellipsis">
-      @prompt
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#functioncall" class="md-nav__link">
-    <span class="md-ellipsis">
-      FunctionCall
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#prompt_chain" class="md-nav__link">
-    <span class="md-ellipsis">
-      @prompt_chain
+      Explained
     </span>
   </a>
   
@@ -378,27 +415,7 @@
   
   
     <li class="md-nav__item">
-      <a href="structured-outputs/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Structured Outputs
-  </span>
-  
-
-      </a>
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="chat-prompting/" class="md-nav__link">
+      <a href="../chat-prompting/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -418,7 +435,7 @@
   
   
     <li class="md-nav__item">
-      <a href="function-calling/" class="md-nav__link">
+      <a href="../function-calling/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -438,7 +455,7 @@
   
   
     <li class="md-nav__item">
-      <a href="formatting/" class="md-nav__link">
+      <a href="../formatting/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -458,7 +475,7 @@
   
   
     <li class="md-nav__item">
-      <a href="asyncio/" class="md-nav__link">
+      <a href="../asyncio/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -478,7 +495,7 @@
   
   
     <li class="md-nav__item">
-      <a href="streaming/" class="md-nav__link">
+      <a href="../streaming/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -498,7 +515,7 @@
   
   
     <li class="md-nav__item">
-      <a href="vision/" class="md-nav__link">
+      <a href="../vision/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -518,7 +535,7 @@
   
   
     <li class="md-nav__item">
-      <a href="configuration/" class="md-nav__link">
+      <a href="../configuration/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -538,7 +555,7 @@
   
   
     <li class="md-nav__item">
-      <a href="type-checking/" class="md-nav__link">
+      <a href="../type-checking/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -595,7 +612,7 @@
   
   
     <li class="md-nav__item">
-      <a href="examples/registering_custom_type/" class="md-nav__link">
+      <a href="../examples/registering_custom_type/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -616,7 +633,7 @@
   
   
     <li class="md-nav__item">
-      <a href="examples/retrieval_augmented_generation/" class="md-nav__link">
+      <a href="../examples/retrieval_augmented_generation/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -637,7 +654,7 @@
   
   
     <li class="md-nav__item">
-      <a href="examples/chain_of_verification/" class="md-nav__link">
+      <a href="../examples/chain_of_verification/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -687,46 +704,61 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#installation" class="md-nav__link">
+  <a href="#pydantic-models" class="md-nav__link">
     <span class="md-ellipsis">
-      Installation
+      Pydantic Models
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Pydantic Models">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#using-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      Using Field
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#json-schema" class="md-nav__link">
+    <span class="md-ellipsis">
+      JSON Schema
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#python-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      Python Types
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#usage" class="md-nav__link">
+  <a href="#chain-of-thought-prompting" class="md-nav__link">
     <span class="md-ellipsis">
-      Usage
+      Chain-of-Thought Prompting
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Usage">
+    <nav class="md-nav" aria-label="Chain-of-Thought Prompting">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#prompt" class="md-nav__link">
+  <a href="#explained" class="md-nav__link">
     <span class="md-ellipsis">
-      @prompt
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#functioncall" class="md-nav__link">
-    <span class="md-ellipsis">
-      FunctionCall
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#prompt_chain" class="md-nav__link">
-    <span class="md-ellipsis">
-      @prompt_chain
+      Explained
     </span>
   </a>
   
@@ -752,7 +784,7 @@
                   
 
   
-    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/index.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/structured-outputs.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
     </a>
@@ -760,37 +792,9 @@
   
 
 
-<h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
-<p>Easily integrate Large Language Models into your Python code. Simply use the <code>@prompt</code> decorator to create functions that return structured output from the LLM. Mix LLM queries and function calling with regular Python code to create complex logic.</p>
-<p><code>magentic</code> is</p>
-<ul>
-<li><strong>Compact:</strong> Query LLMs without duplicating boilerplate code.</li>
-<li><strong>Atomic:</strong> Prompts are functions that can be individually tested and reasoned about.</li>
-<li><strong>Transparent:</strong> Create "chains" using regular Python code. Define all of your own prompts.</li>
-<li><strong>Compatible:</strong> Use <code>@prompt</code> functions as normal functions, including with decorators like <code>@lru_cache</code>.</li>
-<li><strong>Type Annotated:</strong> Works with linters and IDEs.</li>
-</ul>
-<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
-<div class="language-sh highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>magentic
-</code></pre></div>
-<p>or using poetry</p>
-<div class="language-sh highlight"><pre><span></span><code>poetry<span class="w"> </span>add<span class="w"> </span>magentic
-</code></pre></div>
-<p>Configure your OpenAI API key by setting the <code>OPENAI_API_KEY</code> environment variable or using <code>openai.api_key = "sk-..."</code>. See the <a href="https://github.com/openai/openai-python#usage">OpenAI Python library documentation</a> for more information.</p>
-<h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
-<h3 id="prompt">@prompt<a class="headerlink" href="#prompt" title="Permanent link">&para;</a></h3>
-<p>The <code>@prompt</code> decorator allows you to define a template for a Large Language Model (LLM) prompt as a Python function. When this function is called, the arguments are inserted into the template, then this prompt is sent to an LLM which generates the function output.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
-
-
-<span class="nd">@prompt</span><span class="p">(</span><span class="s1">&#39;Add more &quot;dude&quot;ness to: </span><span class="si">{phrase}</span><span class="s1">&#39;</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">dudeify</span><span class="p">(</span><span class="n">phrase</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>  <span class="c1"># No function body as this is never executed</span>
-
-
-<span class="n">dudeify</span><span class="p">(</span><span class="s2">&quot;Hello, how are you?&quot;</span><span class="p">)</span>
-<span class="c1"># &quot;Hey, dude! What&#39;s up? How&#39;s it going, my man?&quot;</span>
-</code></pre></div>
-<p>The <code>@prompt</code> decorator will respect the return type annotation of the decorated function. This can be <a href="https://docs.pydantic.dev/latest/usage/types/types/">any type supported by pydantic</a> including a <code>pydantic</code> model.</p>
+<h1 id="structured-outputs">Structured Outputs<a class="headerlink" href="#structured-outputs" title="Permanent link">&para;</a></h1>
+<h2 id="pydantic-models">Pydantic Models<a class="headerlink" href="#pydantic-models" title="Permanent link">&para;</a></h2>
+<p>The <code>@prompt</code> decorator will respect the return type annotation of the decorated function. This can be <a href="https://docs.pydantic.dev/latest/usage/types/types/">any type supported by pydantic</a> including a <code>pydantic</code> model. See <a href="https://docs.pydantic.dev/latest/concepts/models/">the Pydantic docs</a> for more information about models.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
 <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
 
@@ -809,58 +813,138 @@
 <span class="n">create_superhero</span><span class="p">(</span><span class="s2">&quot;Garden Man&quot;</span><span class="p">)</span>
 <span class="c1"># Superhero(name=&#39;Garden Man&#39;, age=30, power=&#39;Control over plants&#39;, enemies=[&#39;Pollution Man&#39;, &#39;Concrete Woman&#39;])</span>
 </code></pre></div>
-<h3 id="functioncall">FunctionCall<a class="headerlink" href="#functioncall" title="Permanent link">&para;</a></h3>
-<p>An LLM can also decide to call functions. In this case the <code>@prompt</code>-decorated function returns a <code>FunctionCall</code> object which can be called to execute the function using the arguments provided by the LLM.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
-
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">FunctionCall</span>
-
-
-<span class="k">def</span> <span class="nf">activate_oven</span><span class="p">(</span><span class="n">temperature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;broil&quot;</span><span class="p">,</span> <span class="s2">&quot;bake&quot;</span><span class="p">,</span> <span class="s2">&quot;roast&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn the oven on with the provided settings.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Preheating to </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2"> F with mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span>
+<h3 id="using-field">Using <code>Field</code><a class="headerlink" href="#using-field" title="Permanent link">&para;</a></h3>
+<p>With pydantic's <code>BaseModel</code>, you can use <code>Field</code> to provide additional information for individual attributes, such as a description.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
 
 
-<span class="nd">@prompt</span><span class="p">(</span>
-    <span class="s2">&quot;Prepare the oven so I can make </span><span class="si">{food}</span><span class="s2">&quot;</span><span class="p">,</span>
-    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">activate_oven</span><span class="p">],</span>
-<span class="p">)</span>
-<span class="k">def</span> <span class="nf">configure_oven</span><span class="p">(</span><span class="n">food</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
+<span class="k">class</span> <span class="nc">Superhero</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+<span class="hll">    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+</span><span class="hll">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;The age of the hero, which could be much older than humans.&quot;</span>
+</span><span class="hll">    <span class="p">)</span>
+</span><span class="hll">    <span class="n">power</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">examples</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Runs really fast&quot;</span><span class="p">])</span>
+</span>    <span class="n">enemies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
 
 
-<span class="n">output</span> <span class="o">=</span> <span class="n">configure_oven</span><span class="p">(</span><span class="s2">&quot;cookies!&quot;</span><span class="p">)</span>
-<span class="c1"># FunctionCall(&lt;function activate_oven at 0x1105a6200&gt;, temperature=350, mode=&#39;bake&#39;)</span>
-<span class="n">output</span><span class="p">()</span>
-<span class="c1"># &#39;Preheating to 350 F with mode bake&#39;</span>
+<span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Create a Superhero named </span><span class="si">{name}</span><span class="s2">.&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">create_superhero</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Superhero</span><span class="p">:</span> <span class="o">...</span>
 </code></pre></div>
-<h3 id="prompt_chain">@prompt_chain<a class="headerlink" href="#prompt_chain" title="Permanent link">&para;</a></h3>
-<p>Sometimes the LLM requires making one or more function calls to generate a final answer. The <code>@prompt_chain</code> decorator will resolve <code>FunctionCall</code> objects automatically and pass the output back to the LLM to continue until the final answer is reached.</p>
-<p>In the following example, when <code>describe_weather</code> is called the LLM first calls the <code>get_current_weather</code> function, then uses the result of this to formulate its final answer which gets returned.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt_chain</span>
-
-
-<span class="k">def</span> <span class="nf">get_current_weather</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;fahrenheit&quot;</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current weather in a given location&quot;&quot;&quot;</span>
-    <span class="c1"># Pretend to query an API</span>
-    <span class="k">return</span> <span class="p">{</span>
-        <span class="s2">&quot;location&quot;</span><span class="p">:</span> <span class="n">location</span><span class="p">,</span>
-        <span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;unit&quot;</span><span class="p">:</span> <span class="n">unit</span><span class="p">,</span>
-        <span class="s2">&quot;forecast&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sunny&quot;</span><span class="p">,</span> <span class="s2">&quot;windy&quot;</span><span class="p">],</span>
-    <span class="p">}</span>
-
-
-<span class="nd">@prompt_chain</span><span class="p">(</span>
-    <span class="s2">&quot;What&#39;s the weather like in </span><span class="si">{city}</span><span class="s2">?&quot;</span><span class="p">,</span>
-    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">get_current_weather</span><span class="p">],</span>
-<span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_weather</span><span class="p">(</span><span class="n">city</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
-
-
-<span class="n">describe_weather</span><span class="p">(</span><span class="s2">&quot;Boston&quot;</span><span class="p">)</span>
-<span class="c1"># &#39;The current weather in Boston is 72°F and it is sunny and windy.&#39;</span>
+<h3 id="json-schema">JSON Schema<a class="headerlink" href="#json-schema" title="Permanent link">&para;</a></h3>
+<p>You can generate the JSON schema for the pydantic model using the <code>.model_json_schema()</code> method. This is what is sent to the LLM.</p>
+<p>Running <code>Superhero.model_json_schema()</code> for the above definition reveals the following JSON schema</p>
+<div class="language-python highlight"><pre><span></span><code><span class="p">{</span>
+    <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Name&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">},</span>
+        <span class="s2">&quot;age&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;The age of the hero, which could be much older than humans.&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Age&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;power&quot;</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">&quot;examples&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;Runs really fast&quot;</span><span class="p">],</span>
+            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Power&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">,</span>
+        <span class="p">},</span>
+        <span class="s2">&quot;enemies&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span><span class="p">},</span> <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Enemies&quot;</span><span class="p">,</span> <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">},</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">,</span> <span class="s2">&quot;age&quot;</span><span class="p">,</span> <span class="s2">&quot;power&quot;</span><span class="p">,</span> <span class="s2">&quot;enemies&quot;</span><span class="p">],</span>
+    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Superhero&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
+<span class="p">}</span>
 </code></pre></div>
-<p>LLM-powered functions created using <code>@prompt</code> and <code>@prompt_chain</code> can be supplied as <code>functions</code> to other <code>@prompt</code>/<code>@prompt_chain</code> decorators, just like regular python functions. This enables increasingly complex LLM-powered functionality, while allowing individual components to be tested and improved in isolation.</p>
+<p>If a <code>StructuredOutputError</code> is raised often, this indicates that the LLM is failing to match the schema. The traceback for these errors includes the underlying pydantic <code>ValidationError</code> which shows in what way the received response was invalid. To combat these errors there are several options</p>
+<ul>
+<li>Add descriptions or examples for individual fields to demonstrate valid values.</li>
+<li>Simplify the output schema, including using more flexible types (e.g. <code>str</code> instead of <code>datetime</code>) or allowing fields to be nullable with <code>| None</code>.</li>
+<li>Switch to a "more intelligent" LLM. See <a href="../configuration/">Configuration</a> for how to do this.</li>
+</ul>
+<h2 id="python-types">Python Types<a class="headerlink" href="#python-types" title="Permanent link">&para;</a></h2>
+<p>Regular Python types can also be used as the function return type.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+
+<span class="k">class</span> <span class="nc">Superhero</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">power</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">enemies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+
+<span class="n">garden_man</span> <span class="o">=</span> <span class="n">Superhero</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Garden Man&quot;</span><span class="p">,</span>
+    <span class="n">age</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">power</span><span class="o">=</span><span class="s2">&quot;Control over plants&quot;</span><span class="p">,</span>
+    <span class="n">enemies</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Pollution Man&quot;</span><span class="p">,</span> <span class="s2">&quot;Concrete Woman&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Return True if </span><span class="si">{hero.name}</span><span class="s2"> will be defeated by enemies </span><span class="si">{hero.enemies}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">will_be_defeated</span><span class="p">(</span><span class="n">hero</span><span class="p">:</span> <span class="n">Superhero</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span> <span class="o">...</span>
+
+
+<span class="n">hero_defeated</span> <span class="o">=</span> <span class="n">will_be_defeated</span><span class="p">(</span><span class="n">garden_man</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">hero_defeated</span><span class="p">)</span>
+<span class="c1"># &gt; True</span>
+</code></pre></div>
+<h2 id="chain-of-thought-prompting">Chain-of-Thought Prompting<a class="headerlink" href="#chain-of-thought-prompting" title="Permanent link">&para;</a></h2>
+<p>Using a simple Python type as the return annotation might result in poor results as the LLM has no time to arrange its thoughts before answering. To allow the LLM to work through this "chain of thought" you can instead return a pydantic model with initial fields for explaining the final response.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+
+<span class="hll"><span class="k">class</span> <span class="nc">ExplainedDefeated</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+</span><span class="hll">    <span class="n">explanation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span>
+</span><span class="hll">        <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Describe the battle between the hero and their enemy.&quot;</span>
+</span><span class="hll">    <span class="p">)</span>
+</span><span class="hll">    <span class="n">defeated</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;True if the hero was defeated.&quot;</span><span class="p">)</span>
+</span>
+
+<span class="k">class</span> <span class="nc">Superhero</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">power</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">enemies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Return True if </span><span class="si">{hero.name}</span><span class="s2"> will be defeated by enemies </span><span class="si">{hero.enemies}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="hll"><span class="k">def</span> <span class="nf">will_be_defeated</span><span class="p">(</span><span class="n">hero</span><span class="p">:</span> <span class="n">Superhero</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ExplainedDefeated</span><span class="p">:</span> <span class="o">...</span>
+</span>
+
+<span class="n">garden_man</span> <span class="o">=</span> <span class="n">Superhero</span><span class="p">(</span>
+    <span class="n">name</span><span class="o">=</span><span class="s2">&quot;Garden Man&quot;</span><span class="p">,</span>
+    <span class="n">age</span><span class="o">=</span><span class="mi">30</span><span class="p">,</span>
+    <span class="n">power</span><span class="o">=</span><span class="s2">&quot;Control over plants&quot;</span><span class="p">,</span>
+    <span class="n">enemies</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Pollution Man&quot;</span><span class="p">,</span> <span class="s2">&quot;Concrete Woman&quot;</span><span class="p">],</span>
+<span class="p">)</span>
+
+<span class="n">hero_defeated</span> <span class="o">=</span> <span class="n">will_be_defeated</span><span class="p">(</span><span class="n">garden_man</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">hero_defeated</span><span class="o">.</span><span class="n">defeated</span><span class="p">)</span>
+<span class="c1"># &gt; True</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">hero_defeated</span><span class="o">.</span><span class="n">explanation</span><span class="p">)</span>
+<span class="c1"># &gt; &#39;Garden Man is an environmental hero who fights against Pollution Man ...&#39;</span>
+</code></pre></div>
+<h3 id="explained">Explained<a class="headerlink" href="#explained" title="Permanent link">&para;</a></h3>
+<p>Using chain-of-thought is a common approach to improve the output of the model, so a generic <code>Explained</code> model might be generally useful. The <code>description</code> or <code>example</code> parameters of <code>Field</code> can be used to demonstrate the desired style and detail of the explanations.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Generic</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+
+<span class="n">T</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;T&quot;</span><span class="p">)</span>
+
+
+<span class="k">class</span> <span class="nc">Explained</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">,</span> <span class="n">Generic</span><span class="p">[</span><span class="n">T</span><span class="p">]):</span>
+    <span class="n">explanation</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Explanation of how the value was determined.&quot;</span><span class="p">)</span>
+    <span class="n">value</span><span class="p">:</span> <span class="n">T</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Return True if </span><span class="si">{hero.name}</span><span class="s2"> will be defeated by enemies </span><span class="si">{hero.enemies}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">will_be_defeated</span><span class="p">(</span><span class="n">hero</span><span class="p">:</span> <span class="n">Superhero</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Explained</span><span class="p">[</span><span class="nb">bool</span><span class="p">]:</span> <span class="o">...</span>
+</code></pre></div>
 
 
 
@@ -951,10 +1035,10 @@
       <div class="md-progress" data-md-component="progress" role="progressbar"></div>
     
     
-    <script id="__config" type="application/json">{"base": ".", "features": ["content.action.edit", "content.code.copy", "content.code.select", "content.tooltips", "navigation.expand", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "search.suggest"], "search": "assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    <script id="__config" type="application/json">{"base": "..", "features": ["content.action.edit", "content.code.copy", "content.code.select", "content.tooltips", "navigation.expand", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "search.suggest"], "search": "../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
     
     
-      <script src="assets/javascripts/bundle.c8d2eff1.min.js"></script>
+      <script src="../assets/javascripts/bundle.c8d2eff1.min.js"></script>
       
     
   </body>
