@@ -474,7 +474,7 @@ def test_dict_function_schema_serialize_args(type_, expected_args_str, args):
 def test_base_model_function_schema():
     class User(BaseModel):
         name: str
-        age: int
+        age: Annotated[int, Field(description="Age", gt=0, examples=[10, 20])]
 
     function_schema = BaseModelFunctionSchema(User)
 
@@ -486,7 +486,13 @@ def test_base_model_function_schema():
             "properties": {
                 # TODO: Remove "title" keys from schema
                 "name": {"title": "Name", "type": "string"},
-                "age": {"title": "Age", "type": "integer"},
+                "age": {
+                    "description": "Age",
+                    "examples": [10, 20],
+                    "exclusiveMinimum": 0,
+                    "title": "Age",
+                    "type": "integer",
+                },
             },
             "required": ["name", "age"],
         },
