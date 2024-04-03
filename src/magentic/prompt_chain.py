@@ -8,10 +8,14 @@ from typing import (
     cast,
 )
 
+from opentelemetry import trace
+
 from magentic.chat import Chat
 from magentic.chat_model.base import ChatModel
 from magentic.function_call import FunctionCall
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction
+
+tracer = trace.get_tracer(__name__)
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -41,6 +45,7 @@ def prompt_chain(
                 model=model,
             )
 
+            @tracer.start_as_current_span(func.__name__)
             @wraps(func)
             async def awrapper(*args: P.args, **kwargs: P.kwargs) -> Any:
                 chat = await Chat.from_prompt(
@@ -69,6 +74,7 @@ def prompt_chain(
             model=model,
         )
 
+        @tracer.start_as_current_span(func.__name__)
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
             chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()

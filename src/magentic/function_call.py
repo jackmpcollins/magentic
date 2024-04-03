@@ -16,7 +16,12 @@ from typing import (
 )
 from uuid import uuid4
 
+from opentelemetry import trace
+
 from magentic.streaming import CachedAsyncIterable, CachedIterable
+
+tracer = trace.get_tracer(__name__)
+
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -37,7 +42,8 @@ class FunctionCall(Generic[T]):
         self._unique_id = str(uuid4())
 
     def __call__(self) -> T:
-        return self._function(*self._args, **self._kwargs)
+        with tracer.start_as_current_span(name=self._function.__name__):
+            return self._function(*self._args, **self._kwargs)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, type(self)):

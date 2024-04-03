@@ -14,10 +14,14 @@ from typing import (
     overload,
 )
 
+from opentelemetry import trace
+
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import UserMessage
 from magentic.typing import split_union_type
+
+tracer = trace.get_tracer(__name__)
 
 P = ParamSpec("P")
 # TODO: Make `R` type Union of all possible return types except FunctionCall ?
@@ -78,13 +82,14 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted prompt template."""
-        message = self.model.complete(
-            messages=[UserMessage(content=self.format(*args, **kwargs))],
-            functions=self._functions,
-            output_types=self._return_types,
-            stop=self._stop,
-        )
-        return message.content
+        with tracer.start_as_current_span("prompt_function"):
+            message = self.model.complete(
+                messages=[UserMessage(content=self.format(*args, **kwargs))],
+                functions=self._functions,
+                output_types=self._return_types,
+                stop=self._stop,
+            )
+            return message.content
 
 
 class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
@@ -92,13 +97,14 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted prompt template."""
-        message = await self.model.acomplete(
-            messages=[UserMessage(content=self.format(*args, **kwargs))],
-            functions=self._functions,
-            output_types=self._return_types,
-            stop=self._stop,
-        )
-        return message.content
+        with tracer.start_as_current_span("prompt_function"):
+            message = await self.model.acomplete(
+                messages=[UserMessage(content=self.format(*args, **kwargs))],
+                functions=self._functions,
+                output_types=self._return_types,
+                stop=self._stop,
+            )
+            return message.content
 
 
 class PromptDecorator(Protocol):
