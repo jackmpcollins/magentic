@@ -12,7 +12,7 @@ def test_backend_openai_chat_model(monkeypatch):
     monkeypatch.setenv("MAGENTIC_BACKEND", "openai")
     monkeypatch.setenv("MAGENTIC_OPENAI_MODEL", "gpt-4")
     monkeypatch.setenv("MAGENTIC_OPENAI_API_KEY", "sk-1234567890")
-    monkeypatch.setenv("MAGENTIC_OPENAI_API_TYPE", "azure")
+    monkeypatch.setenv("MAGENTIC_OPENAI_API_TYPE", "openai")
     monkeypatch.setenv("MAGENTIC_OPENAI_BASE_URL", "http://localhost:8080")
     monkeypatch.setenv("MAGENTIC_OPENAI_MAX_TOKENS", "1024")
     monkeypatch.setenv("MAGENTIC_OPENAI_SEED", "42")
@@ -21,7 +21,7 @@ def test_backend_openai_chat_model(monkeypatch):
     assert isinstance(chat_model, OpenaiChatModel)
     assert chat_model.model == "gpt-4"
     assert chat_model.api_key == "sk-1234567890"
-    assert chat_model.api_type == "azure"
+    assert chat_model.api_type == "openai"
     assert chat_model.base_url == "http://localhost:8080"
     assert chat_model.max_tokens == 1024
     assert chat_model.seed == 42

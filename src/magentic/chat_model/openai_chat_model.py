@@ -1,8 +1,8 @@
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
-from functools import singledispatch
+from functools import singledispatch, wraps
 from itertools import chain, groupby, takewhile
-from typing import Any, Generic, Literal, TypeVar, cast, overload
+from typing import Any, Generic, Literal, ParamSpec, TypeVar, cast, overload
 from uuid import uuid4
 
 import openai
@@ -287,106 +287,19 @@ async def aparse_streamed_tool_calls(
         yield tool_call
 
 
-def openai_chatcompletion_create(
-    api_key: str | None,
-    api_type: Literal["openai", "azure"],
-    base_url: str | None,
-    model: str,
-    messages: list[ChatCompletionMessageParam],
-    max_tokens: int | None = None,
-    seed: int | None = None,
-    stop: list[str] | None = None,
-    temperature: float | None = None,
-    tools: list[ChatCompletionToolParam] | None = None,
-    tool_choice: ChatCompletionToolChoiceOptionParam | None = None,
-) -> Iterator[ChatCompletionChunk]:
-    client_kwargs: dict[str, Any] = {
-        "api_key": api_key,
-    }
-    if api_type == "openai" and base_url:
-        client_kwargs["base_url"] = base_url
-
-    client = (
-        openai.AzureOpenAI(**client_kwargs)
-        if api_type == "azure"
-        else openai.OpenAI(**client_kwargs)
-    )
-
-    # `openai.OpenAI().chat.completions.create` doesn't accept `None` for some args
-    # so only pass function args if there are functions
-    kwargs: dict[str, Any] = {}
-    if max_tokens is not None:
-        kwargs["max_tokens"] = max_tokens
-    if seed is not None:
-        kwargs["seed"] = seed
-    if stop is not None:
-        kwargs["stop"] = stop
-    if temperature is not None:
-        kwargs["temperature"] = temperature
-    if tools:
-        kwargs["tools"] = tools
-    if tool_choice:
-        kwargs["tool_choice"] = tool_choice
-
-    response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        stream=True,
-        **kwargs,
-    )
-    return response
-
-
-async def openai_chatcompletion_acreate(
-    api_key: str | None,
-    api_type: Literal["openai", "azure"],
-    base_url: str | None,
-    model: str,
-    messages: list[ChatCompletionMessageParam],
-    max_tokens: int | None = None,
-    seed: int | None = None,
-    stop: list[str] | None = None,
-    temperature: float | None = None,
-    tools: list[ChatCompletionToolParam] | None = None,
-    tool_choice: ChatCompletionToolChoiceOptionParam | None = None,
-) -> AsyncIterator[ChatCompletionChunk]:
-    client_kwargs: dict[str, Any] = {
-        "api_key": api_key,
-    }
-    if api_type == "openai" and base_url:
-        client_kwargs["base_url"] = base_url
-
-    client = (
-        openai.AsyncAzureOpenAI(**client_kwargs)
-        if api_type == "azure"
-        else openai.AsyncOpenAI(**client_kwargs)
-    )
-    # `openai.AsyncOpenAI().chat.completions.create` doesn't accept `None` for some args
-    # so only pass function args if there are functions
-    kwargs: dict[str, Any] = {}
-    if max_tokens is not None:
-        kwargs["max_tokens"] = max_tokens
-    if seed is not None:
-        kwargs["seed"] = seed
-    if stop is not None:
-        kwargs["stop"] = stop
-    if temperature is not None:
-        kwargs["temperature"] = temperature
-    if tools:
-        kwargs["tools"] = tools
-    if tool_choice:
-        kwargs["tool_choice"] = tool_choice
-
-    response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
-        model=model,
-        messages=messages,
-        stream=True,
-        **kwargs,
-    )
-    return response
-
-
+P = ParamSpec("P")
 R = TypeVar("R")
+
+
+def discard_none_arguments(func: Callable[P, R]) -> Callable[P, R]:
+    @wraps(func)
+    def wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
+        non_none_kwargs = {
+            key: value for key, value in kwargs.items() if value is not None
+        }
+        return func(*args, **non_none_kwargs)  # type: ignore[arg-type]
+
+    return wrapped
 
 
 class OpenaiChatModel(ChatModel):
@@ -410,6 +323,23 @@ class OpenaiChatModel(ChatModel):
         self._max_tokens = max_tokens
         self._seed = seed
         self._temperature = temperature
+
+        client_kwargs: dict[str, Any] = {
+            "api_key": api_key,
+        }
+        if api_type == "openai" and base_url:
+            client_kwargs["base_url"] = base_url
+
+        self._client = (
+            openai.AzureOpenAI(**client_kwargs)
+            if api_type == "azure"
+            else openai.OpenAI(**client_kwargs)
+        )
+        self._async_client = (
+            openai.AsyncAzureOpenAI(**client_kwargs)
+            if api_type == "azure"
+            else openai.AsyncOpenAI(**client_kwargs)
+        )
 
     @property
     def model(self) -> str:
@@ -485,10 +415,9 @@ class OpenaiChatModel(ChatModel):
         streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
-        response = openai_chatcompletion_create(
-            api_key=self.api_key,
-            api_type=self.api_type,
-            base_url=self.base_url,
+        response: Iterator[ChatCompletionChunk] = discard_none_arguments(
+            self._client.chat.completions.create
+        )(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
                 [message_to_openai_message(m) for m in messages]
@@ -496,12 +425,13 @@ class OpenaiChatModel(ChatModel):
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
+            stream=True,
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas],
             tool_choice=(
                 tool_schemas[0].as_tool_choice()
                 if len(tool_schemas) == 1 and not allow_string_output
-                else None
+                else openai.NOT_GIVEN
             ),
         )
 
@@ -599,10 +529,9 @@ class OpenaiChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        response = await openai_chatcompletion_acreate(
-            api_key=self.api_key,
-            api_type=self.api_type,
-            base_url=self.base_url,
+        response: AsyncIterator[ChatCompletionChunk] = await discard_none_arguments(
+            self._async_client.chat.completions.create
+        )(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
                 [message_to_openai_message(m) for m in messages]
@@ -610,12 +539,13 @@ class OpenaiChatModel(ChatModel):
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
+            stream=True,
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas],
             tool_choice=(
                 tool_schemas[0].as_tool_choice()
                 if len(tool_schemas) == 1 and not allow_string_output
-                else None
+                else openai.NOT_GIVEN
             ),
         )
 
