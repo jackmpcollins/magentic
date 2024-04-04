@@ -131,7 +131,7 @@ class LitellmChatModel(ChatModel):
             stop=stop,
             stream=True,
             temperature=self.temperature,
-            tools=[schema.to_dict() for schema in tool_schemas],
+            tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=(
                 tool_schemas[0].as_tool_choice()
                 if len(tool_schemas) == 1 and not allow_string_output
@@ -243,7 +243,7 @@ class LitellmChatModel(ChatModel):
             stop=stop,
             stream=True,
             temperature=self.temperature,
-            tools=[schema.to_dict() for schema in tool_schemas],
+            tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=(
                 tool_schemas[0].as_tool_choice()
                 if len(tool_schemas) == 1 and not allow_string_output
