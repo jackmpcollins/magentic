@@ -20,6 +20,7 @@ from magentic.chat_model.message import (
     Message,
 )
 from magentic.chat_model.openai_chat_model import (
+    STR_OR_FUNCTIONCALL_TYPE,
     AsyncFunctionToolSchema,
     FunctionToolSchema,
     aparse_streamed_tool_calls,
@@ -28,7 +29,6 @@ from magentic.chat_model.openai_chat_model import (
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
-    FunctionCall,
     ParallelFunctionCall,
 )
 from magentic.streaming import (
@@ -187,9 +187,7 @@ class LitellmChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(
-                type_, (str, StreamedStr, FunctionCall, ParallelFunctionCall)
-            )
+            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
         tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
 
@@ -296,7 +294,7 @@ class LitellmChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             async_function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, AsyncStreamedStr, FunctionCall))
+            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
         tool_schemas = [AsyncFunctionToolSchema(schema) for schema in function_schemas]
 

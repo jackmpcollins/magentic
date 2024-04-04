@@ -302,6 +302,16 @@ def discard_none_arguments(func: Callable[P, R]) -> Callable[P, R]:
     return wrapped
 
 
+STR_OR_FUNCTIONCALL_TYPE = (
+    str,
+    StreamedStr,
+    AsyncStreamedStr,
+    FunctionCall,
+    ParallelFunctionCall,
+    AsyncParallelFunctionCall,
+)
+
+
 class OpenaiChatModel(ChatModel):
     """An LLM chat model that uses the `openai` python package."""
 
@@ -405,9 +415,7 @@ class OpenaiChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(
-                type_, (str, StreamedStr, FunctionCall, ParallelFunctionCall)
-            )
+            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
         tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
 
@@ -519,7 +527,7 @@ class OpenaiChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             async_function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, AsyncStreamedStr, FunctionCall))
+            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
         tool_schemas = [AsyncFunctionToolSchema(schema) for schema in function_schemas]
 
