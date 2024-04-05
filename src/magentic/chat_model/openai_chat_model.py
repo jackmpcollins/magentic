@@ -292,6 +292,8 @@ R = TypeVar("R")
 
 
 def discard_none_arguments(func: Callable[P, R]) -> Callable[P, R]:
+    """Decorator to discard function arguments with value `None`"""
+
     @wraps(func)
     def wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
         non_none_kwargs = {
