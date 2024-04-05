@@ -1,8 +1,8 @@
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
-from functools import singledispatch
+from functools import singledispatch, wraps
 from itertools import chain, groupby, takewhile
-from typing import Any, Generic, Literal, TypeVar, cast, overload
+from typing import Any, Generic, Literal, ParamSpec, TypeVar, cast, overload
 from uuid import uuid4
 
 import openai
@@ -287,102 +287,31 @@ async def aparse_streamed_tool_calls(
         yield tool_call
 
 
-def openai_chatcompletion_create(
-    api_key: str | None,
-    api_type: Literal["openai", "azure"],
-    base_url: str | None,
-    model: str,
-    messages: list[ChatCompletionMessageParam],
-    max_tokens: int | None = None,
-    seed: int | None = None,
-    stop: list[str] | None = None,
-    temperature: float | None = None,
-    tools: list[ChatCompletionToolParam] | None = None,
-    tool_choice: ChatCompletionToolChoiceOptionParam | None = None,
-) -> Iterator[ChatCompletionChunk]:
-    client_kwargs: dict[str, Any] = {
-        "api_key": api_key,
-    }
-    if api_type == "openai" and base_url:
-        client_kwargs["base_url"] = base_url
-
-    client = (
-        openai.AzureOpenAI(**client_kwargs)
-        if api_type == "azure"
-        else openai.OpenAI(**client_kwargs)
-    )
-
-    # `openai.OpenAI().chat.completions.create` doesn't accept `None` for some args
-    # so only pass function args if there are functions
-    kwargs: dict[str, Any] = {}
-    if max_tokens is not None:
-        kwargs["max_tokens"] = max_tokens
-    if stop is not None:
-        kwargs["stop"] = stop
-    if tools:
-        kwargs["tools"] = tools
-    if tool_choice:
-        kwargs["tool_choice"] = tool_choice
-
-    response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        seed=seed,
-        stream=True,
-        temperature=temperature,
-        **kwargs,
-    )
-    return response
-
-
-async def openai_chatcompletion_acreate(
-    api_key: str | None,
-    api_type: Literal["openai", "azure"],
-    base_url: str | None,
-    model: str,
-    messages: list[ChatCompletionMessageParam],
-    max_tokens: int | None = None,
-    seed: int | None = None,
-    stop: list[str] | None = None,
-    temperature: float | None = None,
-    tools: list[ChatCompletionToolParam] | None = None,
-    tool_choice: ChatCompletionToolChoiceOptionParam | None = None,
-) -> AsyncIterator[ChatCompletionChunk]:
-    client_kwargs: dict[str, Any] = {
-        "api_key": api_key,
-    }
-    if api_type == "openai" and base_url:
-        client_kwargs["base_url"] = base_url
-
-    client = (
-        openai.AsyncAzureOpenAI(**client_kwargs)
-        if api_type == "azure"
-        else openai.AsyncOpenAI(**client_kwargs)
-    )
-    # `openai.AsyncOpenAI().chat.completions.create` doesn't accept `None` for some args
-    # so only pass function args if there are functions
-    kwargs: dict[str, Any] = {}
-    if max_tokens is not None:
-        kwargs["max_tokens"] = max_tokens
-    if stop is not None:
-        kwargs["stop"] = stop
-    if tools:
-        kwargs["tools"] = tools
-    if tool_choice:
-        kwargs["tool_choice"] = tool_choice
-
-    response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
-        model=model,
-        messages=messages,
-        seed=seed,
-        temperature=temperature,
-        stream=True,
-        **kwargs,
-    )
-    return response
-
-
+P = ParamSpec("P")
 R = TypeVar("R")
+
+
+def discard_none_arguments(func: Callable[P, R]) -> Callable[P, R]:
+    """Decorator to discard function arguments with value `None`"""
+
+    @wraps(func)
+    def wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
+        non_none_kwargs = {
+            key: value for key, value in kwargs.items() if value is not None
+        }
+        return func(*args, **non_none_kwargs)  # type: ignore[arg-type]
+
+    return wrapped
+
+
+STR_OR_FUNCTIONCALL_TYPE = (
+    str,
+    StreamedStr,
+    AsyncStreamedStr,
+    FunctionCall,
+    ParallelFunctionCall,
+    AsyncParallelFunctionCall,
+)
 
 
 class OpenaiChatModel(ChatModel):
@@ -406,6 +335,23 @@ class OpenaiChatModel(ChatModel):
         self._max_tokens = max_tokens
         self._seed = seed
         self._temperature = temperature
+
+        client_kwargs: dict[str, Any] = {
+            "api_key": api_key,
+        }
+        if api_type == "openai" and base_url:
+            client_kwargs["base_url"] = base_url
+
+        self._client = (
+            openai.AzureOpenAI(**client_kwargs)
+            if api_type == "azure"
+            else openai.OpenAI(**client_kwargs)
+        )
+        self._async_client = (
+            openai.AsyncAzureOpenAI(**client_kwargs)
+            if api_type == "azure"
+            else openai.AsyncOpenAI(**client_kwargs)
+        )
 
     @property
     def model(self) -> str:
@@ -471,9 +417,7 @@ class OpenaiChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(
-                type_, (str, StreamedStr, FunctionCall, ParallelFunctionCall)
-            )
+            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
         tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
 
@@ -481,10 +425,9 @@ class OpenaiChatModel(ChatModel):
         streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
-        response = openai_chatcompletion_create(
-            api_key=self.api_key,
-            api_type=self.api_type,
-            base_url=self.base_url,
+        response: Iterator[ChatCompletionChunk] = discard_none_arguments(
+            self._client.chat.completions.create
+        )(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
                 [message_to_openai_message(m) for m in messages]
@@ -492,12 +435,13 @@ class OpenaiChatModel(ChatModel):
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
+            stream=True,
             temperature=self.temperature,
-            tools=[schema.to_dict() for schema in tool_schemas],
+            tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=(
                 tool_schemas[0].as_tool_choice()
                 if len(tool_schemas) == 1 and not allow_string_output
-                else None
+                else openai.NOT_GIVEN
             ),
         )
 
@@ -506,13 +450,14 @@ class OpenaiChatModel(ChatModel):
         if len(first_chunk.choices) == 0:
             first_chunk = next(response)
         if (
-            first_chunk.choices[0].delta.content is None
-            and first_chunk.choices[0].delta.tool_calls is None
+            # Mistral tool call first chunk has content ""
+            not first_chunk.choices[0].delta.content
+            and not first_chunk.choices[0].delta.tool_calls
         ):
             first_chunk = next(response)
         response = chain([first_chunk], response)
 
-        if first_chunk.choices[0].delta.content is not None:
+        if first_chunk.choices[0].delta.content:
             if not allow_string_output:
                 msg = (
                     "String was returned by model but not expected. You may need to update"
@@ -528,7 +473,7 @@ class OpenaiChatModel(ChatModel):
                 return AssistantMessage(streamed_str)  # type: ignore[return-value]
             return AssistantMessage(str(streamed_str))
 
-        if first_chunk.choices[0].delta.tool_calls is not None:
+        if first_chunk.choices[0].delta.tool_calls:
             try:
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
                     content = ParallelFunctionCall(
@@ -584,7 +529,7 @@ class OpenaiChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             async_function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, AsyncStreamedStr, FunctionCall))
+            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
         tool_schemas = [AsyncFunctionToolSchema(schema) for schema in function_schemas]
 
@@ -594,10 +539,9 @@ class OpenaiChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        response = await openai_chatcompletion_acreate(
-            api_key=self.api_key,
-            api_type=self.api_type,
-            base_url=self.base_url,
+        response: AsyncIterator[ChatCompletionChunk] = await discard_none_arguments(
+            self._async_client.chat.completions.create
+        )(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
                 [message_to_openai_message(m) for m in messages]
@@ -605,12 +549,13 @@ class OpenaiChatModel(ChatModel):
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
+            stream=True,
             temperature=self.temperature,
-            tools=[schema.to_dict() for schema in tool_schemas],
+            tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=(
                 tool_schemas[0].as_tool_choice()
                 if len(tool_schemas) == 1 and not allow_string_output
-                else None
+                else openai.NOT_GIVEN
             ),
         )
 
@@ -619,13 +564,14 @@ class OpenaiChatModel(ChatModel):
         if len(first_chunk.choices) == 0:
             first_chunk = await anext(response)
         if (
-            first_chunk.choices[0].delta.content is None
-            and first_chunk.choices[0].delta.tool_calls is None
+            # Mistral tool call first chunk has content ""
+            not first_chunk.choices[0].delta.content
+            and not first_chunk.choices[0].delta.tool_calls
         ):
             first_chunk = await anext(response)
         response = achain(async_iter([first_chunk]), response)
 
-        if first_chunk.choices[0].delta.content is not None:
+        if first_chunk.choices[0].delta.content:
             if not allow_string_output:
                 msg = (
                     "String was returned by model but not expected. You may need to update"
@@ -641,7 +587,7 @@ class OpenaiChatModel(ChatModel):
                 return AssistantMessage(async_streamed_str)  # type: ignore[return-value]
             return AssistantMessage(await async_streamed_str.to_string())
 
-        if first_chunk.choices[0].delta.tool_calls is not None:
+        if first_chunk.choices[0].delta.tool_calls:
             try:
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                     content = AsyncParallelFunctionCall(
