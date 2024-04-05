@@ -28,6 +28,7 @@ repository = "https://github.com/jackmpcollins/magentic"
 
 [tool.poetry.dependencies]
 python = ">=3.10,<4.0"
+anthropic = {version = ">=0.23.0", optional = true}
 filetype = "*"
 litellm = {version = ">=1.33.7", optional = true}
 openai = ">=1.0"
@@ -36,6 +37,7 @@ pydantic-settings = ">=2.0.0"
 
 [tool.poetry.extras]
 litellm = ["litellm"]
+anthropic = ["anthropic"]
 
 [tool.poetry.group.dev.dependencies]
 blacken-docs = "^1.16.0"
