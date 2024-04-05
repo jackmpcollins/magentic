@@ -282,7 +282,9 @@ async def test_decorator_return_async_parallel_function_call():
     assert len(func_result) == 2
 
 
-def test_decorator_with_context_manager():
+def test_decorator_with_context_manager(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test")
+
     @prompt("Say hello")
     def say_hello() -> str: ...
 

@@ -55,13 +55,15 @@ def test_openai_chat_model_completion():
     # TODO: test for num_tokens here
 
 
-def test_chat_model_context():
+def test_chat_model_context(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test")
     chat_model = OpenaiChatModel("gpt-4")
     with chat_model:
         assert get_chat_model() is chat_model
 
 
-def test_chat_model_context_within_context():
+def test_chat_model_context_within_context(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "test")
     with OpenaiChatModel("gpt-4"):
         assert get_chat_model().model == "gpt-4"  # type: ignore[attr-defined]
 
