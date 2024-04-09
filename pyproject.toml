@@ -36,8 +36,8 @@ pydantic = ">=2.0.0"
 pydantic-settings = ">=2.0.0"
 
 [tool.poetry.extras]
-litellm = ["litellm"]
 anthropic = ["anthropic"]
+litellm = ["litellm"]
 
 [tool.poetry.group.dev.dependencies]
 blacken-docs = "^1.16.0"
