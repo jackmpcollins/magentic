@@ -50,11 +50,13 @@ def test_anthropic_chat_model_complete_parallel_function_call():
     def minus(a: int, b: int) -> int:
         return a - b
 
-    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    chat_model = AnthropicChatModel("claude-3-opus-20240229")
     message = chat_model.complete(
         messages=[
             UserMessage(
-                "Use the plus tool to sum 1 and 2. Use the minus tool to subtract 1 from 2."
+                "Use the plus tool to sum 1 and 2."
+                " Use the minus tool to subtract 1 from 2."
+                " Use both tools at the same time."
             )
         ],
         functions=[plus, minus],
@@ -110,11 +112,13 @@ async def test_anthropic_chat_model_acomplete_async_parallel_function_call():
     def minus(a: int, b: int) -> int:
         return a - b
 
-    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    chat_model = AnthropicChatModel("claude-3-opus-20240229")
     message = await chat_model.acomplete(
         messages=[
             UserMessage(
-                "Use the plus tool to sum 1 and 2. Use the minus tool to subtract 1 from 2."
+                "Use the plus tool to sum 1 and 2."
+                " Use the minus tool to subtract 1 from 2."
+                " Use both tools at the same time."
             )
         ],
         functions=[plus, minus],
