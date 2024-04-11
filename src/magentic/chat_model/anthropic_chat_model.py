@@ -202,7 +202,9 @@ async def aparse_tool_calls(
         yield await tool_schema.aparse_tool_call(block)
 
 
-def _extract_system_message(messages: Iterable[Message]) -> str | anthropic.NotGiven:
+def _extract_system_message(
+    messages: Iterable[Message[Any]],
+) -> str | anthropic.NotGiven:
     system_messages = [m for m in messages if isinstance(m, SystemMessage)]
     if len(system_messages) > 1:
         msg = "Only one system message is allowed per request."
