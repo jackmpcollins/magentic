@@ -17,7 +17,12 @@ from magentic.chat_model.function_schema import (
     async_function_schema_for_type,
     function_schema_for_type,
 )
-from magentic.chat_model.message import AssistantMessage, Message, UserMessage
+from magentic.chat_model.message import (
+    AssistantMessage,
+    Message,
+    SystemMessage,
+    UserMessage,
+)
 from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
@@ -49,12 +54,6 @@ def message_to_anthropic_message(message: Message[Any]) -> ToolsBetaMessageParam
     """Convert a Message to an OpenAI message."""
     # TODO: Add instructions for registering new Message type to this error message
     raise NotImplementedError(type(message))
-
-
-# TODO: Use `system` param
-# @message_to_anthropic_message.register
-# def _(message: SystemMessage) -> ToolsBetaMessageParam:
-#     return {"role": AnthropicMessageRole.SYSTEM.value, "content": message.content}
 
 
 @message_to_anthropic_message.register
@@ -203,6 +202,14 @@ async def aparse_tool_calls(
         yield await tool_schema.aparse_tool_call(block)
 
 
+def _extract_system_message(messages: Iterable[Message]) -> str | anthropic.NotGiven:
+    system_messages = [m for m in messages if isinstance(m, SystemMessage)]
+    if len(system_messages) > 1:
+        msg = "Only one system message is allowed per request."
+        raise ValueError(msg)
+    return system_messages[0].content if system_messages else anthropic.NOT_GIVEN
+
+
 R = TypeVar("R")
 
 
@@ -314,6 +321,7 @@ class AnthropicChatModel(ChatModel):
             messages=[message_to_anthropic_message(m) for m in messages],
             max_tokens=self.max_tokens,
             # stream=True, TODO: Enable streaming when supported
+            system=_extract_system_message(messages),
             temperature=(
                 self.temperature
                 if self.temperature is not None
@@ -408,6 +416,7 @@ class AnthropicChatModel(ChatModel):
             messages=[message_to_anthropic_message(m) for m in messages],
             max_tokens=self.max_tokens,
             # stream=True, TODO: Enable streaming when supported
+            system=_extract_system_message(messages),
             temperature=(
                 self.temperature
                 if self.temperature is not None
