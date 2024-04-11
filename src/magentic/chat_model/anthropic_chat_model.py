@@ -148,7 +148,7 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
         return {
             "name": self._function_schema.name,
             "description": self._function_schema.description or "",
-            "input_schema": self._function_schema.parameters,  # type: ignore
+            "input_schema": self._function_schema.parameters,  # type: ignore[typeddict-item]
         }
 
 
@@ -322,8 +322,6 @@ class AnthropicChatModel(ChatModel):
             tools=[schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN,
         )
 
-        print(response.model_dump_json())
-
         last_content = response.content[-1]
 
         if last_content.type == "text":
@@ -340,8 +338,6 @@ class AnthropicChatModel(ChatModel):
             return AssistantMessage(str(streamed_str))
 
         if last_content.type == "tool_use":
-            print(type(response))  # ToolsBetaMessage
-            print(last_content.model_dump_json())
             try:
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
                     content = ParallelFunctionCall(
@@ -420,8 +416,6 @@ class AnthropicChatModel(ChatModel):
             tools=[schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN,
         )
 
-        print(response.model_dump_json())
-
         last_content = response.content[-1]
 
         if last_content.type == "text":
@@ -438,8 +432,6 @@ class AnthropicChatModel(ChatModel):
             return AssistantMessage(str(streamed_str))
 
         if last_content.type == "tool_use":
-            print(type(response))  # ToolsBetaMessage
-            print(last_content.model_dump_json())
             try:
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                     content = AsyncParallelFunctionCall(
