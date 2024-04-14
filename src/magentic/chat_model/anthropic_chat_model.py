@@ -238,14 +238,12 @@ class AnthropicChatModel(ChatModel):
         api_key: str | None = None,
         base_url: str | None = None,
         max_tokens: int = 1024,
-        seed: int | None = None,
         temperature: float | None = None,
     ):
         self._model = model
         self._api_key = api_key
         self._base_url = base_url
         self._max_tokens = max_tokens
-        self._seed = seed
         self._temperature = temperature
 
         self._client = anthropic.Anthropic(api_key=api_key, base_url=base_url)
@@ -268,10 +266,6 @@ class AnthropicChatModel(ChatModel):
     @property
     def max_tokens(self) -> int:
         return self._max_tokens
-
-    @property
-    def seed(self) -> int | None:
-        return self._seed
 
     @property
     def temperature(self) -> float | None:
