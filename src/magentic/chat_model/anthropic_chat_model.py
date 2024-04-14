@@ -321,6 +321,7 @@ class AnthropicChatModel(ChatModel):
             model=self.model,
             messages=[message_to_anthropic_message(m) for m in messages],
             max_tokens=self.max_tokens,
+            stop_sequences=stop or anthropic.NOT_GIVEN,
             # stream=True, TODO: Enable streaming when supported
             system=system,
             temperature=(
@@ -418,6 +419,7 @@ class AnthropicChatModel(ChatModel):
             model=self.model,
             messages=[message_to_anthropic_message(m) for m in messages],
             max_tokens=self.max_tokens,
+            stop_sequences=stop or anthropic.NOT_GIVEN,
             # stream=True, TODO: Enable streaming when supported
             system=system,
             temperature=(
