@@ -204,12 +204,15 @@ async def aparse_tool_calls(
 
 def _extract_system_message(
     messages: Iterable[Message[Any]],
-) -> str | anthropic.NotGiven:
+) -> tuple[str | anthropic.NotGiven, list[Message[Any]]]:
     system_messages = [m for m in messages if isinstance(m, SystemMessage)]
     if len(system_messages) > 1:
         msg = "Only one system message is allowed per request."
         raise ValueError(msg)
-    return system_messages[0].content if system_messages else anthropic.NOT_GIVEN
+    return (
+        system_messages[0].content if system_messages else anthropic.NOT_GIVEN,
+        [m for m in messages if not isinstance(m, SystemMessage)],
+    )
 
 
 R = TypeVar("R")
@@ -318,12 +321,14 @@ class AnthropicChatModel(ChatModel):
         streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
+        system, messages = _extract_system_message(messages)
+
         response = self._client.beta.tools.messages.create(
             model=self.model,
             messages=[message_to_anthropic_message(m) for m in messages],
             max_tokens=self.max_tokens,
             # stream=True, TODO: Enable streaming when supported
-            system=_extract_system_message(messages),
+            system=system,
             temperature=(
                 self.temperature
                 if self.temperature is not None
@@ -413,12 +418,14 @@ class AnthropicChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
+        system, messages = _extract_system_message(messages)
+
         response = await self._async_client.beta.tools.messages.create(
             model=self.model,
             messages=[message_to_anthropic_message(m) for m in messages],
             max_tokens=self.max_tokens,
             # stream=True, TODO: Enable streaming when supported
-            system=_extract_system_message(messages),
+            system=system,
             temperature=(
                 self.temperature
                 if self.temperature is not None
