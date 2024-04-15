@@ -41,7 +41,7 @@ def test_litellm_chat_model_complete_openai(prompt, output_types, expected_outpu
         ),
     ],
 )
-@pytest.mark.anthropic
+@pytest.mark.litellm_anthropic
 def test_litellm_chat_model_complete_anthropic(
     prompt, output_types, expected_output_type
 ):
@@ -52,7 +52,7 @@ def test_litellm_chat_model_complete_anthropic(
     assert isinstance(message.content, expected_output_type)
 
 
-@pytest.mark.anthropic
+@pytest.mark.litellm_anthropic
 def test_litellm_chat_model_complete_anthropic_function_call():
     def plus(a: int, b: int) -> int:
         """Sum two numbers."""
@@ -67,7 +67,7 @@ def test_litellm_chat_model_complete_anthropic_function_call():
     assert isinstance(message.content, FunctionCall)
 
 
-@pytest.mark.anthropic
+@pytest.mark.litellm_anthropic
 def test_litellm_chat_model_complete_anthropic_parallel_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
@@ -152,7 +152,7 @@ async def test_litellm_chat_model_acomplete_openai(
     ],
 )
 @pytest.mark.asyncio
-@pytest.mark.anthropic
+@pytest.mark.litellm_anthropic
 async def test_litellm_chat_model_acomplete_anthropic(
     prompt, output_types, expected_output_type
 ):
@@ -164,7 +164,7 @@ async def test_litellm_chat_model_acomplete_anthropic(
 
 
 @pytest.mark.asyncio
-@pytest.mark.anthropic
+@pytest.mark.litellm_anthropic
 async def test_litellm_chat_model_acomplete_anthropic_function_call():
     def plus(a: int, b: int) -> int:
         """Sum two numbers."""
@@ -180,7 +180,7 @@ async def test_litellm_chat_model_acomplete_anthropic_function_call():
 
 
 @pytest.mark.asyncio
-@pytest.mark.anthropic
+@pytest.mark.litellm_anthropic
 async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
