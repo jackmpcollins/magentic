@@ -1,11 +1,28 @@
 import pytest
 
 from magentic.backend import get_chat_model
+from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
 from magentic.chat_model.litellm_chat_model import LitellmChatModel
 from magentic.chat_model.message import AssistantMessage, UserMessage
 from magentic.chat_model.openai_chat_model import (
     OpenaiChatModel,
 )
+
+
+def test_backend_anthropic_chat_model(monkeypatch):
+    monkeypatch.setenv("MAGENTIC_BACKEND", "anthropic")
+    monkeypatch.setenv("MAGENTIC_ANTHROPIC_MODEL", "claude-3-haiku-20240307")
+    monkeypatch.setenv("MAGENTIC_ANTHROPIC_API_KEY", "sk-1234567890")
+    monkeypatch.setenv("MAGENTIC_ANTHROPIC_BASE_URL", "http://localhost:8080")
+    monkeypatch.setenv("MAGENTIC_ANTHROPIC_MAX_TOKENS", "10")
+    monkeypatch.setenv("MAGENTIC_ANTHROPIC_TEMPERATURE", "2")
+    chat_model = get_chat_model()
+    assert isinstance(chat_model, AnthropicChatModel)
+    assert chat_model.model == "claude-3-haiku-20240307"
+    assert chat_model.api_key == "sk-1234567890"
+    assert chat_model.base_url == "http://localhost:8080"
+    assert chat_model.max_tokens == 10
+    assert chat_model.temperature == 2
 
 
 def test_backend_openai_chat_model(monkeypatch):

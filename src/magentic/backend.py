@@ -9,6 +9,16 @@ def get_chat_model() -> ChatModel:
     settings = get_settings()
 
     match settings.backend:
+        case Backend.ANTHROPIC:
+            from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
+
+            return AnthropicChatModel(
+                model=settings.anthropic_model,
+                api_key=settings.anthropic_api_key,
+                base_url=settings.anthropic_base_url,
+                max_tokens=settings.anthropic_max_tokens,
+                temperature=settings.anthropic_temperature,
+            )
         case Backend.LITELLM:
             from magentic.chat_model.litellm_chat_model import LitellmChatModel
 
