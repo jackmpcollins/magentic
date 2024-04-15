@@ -1,11 +1,12 @@
 # LLM Configuration
 
-Currently two backends are available
+Magentic supports multiple "backends" (LLM providers). These are
 
-- `openai` : the default backend that uses the `openai` Python package. Supports all features.
+- `openai` : the default backend that uses the `openai` Python package. Supports all features of magentic.
+- `anthropic` : uses the `anthropic` Python package. Install this with `pip install magentic[anthropic]`. Supports all features of magentic, however streaming responses are currently received all at once.
 - `litellm` : uses the `litellm` Python package to enable querying LLMs from [many different providers](https://docs.litellm.ai/docs/providers). Install this with `pip install magentic[litellm]`. Note: some models may not support all features of `magentic` e.g. function calling/structured output and streaming.
 
-The backend and LLM used by `magentic` can be configured in several ways. The order of precedence of configuration is
+The backend and LLM (`ChatModel`) used by `magentic` can be configured in several ways. The order of precedence of configuration is
 
 1. Arguments explicitly passed when initializing an instance in Python
 1. Values set using a context manager in Python
@@ -57,6 +58,6 @@ The following environment variables can be set.
 | MAGENTIC_OPENAI_SEED           | Seed for deterministic sampling          | 42                           |
 | MAGENTIC_OPENAI_TEMPERATURE    | OpenAI temperature                       | 0.5                          |
 
-When using the `openai` backend, setting the `MAGENTIC_OPENAI_BASE_URL` environment variable or using `OpenaiChatModel(..., base_url="http://localhost:8080")` in code allows you to use `magentic` with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LiteLLM OpenAI Proxy Server](https://docs.litellm.ai/docs/proxy_server), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support function calling then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
+When using the `openai` backend, setting the `MAGENTIC_OPENAI_BASE_URL` environment variable or using `OpenaiChatModel(..., base_url="http://localhost:8080")` in code allows you to use `magentic` with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LiteLLM OpenAI Proxy Server](https://docs.litellm.ai/docs/proxy_server), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support tool calls then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
 
 To use Azure with the openai backend you will need to set the `MAGENTIC_OPENAI_API_TYPE` environment variable to "azure" or use `OpenaiChatModel(..., api_type="azure")`, and also set the environment variables needed by the openai package to access Azure. See https://github.com/openai/openai-python#microsoft-azure-openai
