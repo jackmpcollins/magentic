@@ -621,12 +621,13 @@
 
 
 <h1 id="llm-configuration">LLM Configuration<a class="headerlink" href="#llm-configuration" title="Permanent link">&para;</a></h1>
-<p>Currently two backends are available</p>
+<p>Magentic supports multiple "backends" (LLM providers). These are</p>
 <ul>
-<li><code>openai</code> : the default backend that uses the <code>openai</code> Python package. Supports all features.</li>
+<li><code>openai</code> : the default backend that uses the <code>openai</code> Python package. Supports all features of magentic.</li>
+<li><code>anthropic</code> : uses the <code>anthropic</code> Python package. Install this with <code>pip install magentic[anthropic]</code>. Supports all features of magentic, however streaming responses are currently received all at once.</li>
 <li><code>litellm</code> : uses the <code>litellm</code> Python package to enable querying LLMs from <a href="https://docs.litellm.ai/docs/providers">many different providers</a>. Install this with <code>pip install magentic[litellm]</code>. Note: some models may not support all features of <code>magentic</code> e.g. function calling/structured output and streaming.</li>
 </ul>
-<p>The backend and LLM used by <code>magentic</code> can be configured in several ways. The order of precedence of configuration is</p>
+<p>The backend and LLM (<code>ChatModel</code>) used by <code>magentic</code> can be configured in several ways. The order of precedence of configuration is</p>
 <ol>
 <li>Arguments explicitly passed when initializing an instance in Python</li>
 <li>Values set using a context manager in Python</li>
@@ -667,7 +668,32 @@
 <tr>
 <td>MAGENTIC_BACKEND</td>
 <td>The package to use as the LLM backend</td>
-<td>openai</td>
+<td>anthropic / openai / litellm</td>
+</tr>
+<tr>
+<td>MAGENTIC_ANTHROPIC_MODEL</td>
+<td>Anthropic model</td>
+<td>claude-3-haiku-20240307</td>
+</tr>
+<tr>
+<td>MAGENTIC_ANTHROPIC_API_KEY</td>
+<td>Anthropic API key to be used by magentic</td>
+<td>sk-...</td>
+</tr>
+<tr>
+<td>MAGENTIC_ANTHROPIC_BASE_URL</td>
+<td>Base URL for an Anthropic-compatible API</td>
+<td>http://localhost:8080</td>
+</tr>
+<tr>
+<td>MAGENTIC_ANTHROPIC_MAX_TOKENS</td>
+<td>Max number of generated tokens</td>
+<td>1024</td>
+</tr>
+<tr>
+<td>MAGENTIC_ANTHROPIC_TEMPERATURE</td>
+<td>Temperature</td>
+<td>0.5</td>
 </tr>
 <tr>
 <td>MAGENTIC_LITELLM_MODEL</td>
@@ -726,7 +752,7 @@
 </tr>
 </tbody>
 </table>
-<p>When using the <code>openai</code> backend, setting the <code>MAGENTIC_OPENAI_BASE_URL</code> environment variable or using <code>OpenaiChatModel(..., base_url="http://localhost:8080")</code> in code allows you to use <code>magentic</code> with any OpenAI-compatible API e.g. <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&amp;pivots=programming-language-python#create-a-new-python-application">Azure OpenAI Service</a>, <a href="https://docs.litellm.ai/docs/proxy_server">LiteLLM OpenAI Proxy Server</a>, <a href="https://localai.io/howtos/easy-request-openai/">LocalAI</a>. Note that if the API does not support function calling then you will not be able to create prompt-functions that return Python objects, but other features of <code>magentic</code> will still work.</p>
+<p>When using the <code>openai</code> backend, setting the <code>MAGENTIC_OPENAI_BASE_URL</code> environment variable or using <code>OpenaiChatModel(..., base_url="http://localhost:8080")</code> in code allows you to use <code>magentic</code> with any OpenAI-compatible API e.g. <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&amp;pivots=programming-language-python#create-a-new-python-application">Azure OpenAI Service</a>, <a href="https://docs.litellm.ai/docs/proxy_server">LiteLLM OpenAI Proxy Server</a>, <a href="https://localai.io/howtos/easy-request-openai/">LocalAI</a>. Note that if the API does not support tool calls then you will not be able to create prompt-functions that return Python objects, but other features of <code>magentic</code> will still work.</p>
 <p>To use Azure with the openai backend you will need to set the <code>MAGENTIC_OPENAI_API_TYPE</code> environment variable to "azure" or use <code>OpenaiChatModel(..., api_type="azure")</code>, and also set the environment variables needed by the openai package to access Azure. See https://github.com/openai/openai-python#microsoft-azure-openai</p>
 
 
