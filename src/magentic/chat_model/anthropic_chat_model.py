@@ -362,6 +362,7 @@ class AnthropicChatModel(ChatModel):
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
+                    f" {response.model_dump_json()}"
                 )
                 raise StructuredOutputError(msg) from e
 
@@ -460,6 +461,7 @@ class AnthropicChatModel(ChatModel):
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
+                    f" {response.model_dump_json()}"
                 )
                 raise StructuredOutputError(msg) from e
 
