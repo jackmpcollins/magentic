@@ -41,7 +41,7 @@ try:
     if TYPE_CHECKING:
         from litellm.utils import ModelResponse
 except ImportError as error:
-    msg = "To use LitellmChatModel you must install the `litellm` package using `pip install magentic[litellm]`."
+    msg = "To use LitellmChatModel you must install the `litellm` package using `pip install 'magentic[litellm]'`."
     raise ImportError(msg) from error
 
 

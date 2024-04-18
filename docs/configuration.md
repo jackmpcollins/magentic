@@ -3,15 +3,29 @@
 Magentic supports multiple "backends" (LLM providers). These are
 
 - `openai` : the default backend that uses the `openai` Python package. Supports all features of magentic.
-- `anthropic` : uses the `anthropic` Python package. Install this with `pip install magentic[anthropic]`. Supports all features of magentic, however streaming responses are currently received all at once.
-- `litellm` : uses the `litellm` Python package to enable querying LLMs from [many different providers](https://docs.litellm.ai/docs/providers). Install this with `pip install magentic[litellm]`. Note: some models may not support all features of `magentic` e.g. function calling/structured output and streaming.
+  ```python
+  from magentic import OpenaiChatModel
+  ```
+- `anthropic` : uses the `anthropic` Python package. Supports all features of magentic, however streaming responses are currently received all at once.
+  ```sh
+  pip install "magentic[anthropic]"
+  ```
+  ```python
+  from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
+  ```
+- `litellm` : uses the `litellm` Python package to enable querying LLMs from [many different providers](https://docs.litellm.ai/docs/providers). Note: some models may not support all features of `magentic` e.g. function calling/structured output and streaming.
+  ```sh
+  pip install "magentic[litellm]"
+  ```
+  ```python
+  from magentic.chat_model.litellm_chat_model import LitellmChatModel
+  ```
 
-The backend and LLM (`ChatModel`) used by `magentic` can be configured in several ways. The order of precedence of configuration is
+The backend and LLM (`ChatModel`) used by `magentic` can be configured in several ways. When a magentic function is called, the `ChatModel` to use follows this order of preference
 
-1. Arguments explicitly passed when initializing an instance in Python
-1. Values set using a context manager in Python
-1. Environment variables
-1. Default values from [src/magentic/settings.py](https://github.com/jackmpcollins/magentic/src/magentic/settings.py)
+1. The `ChatModel` instance provided as the `model` argument to the magentic decorator
+1. The current chat model context, created using `with MyChatModel:`
+1. The global `ChatModel` created from environment variables and the default settings in [src/magentic/settings.py](https://github.com/jackmpcollins/magentic/src/magentic/settings.py)
 
 ```python
 from magentic import OpenaiChatModel, prompt
