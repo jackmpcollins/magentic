@@ -170,16 +170,16 @@ LLM-powered functions created using `@prompt`, `@chatprompt` and `@prompt_chain`
 
 <!-- Links -->
 
-[Structured Outputs]: magentic.dev/structured-outputs
-[Chat Prompting]: magentic.dev/chat-prompting
-[Function Calling]: magentic.dev/function-calling
-[Parallel Function Calling]: magentic.dev/function-calling/#parallelfunctioncall
-[Formatting]: magentic.dev/formatting
-[Asyncio]: magentic.dev/asyncio
-[Streaming]: magentic.dev/streaming
-[Vision]: magentic.dev/vision
-[Configuration]: magentic.dev/configuration
-[Type Annotations]: magentic.dev/type-checking
+[Structured Outputs]: https://magentic.dev/structured-outputs
+[Chat Prompting]: https://magentic.dev/chat-prompting
+[Function Calling]: https://magentic.dev/function-calling
+[Parallel Function Calling]: https://magentic.dev/function-calling/#parallelfunctioncall
+[Formatting]: https://magentic.dev/formatting
+[Asyncio]: https://magentic.dev/asyncio
+[Streaming]: https://magentic.dev/streaming
+[Vision]: https://magentic.dev/vision
+[Configuration]: https://magentic.dev/configuration
+[Type Annotations]: https://magentic.dev/type-checking
 
 ### Chat Prompting
 
