@@ -40,7 +40,7 @@ try:
         ToolUseBlock,
     )
 except ImportError as error:
-    msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install magentic[anthropic]`."
+    msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install 'magentic[anthropic]'`."
     raise ImportError(msg) from error
 
 
