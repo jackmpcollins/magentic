@@ -4,15 +4,15 @@ Easily integrate Large Language Models into your Python code. Simply use the `@p
 
 ## Features
 
-- [Structured Outputs](structured-outputs.md) using pydantic models and built-in python types.
-- [Chat Prompting](chat-prompting.md) to enable few-shot prompting with structured examples.
-- [Function Calling](function-calling.md) and [Parallel Function Calling](function-calling.md) via the `FunctionCall` and `ParallelFunctionCall` return types.
-- [Formatting](formatting.md) to naturally insert python objects into prompts.
-- [Asyncio](asyncio.md). Simply use `async def` when defining a magentic function.
-- [Streaming](streaming.md) structured outputs to use them as they are being generated.
-- [Vision](vision.md) to easily get stuctured outputs from images.
-- Multiple LLM providers including OpenAI and Anthropic. See [Configuration](configuration.md).
-- [Type Checking](type-checking.md) to work nicely with linters and IDEs.
+- [Structured Outputs] using pydantic models and built-in python types.
+- [Chat Prompting] to enable few-shot prompting with structured examples.
+- [Function Calling] and [Parallel Function Calling] via the `FunctionCall` and `ParallelFunctionCall` return types.
+- [Formatting] to naturally insert python objects into prompts.
+- [Asyncio]. Simply use `async def` when defining a magentic function.
+- [Streaming] structured outputs to use them as they are being generated.
+- [Vision] to easily get stuctured outputs from images.
+- Multiple LLM providers including OpenAI and Anthropic. See [Configuration].
+- [Type Checking] to work nicely with linters and IDEs.
 
 ## Installation
 
@@ -26,7 +26,7 @@ or using poetry
 poetry add magentic
 ```
 
-Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variable. To configure a different LLM provider see [Configuration](configuration.md) for more.
+Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variable. To configure a different LLM provider see [Configuration] for more.
 
 ## Usage
 
@@ -68,7 +68,7 @@ create_superhero("Garden Man")
 # Superhero(name='Garden Man', age=30, power='Control over plants', enemies=['Pollution Man', 'Concrete Woman'])
 ```
 
-See [Structured Outputs](structured-outputs.md) for more.
+See [Structured Outputs] for more.
 
 ### @chatprompt
 
@@ -102,7 +102,7 @@ get_movie_quote("Iron Man")
 # Quote(quote='I am Iron Man.', character='Tony Stark')
 ```
 
-See [Chat Prompting](chat-prompting.md) for more.
+See [Chat Prompting] for more.
 
 ### FunctionCall
 
@@ -132,7 +132,7 @@ output()
 # 'Preheating to 350 F with mode bake'
 ```
 
-See [Function Calling](function-calling.md) for more.
+See [Function Calling] for more.
 
 ### @prompt_chain
 
@@ -167,3 +167,16 @@ describe_weather("Boston")
 ```
 
 LLM-powered functions created using `@prompt`, `@chatprompt` and `@prompt_chain` can be supplied as `functions` to other `@prompt`/`@prompt_chain` decorators, just like regular python functions. This enables increasingly complex LLM-powered functionality, while allowing individual components to be tested and improved in isolation.
+
+<!-- Links -->
+
+[Structured Outputs]: structured-outputs.md
+[Chat Prompting]: chat-prompting.md
+[Function Calling]: function-calling.md
+[Parallel Function Calling]: function-calling.md#parallelfunctioncall
+[Formatting]: formatting.md
+[Asyncio]: asyncio.md
+[Streaming]: streaming.md
+[Vision]: vision.md
+[Configuration]: configuration.md
+[Type Checking]: type-checking.md
