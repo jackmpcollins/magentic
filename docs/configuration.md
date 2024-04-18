@@ -8,14 +8,14 @@ Magentic supports multiple "backends" (LLM providers). These are
   ```
 - `anthropic` : uses the `anthropic` Python package. Supports all features of magentic, however streaming responses are currently received all at once.
   ```sh
-  pip install magentic[anthropic]
+  pip install "magentic[anthropic]"
   ```
   ```python
   from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
   ```
 - `litellm` : uses the `litellm` Python package to enable querying LLMs from [many different providers](https://docs.litellm.ai/docs/providers). Note: some models may not support all features of `magentic` e.g. function calling/structured output and streaming.
   ```sh
-  pip install magentic[litellm]
+  pip install "magentic[litellm]"
   ```
   ```python
   from magentic.chat_model.litellm_chat_model import LitellmChatModel
