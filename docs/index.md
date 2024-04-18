@@ -12,7 +12,7 @@ Easily integrate Large Language Models into your Python code. Simply use the `@p
 - [Streaming] structured outputs to use them as they are being generated.
 - [Vision] to easily get stuctured outputs from images.
 - Multiple LLM providers including OpenAI and Anthropic. See [Configuration].
-- [Type Checking] to work nicely with linters and IDEs.
+- [Type Annotations] to work nicely with linters and IDEs.
 
 ## Installation
 
@@ -179,4 +179,4 @@ LLM-powered functions created using `@prompt`, `@chatprompt` and `@prompt_chain`
 [Streaming]: streaming.md
 [Vision]: vision.md
 [Configuration]: configuration.md
-[Type Checking]: type-checking.md
+[Type Annotations]: type-checking.md
