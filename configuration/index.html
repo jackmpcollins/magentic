@@ -623,16 +623,25 @@
 <h1 id="llm-configuration">LLM Configuration<a class="headerlink" href="#llm-configuration" title="Permanent link">&para;</a></h1>
 <p>Magentic supports multiple "backends" (LLM providers). These are</p>
 <ul>
-<li><code>openai</code> : the default backend that uses the <code>openai</code> Python package. Supports all features of magentic.</li>
-<li><code>anthropic</code> : uses the <code>anthropic</code> Python package. Install this with <code>pip install magentic[anthropic]</code>. Supports all features of magentic, however streaming responses are currently received all at once.</li>
-<li><code>litellm</code> : uses the <code>litellm</code> Python package to enable querying LLMs from <a href="https://docs.litellm.ai/docs/providers">many different providers</a>. Install this with <code>pip install magentic[litellm]</code>. Note: some models may not support all features of <code>magentic</code> e.g. function calling/structured output and streaming.</li>
+<li><code>openai</code> : the default backend that uses the <code>openai</code> Python package. Supports all features of magentic.
+  <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">OpenaiChatModel</span>
+</code></pre></div></li>
+<li><code>anthropic</code> : uses the <code>anthropic</code> Python package. Supports all features of magentic, however streaming responses are currently received all at once.
+  <div class="language-sh highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;magentic[anthropic]&quot;</span>
+</code></pre></div>
+  <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic.chat_model.anthropic_chat_model</span> <span class="kn">import</span> <span class="n">AnthropicChatModel</span>
+</code></pre></div></li>
+<li><code>litellm</code> : uses the <code>litellm</code> Python package to enable querying LLMs from <a href="https://docs.litellm.ai/docs/providers">many different providers</a>. Note: some models may not support all features of <code>magentic</code> e.g. function calling/structured output and streaming.
+  <div class="language-sh highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;magentic[litellm]&quot;</span>
+</code></pre></div>
+  <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic.chat_model.litellm_chat_model</span> <span class="kn">import</span> <span class="n">LitellmChatModel</span>
+</code></pre></div></li>
 </ul>
-<p>The backend and LLM (<code>ChatModel</code>) used by <code>magentic</code> can be configured in several ways. The order of precedence of configuration is</p>
+<p>The backend and LLM (<code>ChatModel</code>) used by <code>magentic</code> can be configured in several ways. When a magentic function is called, the <code>ChatModel</code> to use follows this order of preference</p>
 <ol>
-<li>Arguments explicitly passed when initializing an instance in Python</li>
-<li>Values set using a context manager in Python</li>
-<li>Environment variables</li>
-<li>Default values from <a href="https://github.com/jackmpcollins/magentic/src/magentic/settings.py">src/magentic/settings.py</a></li>
+<li>The <code>ChatModel</code> instance provided as the <code>model</code> argument to the magentic decorator</li>
+<li>The current chat model context, created using <code>with MyChatModel:</code></li>
+<li>The global <code>ChatModel</code> created from environment variables and the default settings in <a href="https://github.com/jackmpcollins/magentic/src/magentic/settings.py">src/magentic/settings.py</a></li>
 </ol>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">prompt</span>
 <span class="kn">from</span> <span class="nn">magentic.chat_model.litellm_chat_model</span> <span class="kn">import</span> <span class="n">LitellmChatModel</span>

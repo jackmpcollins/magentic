@@ -313,6 +313,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Features
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
       Installation
@@ -335,6 +344,15 @@
   <a href="#prompt" class="md-nav__link">
     <span class="md-ellipsis">
       @prompt
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chatprompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      @chatprompt
     </span>
   </a>
   
@@ -687,6 +705,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#features" class="md-nav__link">
+    <span class="md-ellipsis">
+      Features
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#installation" class="md-nav__link">
     <span class="md-ellipsis">
       Installation
@@ -709,6 +736,15 @@
   <a href="#prompt" class="md-nav__link">
     <span class="md-ellipsis">
       @prompt
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#chatprompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      @chatprompt
     </span>
   </a>
   
@@ -761,14 +797,18 @@
 
 
 <h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
-<p>Easily integrate Large Language Models into your Python code. Simply use the <code>@prompt</code> decorator to create functions that return structured output from the LLM. Mix LLM queries and function calling with regular Python code to create complex logic.</p>
-<p><code>magentic</code> is</p>
+<p>Easily integrate Large Language Models into your Python code. Simply use the <code>@prompt</code> and <code>@chatprompt</code> decorators to create functions that return structured output from the LLM. Mix LLM queries and function calling with regular Python code to create complex logic.</p>
+<h2 id="features">Features<a class="headerlink" href="#features" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Compact:</strong> Query LLMs without duplicating boilerplate code.</li>
-<li><strong>Atomic:</strong> Prompts are functions that can be individually tested and reasoned about.</li>
-<li><strong>Transparent:</strong> Create "chains" using regular Python code. Define all of your own prompts.</li>
-<li><strong>Compatible:</strong> Use <code>@prompt</code> functions as normal functions, including with decorators like <code>@lru_cache</code>.</li>
-<li><strong>Type Annotated:</strong> Works with linters and IDEs.</li>
+<li><a href="structured-outputs/">Structured Outputs</a> using pydantic models and built-in python types.</li>
+<li><a href="chat-prompting/">Chat Prompting</a> to enable few-shot prompting with structured examples.</li>
+<li><a href="function-calling/">Function Calling</a> and <a href="function-calling/#parallelfunctioncall">Parallel Function Calling</a> via the <code>FunctionCall</code> and <code>ParallelFunctionCall</code> return types.</li>
+<li><a href="formatting/">Formatting</a> to naturally insert python objects into prompts.</li>
+<li><a href="asyncio/">Asyncio</a>. Simply use <code>async def</code> when defining a magentic function.</li>
+<li><a href="streaming/">Streaming</a> structured outputs to use them as they are being generated.</li>
+<li><a href="vision/">Vision</a> to easily get stuctured outputs from images.</li>
+<li>Multiple LLM providers including OpenAI and Anthropic. See <a href="configuration/">Configuration</a>.</li>
+<li><a href="type-checking/">Type Annotations</a> to work nicely with linters and IDEs.</li>
 </ul>
 <h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
 <div class="language-sh highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>magentic
@@ -776,7 +816,7 @@
 <p>or using poetry</p>
 <div class="language-sh highlight"><pre><span></span><code>poetry<span class="w"> </span>add<span class="w"> </span>magentic
 </code></pre></div>
-<p>Configure your OpenAI API key by setting the <code>OPENAI_API_KEY</code> environment variable or using <code>openai.api_key = "sk-..."</code>. See the <a href="https://github.com/openai/openai-python#usage">OpenAI Python library documentation</a> for more information.</p>
+<p>Configure your OpenAI API key by setting the <code>OPENAI_API_KEY</code> environment variable. To configure a different LLM provider see <a href="configuration/">Configuration</a> for more.</p>
 <h2 id="usage">Usage<a class="headerlink" href="#usage" title="Permanent link">&para;</a></h2>
 <h3 id="prompt">@prompt<a class="headerlink" href="#prompt" title="Permanent link">&para;</a></h3>
 <p>The <code>@prompt</code> decorator allows you to define a template for a Large Language Model (LLM) prompt as a Python function. When this function is called, the arguments are inserted into the template, then this prompt is sent to an LLM which generates the function output.</p>
@@ -809,6 +849,36 @@
 <span class="n">create_superhero</span><span class="p">(</span><span class="s2">&quot;Garden Man&quot;</span><span class="p">)</span>
 <span class="c1"># Superhero(name=&#39;Garden Man&#39;, age=30, power=&#39;Control over plants&#39;, enemies=[&#39;Pollution Man&#39;, &#39;Concrete Woman&#39;])</span>
 </code></pre></div>
+<p>See <a href="structured-outputs/">Structured Outputs</a> for more.</p>
+<h3 id="chatprompt">@chatprompt<a class="headerlink" href="#chatprompt" title="Permanent link">&para;</a></h3>
+<p>The <code>@chatprompt</code> decorator works just like <code>@prompt</code> but allows you to pass chat messages as a template rather than a single text prompt. This can be used to provide a system message or for few-shot prompting where you provide example responses to guide the model's output. Format fields denoted by curly braces <code>{example}</code> will be filled in all messages (except <code>FunctionResultMessage</code>).</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">AssistantMessage</span><span class="p">,</span> <span class="n">SystemMessage</span><span class="p">,</span> <span class="n">UserMessage</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+
+
+<span class="k">class</span> <span class="nc">Quote</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">quote</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">character</span><span class="p">:</span> <span class="nb">str</span>
+
+
+<span class="nd">@chatprompt</span><span class="p">(</span>
+    <span class="n">SystemMessage</span><span class="p">(</span><span class="s2">&quot;You are a movie buff.&quot;</span><span class="p">),</span>
+    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;What is your favorite quote from Harry Potter?&quot;</span><span class="p">),</span>
+    <span class="n">AssistantMessage</span><span class="p">(</span>
+        <span class="n">Quote</span><span class="p">(</span>
+            <span class="n">quote</span><span class="o">=</span><span class="s2">&quot;It does not do to dwell on dreams and forget to live.&quot;</span><span class="p">,</span>
+            <span class="n">character</span><span class="o">=</span><span class="s2">&quot;Albus Dumbledore&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="p">),</span>
+    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;What is your favorite quote from </span><span class="si">{movie}</span><span class="s2">?&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">get_movie_quote</span><span class="p">(</span><span class="n">movie</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Quote</span><span class="p">:</span> <span class="o">...</span>
+
+
+<span class="n">get_movie_quote</span><span class="p">(</span><span class="s2">&quot;Iron Man&quot;</span><span class="p">)</span>
+<span class="c1"># Quote(quote=&#39;I am Iron Man.&#39;, character=&#39;Tony Stark&#39;)</span>
+</code></pre></div>
+<p>See <a href="chat-prompting/">Chat Prompting</a> for more.</p>
 <h3 id="functioncall">FunctionCall<a class="headerlink" href="#functioncall" title="Permanent link">&para;</a></h3>
 <p>An LLM can also decide to call functions. In this case the <code>@prompt</code>-decorated function returns a <code>FunctionCall</code> object which can be called to execute the function using the arguments provided by the LLM.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
@@ -833,6 +903,7 @@
 <span class="n">output</span><span class="p">()</span>
 <span class="c1"># &#39;Preheating to 350 F with mode bake&#39;</span>
 </code></pre></div>
+<p>See <a href="function-calling/">Function Calling</a> for more.</p>
 <h3 id="prompt_chain">@prompt_chain<a class="headerlink" href="#prompt_chain" title="Permanent link">&para;</a></h3>
 <p>Sometimes the LLM requires making one or more function calls to generate a final answer. The <code>@prompt_chain</code> decorator will resolve <code>FunctionCall</code> objects automatically and pass the output back to the LLM to continue until the final answer is reached.</p>
 <p>In the following example, when <code>describe_weather</code> is called the LLM first calls the <code>get_current_weather</code> function, then uses the result of this to formulate its final answer which gets returned.</p>
@@ -860,7 +931,8 @@
 <span class="n">describe_weather</span><span class="p">(</span><span class="s2">&quot;Boston&quot;</span><span class="p">)</span>
 <span class="c1"># &#39;The current weather in Boston is 72°F and it is sunny and windy.&#39;</span>
 </code></pre></div>
-<p>LLM-powered functions created using <code>@prompt</code> and <code>@prompt_chain</code> can be supplied as <code>functions</code> to other <code>@prompt</code>/<code>@prompt_chain</code> decorators, just like regular python functions. This enables increasingly complex LLM-powered functionality, while allowing individual components to be tested and improved in isolation.</p>
+<p>LLM-powered functions created using <code>@prompt</code>, <code>@chatprompt</code> and <code>@prompt_chain</code> can be supplied as <code>functions</code> to other <code>@prompt</code>/<code>@prompt_chain</code> decorators, just like regular python functions. This enables increasingly complex LLM-powered functionality, while allowing individual components to be tested and improved in isolation.</p>
+<!-- Links -->
 
 
 
