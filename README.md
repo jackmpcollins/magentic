@@ -215,6 +215,8 @@ get_movie_quote("Iron Man")
 # Quote(quote='I am Iron Man.', character='Tony Stark')
 ```
 
+See [Chat Prompting] for more.
+
 ### Streaming
 
 The `StreamedStr` (and `AsyncStreamedStr`) class can be used to stream the output of the LLM. This allows you to process the text while it is being generated, rather than receiving the whole output at once.
@@ -297,6 +299,8 @@ for hero in create_superhero_team("The Food Dudes"):
 # 6.05s : name='Ice Cream Girl' age=25 power='Can create ice cream out of thin air' enemies=['The Hot Sauce Squad', 'The Healthy Eaters']
 ```
 
+See [Streaming] for more.
+
 ### Asyncio
 
 Asynchronous functions / coroutines can be used to concurrently query the LLM. This can greatly increase the overall speed of generation, and also allow other asynchronous code to run while waiting on LLM output. In the below example, the LLM generates a description for each US president while it is waiting on the next one in the list. Measuring the characters generated per second shows that this example achieves a 7x speedup over serial processing.
@@ -342,6 +346,8 @@ time_elapsed = time() - start_time
 print(len(out), time_elapsed, len(out) / time_elapsed)
 # 2206 18.72 117.78
 ```
+
+See [Asyncio] for more.
 
 ### Additional Features
 
