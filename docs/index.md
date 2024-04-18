@@ -1,14 +1,18 @@
 # Overview
 
-Easily integrate Large Language Models into your Python code. Simply use the `@prompt` decorator to create functions that return structured output from the LLM. Mix LLM queries and function calling with regular Python code to create complex logic.
+Easily integrate Large Language Models into your Python code. Simply use the `@prompt` and `@chatprompt` decorators to create functions that return structured output from the LLM. Mix LLM queries and function calling with regular Python code to create complex logic.
 
-`magentic` is
+## Features
 
-- **Compact:** Query LLMs without duplicating boilerplate code.
-- **Atomic:** Prompts are functions that can be individually tested and reasoned about.
-- **Transparent:** Create "chains" using regular Python code. Define all of your own prompts.
-- **Compatible:** Use `@prompt` functions as normal functions, including with decorators like `@lru_cache`.
-- **Type Annotated:** Works with linters and IDEs.
+- [Structured Outputs](structured-outputs.md) using pydantic models and built-in python types.
+- [Chat Prompting](chat-prompting.md) to enable few-shot prompting with structured examples.
+- [Function Calling](function-calling.md) and [Parallel Function Calling](function-calling.md) via the `FunctionCall` and `ParallelFunctionCall` return types.
+- [Formatting](formatting.md) to naturally insert python objects into prompts.
+- [Asyncio](asyncio.md). Simply use `async def` when defining a magentic function.
+- [Streaming](streaming.md) structured outputs to use them as they are being generated.
+- [Vision](vision.md) to easily get stuctured outputs from images.
+- Multiple LLM providers including OpenAI and Anthropic. See [Configuration](configuration.md).
+- [Type Checking](type-checking.md) to work nicely with linters and IDEs.
 
 ## Installation
 
@@ -22,7 +26,7 @@ or using poetry
 poetry add magentic
 ```
 
-Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variable or using `openai.api_key = "sk-..."`. See the [OpenAI Python library documentation](https://github.com/openai/openai-python#usage) for more information.
+Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variable. To configure a different LLM provider see [Configuration](configuration.md) for more.
 
 ## Usage
 
@@ -64,6 +68,42 @@ create_superhero("Garden Man")
 # Superhero(name='Garden Man', age=30, power='Control over plants', enemies=['Pollution Man', 'Concrete Woman'])
 ```
 
+See [Structured Outputs](structured-outputs.md) for more.
+
+### @chatprompt
+
+The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages as a template rather than a single text prompt. This can be used to provide a system message or for few-shot prompting where you provide example responses to guide the model's output. Format fields denoted by curly braces `{example}` will be filled in all messages (except `FunctionResultMessage`).
+
+```python
+from magentic import chatprompt, AssistantMessage, SystemMessage, UserMessage
+from pydantic import BaseModel
+
+
+class Quote(BaseModel):
+    quote: str
+    character: str
+
+
+@chatprompt(
+    SystemMessage("You are a movie buff."),
+    UserMessage("What is your favorite quote from Harry Potter?"),
+    AssistantMessage(
+        Quote(
+            quote="It does not do to dwell on dreams and forget to live.",
+            character="Albus Dumbledore",
+        )
+    ),
+    UserMessage("What is your favorite quote from {movie}?"),
+)
+def get_movie_quote(movie: str) -> Quote: ...
+
+
+get_movie_quote("Iron Man")
+# Quote(quote='I am Iron Man.', character='Tony Stark')
+```
+
+See [Chat Prompting](chat-prompting.md) for more.
+
 ### FunctionCall
 
 An LLM can also decide to call functions. In this case the `@prompt`-decorated function returns a `FunctionCall` object which can be called to execute the function using the arguments provided by the LLM.
@@ -91,6 +131,8 @@ output = configure_oven("cookies!")
 output()
 # 'Preheating to 350 F with mode bake'
 ```
+
+See [Function Calling](function-calling.md) for more.
 
 ### @prompt_chain
 
@@ -124,4 +166,4 @@ describe_weather("Boston")
 # 'The current weather in Boston is 72°F and it is sunny and windy.'
 ```
 
-LLM-powered functions created using `@prompt` and `@prompt_chain` can be supplied as `functions` to other `@prompt`/`@prompt_chain` decorators, just like regular python functions. This enables increasingly complex LLM-powered functionality, while allowing individual components to be tested and improved in isolation.
+LLM-powered functions created using `@prompt`, `@chatprompt` and `@prompt_chain` can be supplied as `functions` to other `@prompt`/`@prompt_chain` decorators, just like regular python functions. This enables increasingly complex LLM-powered functionality, while allowing individual components to be tested and improved in isolation.
