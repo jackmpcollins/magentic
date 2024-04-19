@@ -22,6 +22,11 @@ T = TypeVar("T")
 P = ParamSpec("P")
 
 
+def _create_unique_id() -> str:
+    # OpenAI has max length of 29 chars for function call IDs
+    return uuid4().hex[:29]
+
+
 class FunctionCall(Generic[T]):
     """A function with arguments supplied.
 
@@ -34,7 +39,7 @@ class FunctionCall(Generic[T]):
         self._kwargs = kwargs
 
         # Used to correlate function call with result on serialization
-        self._unique_id = str(uuid4())
+        self._unique_id = _create_unique_id()
 
     def __call__(self) -> T:
         return self._function(*self._args, **self._kwargs)

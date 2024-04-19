@@ -3,7 +3,6 @@ from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch
 from typing import Any, Generic, TypeVar, cast, overload
-from uuid import uuid4
 
 from pydantic import ValidationError
 
@@ -27,6 +26,7 @@ from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
     ParallelFunctionCall,
+    _create_unique_id,
 )
 from magentic.streaming import AsyncStreamedStr, StreamedStr, async_iter
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
@@ -110,9 +110,9 @@ def _(message: AssistantMessage[Any]) -> ToolsBetaMessageParam:
         "role": AnthropicMessageRole.ASSISTANT.value,
         "content": [
             {
-                # Can be random because no result will be inserted back into the chat
                 "type": "tool_use",
-                "id": str(uuid4()),
+                # Can be random because no result will be inserted back into the chat
+                "id": _create_unique_id(),
                 "name": function_schema.name,
                 "input": json.loads(function_schema.serialize_args(message.content)),
             }
