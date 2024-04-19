@@ -57,14 +57,14 @@ class LitellmChatModel(ChatModel):
         *,
         api_base: str | None = None,
         max_tokens: int | None = None,
-        temperature: float | None = None,
         metadata: dict | None = None,
+        temperature: float | None = None,
     ):
         self._model = model
         self._api_base = api_base
         self._max_tokens = max_tokens
-        self._temperature = temperature
         self._metadata = metadata
+        self._temperature = temperature
 
     @property
     def model(self) -> str:
@@ -79,12 +79,12 @@ class LitellmChatModel(ChatModel):
         return self._max_tokens
 
     @property
-    def temperature(self) -> float | None:
-        return self._temperature
-
-    @property
     def metadata(self) -> dict | None:
         return self._metadata
+
+    @property
+    def temperature(self) -> float | None:
+        return self._temperature
 
     @overload
     def complete(
