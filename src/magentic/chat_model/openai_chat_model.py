@@ -3,7 +3,6 @@ from enum import Enum
 from functools import singledispatch, wraps
 from itertools import chain, groupby, takewhile
 from typing import Any, Generic, Literal, ParamSpec, TypeVar, cast, overload
-from uuid import uuid4
 
 import openai
 from openai.types.chat import (
@@ -35,6 +34,7 @@ from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
     ParallelFunctionCall,
+    _create_unique_id,
 )
 from magentic.streaming import (
     AsyncStreamedStr,
@@ -121,7 +121,7 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
         "tool_calls": [
             {
                 # Can be random because no result will be inserted back into the chat
-                "id": str(uuid4()),
+                "id": _create_unique_id(),
                 "type": "function",
                 "function": {
                     "name": function_schema.name,
