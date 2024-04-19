@@ -111,7 +111,7 @@ def test_decorator_return_pydantic_model():
         capital: str
         country: str
 
-    @prompt("What is the capital of {country}?")
+    @prompt("What is the capital of {country}? Follow the schema!")
     def get_capital(country: str) -> CapitalCity: ...
 
     output = get_capital("Ireland")
