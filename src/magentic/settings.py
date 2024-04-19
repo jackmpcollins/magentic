@@ -21,12 +21,12 @@ class Settings(BaseSettings):
     anthropic_max_tokens: int = 1024
     anthropic_temperature: float | None = None
 
-    litellm_model: str = "gpt-3.5-turbo"
+    litellm_model: str = "gpt-4-turbo"
     litellm_api_base: str | None = None
     litellm_max_tokens: int | None = None
     litellm_temperature: float | None = None
 
-    openai_model: str = "gpt-3.5-turbo"
+    openai_model: str = "gpt-4-turbo"
     openai_api_key: str | None = None
     openai_api_type: Literal["openai", "azure"] = "openai"
     openai_base_url: str | None = None
