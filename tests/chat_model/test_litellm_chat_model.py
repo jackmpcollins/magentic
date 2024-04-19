@@ -1,3 +1,6 @@
+from typing import Any, Iterator
+
+import litellm
 import pytest
 
 from magentic.chat_model.litellm_chat_model import LitellmChatModel
@@ -25,6 +28,30 @@ def test_litellm_chat_model_complete_openai(prompt, output_types, expected_outpu
         messages=[UserMessage(prompt)], output_types=output_types
     )
     assert isinstance(message.content, expected_output_type)
+
+
+@pytest.fixture()
+def litellm_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
+    """A list of calls to the `litellm.success_callback`"""
+    original_success_callback = litellm.success_callback.copy()
+    callback_calls: list[dict[str, Any]] = []
+
+    def _add_call_to_list(kwargs, completion_response, start_time, end_time):
+        callback_calls.append({"kwargs": kwargs})
+
+    litellm.success_callback = [_add_call_to_list]
+    yield callback_calls
+    litellm.success_callback = original_success_callback
+
+
+@pytest.mark.litellm_openai
+def test_litellm_chat_model_metadata(litellm_success_callback_calls):
+    """Test that provided metadata is passed to the litellm success callback."""
+    chat_model = LitellmChatModel("gpt-3.5-turbo", metadata={"foo": "bar"})
+    assert chat_model.metadata == {"foo": "bar"}
+    chat_model.complete(messages=[UserMessage("Say hello!")])
+    callback_call = litellm_success_callback_calls[0]
+    assert callback_call["kwargs"]["litellm_params"]["metadata"] == {"foo": "bar"}
 
 
 @pytest.mark.parametrize(
