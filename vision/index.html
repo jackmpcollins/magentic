@@ -715,39 +715,49 @@
 
 
 <h1 id="vision">Vision<a class="headerlink" href="#vision" title="Permanent link">&para;</a></h1>
-<p>GPT-4 Vision can be used with magentic by using the <code>UserImageMessage</code> message type. This allows the LLM to accept images as input. Currently this is only supported with the OpenAI backend (<code>OpenaiChatModel</code> with <code>"gpt-4-vision-preview"</code>).</p>
+<p>GPT-4 Vision can be used with magentic by using the <code>UserImageMessage</code> message type. This allows the LLM to accept images as input. Currently this is only supported with the OpenAI backend (<code>OpenaiChatModel</code>).</p>
 <div class="admonition note">
 <p class="admonition-title">Return types</p>
-<p>GPT-4 Vision currently does not support function-calling/tools so functions using <code>@chatprompt</code> can only return <code>str</code>, <code>StreamedStr</code>, or <code>AsyncStreamedStr</code>.</p>
+<p><code>gpt-4-vision-preview</code> does not support function-calling/tools so only <code>str</code>, <code>StreamedStr</code>, and <code>AsyncStreamedStr</code> work as return types.</p>
 </div>
 <div class="admonition tip">
 <p class="admonition-title"><code>max_tokens</code></p>
-<p>By default <code>max_tokens</code> has a low value, so you will likely need to increase it.</p>
+<p>By default, <code>gpt-4-vision-preview</code> has a low value for <code>max_tokens</code> so you will likely need to increase it.</p>
 </div>
 <p>For more information visit the <a href="https://platform.openai.com/docs/guides/vision">OpenAI Vision API documentation</a>.</p>
 <h2 id="userimagemessage">UserImageMessage<a class="headerlink" href="#userimagemessage" title="Permanent link">&para;</a></h2>
-<p>The <code>UserImageMessage</code> can be used with <code>@chatprompt</code> alongside other messages. The LLM must be set to OpenAI's GPT4 Vision model <code>OpenaiChatModel("gpt-4-vision-preview")</code>. This can be done by passing the <code>model</code> parameter to <code>@chatprompt</code>, or through the other methods of <a href="../configuration/">configuration</a>.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">UserMessage</span>
+<p>The <code>UserImageMessage</code> can be used in <code>@chatprompt</code> alongside other messages. The LLM must be set to an OpenAI model that supports vision, currently <code>gpt-4-vision-preview</code> and <code>gpt-4-turbo</code> (the default <code>ChatModel</code>). This can be done by passing the <code>model</code> parameter to <code>@chatprompt</code>, or through the other methods of <a href="../configuration/">configuration</a>.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">UserMessage</span>
 <span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
 
 
 <span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
 
 
+<span class="k">class</span> <span class="nc">ImageDetails</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;A brief description of the image.&quot;</span><span class="p">)</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;A short name.&quot;</span><span class="p">)</span>
+
+
 <span class="nd">@chatprompt</span><span class="p">(</span>
     <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
     <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">),</span>
-    <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4-vision-preview&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2000</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+<span class="k">def</span> <span class="nf">describe_image</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ImageDetails</span><span class="p">:</span> <span class="o">...</span>
 
 
-<span class="n">describe_image</span><span class="p">()</span>
-<span class="c1"># &#39;A wooden boardwalk meanders through a lush green meadow under a blue sky with wispy clouds.&#39;</span>
+<span class="n">image_details</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">image_details</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="c1"># &#39;Wooden Boardwalk in Green Wetland&#39;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">image_details</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+<span class="c1"># &#39;A serene wooden boardwalk meanders through a lush green wetland under a blue sky dotted with clouds.&#39;</span>
 </code></pre></div>
+<p>For more info on the <code>@chatprompt</code> decorator, see <a href="../chat-prompting/">Chat Prompting</a>.</p>
 <h2 id="placeholder">Placeholder<a class="headerlink" href="#placeholder" title="Permanent link">&para;</a></h2>
-<p>To provide the image as a function parameter, use <code>Placeholder</code>. This substitutes a function argument into the message when the function is called.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
+<p>In the previous example, the image url was tied to the function. To provide the image as a function parameter, use <code>Placeholder</code>. This substitutes a function argument into the message when the function is called.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
 <span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
 
 
@@ -757,8 +767,7 @@
 <span class="nd">@chatprompt</span><span class="p">(</span>
     <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
 <span class="hll">    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">)),</span>
-</span>    <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4-vision-preview&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2000</span><span class="p">),</span>
-<span class="p">)</span>
+</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
@@ -769,7 +778,7 @@
 <p><code>UserImageMessage</code> can also accept <code>bytes</code> as input. Like <code>str</code>, this can be passed directly or via <code>Placeholder</code>.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
 <span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
 
 
@@ -781,13 +790,13 @@
 
     <span class="c1"># A custom user-agent is necessary to comply with Wikimedia user-agent policy</span>
     <span class="c1"># https://meta.wikimedia.org/wiki/User-Agent_policy</span>
-    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;User-Agent&#39;</span><span class="p">:</span> <span class="s1">&#39;MagenticExampleBot (https://magentic.dev/)&#39;</span><span class="p">}</span>
-    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="s2">&quot;MagenticExampleBot (https://magentic.dev/)&quot;</span><span class="p">}</span>
+    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
+
 
 <span class="nd">@chatprompt</span><span class="p">(</span>
     <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
     <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="s2">&quot;image_bytes&quot;</span><span class="p">)),</span>
-    <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4-vision-preview&quot;</span><span class="p">,</span> <span class="n">max_tokens</span><span class="o">=</span><span class="mi">2000</span><span class="p">),</span>
 <span class="p">)</span>
 <span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
