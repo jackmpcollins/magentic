@@ -1,8 +1,45 @@
 # Function Calling
 
+For many use cases, it is useful to provide the LLM with tools that it can choose when and how to use. In magentic this is done by passing a list of Python functions to the `functions` argument of a magentic decorator.
+
+If the LLM chooses to call a function, the decorated function will return a `FunctionCall` instance. This object can be called to execute the function with the arguments that the LLM provided.
+
+```python hl_lines="20"
+from typing import Literal
+
+from magentic import prompt, FunctionCall
+
+
+def search_twitter(query: str, category: Literal["latest", "people"]):
+    """Searches Twitter for a query."""
+    print(f"Searching Twitter for: {query!r} in category {category!r}")
+    return "<twitter results>"
+
+
+def search_youtube(query: str, channel: str = "all"):
+    """Searches YouTube for a query."""
+    print(f"Searching YouTube for: {query!r}")
+    return "<youtube results>"
+
+
+@prompt(
+    "Use the appropriate search function to answer: {question}",
+    functions=[search_twitter, search_youtube],
+)
+def perform_search(question: str) -> FunctionCall[int]: ...
+
+
+output = perform_search("What is the latest news on LLMs?")
+print(output)
+# > FunctionCall(<function search_twitter at 0x10c367d00>, 'LLMs', 'latest')
+output()
+# > Searching Twitter for: 'Large Language Models news' in category 'latest'
+# '<twitter results>'
+```
+
 ## FunctionCall
 
-A `FunctionCall` combines a function with a set of arguments, ready to be called.
+A `FunctionCall` combines a function with a set of arguments, ready to be called with no additional inputs required. In magentic, each time the LLM chooses to invoke a function a `FunctionCall` instance is returned. This allows the chosen function and supplied arguments to be validated or logged before the function is executed.
 
 ```python
 from magentic import FunctionCall
@@ -13,37 +50,12 @@ def plus(a: int, b: int) -> int:
 
 
 plus_1_2 = FunctionCall(plus, 1, b=2)
+print(plus_1_2.function)
+# > <function plus at 0x10c39cd30>
+print(plus_1_2.arguments)
+# > {'a': 1, 'b': 2}
 plus_1_2()
 # 3
-```
-
-The `@prompt` decorator has a `functions` parameter which provides the LLM with a list of Python functions that it can decide to call. If the LLM chooses to use a function, the decorated function will return a `FunctionCall` which you can then call to execute that function with the inputs provided by the LLM. This gives you the opportunity to validate the arguments that the LLM provided before the function is called.
-
-```python
-from typing import Literal
-
-from magentic import prompt, FunctionCall
-
-
-def activate_oven(
-    temperature: int,
-    mode: Literal["broil", "bake", "roast"],
-) -> str:
-    """Turn the oven on with the provided settings."""
-    return f"Preheating to {temperature} F with mode {mode}"
-
-
-@prompt(
-    "Prepare the oven so I can make {food}",
-    functions=[activate_oven],
-)
-def configure_oven(food: str) -> FunctionCall[str]: ...
-
-
-output = configure_oven("cookies!")
-# FunctionCall(<function activate_oven at 0x1105a6200>, temperature=350, mode='bake')
-output()
-# 'Preheating to 350 F with mode bake'
 ```
 
 ## @prompt_chain
@@ -86,33 +98,44 @@ The most recent LLMs support "parallel function calling". This allows the model 
 
 You can use `ParallelFunctionCall` (and `AsyncParallelFunctionCall`) as a return annotation to indicate that you expect the LLM to make one or more function calls. The returned `ParallelFunctionCall` is a container of `FunctionCall` instances. When called, it returns a tuple of their results.
 
-```python
+```python hl_lines="22"
+from typing import Literal
+
 from magentic import prompt, ParallelFunctionCall
 
 
-def plus(a: int, b: int) -> int:
-    return a + b
+def search_twitter(query: str, category: Literal["latest", "people"]):
+    """Searches Twitter for a query."""
+    print(f"Searching Twitter for: {query!r} in category {category!r}")
+    return "<twitter results>"
 
 
-def minus(a: int, b: int) -> int:
-    return a - b
+def search_youtube(query: str, channel: str = "all"):
+    """Searches YouTube for a query."""
+    print(f"Searching YouTube for: {query!r}")
+    return "<youtube results>"
 
 
 @prompt(
-    "Sum {a} and {b}. Also subtract {a} from {b}.",
-    functions=[plus, minus],
+    "Use the appropriate search functions to answer: {question}",
+    functions=[search_twitter, search_youtube],
 )
-def plus_and_minus(a: int, b: int) -> ParallelFunctionCall[int]: ...
+def perform_search(question: str) -> ParallelFunctionCall[int]: ...
 
 
-output = plus_and_minus(2, 3)
+output = perform_search("What is the latest news on LLMs?")
 print(list(output))
-# > [FunctionCall(<function plus at 0x106b8f010>, 2, 3), FunctionCall(<function minus at 0x106b8ef80>, 3, 2)]
+# > [FunctionCall(<function search_twitter at 0x10c39f760>, 'LLMs', 'latest'),
+#    FunctionCall(<function search_youtube at 0x10c39f7f0>, 'LLMs')]
 output()
-# (5, 1)
+# > Searching Twitter for: 'LLMs' in category 'latest'
+# > Searching YouTube for: 'LLMs'
+# ('<twitter results>', '<youtube results>')
 ```
 
-As with `FunctionCall` and other objects, `ParallelFunctionCall` can be used with `@chatprompt` for few-shot prompting. In other words, to demonstrate to the LLM how/when it should use functions.
+## ParallelFunctionCall with @chatprompt
+
+As with `FunctionCall` and Pydantic/Python objects, `ParallelFunctionCall` can be used with `@chatprompt` for few-shot prompting. In other words, to demonstrate to the LLM how/when it should use functions.
 
 ```python
 from magentic import (
