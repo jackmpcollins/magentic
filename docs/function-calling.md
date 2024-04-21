@@ -12,13 +12,13 @@ from magentic import prompt, FunctionCall
 
 def search_twitter(query: str, category: Literal["latest", "people"]) -> str:
     """Searches Twitter for a query."""
-    print(f"Searching Twitter for: {query!r} in category {category!r}")
+    print(f"Searching Twitter for {query!r} in category {category!r}")
     return "<twitter results>"
 
 
 def search_youtube(query: str, channel: str = "all") -> str:
     """Searches YouTube for a query."""
-    print(f"Searching YouTube for: {query!r} in channel {channel!r}")
+    print(f"Searching YouTube for {query!r} in channel {channel!r}")
     return "<youtube results>"
 
 
@@ -33,7 +33,7 @@ output = perform_search("What is the latest news on LLMs?")
 print(output)
 # > FunctionCall(<function search_twitter at 0x10c367d00>, 'LLMs', 'latest')
 output()
-# > Searching Twitter for: 'Large Language Models news' in category 'latest'
+# > Searching Twitter for 'Large Language Models news' in category 'latest'
 # '<twitter results>'
 ```
 
@@ -106,13 +106,13 @@ from magentic import prompt, ParallelFunctionCall
 
 def search_twitter(query: str, category: Literal["latest", "people"]) -> str:
     """Searches Twitter for a query."""
-    print(f"Searching Twitter for: {query!r} in category {category!r}")
+    print(f"Searching Twitter for {query!r} in category {category!r}")
     return "<twitter results>"
 
 
 def search_youtube(query: str, channel: str = "all") -> str:
     """Searches YouTube for a query."""
-    print(f"Searching YouTube for: {query!r} in channel {channel!r}")
+    print(f"Searching YouTube for {query!r} in channel {channel!r}")
     return "<youtube results>"
 
 
@@ -128,8 +128,8 @@ print(list(output))
 # > [FunctionCall(<function search_twitter at 0x10c39f760>, 'LLMs', 'latest'),
 #    FunctionCall(<function search_youtube at 0x10c39f7f0>, 'LLMs')]
 output()
-# > Searching Twitter for: 'LLMs' in category 'latest'
-# > Searching YouTube for: 'LLMs' in channel 'all'
+# > Searching Twitter for 'LLMs' in category 'latest'
+# > Searching YouTube for 'LLMs' in channel 'all'
 # ('<twitter results>', '<youtube results>')
 ```
 
