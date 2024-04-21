@@ -90,7 +90,7 @@ describe_weather("Boston")
 # 'The current weather in Boston is 72°F and it is sunny and windy.'
 ```
 
-LLM-powered functions created using `@prompt` and `@prompt_chain` can be supplied as `functions` to other `@prompt`/`@prompt_chain` decorators, just like regular python functions!
+LLM-powered functions created using `@prompt`, `@chatprompt` and `@prompt_chain` can be supplied as `functions` to other `@prompt`/`@prompt_chain` decorators, just like regular python functions!
 
 ## ParallelFunctionCall
 
