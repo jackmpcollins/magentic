@@ -886,22 +886,31 @@
 <span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">FunctionCall</span>
 
 
-<span class="k">def</span> <span class="nf">activate_oven</span><span class="p">(</span><span class="n">temperature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;broil&quot;</span><span class="p">,</span> <span class="s2">&quot;bake&quot;</span><span class="p">,</span> <span class="s2">&quot;roast&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn the oven on with the provided settings.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Preheating to </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2"> F with mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="k">def</span> <span class="nf">search_twitter</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;latest&quot;</span><span class="p">,</span> <span class="s2">&quot;people&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Searches Twitter for a query.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Searching Twitter for </span><span class="si">{</span><span class="n">query</span><span class="si">!r}</span><span class="s2"> in category </span><span class="si">{</span><span class="n">category</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;twitter results&gt;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">search_youtube</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Searches YouTube for a query.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Searching YouTube for </span><span class="si">{</span><span class="n">query</span><span class="si">!r}</span><span class="s2"> in channel </span><span class="si">{</span><span class="n">channel</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;youtube results&gt;&quot;</span>
 
 
 <span class="nd">@prompt</span><span class="p">(</span>
-    <span class="s2">&quot;Prepare the oven so I can make </span><span class="si">{food}</span><span class="s2">&quot;</span><span class="p">,</span>
-    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">activate_oven</span><span class="p">],</span>
+    <span class="s2">&quot;Use the appropriate search function to answer: </span><span class="si">{question}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">search_twitter</span><span class="p">,</span> <span class="n">search_youtube</span><span class="p">],</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">configure_oven</span><span class="p">(</span><span class="n">food</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
+<span class="k">def</span> <span class="nf">perform_search</span><span class="p">(</span><span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
 
 
-<span class="n">output</span> <span class="o">=</span> <span class="n">configure_oven</span><span class="p">(</span><span class="s2">&quot;cookies!&quot;</span><span class="p">)</span>
-<span class="c1"># FunctionCall(&lt;function activate_oven at 0x1105a6200&gt;, temperature=350, mode=&#39;bake&#39;)</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">perform_search</span><span class="p">(</span><span class="s2">&quot;What is the latest news on LLMs?&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+<span class="c1"># &gt; FunctionCall(&lt;function search_twitter at 0x10c367d00&gt;, &#39;LLMs&#39;, &#39;latest&#39;)</span>
 <span class="n">output</span><span class="p">()</span>
-<span class="c1"># &#39;Preheating to 350 F with mode bake&#39;</span>
+<span class="c1"># &gt; Searching Twitter for &#39;Large Language Models news&#39; in category &#39;latest&#39;</span>
+<span class="c1"># &#39;&lt;twitter results&gt;&#39;</span>
 </code></pre></div>
 <p>See <a href="function-calling/">Function Calling</a> for more.</p>
 <h3 id="prompt_chain">@prompt_chain<a class="headerlink" href="#prompt_chain" title="Permanent link">&para;</a></h3>

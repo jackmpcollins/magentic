@@ -402,6 +402,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#parallelfunctioncall-with-chatprompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      ParallelFunctionCall with @chatprompt
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#annotated-parameters" class="md-nav__link">
     <span class="md-ellipsis">
       Annotated Parameters
@@ -701,6 +710,15 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#parallelfunctioncall-with-chatprompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      ParallelFunctionCall with @chatprompt
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#annotated-parameters" class="md-nav__link">
     <span class="md-ellipsis">
       Annotated Parameters
@@ -733,8 +751,41 @@
 
 
 <h1 id="function-calling">Function Calling<a class="headerlink" href="#function-calling" title="Permanent link">&para;</a></h1>
+<p>For many use cases, it is useful to provide the LLM with tools that it can choose when and how to use. In magentic this is done by passing a list of Python functions to the <code>functions</code> argument of a magentic decorator.</p>
+<p>If the LLM chooses to call a function, the decorated function will return a <code>FunctionCall</code> instance. This object can be called to execute the function with the arguments that the LLM provided.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">FunctionCall</span>
+
+
+<span class="k">def</span> <span class="nf">search_twitter</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;latest&quot;</span><span class="p">,</span> <span class="s2">&quot;people&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Searches Twitter for a query.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Searching Twitter for </span><span class="si">{</span><span class="n">query</span><span class="si">!r}</span><span class="s2"> in category </span><span class="si">{</span><span class="n">category</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;twitter results&gt;&quot;</span>
+
+
+<span class="k">def</span> <span class="nf">search_youtube</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Searches YouTube for a query.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Searching YouTube for </span><span class="si">{</span><span class="n">query</span><span class="si">!r}</span><span class="s2"> in channel </span><span class="si">{</span><span class="n">channel</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;youtube results&gt;&quot;</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span>
+    <span class="s2">&quot;Use the appropriate search function to answer: </span><span class="si">{question}</span><span class="s2">&quot;</span><span class="p">,</span>
+<span class="hll">    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">search_twitter</span><span class="p">,</span> <span class="n">search_youtube</span><span class="p">],</span>
+</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">perform_search</span><span class="p">(</span><span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
+
+
+<span class="n">output</span> <span class="o">=</span> <span class="n">perform_search</span><span class="p">(</span><span class="s2">&quot;What is the latest news on LLMs?&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+<span class="c1"># &gt; FunctionCall(&lt;function search_twitter at 0x10c367d00&gt;, &#39;LLMs&#39;, &#39;latest&#39;)</span>
+<span class="n">output</span><span class="p">()</span>
+<span class="c1"># &gt; Searching Twitter for &#39;Large Language Models news&#39; in category &#39;latest&#39;</span>
+<span class="c1"># &#39;&lt;twitter results&gt;&#39;</span>
+</code></pre></div>
 <h2 id="functioncall">FunctionCall<a class="headerlink" href="#functioncall" title="Permanent link">&para;</a></h2>
-<p>A <code>FunctionCall</code> combines a function with a set of arguments, ready to be called.</p>
+<p>A <code>FunctionCall</code> combines a function with a set of arguments, ready to be called with no additional inputs required. In magentic, each time the LLM chooses to invoke a function a <code>FunctionCall</code> instance is returned. This allows the chosen function and supplied arguments to be validated or logged before the function is executed.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">FunctionCall</span>
 
 
@@ -743,34 +794,12 @@
 
 
 <span class="n">plus_1_2</span> <span class="o">=</span> <span class="n">FunctionCall</span><span class="p">(</span><span class="n">plus</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">plus_1_2</span><span class="o">.</span><span class="n">function</span><span class="p">)</span>
+<span class="c1"># &gt; &lt;function plus at 0x10c39cd30&gt;</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">plus_1_2</span><span class="o">.</span><span class="n">arguments</span><span class="p">)</span>
+<span class="c1"># &gt; {&#39;a&#39;: 1, &#39;b&#39;: 2}</span>
 <span class="n">plus_1_2</span><span class="p">()</span>
 <span class="c1"># 3</span>
-</code></pre></div>
-<p>The <code>@prompt</code> decorator has a <code>functions</code> parameter which provides the LLM with a list of Python functions that it can decide to call. If the LLM chooses to use a function, the decorated function will return a <code>FunctionCall</code> which you can then call to execute that function with the inputs provided by the LLM. This gives you the opportunity to validate the arguments that the LLM provided before the function is called.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
-
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">FunctionCall</span>
-
-
-<span class="k">def</span> <span class="nf">activate_oven</span><span class="p">(</span>
-    <span class="n">temperature</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;broil&quot;</span><span class="p">,</span> <span class="s2">&quot;bake&quot;</span><span class="p">,</span> <span class="s2">&quot;roast&quot;</span><span class="p">],</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn the oven on with the provided settings.&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Preheating to </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2"> F with mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span>
-
-
-<span class="nd">@prompt</span><span class="p">(</span>
-    <span class="s2">&quot;Prepare the oven so I can make </span><span class="si">{food}</span><span class="s2">&quot;</span><span class="p">,</span>
-    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">activate_oven</span><span class="p">],</span>
-<span class="p">)</span>
-<span class="k">def</span> <span class="nf">configure_oven</span><span class="p">(</span><span class="n">food</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">FunctionCall</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
-
-
-<span class="n">output</span> <span class="o">=</span> <span class="n">configure_oven</span><span class="p">(</span><span class="s2">&quot;cookies!&quot;</span><span class="p">)</span>
-<span class="c1"># FunctionCall(&lt;function activate_oven at 0x1105a6200&gt;, temperature=350, mode=&#39;bake&#39;)</span>
-<span class="n">output</span><span class="p">()</span>
-<span class="c1"># &#39;Preheating to 350 F with mode bake&#39;</span>
 </code></pre></div>
 <h2 id="prompt_chain">@prompt_chain<a class="headerlink" href="#prompt_chain" title="Permanent link">&para;</a></h2>
 <p>In some cases, you need the model to perform multiple function calls to reach a final answer. The <code>@prompt_chain</code> decorator will execute function calls automatically, append the result to the list of messages, and query the LLM again until a final answer is reached.</p>
@@ -799,35 +828,45 @@
 <span class="n">describe_weather</span><span class="p">(</span><span class="s2">&quot;Boston&quot;</span><span class="p">)</span>
 <span class="c1"># &#39;The current weather in Boston is 72°F and it is sunny and windy.&#39;</span>
 </code></pre></div>
-<p>LLM-powered functions created using <code>@prompt</code> and <code>@prompt_chain</code> can be supplied as <code>functions</code> to other <code>@prompt</code>/<code>@prompt_chain</code> decorators, just like regular python functions!</p>
+<p>LLM-powered functions created using <code>@prompt</code>, <code>@chatprompt</code> and <code>@prompt_chain</code> can be supplied as <code>functions</code> to other <code>@prompt</code>/<code>@prompt_chain</code> decorators, just like regular python functions!</p>
 <h2 id="parallelfunctioncall">ParallelFunctionCall<a class="headerlink" href="#parallelfunctioncall" title="Permanent link">&para;</a></h2>
 <p>The most recent LLMs support "parallel function calling". This allows the model to call multiple functions at once. These functions can be executed concurrently, avoiding having to make several serial queries to the model.</p>
 <p>You can use <code>ParallelFunctionCall</code> (and <code>AsyncParallelFunctionCall</code>) as a return annotation to indicate that you expect the LLM to make one or more function calls. The returned <code>ParallelFunctionCall</code> is a container of <code>FunctionCall</code> instances. When called, it returns a tuple of their results.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">ParallelFunctionCall</span>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Literal</span>
+
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">ParallelFunctionCall</span>
 
 
-<span class="k">def</span> <span class="nf">plus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+<span class="k">def</span> <span class="nf">search_twitter</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">category</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;latest&quot;</span><span class="p">,</span> <span class="s2">&quot;people&quot;</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Searches Twitter for a query.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Searching Twitter for </span><span class="si">{</span><span class="n">query</span><span class="si">!r}</span><span class="s2"> in category </span><span class="si">{</span><span class="n">category</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;twitter results&gt;&quot;</span>
 
 
-<span class="k">def</span> <span class="nf">minus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-    <span class="k">return</span> <span class="n">a</span> <span class="o">-</span> <span class="n">b</span>
+<span class="k">def</span> <span class="nf">search_youtube</span><span class="p">(</span><span class="n">query</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">channel</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;all&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Searches YouTube for a query.&quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Searching YouTube for </span><span class="si">{</span><span class="n">query</span><span class="si">!r}</span><span class="s2"> in channel </span><span class="si">{</span><span class="n">channel</span><span class="si">!r}</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;&lt;youtube results&gt;&quot;</span>
 
 
 <span class="nd">@prompt</span><span class="p">(</span>
-    <span class="s2">&quot;Sum </span><span class="si">{a}</span><span class="s2"> and </span><span class="si">{b}</span><span class="s2">. Also subtract </span><span class="si">{a}</span><span class="s2"> from </span><span class="si">{b}</span><span class="s2">.&quot;</span><span class="p">,</span>
-    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">plus</span><span class="p">,</span> <span class="n">minus</span><span class="p">],</span>
+    <span class="s2">&quot;Use the appropriate search functions to answer: </span><span class="si">{question}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">search_twitter</span><span class="p">,</span> <span class="n">search_youtube</span><span class="p">],</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">plus_and_minus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParallelFunctionCall</span><span class="p">[</span><span class="nb">int</span><span class="p">]:</span> <span class="o">...</span>
+<span class="hll"><span class="k">def</span> <span class="nf">perform_search</span><span class="p">(</span><span class="n">question</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ParallelFunctionCall</span><span class="p">[</span><span class="nb">str</span><span class="p">]:</span> <span class="o">...</span>
+</span>
 
-
-<span class="n">output</span> <span class="o">=</span> <span class="n">plus_and_minus</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+<span class="n">output</span> <span class="o">=</span> <span class="n">perform_search</span><span class="p">(</span><span class="s2">&quot;What is the latest news on LLMs?&quot;</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
-<span class="c1"># &gt; [FunctionCall(&lt;function plus at 0x106b8f010&gt;, 2, 3), FunctionCall(&lt;function minus at 0x106b8ef80&gt;, 3, 2)]</span>
+<span class="c1"># &gt; [FunctionCall(&lt;function search_twitter at 0x10c39f760&gt;, &#39;LLMs&#39;, &#39;latest&#39;),</span>
+<span class="c1">#    FunctionCall(&lt;function search_youtube at 0x10c39f7f0&gt;, &#39;LLMs&#39;)]</span>
 <span class="n">output</span><span class="p">()</span>
-<span class="c1"># (5, 1)</span>
+<span class="c1"># &gt; Searching Twitter for &#39;LLMs&#39; in category &#39;latest&#39;</span>
+<span class="c1"># &gt; Searching YouTube for &#39;LLMs&#39; in channel &#39;all&#39;</span>
+<span class="c1"># (&#39;&lt;twitter results&gt;&#39;, &#39;&lt;youtube results&gt;&#39;)</span>
 </code></pre></div>
-<p>As with <code>FunctionCall</code> and other objects, <code>ParallelFunctionCall</code> can be used with <code>@chatprompt</code> for few-shot prompting. In other words, to demonstrate to the LLM how/when it should use functions.</p>
+<h2 id="parallelfunctioncall-with-chatprompt">ParallelFunctionCall with @chatprompt<a class="headerlink" href="#parallelfunctioncall-with-chatprompt" title="Permanent link">&para;</a></h2>
+<p>As with <code>FunctionCall</code> and Pydantic/Python objects, <code>ParallelFunctionCall</code> can be used with <code>@chatprompt</code> for few-shot prompting. In other words, to demonstrate to the LLM how/when it should use functions.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="p">(</span>
     <span class="n">chatprompt</span><span class="p">,</span>
     <span class="n">AssistantMessage</span><span class="p">,</span>
@@ -865,7 +904,8 @@
 
 <span class="n">output</span> <span class="o">=</span> <span class="n">do_math</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">output</span><span class="p">))</span>
-<span class="c1"># &gt; [FunctionCall(&lt;function plus at 0x10c3584c0&gt;, 3, 4), FunctionCall(&lt;function plus at 0x10c3584c0&gt;, 1, 4)]</span>
+<span class="c1"># &gt; [FunctionCall(&lt;function plus at 0x10c3584c0&gt;, 3, 4),</span>
+<span class="c1">#    FunctionCall(&lt;function plus at 0x10c3584c0&gt;, 1, 4)]</span>
 <span class="n">output</span><span class="p">()</span>
 <span class="c1"># (7, 5)</span>
 </code></pre></div>
