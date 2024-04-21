@@ -555,11 +555,11 @@
   
   
     <li class="md-nav__item">
-      <a href="../examples/retrieval_augmented_generation/" class="md-nav__link">
+      <a href="../examples/rag_github/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
-    Retrieval Augmented Generation
+    Retrieval-Augmented Generation with GitHub
   </span>
   
 
@@ -743,7 +743,7 @@
 <span class="c1"># 24.67s : Chile - 2186 chars</span>
 </code></pre></div>
 <h2 id="object-streaming">Object Streaming<a class="headerlink" href="#object-streaming" title="Permanent link">&para;</a></h2>
-<p>Structured outputs can also be streamed from the LLM by using the return type annotation <code>Iterable</code> (or <code>AsyncIterable</code>). This allows each item to be processed while the next one is being generated. See the example in examples/quiz for how this can be used to improve user experience by quickly displaying/using the first item returned.</p>
+<p>Structured outputs can also be streamed from the LLM by using the return type annotation <code>Iterable</code> (or <code>AsyncIterable</code>). This allows each item to be processed while the next one is being generated.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">collections.abc</span> <span class="kn">import</span> <span class="n">Iterable</span>
 <span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
 
