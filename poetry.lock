@@ -3982,20 +3982,6 @@ files = [
 ]
 
 [[package]]
-name = "wikipedia"
-version = "1.4.0"
-description = "Wikipedia API for Python"
-optional = false
-python-versions = "*"
-files = [
-    {file = "wikipedia-1.4.0.tar.gz", hash = "sha256:db0fad1829fdd441b1852306e9856398204dc0786d2996dd2e0c8bb8e26133b2"},
-]
-
-[package.dependencies]
-beautifulsoup4 = "*"
-requests = ">=2.0.0,<3.0.0"
-
-[[package]]
 name = "yarl"
 version = "1.9.4"
 description = "Yet another URL library"
@@ -4120,4 +4106,4 @@ litellm = ["litellm"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "f5d962632ceeeea467de41021e9b0a67215af6adbe6934b4adf3b51429ece858"
+content-hash = "8ecbe0bcafa8350ddefbc7fa8b27a888c160452146167084ce3909970d9853a2"
