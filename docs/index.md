@@ -114,22 +114,31 @@ from typing import Literal
 from magentic import prompt, FunctionCall
 
 
-def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]) -> str:
-    """Turn the oven on with the provided settings."""
-    return f"Preheating to {temperature} F with mode {mode}"
+def search_twitter(query: str, category: Literal["latest", "people"]) -> str:
+    """Searches Twitter for a query."""
+    print(f"Searching Twitter for {query!r} in category {category!r}")
+    return "<twitter results>"
+
+
+def search_youtube(query: str, channel: str = "all") -> str:
+    """Searches YouTube for a query."""
+    print(f"Searching YouTube for {query!r} in channel {channel!r}")
+    return "<youtube results>"
 
 
 @prompt(
-    "Prepare the oven so I can make {food}",
-    functions=[activate_oven],
+    "Use the appropriate search function to answer: {question}",
+    functions=[search_twitter, search_youtube],
 )
-def configure_oven(food: str) -> FunctionCall[str]: ...
+def perform_search(question: str) -> FunctionCall[str]: ...
 
 
-output = configure_oven("cookies!")
-# FunctionCall(<function activate_oven at 0x1105a6200>, temperature=350, mode='bake')
+output = perform_search("What is the latest news on LLMs?")
+print(output)
+# > FunctionCall(<function search_twitter at 0x10c367d00>, 'LLMs', 'latest')
 output()
-# 'Preheating to 350 F with mode bake'
+# > Searching Twitter for 'Large Language Models news' in category 'latest'
+# '<twitter results>'
 ```
 
 See [Function Calling] for more.
