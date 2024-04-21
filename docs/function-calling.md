@@ -175,7 +175,8 @@ def do_math() -> ParallelFunctionCall[int]: ...
 
 output = do_math()
 print(list(output))
-# > [FunctionCall(<function plus at 0x10c3584c0>, 3, 4), FunctionCall(<function plus at 0x10c3584c0>, 1, 4)]
+# > [FunctionCall(<function plus at 0x10c3584c0>, 3, 4),
+#    FunctionCall(<function plus at 0x10c3584c0>, 1, 4)]
 output()
 # (7, 5)
 ```
