@@ -55,9 +55,9 @@ mkdocs-jupyter = "^0.24.6"
 mkdocs-material = "^9.5.11"
 
 [tool.poetry.group.examples.dependencies]
+ghapi = "^1.0.5"
 jupyter = "*"
 pandas = "^2.2.1"
-wikipedia = "*"
 
 [tool.pytest.ini_options]
 addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not litellm_anthropic and not litellm_openai and not ollama and not openai'"
