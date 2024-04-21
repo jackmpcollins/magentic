@@ -55,6 +55,7 @@ mkdocs-jupyter = "^0.24.6"
 mkdocs-material = "^9.5.11"
 
 [tool.poetry.group.examples.dependencies]
+ghapi = "^1.0.5"
 jupyter = "*"
 pandas = "^2.2.1"
 wikipedia = "*"
