@@ -122,7 +122,7 @@ def search_twitter(query: str, category: Literal["latest", "people"]) -> str:
 
 def search_youtube(query: str, channel: str = "all") -> str:
     """Searches YouTube for a query."""
-    print(f"Searching YouTube for: {query!r}")
+    print(f"Searching YouTube for: {query!r} in channel {channel!r}")
     return "<youtube results>"
 
 

@@ -18,7 +18,7 @@ def search_twitter(query: str, category: Literal["latest", "people"]) -> str:
 
 def search_youtube(query: str, channel: str = "all") -> str:
     """Searches YouTube for a query."""
-    print(f"Searching YouTube for: {query!r}")
+    print(f"Searching YouTube for: {query!r} in channel {channel!r}")
     return "<youtube results>"
 
 
@@ -112,7 +112,7 @@ def search_twitter(query: str, category: Literal["latest", "people"]) -> str:
 
 def search_youtube(query: str, channel: str = "all") -> str:
     """Searches YouTube for a query."""
-    print(f"Searching YouTube for: {query!r}")
+    print(f"Searching YouTube for: {query!r} in channel {channel!r}")
     return "<youtube results>"
 
 
@@ -129,7 +129,7 @@ print(list(output))
 #    FunctionCall(<function search_youtube at 0x10c39f7f0>, 'LLMs')]
 output()
 # > Searching Twitter for: 'LLMs' in category 'latest'
-# > Searching YouTube for: 'LLMs'
+# > Searching YouTube for: 'LLMs' in channel 'all'
 # ('<twitter results>', '<youtube results>')
 ```
 
