@@ -10,13 +10,13 @@ from typing import Literal
 from magentic import prompt, FunctionCall
 
 
-def search_twitter(query: str, category: Literal["latest", "people"]):
+def search_twitter(query: str, category: Literal["latest", "people"]) -> str:
     """Searches Twitter for a query."""
     print(f"Searching Twitter for: {query!r} in category {category!r}")
     return "<twitter results>"
 
 
-def search_youtube(query: str, channel: str = "all"):
+def search_youtube(query: str, channel: str = "all") -> str:
     """Searches YouTube for a query."""
     print(f"Searching YouTube for: {query!r}")
     return "<youtube results>"
@@ -26,7 +26,7 @@ def search_youtube(query: str, channel: str = "all"):
     "Use the appropriate search function to answer: {question}",
     functions=[search_twitter, search_youtube],
 )
-def perform_search(question: str) -> FunctionCall[int]: ...
+def perform_search(question: str) -> FunctionCall[str]: ...
 
 
 output = perform_search("What is the latest news on LLMs?")
@@ -104,13 +104,13 @@ from typing import Literal
 from magentic import prompt, ParallelFunctionCall
 
 
-def search_twitter(query: str, category: Literal["latest", "people"]):
+def search_twitter(query: str, category: Literal["latest", "people"]) -> str:
     """Searches Twitter for a query."""
     print(f"Searching Twitter for: {query!r} in category {category!r}")
     return "<twitter results>"
 
 
-def search_youtube(query: str, channel: str = "all"):
+def search_youtube(query: str, channel: str = "all") -> str:
     """Searches YouTube for a query."""
     print(f"Searching YouTube for: {query!r}")
     return "<youtube results>"
@@ -120,7 +120,7 @@ def search_youtube(query: str, channel: str = "all"):
     "Use the appropriate search functions to answer: {question}",
     functions=[search_twitter, search_youtube],
 )
-def perform_search(question: str) -> ParallelFunctionCall[int]: ...
+def perform_search(question: str) -> ParallelFunctionCall[str]: ...
 
 
 output = perform_search("What is the latest news on LLMs?")
