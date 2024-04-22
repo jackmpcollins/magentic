@@ -2,7 +2,7 @@ from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, It
 from enum import Enum
 from functools import singledispatch, wraps
 from itertools import chain, groupby, takewhile
-from typing import Any, Generic, Literal, ParamSpec, TypeVar, cast, overload
+from typing import Any, Generic, Literal, ParamSpec, Sequence, TypeVar, cast, overload
 
 import openai
 from openai.types.chat import (
@@ -381,6 +381,19 @@ class OpenaiChatModel(ChatModel):
     def temperature(self) -> float | None:
         return self._temperature
 
+    @staticmethod
+    def _get_tool_choice(
+        *,
+        tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
+        allow_string_output: bool,
+    ) -> ChatCompletionToolChoiceOptionParam | openai.NotGiven:
+        """Create the tool choice argument."""
+        return (
+            tool_schemas[0].as_tool_choice()
+            if len(tool_schemas) == 1 and not allow_string_output
+            else openai.NOT_GIVEN
+        )
+
     @overload
     def complete(
         self,
@@ -438,10 +451,8 @@ class OpenaiChatModel(ChatModel):
             stream=True,
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
-            tool_choice=(
-                tool_schemas[0].as_tool_choice()
-                if len(tool_schemas) == 1 and not allow_string_output
-                else openai.NOT_GIVEN
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
 
@@ -552,10 +563,8 @@ class OpenaiChatModel(ChatModel):
             stream=True,
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
-            tool_choice=(
-                tool_schemas[0].as_tool_choice()
-                if len(tool_schemas) == 1 and not allow_string_output
-                else openai.NOT_GIVEN
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
 
