@@ -42,7 +42,6 @@ def test_mistral_chat_model_complete_function_call():
     assert isinstance(message.content, FunctionCall)
 
 
-@pytest.mark.skip("Mistral fails to make parallel function calls")
 @pytest.mark.mistral
 def test_mistral_chat_model_complete_parallel_function_call():
     def plus(a: int, b: int) -> int:
@@ -102,7 +101,6 @@ async def test_mistral_chat_model_acomplete_function_call():
     assert isinstance(message.content, FunctionCall)
 
 
-@pytest.mark.skip("Mistral fails to make parallel function calls")
 @pytest.mark.asyncio
 @pytest.mark.mistral
 async def test_mistral_chat_model_acomplete_async_parallel_function_call():
