@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Backend(Enum):
     ANTHROPIC = "anthropic"
     LITELLM = "litellm"
+    MISTRAL = "mistral"
     OPENAI = "openai"
 
 
@@ -25,6 +26,13 @@ class Settings(BaseSettings):
     litellm_api_base: str | None = None
     litellm_max_tokens: int | None = None
     litellm_temperature: float | None = None
+
+    mistral_model: str = "mistral-large-latest"
+    mistral_api_key: str | None = None
+    mistral_base_url: str | None = None
+    mistral_max_tokens: int | None = None
+    mistral_seed: int | None = None
+    mistral_temperature: float | None = None
 
     openai_model: str = "gpt-4-turbo"
     openai_api_key: str | None = None

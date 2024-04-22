@@ -66,6 +66,30 @@ class MistralChatModel(ChatModel):
             temperature=temperature,
         )
 
+    @property
+    def model(self) -> str:
+        return self._mistral_openai_chat_model.model
+
+    @property
+    def api_key(self) -> str | None:
+        return self._mistral_openai_chat_model.api_key
+
+    @property
+    def base_url(self) -> str | None:
+        return self._mistral_openai_chat_model.base_url
+
+    @property
+    def max_tokens(self) -> int | None:
+        return self._mistral_openai_chat_model.max_tokens
+
+    @property
+    def seed(self) -> int | None:
+        return self._mistral_openai_chat_model.seed
+
+    @property
+    def temperature(self) -> float | None:
+        return self._mistral_openai_chat_model.temperature
+
     @overload
     def complete(
         self,
