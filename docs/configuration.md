@@ -20,6 +20,10 @@ Magentic supports multiple "backends" (LLM providers). These are
   ```python
   from magentic.chat_model.litellm_chat_model import LitellmChatModel
   ```
+- `mistral` : uses the `openai` Python package with some small modifications to make the API queries compatible with the Mistral API. Supports all features of magentic, however tool calls (including structured outputs) are not streamed so are received all at once. Note: a future version of magentic might switch to using the `mistral` Python package.
+  ```python
+  from magentic.chat_model.mistral_chat_model import MistralChatModel
+  ```
 
 The backend and LLM (`ChatModel`) used by `magentic` can be configured in several ways. When a magentic function is called, the `ChatModel` to use follows this order of preference
 
@@ -64,6 +68,12 @@ The following environment variables can be set.
 | MAGENTIC_LITELLM_API_BASE      | The base url to query                    | http://localhost:11434       |
 | MAGENTIC_LITELLM_MAX_TOKENS    | LiteLLM max number of generated tokens   | 1024                         |
 | MAGENTIC_LITELLM_TEMPERATURE   | LiteLLM temperature                      | 0.5                          |
+| MAGENTIC_MISTRAL_MODEL         | Mistral model                            | mistral-large-latest         |
+| MAGENTIC_MISTRAL_API_KEY       | Mistral API key to be used by magentic   | XEG...                       |
+| MAGENTIC_MISTRAL_BASE_URL      | Base URL for an Mistral-compatible API   | http://localhost:8080        |
+| MAGENTIC_MISTRAL_MAX_TOKENS    | Max number of generated tokens           | 1024                         |
+| MAGENTIC_MISTRAL_SEED          | Seed for deterministic sampling          | 42                           |
+| MAGENTIC_MISTRAL_TEMPERATURE   | Temperature                              | 0.5                          |
 | MAGENTIC_OPENAI_MODEL          | OpenAI model                             | gpt-4                        |
 | MAGENTIC_OPENAI_API_KEY        | OpenAI API key to be used by magentic    | sk-...                       |
 | MAGENTIC_OPENAI_API_TYPE       | Allowed options: "openai", "azure"       | azure                        |
