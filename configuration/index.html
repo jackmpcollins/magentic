@@ -657,6 +657,9 @@
 </code></pre></div>
   <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic.chat_model.litellm_chat_model</span> <span class="kn">import</span> <span class="n">LitellmChatModel</span>
 </code></pre></div></li>
+<li><code>mistral</code> : uses the <code>openai</code> Python package with some small modifications to make the API queries compatible with the Mistral API. Supports all features of magentic, however tool calls (including structured outputs) are not streamed so are received all at once. Note: a future version of magentic might switch to using the <code>mistral</code> Python package.
+  <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic.chat_model.mistral_chat_model</span> <span class="kn">import</span> <span class="n">MistralChatModel</span>
+</code></pre></div></li>
 </ul>
 <p>The backend and LLM (<code>ChatModel</code>) used by <code>magentic</code> can be configured in several ways. When a magentic function is called, the <code>ChatModel</code> to use follows this order of preference</p>
 <ol>
@@ -743,6 +746,36 @@
 <tr>
 <td>MAGENTIC_LITELLM_TEMPERATURE</td>
 <td>LiteLLM temperature</td>
+<td>0.5</td>
+</tr>
+<tr>
+<td>MAGENTIC_MISTRAL_MODEL</td>
+<td>Mistral model</td>
+<td>mistral-large-latest</td>
+</tr>
+<tr>
+<td>MAGENTIC_MISTRAL_API_KEY</td>
+<td>Mistral API key to be used by magentic</td>
+<td>XEG...</td>
+</tr>
+<tr>
+<td>MAGENTIC_MISTRAL_BASE_URL</td>
+<td>Base URL for an Mistral-compatible API</td>
+<td>http://localhost:8080</td>
+</tr>
+<tr>
+<td>MAGENTIC_MISTRAL_MAX_TOKENS</td>
+<td>Max number of generated tokens</td>
+<td>1024</td>
+</tr>
+<tr>
+<td>MAGENTIC_MISTRAL_SEED</td>
+<td>Seed for deterministic sampling</td>
+<td>42</td>
+</tr>
+<tr>
+<td>MAGENTIC_MISTRAL_TEMPERATURE</td>
+<td>Temperature</td>
 <td>0.5</td>
 </tr>
 <tr>
