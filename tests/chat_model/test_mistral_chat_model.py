@@ -56,7 +56,7 @@ def test_mistral_chat_model_complete_parallel_function_call():
             UserMessage(
                 "Use the plus tool to sum 1 and 2."
                 " Use the minus tool to subtract 1 from 2."
-                " Use both tools at the same time."
+                " Make sure to use both tools at once."
             )
         ],
         functions=[plus, minus],
@@ -116,7 +116,7 @@ async def test_mistral_chat_model_acomplete_async_parallel_function_call():
             UserMessage(
                 "Use the plus tool to sum 1 and 2."
                 " Use the minus tool to subtract 1 from 2."
-                " Use both tools at the same time."
+                " Make sure to use both tools at once."
             )
         ],
         functions=[plus, minus],
