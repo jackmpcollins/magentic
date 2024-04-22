@@ -28,6 +28,17 @@ def get_chat_model() -> ChatModel:
                 max_tokens=settings.litellm_max_tokens,
                 temperature=settings.litellm_temperature,
             )
+        case Backend.MISTRAL:
+            from magentic.chat_model.mistral_chat_model import MistralChatModel
+
+            return MistralChatModel(
+                model=settings.mistral_model,
+                api_key=settings.mistral_api_key,
+                base_url=settings.mistral_base_url,
+                max_tokens=settings.mistral_max_tokens,
+                seed=settings.mistral_seed,
+                temperature=settings.mistral_temperature,
+            )
         case Backend.OPENAI:
             from magentic.chat_model.openai_chat_model import OpenaiChatModel
 
