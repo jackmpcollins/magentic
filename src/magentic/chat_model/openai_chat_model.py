@@ -336,22 +336,21 @@ class OpenaiChatModel(ChatModel):
         self._seed = seed
         self._temperature = temperature
 
-        client_kwargs: dict[str, Any] = {
-            "api_key": api_key,
-        }
-        if api_type == "openai" and base_url:
-            client_kwargs["base_url"] = base_url
-
-        self._client = (
-            openai.AzureOpenAI(**client_kwargs)
-            if api_type == "azure"
-            else openai.OpenAI(**client_kwargs)
-        )
-        self._async_client = (
-            openai.AsyncAzureOpenAI(**client_kwargs)
-            if api_type == "azure"
-            else openai.AsyncOpenAI(**client_kwargs)
-        )
+        match api_type:
+            case "openai":
+                self._client = openai.OpenAI(api_key=api_key, base_url=base_url)
+                self._async_client = openai.AsyncOpenAI(
+                    api_key=api_key, base_url=base_url
+                )
+            case "azure":
+                self._client = openai.AzureOpenAI(
+                    api_key=api_key,
+                    base_url=base_url,  # type: ignore[arg-type]
+                )
+                self._async_client = openai.AsyncAzureOpenAI(
+                    api_key=api_key,
+                    base_url=base_url,  # type: ignore[arg-type]
+                )
 
     @property
     def model(self) -> str:
