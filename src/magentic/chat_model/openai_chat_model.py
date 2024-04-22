@@ -1,7 +1,7 @@
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch, wraps
-from itertools import chain, groupby, takewhile
+from itertools import chain, groupby
 from typing import Any, Generic, Literal, ParamSpec, Sequence, TypeVar, cast, overload
 
 import openai
@@ -42,7 +42,6 @@ from magentic.streaming import (
     achain,
     agroupby,
     async_iter,
-    atakewhile,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
@@ -229,21 +228,28 @@ class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
         )
 
 
+def _get_tool_call_id_for_chunk(tool_call: ChoiceDeltaToolCall) -> Any:
+    """Returns an id that is consistent for chunks from the same tool_call."""
+    # openai keeps index consistent for chunks from the same tool_call, but id is null
+    # mistral has null index, but keeps id consistent
+    return tool_call.index if tool_call.index is not None else tool_call.id
+
+
 def _iter_streamed_tool_calls(
     response: Iterable[ChatCompletionChunk],
 ) -> Iterator[Iterator[ChoiceDeltaToolCall]]:
     """Group tool_call chunks into separate iterators."""
-    response = takewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
+    all_tool_call_chunks = (
+        tool_call
+        for chunk in response
+        if chunk.choices[0].delta.tool_calls
+        for tool_call in chunk.choices[0].delta.tool_calls
+    )
     for _, tool_call_chunks in groupby(
-        response,
-        lambda chunk: chunk.choices[0].delta.tool_calls
-        and chunk.choices[0].delta.tool_calls[0].index,
+        all_tool_call_chunks,
+        _get_tool_call_id_for_chunk,
     ):
-        yield (
-            chunk.choices[0].delta.tool_calls[0]
-            for chunk in tool_call_chunks
-            if chunk.choices[0].delta.tool_calls
-        )
+        yield tool_call_chunks
 
 
 def parse_streamed_tool_calls(
@@ -261,17 +267,17 @@ async def _aiter_streamed_tool_calls(
     response: AsyncIterable[ChatCompletionChunk],
 ) -> AsyncIterator[AsyncIterator[ChoiceDeltaToolCall]]:
     """Async version of `_iter_streamed_tool_calls`."""
-    response = atakewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
+    all_tool_call_chunks = (
+        tool_call
+        async for chunk in response
+        if chunk.choices[0].delta.tool_calls
+        for tool_call in chunk.choices[0].delta.tool_calls
+    )
     async for _, tool_call_chunks in agroupby(
-        response,
-        lambda chunk: chunk.choices[0].delta.tool_calls
-        and chunk.choices[0].delta.tool_calls[0].index,
+        all_tool_call_chunks,
+        _get_tool_call_id_for_chunk,
     ):
-        yield (
-            chunk.choices[0].delta.tool_calls[0]
-            async for chunk in tool_call_chunks
-            if chunk.choices[0].delta.tool_calls
-        )
+        yield tool_call_chunks
 
 
 async def aparse_streamed_tool_calls(
