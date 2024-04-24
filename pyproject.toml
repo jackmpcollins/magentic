@@ -47,7 +47,7 @@ pytest-asyncio = "*"
 pytest-clarity = "*"
 pytest-cov = "*"
 python-dotenv = "^1.0.1"
-ruff = "^0.3.0"
+ruff = ">=0.3,<0.5"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.5.3"
