@@ -702,7 +702,7 @@ def plus_with_basemodel(a: IntModel, b: IntModel) -> IntModel:
                 },
             },
         ),
-        pytest.param(
+        (
             plus_with_annotated,
             {
                 "name": "plus_with_annotated",
@@ -724,7 +724,6 @@ def plus_with_basemodel(a: IntModel, b: IntModel) -> IntModel:
                     "required": ["a", "b"],
                 },
             },
-            marks=pytest.mark.skip(reason="Waiting on pydantic#8634 release"),
         ),
         (
             plus_with_basemodel,
