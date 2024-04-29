@@ -24,7 +24,7 @@ class StructuredOutputError(Exception):
 _STRING_NOT_EXPECTED_ERROR_MESSAGE = (
     "String was returned by model but not expected. You may need to update"
     " your prompt to encourage the model to return a specific type."
-    " Model output: {model_output}"
+    " Model output: {model_output!r}"
 )
 
 
@@ -34,7 +34,7 @@ def validate_str_content(
     """Raise error if string output not expected. Otherwise return correct string type."""
     if not allow_string_output:
         msg = _STRING_NOT_EXPECTED_ERROR_MESSAGE.format(
-            model_output=streamed_str.truncate(50)
+            model_output=streamed_str.truncate(100)
         )
         raise StructuredOutputError(msg)
     if streamed:
@@ -48,7 +48,7 @@ async def avalidate_str_content(
     """Async version of `validate_str_content`."""
     if not allow_string_output:
         msg = _STRING_NOT_EXPECTED_ERROR_MESSAGE.format(
-            model_output=await async_streamed_str.truncate(50)
+            model_output=await async_streamed_str.truncate(100)
         )
         raise StructuredOutputError(msg)
     if streamed:
