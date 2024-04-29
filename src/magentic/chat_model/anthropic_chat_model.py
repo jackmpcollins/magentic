@@ -7,7 +7,12 @@ from typing import Any, Generic, TypeVar, cast, overload
 from pydantic import ValidationError
 
 from magentic import FunctionResultMessage
-from magentic.chat_model.base import ChatModel, StructuredOutputError
+from magentic.chat_model.base import (
+    ChatModel,
+    StructuredOutputError,
+    avalidate_str_content,
+    validate_str_content,
+)
 from magentic.chat_model.function_schema import (
     AsyncFunctionSchema,
     BaseFunctionSchema,
@@ -335,17 +340,12 @@ class AnthropicChatModel(ChatModel):
         last_content = response.content[-1]
 
         if last_content.type == "text":
-            if not allow_string_output:
-                msg = (
-                    "String was returned by model but not expected. You may need to update"
-                    " your prompt to encourage the model to return a specific type."
-                    f" {response.model_dump_json()}"
-                )
-                raise StructuredOutputError(msg)
-            streamed_str = StreamedStr(last_content.text)
-            if streamed_str_in_output_types:
-                return AssistantMessage(streamed_str)  # type: ignore[return-value]
-            return AssistantMessage(str(streamed_str))
+            str_content = validate_str_content(
+                StreamedStr(last_content.text),
+                allow_string_output=allow_string_output,
+                streamed=streamed_str_in_output_types,
+            )
+            return AssistantMessage(str_content)  # type: ignore[return-value]
 
         if last_content.type == "tool_use":
             try:
@@ -434,17 +434,12 @@ class AnthropicChatModel(ChatModel):
         last_content = response.content[-1]
 
         if last_content.type == "text":
-            if not allow_string_output:
-                msg = (
-                    "String was returned by model but not expected. You may need to update"
-                    " your prompt to encourage the model to return a specific type."
-                    f" {response.model_dump_json()}"
-                )
-                raise StructuredOutputError(msg)
-            streamed_str = AsyncStreamedStr(async_iter(last_content.text))
-            if async_streamed_str_in_output_types:
-                return AssistantMessage(streamed_str)  # type: ignore[return-value]
-            return AssistantMessage(str(streamed_str))
+            str_content = await avalidate_str_content(
+                AsyncStreamedStr(async_iter(last_content.text)),
+                allow_string_output=allow_string_output,
+                streamed=async_streamed_str_in_output_types,
+            )
+            return AssistantMessage(str_content)  # type: ignore[return-value]
 
         if last_content.type == "tool_use":
             try:

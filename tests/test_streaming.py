@@ -124,6 +124,12 @@ def test_streamed_str_str():
     assert str(streamed_str) == "Hello World"
 
 
+def test_streamed_str_truncate():
+    streamed_str = StreamedStr(["First", " Second", " Third"])
+    assert streamed_str.truncate(length=12) == "First [...]"
+    assert streamed_str.truncate(length=99) == "First Second Third"
+
+
 @pytest.mark.asyncio
 async def test_async_streamed_str_iter():
     aiter_chunks = async_iter(["Hello", " World"])
@@ -137,3 +143,10 @@ async def test_async_streamed_str_iter():
 async def test_async_streamed_str_to_string():
     async_streamed_str = AsyncStreamedStr(async_iter(["Hello", " World"]))
     assert await async_streamed_str.to_string() == "Hello World"
+
+
+@pytest.mark.asyncio
+async def test_async_streamed_str_truncate():
+    async_streamed_str = AsyncStreamedStr(async_iter(["First", " Second", " Third"]))
+    assert await async_streamed_str.truncate(length=12) == "First [...]"
+    assert await async_streamed_str.truncate(length=99) == "First Second Third"

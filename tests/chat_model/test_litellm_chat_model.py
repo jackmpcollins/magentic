@@ -50,7 +50,9 @@ def test_litellm_chat_model_metadata(litellm_success_callback_calls):
     chat_model = LitellmChatModel("gpt-3.5-turbo", metadata={"foo": "bar"})
     assert chat_model.metadata == {"foo": "bar"}
     chat_model.complete(messages=[UserMessage("Say hello!")])
-    callback_call = litellm_success_callback_calls[0]
+    # There are multiple callback calls due to streaming
+    # Take the last one because the first is occasionally from another test
+    callback_call = litellm_success_callback_calls[-1]
     assert callback_call["kwargs"]["litellm_params"]["metadata"] == {"foo": "bar"}
 
 

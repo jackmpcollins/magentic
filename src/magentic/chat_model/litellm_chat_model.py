@@ -4,7 +4,12 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
 
 from pydantic import ValidationError
 
-from magentic.chat_model.base import ChatModel, StructuredOutputError
+from magentic.chat_model.base import (
+    ChatModel,
+    StructuredOutputError,
+    avalidate_str_content,
+    validate_str_content,
+)
 from magentic.chat_model.function_schema import (
     FunctionCallFunctionSchema,
     async_function_schema_for_type,
@@ -178,20 +183,17 @@ class LitellmChatModel(ChatModel):
                 raise StructuredOutputError(msg) from e
 
         if first_chunk.choices[0].delta.content is not None:
-            if not allow_string_output:
-                msg = (
-                    "String was returned by model but not expected. You may need to update"
-                    " your prompt to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg)
             streamed_str = StreamedStr(
                 chunk.choices[0].delta.get("content", None)
                 for chunk in response
                 if chunk.choices[0].delta.get("content", None) is not None
             )
-            if streamed_str_in_output_types:
-                return AssistantMessage(streamed_str)  # type: ignore[return-value]
-            return AssistantMessage(str(streamed_str))
+            str_content = validate_str_content(
+                streamed_str,
+                allow_string_output=allow_string_output,
+                streamed=streamed_str_in_output_types,
+            )
+            return AssistantMessage(str_content)  # type: ignore[return-value]
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
@@ -293,20 +295,17 @@ class LitellmChatModel(ChatModel):
                 raise StructuredOutputError(msg) from e
 
         if first_chunk.choices[0].delta.content is not None:
-            if not allow_string_output:
-                msg = (
-                    "String was returned by model but not expected. You may need to update"
-                    " your prompt to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg)
             async_streamed_str = AsyncStreamedStr(
                 chunk.choices[0].delta.get("content", None)
                 async for chunk in response
                 if chunk.choices[0].delta.get("content", None) is not None
             )
-            if async_streamed_str_in_output_types:
-                return AssistantMessage(async_streamed_str)  # type: ignore[return-value]
-            return AssistantMessage(await async_streamed_str.to_string())
+            str_content = await avalidate_str_content(
+                async_streamed_str,
+                allow_string_output=allow_string_output,
+                streamed=async_streamed_str_in_output_types,
+            )
+            return AssistantMessage(str_content)  # type: ignore[return-value]
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
