@@ -1,4 +1,5 @@
 import asyncio
+import textwrap
 from collections.abc import AsyncIterable, Iterable
 from dataclasses import dataclass
 from itertools import chain, dropwhile
@@ -199,6 +200,17 @@ class StreamedStr(Iterable[str]):
         """Convert the streamed string to a string."""
         return str(self)
 
+    def truncate(self, length: int) -> str:
+        """Truncate the streamed string to the specified length."""
+        chunks = []
+        current_length = 0
+        for chunk in self._chunks:
+            chunks.append(chunk)
+            current_length += len(chunk)
+            if current_length > length:
+                break
+        return textwrap.shorten("".join(chunks), width=length)
+
 
 class AsyncStreamedStr(AsyncIterable[str]):
     """Async version of `StreamedStr`."""
@@ -213,3 +225,14 @@ class AsyncStreamedStr(AsyncIterable[str]):
     async def to_string(self) -> str:
         """Convert the streamed string to a string."""
         return "".join([item async for item in self])
+
+    async def truncate(self, length: int) -> str:
+        """Truncate the streamed string to the specified length."""
+        chunks = []
+        current_length = 0
+        async for chunk in self._chunks:
+            chunks.append(chunk)
+            current_length += len(chunk)
+            if current_length > length:
+                break
+        return textwrap.shorten("".join(chunks), width=length)
