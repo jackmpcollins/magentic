@@ -343,7 +343,7 @@ class AnthropicChatModel(ChatModel):
             str_content = validate_str_content(
                 StreamedStr(last_content.text),
                 allow_string_output=allow_string_output,
-                streamed=True,
+                streamed=streamed_str_in_output_types,
             )
             return AssistantMessage(str_content)  # type: ignore[return-value]
 
@@ -437,7 +437,7 @@ class AnthropicChatModel(ChatModel):
             str_content = await avalidate_str_content(
                 AsyncStreamedStr(async_iter(last_content.text)),
                 allow_string_output=allow_string_output,
-                streamed=True,
+                streamed=async_streamed_str_in_output_types,
             )
             return AssistantMessage(str_content)  # type: ignore[return-value]
 
