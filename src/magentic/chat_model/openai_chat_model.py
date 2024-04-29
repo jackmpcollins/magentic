@@ -14,7 +14,12 @@ from openai.types.chat import (
 from openai.types.chat.chat_completion_chunk import ChoiceDeltaToolCall
 from pydantic import ValidationError
 
-from magentic.chat_model.base import ChatModel, StructuredOutputError
+from magentic.chat_model.base import (
+    ChatModel,
+    StructuredOutputError,
+    avalidate_str_content,
+    validate_str_content,
+)
 from magentic.chat_model.function_schema import (
     AsyncFunctionSchema,
     BaseFunctionSchema,
@@ -474,20 +479,17 @@ class OpenaiChatModel(ChatModel):
         response = chain([first_chunk], response)
 
         if first_chunk.choices[0].delta.content:
-            if not allow_string_output:
-                msg = (
-                    "String was returned by model but not expected. You may need to update"
-                    " your prompt to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg)
             streamed_str = StreamedStr(
                 chunk.choices[0].delta.content
                 for chunk in response
                 if chunk.choices[0].delta.content is not None
             )
-            if streamed_str_in_output_types:
-                return AssistantMessage(streamed_str)  # type: ignore[return-value]
-            return AssistantMessage(str(streamed_str))
+            str_content = validate_str_content(
+                streamed_str,
+                allow_string_output=allow_string_output,
+                streamed=streamed_str_in_output_types,
+            )
+            return AssistantMessage(str_content)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
             try:
@@ -586,20 +588,17 @@ class OpenaiChatModel(ChatModel):
         response = achain(async_iter([first_chunk]), response)
 
         if first_chunk.choices[0].delta.content:
-            if not allow_string_output:
-                msg = (
-                    "String was returned by model but not expected. You may need to update"
-                    " your prompt to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg)
             async_streamed_str = AsyncStreamedStr(
                 chunk.choices[0].delta.content
                 async for chunk in response
                 if chunk.choices[0].delta.content is not None
             )
-            if async_streamed_str_in_output_types:
-                return AssistantMessage(async_streamed_str)  # type: ignore[return-value]
-            return AssistantMessage(await async_streamed_str.to_string())
+            str_content = await avalidate_str_content(
+                async_streamed_str,
+                allow_string_output=allow_string_output,
+                streamed=async_streamed_str_in_output_types,
+            )
+            return AssistantMessage(str_content)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
             try:
