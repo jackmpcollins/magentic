@@ -178,8 +178,10 @@ def chatprompt(
                 stop=stop,
                 model=model,
             )
-            async_prompt_function = update_wrapper(async_prompt_function, func)
-            return cast(AsyncChatPromptFunction[P, R], async_prompt_function)  # type: ignore[redundant-cast]
+            return cast(
+                AsyncChatPromptFunction[P, R],
+                update_wrapper(async_prompt_function, func),
+            )
 
         prompt_function = ChatPromptFunction[P, R](
             messages=messages,
@@ -189,6 +191,6 @@ def chatprompt(
             stop=stop,
             model=model,
         )
-        return cast(ChatPromptFunction[P, R], update_wrapper(prompt_function, func))  # type: ignore[redundant-cast]
+        return cast(ChatPromptFunction[P, R], update_wrapper(prompt_function, func))
 
     return cast(ChatPromptDecorator, decorator)
