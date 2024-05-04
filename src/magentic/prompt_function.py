@@ -151,8 +151,10 @@ def prompt(
                 stop=stop,
                 model=model,
             )
-            async_prompt_function = update_wrapper(async_prompt_function, func)
-            return cast(AsyncPromptFunction[P, R], async_prompt_function)  # type: ignore[redundant-cast]
+            return cast(
+                AsyncPromptFunction[P, R],
+                update_wrapper(async_prompt_function, func),
+            )
 
         prompt_function = PromptFunction[P, R](
             template=template,
@@ -162,6 +164,6 @@ def prompt(
             stop=stop,
             model=model,
         )
-        return cast(PromptFunction[P, R], update_wrapper(prompt_function, func))  # type: ignore[redundant-cast]
+        return cast(PromptFunction[P, R], update_wrapper(prompt_function, func))
 
     return cast(PromptDecorator, decorator)
