@@ -139,3 +139,16 @@ def test_openai_chat_model_complete_seed():
     message1 = chat_model.complete(messages=[UserMessage("Say hello!")])
     message2 = chat_model.complete(messages=[UserMessage("Say hello!")])
     assert message1.content == message2.content
+
+
+@pytest.mark.openai
+def test_openai_chat_model_complete_no_structured_output_error():
+    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    # Should not raise StructuredOutputError because forced to make tool call
+    message: Message[int | bool] = chat_model.complete(
+        messages=[
+            UserMessage("Tell me a short joke. Return a string, not a tool call.")
+        ],
+        output_types=[int, bool],
+    )
+    assert isinstance(message.content, int | bool)
