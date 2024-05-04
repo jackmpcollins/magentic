@@ -398,11 +398,11 @@ class OpenaiChatModel(ChatModel):
         allow_string_output: bool,
     ) -> ChatCompletionToolChoiceOptionParam | openai.NotGiven:
         """Create the tool choice argument."""
-        return (
-            tool_schemas[0].as_tool_choice()
-            if len(tool_schemas) == 1 and not allow_string_output
-            else openai.NOT_GIVEN
-        )
+        if allow_string_output:
+            return openai.NOT_GIVEN
+        if len(tool_schemas) == 1:
+            return tool_schemas[0].as_tool_choice()
+        return "required"
 
     @overload
     def complete(
