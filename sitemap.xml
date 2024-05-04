@@ -2,72 +2,72 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://magentic.dev/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/asyncio/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/chat-prompting/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/configuration/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/formatting/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/function-calling/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/streaming/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/structured-outputs/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/type-checking/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/vision/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/examples/chain_of_verification/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/examples/rag_github/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/examples/registering_custom_type/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://magentic.dev/examples/vision_renaming_screenshots/</loc>
-         <lastmod>2024-04-29</lastmod>
+         <lastmod>2024-05-04</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
