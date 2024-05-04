@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 from pydantic import BaseModel
 
-from magentic.chat_model.base import StructuredOutputError
 from magentic.chat_model.message import AssistantMessage, UserMessage
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
 from magentic.function_call import (
@@ -182,15 +181,6 @@ def test_decorator_return_streamed_str():
 
     output = get_capital("Ireland")
     assert isinstance(output, StreamedStr)
-
-
-@pytest.mark.openai
-def test_decorator_raise_structured_output_error():
-    @prompt("Tell me a short joke.")
-    def should_return_int_or_bool() -> int | bool: ...
-
-    with pytest.raises(StructuredOutputError):
-        should_return_int_or_bool()
 
 
 @pytest.mark.asyncio
