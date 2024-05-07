@@ -127,7 +127,7 @@ def test_litellm_chat_model_complete_anthropic_parallel_function_call():
         ('Return ["apple", "banana"]', [list[str]], list),
     ],
 )
-@pytest.mark.ollama
+@pytest.mark.litellm_ollama
 def test_litellm_chat_model_complete_ollama(prompt, output_types, expected_output_type):
     chat_model = LitellmChatModel("ollama/llama3", api_base="http://localhost:11434")
     message = chat_model.complete(
@@ -232,7 +232,7 @@ async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_ca
     ],
 )
 @pytest.mark.asyncio
-@pytest.mark.ollama
+@pytest.mark.litellm_ollama
 async def test_litellm_chat_model_acomplete_ollama(
     prompt, output_types, expected_output_type
 ):
