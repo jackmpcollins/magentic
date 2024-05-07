@@ -30,7 +30,7 @@ repository = "https://github.com/jackmpcollins/magentic"
 python = ">=3.10,<4.0"
 anthropic = {version = ">=0.23.0", optional = true}
 filetype = "*"
-litellm = {version = ">=1.33.7", optional = true}
+litellm = {version = ">=1.36.0", optional = true}
 openai = ">=1.24.0"
 pydantic = ">=2.0.0"
 pydantic-settings = ">=2.0.0"
