@@ -120,7 +120,12 @@ def test_litellm_chat_model_complete_anthropic_parallel_function_call():
 
 @pytest.mark.parametrize(
     ("prompt", "output_types", "expected_output_type"),
-    [("Say hello!", [str], str)],
+    [
+        ("Say hello!", [str], str),
+        ("Return True.", [bool], bool),
+        ("Return [1, 2, 3, 4, 5]", [list[int]], list),
+        ('Return ["apple", "banana"]', [list[str]], list),
+    ],
 )
 @pytest.mark.ollama
 def test_litellm_chat_model_complete_ollama(prompt, output_types, expected_output_type):
@@ -129,20 +134,6 @@ def test_litellm_chat_model_complete_ollama(prompt, output_types, expected_outpu
         messages=[UserMessage(prompt)], output_types=output_types
     )
     assert isinstance(message.content, expected_output_type)
-
-
-@pytest.mark.skip(reason="LiteLLM does not parse ollama tool calls")
-@pytest.mark.ollama
-def test_litellm_chat_model_complete_ollama_function_call():
-    def plus(a: int, b: int) -> int:
-        """Sum two numbers."""
-        return a + b
-
-    chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
-    message = chat_model.complete(
-        messages=[UserMessage("Sum 1 and 2")], functions=[plus]
-    )
-    assert isinstance(message.content, FunctionCall)
 
 
 @pytest.mark.parametrize(
@@ -233,7 +224,12 @@ async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_ca
 
 @pytest.mark.parametrize(
     ("prompt", "output_types", "expected_output_type"),
-    [("Say hello!", [str], str)],
+    [
+        ("Say hello!", [str], str),
+        ("Return True.", [bool], bool),
+        ("Return [1, 2, 3, 4, 5]", [list[int]], list),
+        ('Return ["apple", "banana"]', [list[str]], list),
+    ],
 )
 @pytest.mark.asyncio
 @pytest.mark.ollama
