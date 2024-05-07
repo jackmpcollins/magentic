@@ -373,7 +373,7 @@ def say_hello() -> str: ...
 
 @prompt(
     "Say hello",
-    model=LitellmChatModel("ollama/llama2"),
+    model=LitellmChatModel("ollama/llama3"),
 )
 def say_hello_litellm() -> str: ...
 
@@ -382,7 +382,7 @@ say_hello()  # Uses env vars or default settings
 
 with OpenaiChatModel("gpt-3.5-turbo", temperature=1):
     say_hello()  # Uses openai with gpt-3.5-turbo and temperature=1 due to context manager
-    say_hello_litellm()  # Uses litellm with ollama/llama2 because explicitly configured
+    say_hello_litellm()  # Uses litellm with ollama/llama3 because explicitly configured
 ```
 
 The following environment variables can be set.

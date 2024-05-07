@@ -124,7 +124,7 @@ def test_litellm_chat_model_complete_anthropic_parallel_function_call():
 )
 @pytest.mark.ollama
 def test_litellm_chat_model_complete_ollama(prompt, output_types, expected_output_type):
-    chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
+    chat_model = LitellmChatModel("ollama/llama3", api_base="http://localhost:11434")
     message = chat_model.complete(
         messages=[UserMessage(prompt)], output_types=output_types
     )
@@ -240,7 +240,7 @@ async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_ca
 async def test_litellm_chat_model_acomplete_ollama(
     prompt, output_types, expected_output_type
 ):
-    chat_model = LitellmChatModel("ollama/llama2", api_base="http://localhost:11434")
+    chat_model = LitellmChatModel("ollama/llama3", api_base="http://localhost:11434")
     message = await chat_model.acomplete(
         messages=[UserMessage(prompt)], output_types=output_types
     )
