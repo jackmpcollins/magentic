@@ -10,7 +10,7 @@ Easily integrate Large Language Models into your Python code. Simply use the `@p
 - [Formatting] to naturally insert python objects into prompts.
 - [Asyncio]. Simply use `async def` when defining a magentic function.
 - [Streaming] structured outputs to use them as they are being generated.
-- [Vision] to easily get stuctured outputs from images.
+- [Vision] to easily get structured outputs from images.
 - Multiple LLM providers including OpenAI and Anthropic. See [Configuration].
 - [Type Annotations] to work nicely with linters and IDEs.
 
