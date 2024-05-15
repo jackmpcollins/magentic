@@ -82,7 +82,7 @@ def test_decorator_return_bool_str():
     @prompt("{text}")
     def query(text: str) -> bool | str: ...
 
-    output = query("Reply to me with just the word 'hello'. Do not use the tool.")
+    output = query("Hello, how are you?")
     assert isinstance(output, str)
     output = query("Use the tool/function to return the value True.")
     assert isinstance(output, bool)
