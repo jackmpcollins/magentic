@@ -115,6 +115,15 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
         return AssistantMessage(self.content)
 
 
+def _assistant_message_with_usage(
+    content: ContentT, usage_pointer: list[Usage]
+) -> AssistantMessage[ContentT]:
+    """Create an AssistantMessage with usage statistics."""
+    message = AssistantMessage(content)
+    message._usage_pointer = usage_pointer
+    return message
+
+
 class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     """A message containing the result of a function call."""
 

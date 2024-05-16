@@ -33,7 +33,9 @@ from magentic.chat_model.message import (
     FunctionResultMessage,
     Message,
     SystemMessage,
+    Usage,
     UserMessage,
+    _assistant_message_with_usage,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -298,6 +300,44 @@ async def aparse_streamed_tool_calls(
         yield tool_call
 
 
+def _create_usage_pointer(
+    response: Iterable[ChatCompletionChunk],
+) -> tuple[list[Usage], Iterator[ChatCompletionChunk]]:
+    """Returns a pointer to a Usage object that is created at the end of the response."""
+    usage_pointer = []
+
+    def generator():
+        for chunk in response:
+            if chunk.usage:
+                usage = Usage(
+                    input_tokens=chunk.usage.prompt_tokens,
+                    output_tokens=chunk.usage.completion_tokens,
+                )
+                usage_pointer.append(usage)
+            yield chunk
+
+    return usage_pointer, generator()
+
+
+def _acreate_usage_pointer(
+    response: AsyncIterable[ChatCompletionChunk],
+) -> tuple[list[Usage], AsyncIterator[ChatCompletionChunk]]:
+    """Async version of `_create_usage_pointer`."""
+    usage_pointer = []
+
+    async def generator():
+        async for chunk in response:
+            if chunk.usage:
+                usage = Usage(
+                    input_tokens=chunk.usage.prompt_tokens,
+                    output_tokens=chunk.usage.completion_tokens,
+                )
+                usage_pointer.append(usage)
+            yield chunk
+
+    return usage_pointer, generator()
+
+
 P = ParamSpec("P")
 R = TypeVar("R")
 
@@ -479,6 +519,8 @@ class OpenaiChatModel(ChatModel):
             first_chunk = next(response)
         response = chain([first_chunk], response)
 
+        usage_pointer, response = _create_usage_pointer(response)
+
         if first_chunk.choices[0].delta.content:
             streamed_str = StreamedStr(
                 chunk.choices[0].delta.content
@@ -490,7 +532,7 @@ class OpenaiChatModel(ChatModel):
                 allow_string_output=allow_string_output,
                 streamed=streamed_str_in_output_types,
             )
-            return AssistantMessage(str_content)  # type: ignore[return-value]
+            return _assistant_message_with_usage(str_content, usage_pointer)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
             try:
@@ -498,11 +540,11 @@ class OpenaiChatModel(ChatModel):
                     content = ParallelFunctionCall(
                         parse_streamed_tool_calls(response, tool_schemas)
                     )
-                    return AssistantMessage(content)  # type: ignore[return-value]
+                    return _assistant_message_with_usage(content, usage_pointer)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
                 content = next(parse_streamed_tool_calls(response, tool_schemas))
-                return AssistantMessage(content)  # type: ignore[return-value]
+                return _assistant_message_with_usage(content, usage_pointer)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
@@ -589,6 +631,8 @@ class OpenaiChatModel(ChatModel):
             first_chunk = await anext(response)
         response = achain(async_iter([first_chunk]), response)
 
+        usage_pointer, response = _acreate_usage_pointer(response)
+
         if first_chunk.choices[0].delta.content:
             async_streamed_str = AsyncStreamedStr(
                 chunk.choices[0].delta.content
@@ -600,7 +644,7 @@ class OpenaiChatModel(ChatModel):
                 allow_string_output=allow_string_output,
                 streamed=async_streamed_str_in_output_types,
             )
-            return AssistantMessage(str_content)  # type: ignore[return-value]
+            return _assistant_message_with_usage(str_content, usage_pointer)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
             try:
@@ -608,13 +652,13 @@ class OpenaiChatModel(ChatModel):
                     content = AsyncParallelFunctionCall(
                         aparse_streamed_tool_calls(response, tool_schemas)
                     )
-                    return AssistantMessage(content)  # type: ignore[return-value]
+                    return _assistant_message_with_usage(content, usage_pointer)  # type: ignore[return-value]
 
                 # Take only the first tool_call, silently ignore extra chunks
                 content = await anext(
                     aparse_streamed_tool_calls(response, tool_schemas)
                 )
-                return AssistantMessage(content)  # type: ignore[return-value]
+                return _assistant_message_with_usage(content, usage_pointer)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
