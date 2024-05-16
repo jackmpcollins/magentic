@@ -14,7 +14,7 @@ For more information visit the [OpenAI Vision API documentation](https://platfor
 
 ## UserImageMessage
 
-The `UserImageMessage` can be used in `@chatprompt` alongside other messages. The LLM must be set to an OpenAI model that supports vision, currently `gpt-4-vision-preview` and `gpt-4-turbo` (the default `ChatModel`). This can be done by passing the `model` parameter to `@chatprompt`, or through the other methods of [configuration](configuration.md).
+The `UserImageMessage` can be used in `@chatprompt` alongside other messages. The LLM must be set to an OpenAI model that supports vision, currently `gpt-4-vision-preview`, `gpt-4-turbo`, and `gpt-4o` (the default `ChatModel`). This can be done by passing the `model` parameter to `@chatprompt`, or through the other methods of [configuration](configuration.md).
 
 ```python
 from pydantic import BaseModel, Field
