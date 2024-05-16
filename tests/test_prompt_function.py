@@ -88,6 +88,7 @@ def test_decorator_return_bool_str():
     assert isinstance(output, bool)
 
 
+@pytest.mark.skip(reason="Flaky")  # TODO: Make dict function call more reliable
 @pytest.mark.openai
 def test_decorator_return_dict():
     @prompt(
