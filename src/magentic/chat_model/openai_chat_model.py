@@ -247,7 +247,7 @@ def _iter_streamed_tool_calls(
     all_tool_call_chunks = (
         tool_call
         for chunk in response
-        if chunk.choices[0].delta.tool_calls
+        if chunk.choices and chunk.choices[0].delta.tool_calls
         for tool_call in chunk.choices[0].delta.tool_calls
     )
     for _, tool_call_chunks in groupby(
@@ -275,7 +275,7 @@ async def _aiter_streamed_tool_calls(
     all_tool_call_chunks = (
         tool_call
         async for chunk in response
-        if chunk.choices[0].delta.tool_calls
+        if chunk.choices and chunk.choices[0].delta.tool_calls
         for tool_call in chunk.choices[0].delta.tool_calls
     )
     async for _, tool_call_chunks in agroupby(
@@ -459,6 +459,7 @@ class OpenaiChatModel(ChatModel):
             seed=self.seed,
             stop=stop,
             stream=True,
+            stream_options={"include_usage": True},
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
@@ -482,7 +483,7 @@ class OpenaiChatModel(ChatModel):
             streamed_str = StreamedStr(
                 chunk.choices[0].delta.content
                 for chunk in response
-                if chunk.choices[0].delta.content is not None
+                if chunk.choices and chunk.choices[0].delta.content is not None
             )
             str_content = validate_str_content(
                 streamed_str,
@@ -568,6 +569,7 @@ class OpenaiChatModel(ChatModel):
             seed=self.seed,
             stop=stop,
             stream=True,
+            stream_options={"include_usage": True},
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
@@ -591,7 +593,7 @@ class OpenaiChatModel(ChatModel):
             async_streamed_str = AsyncStreamedStr(
                 chunk.choices[0].delta.content
                 async for chunk in response
-                if chunk.choices[0].delta.content is not None
+                if chunk.choices and chunk.choices[0].delta.content is not None
             )
             str_content = await avalidate_str_content(
                 async_streamed_str,
