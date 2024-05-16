@@ -3,6 +3,7 @@ from typing import (
     Any,
     Awaitable,
     Generic,
+    NamedTuple,
     TypeVar,
     cast,
     get_origin,
@@ -76,8 +77,17 @@ class UserMessage(Message[str]):
         return UserMessage(self.content.format(**kwargs))
 
 
+class Usage(NamedTuple):
+    """Usage statistics for the LLM request."""
+
+    input_tokens: int | None = None
+    output_tokens: int | None = None
+
+
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
+
+    usage: Usage | None = None
 
     @overload
     def format(
