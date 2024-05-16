@@ -80,8 +80,8 @@ class UserMessage(Message[str]):
 class Usage(NamedTuple):
     """Usage statistics for the LLM request."""
 
-    input_tokens: int | None = None
-    output_tokens: int | None = None
+    input_tokens: int
+    output_tokens: int
 
 
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
