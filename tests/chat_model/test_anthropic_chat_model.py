@@ -2,12 +2,13 @@ import pytest
 
 from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
 from magentic.chat_model.base import StructuredOutputError
-from magentic.chat_model.message import UserMessage
+from magentic.chat_model.message import Usage, UserMessage
 from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
     ParallelFunctionCall,
 )
+from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 
 @pytest.mark.parametrize(
@@ -26,6 +27,18 @@ def test_anthropic_chat_model_complete(prompt, output_types, expected_output_typ
         messages=[UserMessage(prompt)], output_types=output_types
     )
     assert isinstance(message.content, expected_output_type)
+
+
+@pytest.mark.anthropic
+def test_anthropic_chat_model_complete_usage():
+    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    message = chat_model.complete(
+        messages=[UserMessage("Say hello!")], output_types=[StreamedStr]
+    )
+    str(message.content)  # Finish the stream
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
 
 
 @pytest.mark.anthropic
@@ -98,6 +111,19 @@ async def test_anthropic_chat_model_acomplete(
         messages=[UserMessage(prompt)], output_types=output_types
     )
     assert isinstance(message.content, expected_output_type)
+
+
+@pytest.mark.asyncio
+@pytest.mark.anthropic
+async def test_anthropic_chat_model_acomplete_usage():
+    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Say hello!")], output_types=[AsyncStreamedStr]
+    )
+    await message.content.to_string()  # Finish the stream
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
 
 
 @pytest.mark.asyncio
