@@ -25,7 +25,9 @@ from magentic.chat_model.message import (
     AssistantMessage,
     Message,
     SystemMessage,
+    Usage,
     UserMessage,
+    _assistant_message_with_usage,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -44,6 +46,7 @@ try:
         ToolsBetaMessageParam,
         ToolUseBlock,
     )
+    from anthropic.types.usage import Usage as AnthropicUsage
 except ImportError as error:
     msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install 'magentic[anthropic]'`."
     raise ImportError(msg) from error
@@ -220,6 +223,15 @@ def _extract_system_message(
     )
 
 
+def _assistant_message(content: T, usage: AnthropicUsage) -> AssistantMessage[T]:
+    """Create an AssistantMessage with the given content and Anthropic usage onject."""
+    _usage = Usage(
+        input_tokens=usage.input_tokens,
+        output_tokens=usage.output_tokens,
+    )
+    return _assistant_message_with_usage(content, usage_pointer=[_usage])
+
+
 R = TypeVar("R")
 
 
@@ -345,7 +357,7 @@ class AnthropicChatModel(ChatModel):
                 allow_string_output=allow_string_output,
                 streamed=streamed_str_in_output_types,
             )
-            return AssistantMessage(str_content)  # type: ignore[return-value]
+            return _assistant_message(str_content, response.usage)  # type: ignore[return-value]
 
         if last_content.type == "tool_use":
             try:
@@ -353,11 +365,11 @@ class AnthropicChatModel(ChatModel):
                     content = ParallelFunctionCall(
                         parse_tool_calls(response, tool_schemas)
                     )
-                    return AssistantMessage(content)  # type: ignore[return-value]
+                    return _assistant_message(content, response.usage)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
                 content = next(parse_tool_calls(response, tool_schemas))
-                return AssistantMessage(content)  # type: ignore[return-value]
+                return _assistant_message(content, response.usage)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
@@ -439,7 +451,7 @@ class AnthropicChatModel(ChatModel):
                 allow_string_output=allow_string_output,
                 streamed=async_streamed_str_in_output_types,
             )
-            return AssistantMessage(str_content)  # type: ignore[return-value]
+            return _assistant_message(str_content, response.usage)  # type: ignore[return-value]
 
         if last_content.type == "tool_use":
             try:
@@ -447,11 +459,11 @@ class AnthropicChatModel(ChatModel):
                     content = AsyncParallelFunctionCall(
                         aparse_tool_calls(response, tool_schemas)
                     )
-                    return AssistantMessage(content)  # type: ignore[return-value]
+                    return _assistant_message(content, response.usage)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
                 content = await anext(aparse_tool_calls(response, tool_schemas))
-                return AssistantMessage(content)  # type: ignore[return-value]
+                return _assistant_message(content, response.usage)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
