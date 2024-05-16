@@ -306,7 +306,7 @@ def _create_usage_pointer(
     """Returns a pointer to a Usage object that is created at the end of the response."""
     usage_pointer = []
 
-    def generator():
+    def generator() -> Iterator[ChatCompletionChunk]:
         for chunk in response:
             if chunk.usage:
                 usage = Usage(
@@ -325,7 +325,7 @@ def _acreate_usage_pointer(
     """Async version of `_create_usage_pointer`."""
     usage_pointer = []
 
-    async def generator():
+    async def generator() -> AsyncIterator[ChatCompletionChunk]:
         async for chunk in response:
             if chunk.usage:
                 usage = Usage(
