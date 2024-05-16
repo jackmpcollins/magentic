@@ -87,7 +87,13 @@ class Usage(NamedTuple):
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
-    usage: Usage | None = None
+    _usage_pointer: list[Usage] | None = None
+
+    @property
+    def usage(self) -> Usage | None:
+        if self._usage_pointer:
+            return self._usage_pointer[0]
+        return None
 
     @overload
     def format(
