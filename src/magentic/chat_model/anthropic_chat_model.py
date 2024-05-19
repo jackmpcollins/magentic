@@ -2,7 +2,8 @@ import json
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch
-from typing import Any, Generic, TypeVar, cast, overload
+from itertools import chain, groupby
+from typing import Any, AsyncIterable, Generic, Sequence, TypeVar, cast, overload
 
 from pydantic import ValidationError
 
@@ -33,17 +34,26 @@ from magentic.function_call import (
     ParallelFunctionCall,
     _create_unique_id,
 )
-from magentic.streaming import AsyncStreamedStr, StreamedStr, async_iter
+from magentic.streaming import (
+    AsyncStreamedStr,
+    StreamedStr,
+    achain,
+    agroupby,
+    async_iter,
+)
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
 try:
     import anthropic
     from anthropic.types.beta.tools import (
         ToolParam,
-        ToolsBetaMessage,
+        ToolsBetaContentBlockDeltaEvent,
+        ToolsBetaContentBlockStartEvent,
         ToolsBetaMessageParam,
+        ToolsBetaMessageStreamEvent,
         ToolUseBlock,
     )
+    from anthropic.types.beta.tools.message_create_params import ToolChoice
 except ImportError as error:
     msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install 'magentic[anthropic]'`."
     raise ImportError(msg) from error
@@ -152,8 +162,11 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
         return {
             "name": self._function_schema.name,
             "description": self._function_schema.description or "",
-            "input_schema": self._function_schema.parameters,  # type: ignore[typeddict-item]
+            "input_schema": self._function_schema.parameters,
         }
+
+    def as_tool_choice(self) -> ToolChoice:
+        return {"type": "tool", "name": self._function_schema.name}
 
 
 # TODO: Generalize this to BaseToolSchema when that is created
@@ -174,37 +187,59 @@ def select_tool_schema(
 
 
 class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
-    def parse_tool_call(self, block: ToolUseBlock) -> T:
-        return self._function_schema.parse_args(json.dumps(block.input))
-
-
-class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
-    async def aparse_tool_call(self, block: ToolUseBlock) -> T:
-        return await self._function_schema.aparse_args(
-            async_iter(json.dumps(block.input))
+    def parse_tool_call(self, chunks: Iterable[ToolsBetaMessageStreamEvent]) -> T:
+        return self._function_schema.parse_args(
+            chunk.delta.partial_json
+            for chunk in chunks
+            if chunk.type == "content_block_delta"
+            if chunk.delta.type == "input_json_delta"
         )
 
 
-def parse_tool_calls(
-    response: ToolsBetaMessage,
+class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
+    async def aparse_tool_call(
+        self, chunks: AsyncIterable[ToolsBetaMessageStreamEvent]
+    ) -> T:
+        return await self._function_schema.aparse_args(
+            chunk.delta.partial_json
+            async for chunk in chunks
+            if chunk.type == "content_block_delta"
+            if chunk.delta.type == "input_json_delta"
+        )
+
+
+def parse_streamed_tool_calls(
+    response: Iterable[ToolsBetaMessageStreamEvent],
     tool_schemas: Iterable[FunctionToolSchema[T]],
 ) -> Iterator[T]:
-    for block in response.content:
-        if block.type != "tool_use":
-            continue
-        tool_schema = select_tool_schema(block, tool_schemas)
-        yield tool_schema.parse_tool_call(block)
+    all_tool_call_chunks = (
+        cast(ToolsBetaContentBlockStartEvent | ToolsBetaContentBlockDeltaEvent, chunk)
+        for chunk in response
+        if chunk.type in ("content_block_start", "content_block_delta")
+    )
+    for _, tool_call_chunks in groupby(all_tool_call_chunks, lambda x: x.index):
+        first_chunk = next(tool_call_chunks)
+        assert first_chunk.type == "content_block_start"  # noqa: S101
+        assert first_chunk.content_block.type == "tool_use"  # noqa: S101
+        tool_schema = select_tool_schema(first_chunk.content_block, tool_schemas)
+        yield tool_schema.parse_tool_call(tool_call_chunks)  # noqa: B031
 
 
-async def aparse_tool_calls(
-    response: ToolsBetaMessage,
+async def aparse_streamed_tool_calls(
+    response: AsyncIterable[ToolsBetaMessageStreamEvent],
     tool_schemas: Iterable[AsyncFunctionToolSchema[T]],
 ) -> AsyncIterator[T]:
-    for block in response.content:
-        if block.type != "tool_use":
-            continue
-        tool_schema = select_tool_schema(block, tool_schemas)
-        yield await tool_schema.aparse_tool_call(block)
+    all_tool_call_chunks = (
+        cast(ToolsBetaContentBlockStartEvent | ToolsBetaContentBlockDeltaEvent, chunk)
+        async for chunk in response
+        if chunk.type in ("content_block_start", "content_block_delta")
+    )
+    async for _, tool_call_chunks in agroupby(all_tool_call_chunks, lambda x: x.index):
+        first_chunk = await anext(tool_call_chunks)
+        assert first_chunk.type == "content_block_start"  # noqa: S101
+        assert first_chunk.content_block.type == "tool_use"  # noqa: S101
+        tool_schema = select_tool_schema(first_chunk.content_block, tool_schemas)
+        yield await tool_schema.aparse_tool_call(tool_call_chunks)
 
 
 def _extract_system_message(
@@ -276,6 +311,19 @@ class AnthropicChatModel(ChatModel):
     def temperature(self) -> float | None:
         return self._temperature
 
+    @staticmethod
+    def _get_tool_choice(
+        *,
+        tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
+        allow_string_output: bool,
+    ) -> ToolChoice | anthropic.NotGiven:
+        """Create the tool choice argument."""
+        if allow_string_output:
+            return anthropic.NOT_GIVEN
+        if len(tool_schemas) == 1:
+            return tool_schemas[0].as_tool_choice()
+        return {"type": "any"}
+
     @overload
     def complete(
         self,
@@ -322,51 +370,73 @@ class AnthropicChatModel(ChatModel):
 
         system, messages = _extract_system_message(messages)
 
-        response = self._client.beta.tools.messages.create(
-            model=self.model,
-            messages=[message_to_anthropic_message(m) for m in messages],
-            max_tokens=self.max_tokens,
-            stop_sequences=stop or anthropic.NOT_GIVEN,
-            # stream=True, TODO: Enable streaming when supported
-            system=system,
-            temperature=(
-                self.temperature
-                if self.temperature is not None
-                else anthropic.NOT_GIVEN
-            ),
-            tools=[schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN,
-        )
+        def _response_generator() -> Iterator[ToolsBetaMessageStreamEvent]:
+            with self._client.beta.tools.messages.stream(
+                model=self.model,
+                messages=[message_to_anthropic_message(m) for m in messages],
+                max_tokens=self.max_tokens,
+                stop_sequences=stop or anthropic.NOT_GIVEN,
+                system=system,
+                temperature=(
+                    self.temperature
+                    if self.temperature is not None
+                    else anthropic.NOT_GIVEN
+                ),
+                tools=(
+                    [schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN
+                ),
+                tool_choice=self._get_tool_choice(
+                    tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                ),
+            ) as stream:
+                yield from stream
 
-        last_content = response.content[-1]
+        response = _response_generator()
+        first_chunk = next(response)
+        if first_chunk.type == "message_start":
+            first_chunk = next(response)
+        assert first_chunk.type == "content_block_start"  # noqa: S101
+        response = chain([first_chunk], response)
 
-        if last_content.type == "text":
+        if (
+            first_chunk.type == "content_block_start"
+            and first_chunk.content_block.type == "text"
+        ):
+            streamed_str = StreamedStr(
+                chunk.delta.text
+                for chunk in response
+                if chunk.type == "content_block_delta"
+                and chunk.delta.type == "text_delta"
+            )
             str_content = validate_str_content(
-                StreamedStr(last_content.text),
+                streamed_str,
                 allow_string_output=allow_string_output,
                 streamed=streamed_str_in_output_types,
             )
             return AssistantMessage(str_content)  # type: ignore[return-value]
 
-        if last_content.type == "tool_use":
+        if (
+            first_chunk.type == "content_block_start"
+            and first_chunk.content_block.type == "tool_use"
+        ):
             try:
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
                     content = ParallelFunctionCall(
-                        parse_tool_calls(response, tool_schemas)
+                        parse_streamed_tool_calls(response, tool_schemas)
                     )
                     return AssistantMessage(content)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = next(parse_tool_calls(response, tool_schemas))
+                content = next(parse_streamed_tool_calls(response, tool_schemas))
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
-                    f" {response.model_dump_json()}"
                 )
                 raise StructuredOutputError(msg) from e
 
-        msg = "Could not determine response type"
+        msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
 
     @overload
@@ -416,47 +486,72 @@ class AnthropicChatModel(ChatModel):
 
         system, messages = _extract_system_message(messages)
 
-        response = await self._async_client.beta.tools.messages.create(
-            model=self.model,
-            messages=[message_to_anthropic_message(m) for m in messages],
-            max_tokens=self.max_tokens,
-            stop_sequences=stop or anthropic.NOT_GIVEN,
-            # stream=True, TODO: Enable streaming when supported
-            system=system,
-            temperature=(
-                self.temperature
-                if self.temperature is not None
-                else anthropic.NOT_GIVEN
-            ),
-            tools=[schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN,
-        )
+        async def _response_generator() -> AsyncIterator[ToolsBetaMessageStreamEvent]:
+            async with self._async_client.beta.tools.messages.stream(
+                model=self.model,
+                messages=[message_to_anthropic_message(m) for m in messages],
+                max_tokens=self.max_tokens,
+                stop_sequences=stop or anthropic.NOT_GIVEN,
+                system=system,
+                temperature=(
+                    self.temperature
+                    if self.temperature is not None
+                    else anthropic.NOT_GIVEN
+                ),
+                tools=(
+                    [schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN
+                ),
+                tool_choice=self._get_tool_choice(
+                    tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                ),
+            ) as stream:
+                async for chunk in stream:
+                    yield chunk
 
-        last_content = response.content[-1]
+        response = _response_generator()
+        first_chunk = await anext(response)
+        if first_chunk.type == "message_start":
+            first_chunk = await anext(response)
+        assert first_chunk.type == "content_block_start"  # noqa: S101
+        response = achain(async_iter([first_chunk]), response)
 
-        if last_content.type == "text":
+        if (
+            first_chunk.type == "content_block_start"
+            and first_chunk.content_block.type == "text"
+        ):
+            async_streamed_str = AsyncStreamedStr(
+                chunk.delta.text
+                async for chunk in response
+                if chunk.type == "content_block_delta"
+                and chunk.delta.type == "text_delta"
+            )
             str_content = await avalidate_str_content(
-                AsyncStreamedStr(async_iter(last_content.text)),
+                async_streamed_str,
                 allow_string_output=allow_string_output,
                 streamed=async_streamed_str_in_output_types,
             )
             return AssistantMessage(str_content)  # type: ignore[return-value]
 
-        if last_content.type == "tool_use":
+        if (
+            first_chunk.type == "content_block_start"
+            and first_chunk.content_block.type == "tool_use"
+        ):
             try:
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                     content = AsyncParallelFunctionCall(
-                        aparse_tool_calls(response, tool_schemas)
+                        aparse_streamed_tool_calls(response, tool_schemas)
                     )
                     return AssistantMessage(content)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = await anext(aparse_tool_calls(response, tool_schemas))
+                content = await anext(
+                    aparse_streamed_tool_calls(response, tool_schemas)
+                )
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
-                    f" {response.model_dump_json()}"
                 )
                 raise StructuredOutputError(msg) from e
 
