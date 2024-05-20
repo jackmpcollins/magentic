@@ -1,8 +1,7 @@
 import pytest
 
 from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
-from magentic.chat_model.base import StructuredOutputError
-from magentic.chat_model.message import Usage, UserMessage
+from magentic.chat_model.message import Message, Usage, UserMessage
 from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
@@ -42,15 +41,16 @@ def test_anthropic_chat_model_complete_usage():
 
 
 @pytest.mark.anthropic
-def test_anthropic_chat_model_complete_raise_structured_output_error():
+def test_anthropic_chat_model_complete_no_structured_output_error():
     chat_model = AnthropicChatModel("claude-3-haiku-20240307")
-    with pytest.raises(StructuredOutputError):
-        chat_model.complete(
-            messages=[
-                UserMessage("Tell me a short joke. Return a string, not a tool call.")
-            ],
-            output_types=[int, bool],
-        )
+    # Should not raise StructuredOutputError because forced to make tool call
+    message: Message[int | bool] = chat_model.complete(
+        messages=[
+            UserMessage("Tell me a short joke. Return a string, not a tool call.")
+        ],
+        output_types=[int, bool],
+    )
+    assert isinstance(message.content, int | bool)
 
 
 @pytest.mark.anthropic
