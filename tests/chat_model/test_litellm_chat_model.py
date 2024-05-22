@@ -55,6 +55,14 @@ def test_litellm_chat_model_metadata(litellm_success_callback_calls):
     callback_call = litellm_success_callback_calls[-1]
     assert callback_call["kwargs"]["litellm_params"]["metadata"] == {"foo": "bar"}
 
+@pytest.mark.litellm_openai
+def test_litellm_chat_model_custom_llm_provider(litellm_success_callback_calls):
+    """Test that provided custom_llm_provider is passed to the litellm success callback."""
+    chat_model = LitellmChatModel("gpt-3.5-turbo", custom_llm_provider="custom")
+    assert chat_model.custom_llm_provider == "custom"
+    chat_model.complete(messages=[UserMessage("Say hello!")])
+    callback_call = litellm_success_callback_calls[-1]
+    assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "custom"
 
 @pytest.mark.parametrize(
     ("prompt", "output_types", "expected_output_type"),
