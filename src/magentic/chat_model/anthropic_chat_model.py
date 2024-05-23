@@ -396,11 +396,32 @@ class AnthropicChatModel(ChatModel):
         if first_chunk.type == "message_start":
             first_chunk = next(response)
         assert first_chunk.type == "content_block_start"  # noqa: S101
+
+        if (
+            first_chunk.type in "content_block_start"
+            and first_chunk.content_block.type == "text"
+        ):
+            second_chunk = next(response)
+            response = chain([second_chunk], response)
+            if second_chunk.delta.text.startswith("<thinking>"):
+                text = ""
+                for chunk in response:
+                    text += chunk.delta.text
+                    if "</thinking>" in text:
+                        break
+                first_chunk = next(response)
+                # content_block_stop encountered if switching to tool calls
+                if first_chunk.type == "content_block_stop":
+                    first_chunk = next(response)
+
         response = chain([first_chunk], response)
 
         if (
             first_chunk.type == "content_block_start"
             and first_chunk.content_block.type == "text"
+        ) or (
+            first_chunk.type == "content_block_delta"
+            and first_chunk.delta.type == "text_delta"
         ):
             streamed_str = StreamedStr(
                 chunk.delta.text
@@ -513,11 +534,32 @@ class AnthropicChatModel(ChatModel):
         if first_chunk.type == "message_start":
             first_chunk = await anext(response)
         assert first_chunk.type == "content_block_start"  # noqa: S101
+
+        if (
+            first_chunk.type in "content_block_start"
+            and first_chunk.content_block.type == "text"
+        ):
+            second_chunk = await anext(response)
+            response = achain(async_iter([second_chunk]), response)
+            if second_chunk.delta.text.startswith("<thinking>"):
+                text = ""
+                async for chunk in response:
+                    text += chunk.delta.text
+                    if "</thinking>" in text:
+                        break
+                first_chunk = await anext(response)
+                # content_block_stop encountered if switching to tool calls
+                if first_chunk.type == "content_block_stop":
+                    first_chunk = await anext(response)
+
         response = achain(async_iter([first_chunk]), response)
 
         if (
             first_chunk.type == "content_block_start"
             and first_chunk.content_block.type == "text"
+        ) or (
+            first_chunk.type == "content_block_delta"
+            and first_chunk.delta.type == "text_delta"
         ):
             async_streamed_str = AsyncStreamedStr(
                 chunk.delta.text
