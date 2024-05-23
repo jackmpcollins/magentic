@@ -13,6 +13,7 @@ module = [
     "filetype",
     "litellm",
     "litellm.utils",
+    "litellm.integrations.custom_logger",
 ]
 ignore_missing_imports = true
 

@@ -73,7 +73,7 @@ def litellm_async_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
     original_success_callback = litellm.success_callback.copy()
     callback_calls: list[dict[str, Any]] = []
 
-    class AddCallToList(CustomLogger):
+    class AddCallToList(CustomLogger):  # type: ignore[misc]
         async def async_log_success_event(
             self, kwargs, response_obj, start_time, end_time
         ):
