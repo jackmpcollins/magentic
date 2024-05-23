@@ -240,10 +240,10 @@ def _get_tool_call_id_for_chunk(tool_call: ChoiceDeltaToolCall) -> Any:
     return tool_call.index if tool_call.index is not None else tool_call.id
 
 
-def _iter_streamed_tool_calls(
+def parse_streamed_tool_calls(
     response: Iterable[ChatCompletionChunk],
-) -> Iterator[Iterator[ChoiceDeltaToolCall]]:
-    """Group tool_call chunks into separate iterators."""
+    tool_schemas: list[FunctionToolSchema[T]],
+) -> Iterator[T]:
     all_tool_call_chunks = (
         tool_call
         for chunk in response
@@ -251,27 +251,18 @@ def _iter_streamed_tool_calls(
         for tool_call in chunk.choices[0].delta.tool_calls
     )
     for _, tool_call_chunks in groupby(
-        all_tool_call_chunks,
-        _get_tool_call_id_for_chunk,
+        all_tool_call_chunks, _get_tool_call_id_for_chunk
     ):
-        yield tool_call_chunks
-
-
-def parse_streamed_tool_calls(
-    response: Iterable[ChatCompletionChunk],
-    tool_schemas: list[FunctionToolSchema[T]],
-) -> Iterator[T]:
-    for tool_call_chunks in _iter_streamed_tool_calls(response):
         first_chunk = next(tool_call_chunks)
         tool_schema = select_tool_schema(first_chunk, tool_schemas)
-        tool_call = tool_schema.parse_tool_call(chain([first_chunk], tool_call_chunks))
+        tool_call = tool_schema.parse_tool_call(chain([first_chunk], tool_call_chunks))  # noqa: B031
         yield tool_call
 
 
-async def _aiter_streamed_tool_calls(
+async def aparse_streamed_tool_calls(
     response: AsyncIterable[ChatCompletionChunk],
-) -> AsyncIterator[AsyncIterator[ChoiceDeltaToolCall]]:
-    """Async version of `_iter_streamed_tool_calls`."""
+    tool_schemas: list[AsyncFunctionToolSchema[T]],
+) -> AsyncIterator[T]:
     all_tool_call_chunks = (
         tool_call
         async for chunk in response
@@ -279,17 +270,8 @@ async def _aiter_streamed_tool_calls(
         for tool_call in chunk.choices[0].delta.tool_calls
     )
     async for _, tool_call_chunks in agroupby(
-        all_tool_call_chunks,
-        _get_tool_call_id_for_chunk,
+        all_tool_call_chunks, _get_tool_call_id_for_chunk
     ):
-        yield tool_call_chunks
-
-
-async def aparse_streamed_tool_calls(
-    response: AsyncIterable[ChatCompletionChunk],
-    tool_schemas: list[AsyncFunctionToolSchema[T]],
-) -> AsyncIterator[T]:
-    async for tool_call_chunks in _aiter_streamed_tool_calls(response):
         first_chunk = await anext(tool_call_chunks)
         tool_schema = select_tool_schema(first_chunk, tool_schemas)
         tool_call = await tool_schema.aparse_tool_call(
