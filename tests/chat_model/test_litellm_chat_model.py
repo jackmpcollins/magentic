@@ -2,6 +2,7 @@ from typing import Any, Iterator
 
 import litellm
 import pytest
+from litellm.integrations.custom_logger import CustomLogger
 
 from magentic.chat_model.litellm_chat_model import LitellmChatModel
 from magentic.chat_model.message import UserMessage
@@ -54,6 +55,59 @@ def test_litellm_chat_model_metadata(litellm_success_callback_calls):
     # Take the last one because the first is occasionally from another test
     callback_call = litellm_success_callback_calls[-1]
     assert callback_call["kwargs"]["litellm_params"]["metadata"] == {"foo": "bar"}
+
+
+@pytest.mark.litellm_openai
+def test_litellm_chat_model_custom_llm_provider(litellm_success_callback_calls):
+    """Test that provided custom_llm_provider is passed to the litellm success callback."""
+    chat_model = LitellmChatModel("gpt-3.5-turbo", custom_llm_provider="custom")
+    assert chat_model.custom_llm_provider == "custom"
+    chat_model.complete(messages=[UserMessage("Say hello!")])
+    callback_call = litellm_success_callback_calls[-1]
+    assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "custom"
+
+
+@pytest.fixture()
+def litellm_async_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
+    """A list of calls to the `async_log_success_event` callback"""
+    original_success_callback = litellm.success_callback.copy()
+    callback_calls: list[dict[str, Any]] = []
+
+    class AddCallToList(CustomLogger):  # type: ignore[misc]
+        async def async_log_success_event(
+            self, kwargs, response_obj, start_time, end_time
+        ):
+            callback_calls.append({"kwargs": kwargs})
+
+    litellm.callbacks = [AddCallToList()]
+    yield callback_calls
+    litellm.callbacks = original_success_callback
+
+
+@pytest.mark.asyncio
+@pytest.mark.litellm_openai
+async def test_litellm_chat_model_metadata_async(litellm_async_success_callback_calls):
+    """Test that provided metadata is passed to the litellm success callback."""
+    chat_model = LitellmChatModel("gpt-3.5-turbo", metadata={"foo": "bar"})
+    assert chat_model.metadata == {"foo": "bar"}
+    await chat_model.acomplete(messages=[UserMessage("Say hello!")])
+    # There are multiple callback calls due to streaming
+    # Take the last one because the first is occasionally from another test
+    callback_call = litellm_async_success_callback_calls[-1]
+    assert callback_call["kwargs"]["litellm_params"]["metadata"] == {"foo": "bar"}
+
+
+@pytest.mark.asyncio
+@pytest.mark.litellm_openai
+async def test_litellm_chat_model_custom_llm_provider_async(
+    litellm_async_success_callback_calls,
+):
+    """Test that provided custom_llm_provider is passed to the litellm success callback."""
+    chat_model = LitellmChatModel("gpt-3.5-turbo", custom_llm_provider="custom")
+    assert chat_model.custom_llm_provider == "custom"
+    await chat_model.acomplete(messages=[UserMessage("Say hello!")])
+    callback_call = litellm_async_success_callback_calls[-1]
+    assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "custom"
 
 
 @pytest.mark.parametrize(
