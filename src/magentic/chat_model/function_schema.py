@@ -198,15 +198,6 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
             self._item_type_adapter.validate_json(item)
             for item in iter_streamed_json_array(chunks)
         )
-        # Return the generator directly for abstract types
-        # Otherwise pydantic ValidatorIterator will be returned which breaks the
-        # callbacks for the end of the stream because it can't be printed from inside
-        # the generator while it's running.
-        if (get_origin(self._output_type) or self._output_type) in (
-            typing.Iterable,
-            typing.Iterator,
-        ) or is_origin_abstract(self._output_type):
-            return iter_items  # type: ignore[return-value]
         return self._model.model_validate({"value": iter_items}).value
 
     def serialize_args(self, value: IterableT) -> str:
