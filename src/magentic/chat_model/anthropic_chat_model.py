@@ -312,6 +312,70 @@ def _create_usage_ref_async(
     return usage_ref, agenerator(response)
 
 
+def _extract_thinking(
+    response: Iterator[ToolsBetaMessageStreamEvent],
+) -> tuple[str | None, Iterator[ToolsBetaMessageStreamEvent]]:
+    """Extract the <thinking>...</thinking> block from the response."""
+    first_chunk = next(response)
+    if not (
+        first_chunk.type in "content_block_start"
+        and first_chunk.content_block.type == "text"
+    ):
+        return None, chain([first_chunk], response)
+
+    second_chunk = next(response)
+    assert second_chunk.type == "content_block_delta"  # noqa: S101
+    assert second_chunk.delta.type == "text_delta"  # noqa: S101
+    if not second_chunk.delta.text.startswith("<thinking>"):
+        return None, chain([first_chunk, second_chunk], response)
+
+    thinking = second_chunk.delta.text.removeprefix("<thinking>").lstrip()
+    for chunk in response:
+        assert chunk.type == "content_block_delta"  # noqa: S101
+        assert chunk.delta.type == "text_delta"  # noqa: S101
+        thinking += chunk.delta.text
+        if "</thinking>" in thinking:
+            break
+    thinking = thinking.rstrip().removesuffix("</thinking>").rstrip()
+    first_chunk = next(response)
+    # content_block_stop encountered if switching to tool calls
+    if first_chunk.type == "content_block_stop":
+        first_chunk = next(response)
+    return thinking, chain([first_chunk], response)
+
+
+async def _aextract_thinking(
+    response: AsyncIterator[ToolsBetaMessageStreamEvent],
+) -> tuple[str | None, AsyncIterator[ToolsBetaMessageStreamEvent]]:
+    """Async version of `_extract_thinking`."""
+    first_chunk = await anext(response)
+    if not (
+        first_chunk.type in "content_block_start"
+        and first_chunk.content_block.type == "text"
+    ):
+        return None, achain(async_iter([first_chunk]), response)
+
+    second_chunk = await anext(response)
+    assert second_chunk.type == "content_block_delta"  # noqa: S101
+    assert second_chunk.delta.type == "text_delta"  # noqa: S101
+    if not second_chunk.delta.text.startswith("<thinking>"):
+        return None, achain(async_iter([first_chunk, second_chunk]), response)
+
+    thinking = second_chunk.delta.text.removeprefix("<thinking>").lstrip()
+    async for chunk in response:
+        assert chunk.type == "content_block_delta"  # noqa: S101
+        assert chunk.delta.type == "text_delta"  # noqa: S101
+        thinking += chunk.delta.text
+        if "</thinking>" in thinking:
+            break
+    thinking = thinking.rstrip().removesuffix("</thinking>").rstrip()
+    first_chunk = await anext(response)
+    # content_block_stop encountered if switching to tool calls
+    if first_chunk.type == "content_block_stop":
+        first_chunk = await anext(response)
+    return thinking, achain(async_iter([first_chunk]), response)
+
+
 R = TypeVar("R")
 
 
@@ -455,24 +519,10 @@ class AnthropicChatModel(ChatModel):
         if first_chunk.type == "message_start":
             first_chunk = next(response)
         assert first_chunk.type == "content_block_start"  # noqa: S101
+        response = chain([first_chunk], response)
 
-        if (
-            first_chunk.type in "content_block_start"
-            and first_chunk.content_block.type == "text"
-        ):
-            second_chunk = next(response)
-            response = chain([second_chunk], response)
-            if second_chunk.delta.text.startswith("<thinking>"):
-                text = ""
-                for chunk in response:
-                    text += chunk.delta.text
-                    if "</thinking>" in text:
-                        break
-                first_chunk = next(response)
-                # content_block_stop encountered if switching to tool calls
-                if first_chunk.type == "content_block_stop":
-                    first_chunk = next(response)
-
+        _, response = _extract_thinking(response)
+        first_chunk = next(response)
         response = chain([first_chunk], response)
 
         if (
@@ -595,24 +645,10 @@ class AnthropicChatModel(ChatModel):
         if first_chunk.type == "message_start":
             first_chunk = await anext(response)
         assert first_chunk.type == "content_block_start"  # noqa: S101
+        response = achain(async_iter([first_chunk]), response)
 
-        if (
-            first_chunk.type in "content_block_start"
-            and first_chunk.content_block.type == "text"
-        ):
-            second_chunk = await anext(response)
-            response = achain(async_iter([second_chunk]), response)
-            if second_chunk.delta.text.startswith("<thinking>"):
-                text = ""
-                async for chunk in response:
-                    text += chunk.delta.text
-                    if "</thinking>" in text:
-                        break
-                first_chunk = await anext(response)
-                # content_block_stop encountered if switching to tool calls
-                if first_chunk.type == "content_block_stop":
-                    first_chunk = await anext(response)
-
+        _, response = await _aextract_thinking(response)
+        first_chunk = await anext(response)
         response = achain(async_iter([first_chunk]), response)
 
         if (
