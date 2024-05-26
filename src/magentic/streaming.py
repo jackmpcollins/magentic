@@ -33,6 +33,31 @@ async def achain(*aiterables: AsyncIterable[T]) -> AsyncIterator[T]:
             yield item
 
 
+def peek(iterator: Iterator[T]) -> tuple[T, Iterator[T]]:
+    """Returns the first item in the Iterator and a copy of the Iterator."""
+    first_item = next(iterator)
+    return first_item, chain([first_item], iterator)
+
+
+async def apeek(aiterator: AsyncIterator[T]) -> tuple[T, AsyncIterator[T]]:
+    """Async version of `peek`."""
+    first_item = await anext(aiterator)
+    return first_item, achain(async_iter([first_item]), aiterator)
+
+
+async def adropwhile(
+    predicate: Callable[[T], object], aiterable: AsyncIterable[T]
+) -> AsyncIterator[T]:
+    """Async version of `itertools.dropwhile`."""
+    aiterator = aiter(aiterable)
+    async for item in aiterator:
+        if not predicate(item):
+            yield item
+            break
+    async for item in aiterator:
+        yield item
+
+
 async def atakewhile(
     predicate: Callable[[T], object], aiterable: AsyncIterable[T]
 ) -> AsyncIterator[T]:
