@@ -41,6 +41,17 @@ def test_anthropic_chat_model_complete_usage():
 
 
 @pytest.mark.anthropic
+def test_anthropic_chat_model_complete_usage_structured_output():
+    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    message = chat_model.complete(
+        messages=[UserMessage("Count to 5")], output_types=[list[int]]
+    )
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
+
+
+@pytest.mark.anthropic
 def test_anthropic_chat_model_complete_no_structured_output_error():
     chat_model = AnthropicChatModel("claude-3-haiku-20240307")
     # Should not raise StructuredOutputError because forced to make tool call
@@ -121,6 +132,18 @@ async def test_anthropic_chat_model_acomplete_usage():
         messages=[UserMessage("Say hello!")], output_types=[AsyncStreamedStr]
     )
     await message.content.to_string()  # Finish the stream
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.anthropic
+async def test_anthropic_chat_model_acomplete_usage_structured_output():
+    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Count to 5")], output_types=[list[int]]
+    )
     assert isinstance(message.usage, Usage)
     assert message.usage.input_tokens > 0
     assert message.usage.output_tokens > 0
