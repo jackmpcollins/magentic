@@ -2,7 +2,7 @@ import json
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch
-from itertools import chain, groupby
+from itertools import chain, dropwhile, groupby
 from typing import Any, AsyncIterable, Generic, Sequence, TypeVar, cast, overload
 
 from pydantic import ValidationError
@@ -39,8 +39,11 @@ from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
     achain,
+    adropwhile,
     agroupby,
+    apeek,
     async_iter,
+    peek,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
@@ -514,16 +517,9 @@ class AnthropicChatModel(ChatModel):
 
         response = _response_generator()
         usage_ref, response = _create_usage_ref(response)
-
-        first_chunk = next(response)
-        if first_chunk.type == "message_start":
-            first_chunk = next(response)
-        assert first_chunk.type == "content_block_start"  # noqa: S101
-        response = chain([first_chunk], response)
-
+        response = dropwhile(lambda x: x.type != "content_block_start", response)
         _, response = _extract_thinking(response)
-        first_chunk = next(response)
-        response = chain([first_chunk], response)
+        first_chunk, response = peek(response)
 
         if (
             first_chunk.type == "content_block_start"
@@ -640,16 +636,9 @@ class AnthropicChatModel(ChatModel):
 
         response = _response_generator()
         usage_ref, response = _create_usage_ref_async(response)
-
-        first_chunk = await anext(response)
-        if first_chunk.type == "message_start":
-            first_chunk = await anext(response)
-        assert first_chunk.type == "content_block_start"  # noqa: S101
-        response = achain(async_iter([first_chunk]), response)
-
+        response = adropwhile(lambda x: x.type != "content_block_start", response)
         _, response = await _aextract_thinking(response)
-        first_chunk = await anext(response)
-        response = achain(async_iter([first_chunk]), response)
+        first_chunk, response = await apeek(response)
 
         if (
             first_chunk.type == "content_block_start"
