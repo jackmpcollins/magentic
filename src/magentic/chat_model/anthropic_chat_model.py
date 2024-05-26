@@ -260,7 +260,7 @@ def _create_usage_ref(
     response: Iterable[ToolsBetaMessageStreamEvent],
 ) -> tuple[list[Usage], Iterator[ToolsBetaMessageStreamEvent]]:
     """Returns a pointer to a Usage object that is created at the end of the response."""
-    usage_ref = []
+    usage_ref: list[Usage] = []
 
     def generator(
         response: Iterable[ToolsBetaMessageStreamEvent],
@@ -288,7 +288,7 @@ def _create_usage_ref_async(
     response: AsyncIterable[ToolsBetaMessageStreamEvent],
 ) -> tuple[list[Usage], AsyncIterator[ToolsBetaMessageStreamEvent]]:
     """Async version of `_create_usage_ref`."""
-    usage_ref = []
+    usage_ref: list[Usage] = []
 
     async def agenerator(
         response: AsyncIterable[ToolsBetaMessageStreamEvent],
