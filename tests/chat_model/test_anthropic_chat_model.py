@@ -79,13 +79,21 @@ def test_anthropic_chat_model_complete_function_call():
     assert isinstance(message.content, FunctionCall)
 
 
+@pytest.mark.parametrize(
+    "model_name",
+    [
+        "claude-3-opus-20240229",
+        "claude-3-sonnet-20240229",
+        "claude-3-haiku-20240307",
+    ],
+)
 @pytest.mark.anthropic
-def test_anthropic_chat_model_complete_function_call_with_thinking():
+def test_anthropic_chat_model_complete_function_call_with_thinking(model_name):
     def plus(a: int, b: int) -> int:
         """Sum two numbers."""
         return a + b
 
-    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    chat_model = AnthropicChatModel(model_name)
     message = chat_model.complete(
         messages=[UserMessage("Use the tool to sum 1 and 2")],
         functions=[plus],
