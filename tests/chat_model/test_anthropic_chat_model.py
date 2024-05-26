@@ -80,6 +80,22 @@ def test_anthropic_chat_model_complete_function_call():
 
 
 @pytest.mark.anthropic
+def test_anthropic_chat_model_complete_function_call_with_thinking():
+    def plus(a: int, b: int) -> int:
+        """Sum two numbers."""
+        return a + b
+
+    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    message = chat_model.complete(
+        messages=[UserMessage("Use the tool to sum 1 and 2")],
+        functions=[plus],
+        # Union with str so tool call is not forced => <thinking> section is generated
+        output_types=[FunctionCall[int], str],  # type: ignore[misc]
+    )
+    assert isinstance(message.content, FunctionCall)
+
+
+@pytest.mark.anthropic
 def test_anthropic_chat_model_complete_parallel_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
@@ -161,6 +177,23 @@ async def test_anthropic_chat_model_acomplete_function_call():
         messages=[UserMessage("Use the tool to sum 1 and 2")],
         functions=[plus],
         output_types=[FunctionCall[int]],  # type: ignore[misc]
+    )
+    assert isinstance(message.content, FunctionCall)
+
+
+@pytest.mark.asyncio
+@pytest.mark.anthropic
+async def test_anthropic_chat_model_acomplete_function_call_with_thinking():
+    def plus(a: int, b: int) -> int:
+        """Sum two numbers."""
+        return a + b
+
+    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Use the tool to sum 1 and 2")],
+        functions=[plus],
+        # Union with str so tool call is not forced => <thinking> section is generated
+        output_types=[FunctionCall[int], str],  # type: ignore[misc]
     )
     assert isinstance(message.content, FunctionCall)
 
