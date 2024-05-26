@@ -8,6 +8,7 @@ import openai
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionMessageParam,
+    ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
 )
@@ -33,6 +34,7 @@ from magentic.chat_model.message import (
     FunctionResultMessage,
     Message,
     SystemMessage,
+    Usage,
     UserMessage,
 )
 from magentic.function_call import (
@@ -247,7 +249,7 @@ def parse_streamed_tool_calls(
     all_tool_call_chunks = (
         tool_call
         for chunk in response
-        if chunk.choices[0].delta.tool_calls
+        if chunk.choices and chunk.choices[0].delta.tool_calls
         for tool_call in chunk.choices[0].delta.tool_calls
     )
     for _, tool_call_chunks in groupby(
@@ -266,7 +268,7 @@ async def aparse_streamed_tool_calls(
     all_tool_call_chunks = (
         tool_call
         async for chunk in response
-        if chunk.choices[0].delta.tool_calls
+        if chunk.choices and chunk.choices[0].delta.tool_calls
         for tool_call in chunk.choices[0].delta.tool_calls
     )
     async for _, tool_call_chunks in agroupby(
@@ -278,6 +280,48 @@ async def aparse_streamed_tool_calls(
             achain(async_iter([first_chunk]), tool_call_chunks)
         )
         yield tool_call
+
+
+def _create_usage_ref(
+    response: Iterable[ChatCompletionChunk],
+) -> tuple[list[Usage], Iterator[ChatCompletionChunk]]:
+    """Returns a pointer to a Usage object that is created at the end of the response."""
+    usage_ref: list[Usage] = []
+
+    def generator(
+        response: Iterable[ChatCompletionChunk],
+    ) -> Iterator[ChatCompletionChunk]:
+        for chunk in response:
+            if chunk.usage:
+                usage = Usage(
+                    input_tokens=chunk.usage.prompt_tokens,
+                    output_tokens=chunk.usage.completion_tokens,
+                )
+                usage_ref.append(usage)
+            yield chunk
+
+    return usage_ref, generator(response)
+
+
+def _create_usage_ref_async(
+    response: AsyncIterable[ChatCompletionChunk],
+) -> tuple[list[Usage], AsyncIterator[ChatCompletionChunk]]:
+    """Async version of `_create_usage_ref`."""
+    usage_ref: list[Usage] = []
+
+    async def agenerator(
+        response: AsyncIterable[ChatCompletionChunk],
+    ) -> AsyncIterator[ChatCompletionChunk]:
+        async for chunk in response:
+            if chunk.usage:
+                usage = Usage(
+                    input_tokens=chunk.usage.prompt_tokens,
+                    output_tokens=chunk.usage.completion_tokens,
+                )
+                usage_ref.append(usage)
+            yield chunk
+
+    return usage_ref, agenerator(response)
 
 
 P = ParamSpec("P")
@@ -374,6 +418,10 @@ class OpenaiChatModel(ChatModel):
         return self._temperature
 
     @staticmethod
+    def _get_stream_options() -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+        return {"include_usage": True}
+
+    @staticmethod
     def _get_tool_choice(
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
@@ -441,12 +489,14 @@ class OpenaiChatModel(ChatModel):
             seed=self.seed,
             stop=stop,
             stream=True,
+            stream_options=self._get_stream_options(),
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
+        usage_ref, response = _create_usage_ref(response)
 
         first_chunk = next(response)
         # Azure OpenAI sends a chunk with empty choices first
@@ -464,14 +514,14 @@ class OpenaiChatModel(ChatModel):
             streamed_str = StreamedStr(
                 chunk.choices[0].delta.content
                 for chunk in response
-                if chunk.choices[0].delta.content is not None
+                if chunk.choices and chunk.choices[0].delta.content is not None
             )
             str_content = validate_str_content(
                 streamed_str,
                 allow_string_output=allow_string_output,
                 streamed=streamed_str_in_output_types,
             )
-            return AssistantMessage(str_content)  # type: ignore[return-value]
+            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
             try:
@@ -479,11 +529,11 @@ class OpenaiChatModel(ChatModel):
                     content = ParallelFunctionCall(
                         parse_streamed_tool_calls(response, tool_schemas)
                     )
-                    return AssistantMessage(content)  # type: ignore[return-value]
+                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
                 content = next(parse_streamed_tool_calls(response, tool_schemas))
-                return AssistantMessage(content)  # type: ignore[return-value]
+                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
@@ -550,12 +600,14 @@ class OpenaiChatModel(ChatModel):
             seed=self.seed,
             stop=stop,
             stream=True,
+            stream_options=self._get_stream_options(),
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
+        usage_ref, response = _create_usage_ref_async(response)
 
         first_chunk = await anext(response)
         # Azure OpenAI sends a chunk with empty choices first
@@ -573,14 +625,14 @@ class OpenaiChatModel(ChatModel):
             async_streamed_str = AsyncStreamedStr(
                 chunk.choices[0].delta.content
                 async for chunk in response
-                if chunk.choices[0].delta.content is not None
+                if chunk.choices and chunk.choices[0].delta.content is not None
             )
             str_content = await avalidate_str_content(
                 async_streamed_str,
                 allow_string_output=allow_string_output,
                 streamed=async_streamed_str_in_output_types,
             )
-            return AssistantMessage(str_content)  # type: ignore[return-value]
+            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
             try:
@@ -588,13 +640,13 @@ class OpenaiChatModel(ChatModel):
                     content = AsyncParallelFunctionCall(
                         aparse_streamed_tool_calls(response, tool_schemas)
                     )
-                    return AssistantMessage(content)  # type: ignore[return-value]
+                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
 
                 # Take only the first tool_call, silently ignore extra chunks
                 content = await anext(
                     aparse_streamed_tool_calls(response, tool_schemas)
                 )
-                return AssistantMessage(content)  # type: ignore[return-value]
+                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"

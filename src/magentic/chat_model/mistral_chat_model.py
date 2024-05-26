@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Any, Callable, Iterable, Sequence, TypeVar, overload
 
 import openai
+from openai.types.chat import ChatCompletionStreamOptionsParam
 
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import AssistantMessage, Message
@@ -23,6 +24,10 @@ class _MistralToolChoice(Enum):
 
 class _MistralOpenaiChatModel(OpenaiChatModel):
     """Modified OpenaiChatModel to be compatible with Mistral API."""
+
+    @staticmethod
+    def _get_stream_options() -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+        return openai.NOT_GIVEN
 
     @staticmethod
     def _get_tool_choice(  # type: ignore[override]

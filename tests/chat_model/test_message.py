@@ -5,6 +5,7 @@ from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
     Placeholder,
+    Usage,
     UserMessage,
 )
 from magentic.function_call import FunctionCall
@@ -27,6 +28,15 @@ def test_user_message_format():
     assert_type(user_message_formatted, UserMessage)
     assert_type(user_message_formatted.content, str)
     assert user_message_formatted == UserMessage("Hello world")
+
+
+def test_assistant_message_usage():
+    assistant_message = AssistantMessage("Hello")
+    assert assistant_message.usage is None
+    assistant_message = AssistantMessage._with_usage(
+        "Hello", [Usage(input_tokens=1, output_tokens=2)]
+    )
+    assert assistant_message.usage == Usage(input_tokens=1, output_tokens=2)
 
 
 def test_assistant_message_format_str():
