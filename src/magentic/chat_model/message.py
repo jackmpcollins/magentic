@@ -10,6 +10,8 @@ from typing import (
     overload,
 )
 
+from typing_extensions import Self
+
 from magentic.function_call import FunctionCall
 
 T = TypeVar("T")
@@ -87,12 +89,18 @@ class Usage(NamedTuple):
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
-    _usage_pointer: list[Usage] | None = None
+    _usage_ref: list[Usage] | None = None
+
+    @classmethod
+    def _with_usage(cls, content: ContentT, usage_ref: list[Usage]) -> Self:
+        message = cls(content)
+        message._usage_ref = usage_ref
+        return message
 
     @property
     def usage(self) -> Usage | None:
-        if self._usage_pointer:
-            return self._usage_pointer[0]
+        if self._usage_ref:
+            return self._usage_ref[0]
         return None
 
     @overload
@@ -113,15 +121,6 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
             content = cast(Placeholder[T], self.content)
             return AssistantMessage(content.format(**kwargs))
         return AssistantMessage(self.content)
-
-
-def _assistant_message_with_usage(
-    content: ContentT, usage_pointer: list[Usage]
-) -> AssistantMessage[ContentT]:
-    """Create an AssistantMessage with usage statistics."""
-    message = AssistantMessage(content)
-    message._usage_pointer = usage_pointer
-    return message
 
 
 class FunctionResultMessage(Message[ContentT], Generic[ContentT]):

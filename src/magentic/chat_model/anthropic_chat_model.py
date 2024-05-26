@@ -28,7 +28,6 @@ from magentic.chat_model.message import (
     SystemMessage,
     Usage,
     UserMessage,
-    _assistant_message_with_usage,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -56,7 +55,6 @@ try:
         ToolUseBlock,
     )
     from anthropic.types.beta.tools.message_create_params import ToolChoice
-    from anthropic.types.usage import Usage as AnthropicUsage
 except ImportError as error:
     msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install 'magentic[anthropic]'`."
     raise ImportError(msg) from error
@@ -258,13 +256,60 @@ def _extract_system_message(
     )
 
 
-def _assistant_message(content: T, usage: AnthropicUsage) -> AssistantMessage[T]:
-    """Create an AssistantMessage with the given content and Anthropic usage onject."""
-    _usage = Usage(
-        input_tokens=usage.input_tokens,
-        output_tokens=usage.output_tokens,
-    )
-    return _assistant_message_with_usage(content, usage_pointer=[_usage])
+def _create_usage_ref(
+    response: Iterable[ToolsBetaMessageStreamEvent],
+) -> tuple[list[Usage], Iterator[ToolsBetaMessageStreamEvent]]:
+    """Returns a pointer to a Usage object that is created at the end of the response."""
+    usage_ref = []
+
+    def generator(
+        response: Iterable[ToolsBetaMessageStreamEvent],
+    ) -> Iterator[ToolsBetaMessageStreamEvent]:
+        message_start_usage = None
+        output_tokens = None
+        for chunk in response:
+            if chunk.type == "message_start":
+                message_start_usage = chunk.message.usage
+            if chunk.type == "message_delta":
+                output_tokens = chunk.usage.output_tokens
+            yield chunk
+        if message_start_usage and output_tokens:
+            usage_ref.append(
+                Usage(
+                    input_tokens=message_start_usage.input_tokens,
+                    output_tokens=message_start_usage.output_tokens + output_tokens,
+                )
+            )
+
+    return usage_ref, generator(response)
+
+
+def _create_usage_ref_async(
+    response: AsyncIterable[ToolsBetaMessageStreamEvent],
+) -> tuple[list[Usage], AsyncIterator[ToolsBetaMessageStreamEvent]]:
+    """Async version of `_create_usage_ref`."""
+    usage_ref = []
+
+    async def agenerator(
+        response: AsyncIterable[ToolsBetaMessageStreamEvent],
+    ) -> AsyncIterator[ToolsBetaMessageStreamEvent]:
+        message_start_usage = None
+        output_tokens = None
+        async for chunk in response:
+            if chunk.type == "message_start":
+                message_start_usage = chunk.message.usage
+            if chunk.type == "message_delta":
+                output_tokens = chunk.usage.output_tokens
+            yield chunk
+        if message_start_usage and output_tokens:
+            usage_ref.append(
+                Usage(
+                    input_tokens=message_start_usage.input_tokens,
+                    output_tokens=message_start_usage.output_tokens + output_tokens,
+                )
+            )
+
+    return usage_ref, agenerator(response)
 
 
 R = TypeVar("R")
@@ -404,6 +449,8 @@ class AnthropicChatModel(ChatModel):
                 yield from stream
 
         response = _response_generator()
+        usage_ref, response = _create_usage_ref(response)
+
         first_chunk = next(response)
         if first_chunk.type == "message_start":
             first_chunk = next(response)
@@ -425,7 +472,7 @@ class AnthropicChatModel(ChatModel):
                 allow_string_output=allow_string_output,
                 streamed=streamed_str_in_output_types,
             )
-            return _assistant_message(str_content, response.usage)  # type: ignore[return-value]
+            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if (
             first_chunk.type == "content_block_start"
@@ -436,11 +483,11 @@ class AnthropicChatModel(ChatModel):
                     content = ParallelFunctionCall(
                         parse_streamed_tool_calls(response, tool_schemas)
                     )
-                    return _assistant_message(content, response.usage)  # type: ignore[return-value]
+                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
                 content = next(parse_streamed_tool_calls(response, tool_schemas))
-                return _assistant_message(content, response.usage)  # type: ignore[return-value]
+                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
@@ -521,6 +568,8 @@ class AnthropicChatModel(ChatModel):
                     yield chunk
 
         response = _response_generator()
+        usage_ref, response = _create_usage_ref_async(response)
+
         first_chunk = await anext(response)
         if first_chunk.type == "message_start":
             first_chunk = await anext(response)
@@ -542,7 +591,7 @@ class AnthropicChatModel(ChatModel):
                 allow_string_output=allow_string_output,
                 streamed=async_streamed_str_in_output_types,
             )
-            return _assistant_message(str_content, response.usage)  # type: ignore[return-value]
+            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if (
             first_chunk.type == "content_block_start"
@@ -553,13 +602,13 @@ class AnthropicChatModel(ChatModel):
                     content = AsyncParallelFunctionCall(
                         aparse_streamed_tool_calls(response, tool_schemas)
                     )
-                    return _assistant_message(content, response.usage)  # type: ignore[return-value]
+                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
                 content = await anext(
                     aparse_streamed_tool_calls(response, tool_schemas)
                 )
-                return _assistant_message(content, response.usage)  # type: ignore[return-value]
+                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"

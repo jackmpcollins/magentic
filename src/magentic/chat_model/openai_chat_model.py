@@ -35,7 +35,6 @@ from magentic.chat_model.message import (
     SystemMessage,
     Usage,
     UserMessage,
-    _assistant_message_with_usage,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -282,42 +281,46 @@ async def aparse_streamed_tool_calls(
         yield tool_call
 
 
-def _create_usage_pointer(
+def _create_usage_ref(
     response: Iterable[ChatCompletionChunk],
 ) -> tuple[list[Usage], Iterator[ChatCompletionChunk]]:
     """Returns a pointer to a Usage object that is created at the end of the response."""
-    usage_pointer = []
+    usage_ref = []
 
-    def generator() -> Iterator[ChatCompletionChunk]:
+    def generator(
+        response: Iterable[ChatCompletionChunk],
+    ) -> Iterator[ChatCompletionChunk]:
         for chunk in response:
             if chunk.usage:
                 usage = Usage(
                     input_tokens=chunk.usage.prompt_tokens,
                     output_tokens=chunk.usage.completion_tokens,
                 )
-                usage_pointer.append(usage)
+                usage_ref.append(usage)
             yield chunk
 
-    return usage_pointer, generator()
+    return usage_ref, generator(response)
 
 
-def _acreate_usage_pointer(
+def _create_usage_ref_async(
     response: AsyncIterable[ChatCompletionChunk],
 ) -> tuple[list[Usage], AsyncIterator[ChatCompletionChunk]]:
-    """Async version of `_create_usage_pointer`."""
-    usage_pointer = []
+    """Async version of `_create_usage_ref`."""
+    usage_ref = []
 
-    async def generator() -> AsyncIterator[ChatCompletionChunk]:
+    async def agenerator(
+        response: AsyncIterable[ChatCompletionChunk],
+    ) -> AsyncIterator[ChatCompletionChunk]:
         async for chunk in response:
             if chunk.usage:
                 usage = Usage(
                     input_tokens=chunk.usage.prompt_tokens,
                     output_tokens=chunk.usage.completion_tokens,
                 )
-                usage_pointer.append(usage)
+                usage_ref.append(usage)
             yield chunk
 
-    return usage_pointer, generator()
+    return usage_ref, agenerator(response)
 
 
 P = ParamSpec("P")
@@ -488,6 +491,7 @@ class OpenaiChatModel(ChatModel):
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
+        usage_ref, response = _create_usage_ref(response)
 
         first_chunk = next(response)
         # Azure OpenAI sends a chunk with empty choices first
@@ -501,8 +505,6 @@ class OpenaiChatModel(ChatModel):
             first_chunk = next(response)
         response = chain([first_chunk], response)
 
-        usage_pointer, response = _create_usage_pointer(response)
-
         if first_chunk.choices[0].delta.content:
             streamed_str = StreamedStr(
                 chunk.choices[0].delta.content
@@ -514,7 +516,7 @@ class OpenaiChatModel(ChatModel):
                 allow_string_output=allow_string_output,
                 streamed=streamed_str_in_output_types,
             )
-            return _assistant_message_with_usage(str_content, usage_pointer)  # type: ignore[return-value]
+            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
             try:
@@ -522,11 +524,11 @@ class OpenaiChatModel(ChatModel):
                     content = ParallelFunctionCall(
                         parse_streamed_tool_calls(response, tool_schemas)
                     )
-                    return _assistant_message_with_usage(content, usage_pointer)  # type: ignore[return-value]
+                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
                 content = next(parse_streamed_tool_calls(response, tool_schemas))
-                return _assistant_message_with_usage(content, usage_pointer)  # type: ignore[return-value]
+                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
@@ -600,6 +602,7 @@ class OpenaiChatModel(ChatModel):
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
+        usage_ref, response = _create_usage_ref_async(response)
 
         first_chunk = await anext(response)
         # Azure OpenAI sends a chunk with empty choices first
@@ -613,8 +616,6 @@ class OpenaiChatModel(ChatModel):
             first_chunk = await anext(response)
         response = achain(async_iter([first_chunk]), response)
 
-        usage_pointer, response = _acreate_usage_pointer(response)
-
         if first_chunk.choices[0].delta.content:
             async_streamed_str = AsyncStreamedStr(
                 chunk.choices[0].delta.content
@@ -626,7 +627,7 @@ class OpenaiChatModel(ChatModel):
                 allow_string_output=allow_string_output,
                 streamed=async_streamed_str_in_output_types,
             )
-            return _assistant_message_with_usage(str_content, usage_pointer)  # type: ignore[return-value]
+            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
             try:
@@ -634,13 +635,13 @@ class OpenaiChatModel(ChatModel):
                     content = AsyncParallelFunctionCall(
                         aparse_streamed_tool_calls(response, tool_schemas)
                     )
-                    return _assistant_message_with_usage(content, usage_pointer)  # type: ignore[return-value]
+                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
 
                 # Take only the first tool_call, silently ignore extra chunks
                 content = await anext(
                     aparse_streamed_tool_calls(response, tool_schemas)
                 )
-                return _assistant_message_with_usage(content, usage_pointer)  # type: ignore[return-value]
+                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
