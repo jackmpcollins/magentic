@@ -8,6 +8,7 @@ import openai
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionMessageParam,
+    ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
 )
@@ -417,6 +418,10 @@ class OpenaiChatModel(ChatModel):
         return self._temperature
 
     @staticmethod
+    def _get_stream_options() -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+        return {"include_usage": True}
+
+    @staticmethod
     def _get_tool_choice(
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
@@ -484,7 +489,7 @@ class OpenaiChatModel(ChatModel):
             seed=self.seed,
             stop=stop,
             stream=True,
-            stream_options={"include_usage": True},
+            stream_options=self._get_stream_options(),
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
@@ -595,7 +600,7 @@ class OpenaiChatModel(ChatModel):
             seed=self.seed,
             stop=stop,
             stream=True,
-            stream_options={"include_usage": True},
+            stream_options=self._get_stream_options(),
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
