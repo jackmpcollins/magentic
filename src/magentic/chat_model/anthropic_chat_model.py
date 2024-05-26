@@ -321,7 +321,7 @@ def _extract_thinking(
     """Extract the <thinking>...</thinking> block from the response."""
     first_chunk = next(response)
     if not (
-        first_chunk.type in "content_block_start"
+        first_chunk.type == "content_block_start"
         and first_chunk.content_block.type == "text"
     ):
         return None, chain([first_chunk], response)
@@ -353,7 +353,7 @@ async def _aextract_thinking(
     """Async version of `_extract_thinking`."""
     first_chunk = await anext(response)
     if not (
-        first_chunk.type in "content_block_start"
+        first_chunk.type == "content_block_start"
         and first_chunk.content_block.type == "text"
     ):
         return None, achain(async_iter([first_chunk]), response)
