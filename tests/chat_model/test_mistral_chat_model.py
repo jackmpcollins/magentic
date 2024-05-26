@@ -1,12 +1,13 @@
 import pytest
 
-from magentic.chat_model.message import UserMessage
+from magentic.chat_model.message import Usage, UserMessage
 from magentic.chat_model.mistral_chat_model import MistralChatModel
 from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
     ParallelFunctionCall,
 )
+from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 
 @pytest.mark.parametrize(
@@ -25,6 +26,29 @@ def test_mistral_chat_model_complete(prompt, output_types, expected_output_type)
         messages=[UserMessage(prompt)], output_types=output_types
     )
     assert isinstance(message.content, expected_output_type)
+
+
+@pytest.mark.mistral
+def test_mistral_chat_model_complete_usage():
+    chat_model = MistralChatModel("mistral-large-latest")
+    message = chat_model.complete(
+        messages=[UserMessage("Say hello!")], output_types=[StreamedStr]
+    )
+    str(message.content)  # Finish the stream
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
+
+
+@pytest.mark.mistral
+def test_mistral_chat_model_complete_usage_structured_output():
+    chat_model = MistralChatModel("mistral-large-latest")
+    message = chat_model.complete(
+        messages=[UserMessage("Count to 5")], output_types=[list[int]]
+    )
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
 
 
 @pytest.mark.mistral
@@ -83,6 +107,31 @@ async def test_mistral_chat_model_acomplete(prompt, output_types, expected_outpu
         messages=[UserMessage(prompt)], output_types=output_types
     )
     assert isinstance(message.content, expected_output_type)
+
+
+@pytest.mark.asyncio
+@pytest.mark.mistral
+async def test_mistral_chat_model_acomplete_usage():
+    chat_model = MistralChatModel("mistral-large-latest")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Say hello!")], output_types=[AsyncStreamedStr]
+    )
+    await message.content.to_string()  # Finish the stream
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.mistral
+async def test_mistral_chat_model_acomplete_usage_structured_output():
+    chat_model = MistralChatModel("mistral-large-latest")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Count to 5")], output_types=[list[int]]
+    )
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
 
 
 @pytest.mark.asyncio

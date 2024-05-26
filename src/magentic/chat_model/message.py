@@ -3,11 +3,14 @@ from typing import (
     Any,
     Awaitable,
     Generic,
+    NamedTuple,
     TypeVar,
     cast,
     get_origin,
     overload,
 )
+
+from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
 
@@ -76,8 +79,29 @@ class UserMessage(Message[str]):
         return UserMessage(self.content.format(**kwargs))
 
 
+class Usage(NamedTuple):
+    """Usage statistics for the LLM request."""
+
+    input_tokens: int
+    output_tokens: int
+
+
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
+
+    _usage_ref: list[Usage] | None = None
+
+    @classmethod
+    def _with_usage(cls, content: ContentT, usage_ref: list[Usage]) -> Self:
+        message = cls(content)
+        message._usage_ref = usage_ref
+        return message
+
+    @property
+    def usage(self) -> Usage | None:
+        if self._usage_ref:
+            return self._usage_ref[0]
+        return None
 
     @overload
     def format(
