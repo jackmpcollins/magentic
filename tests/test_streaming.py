@@ -6,12 +6,15 @@ from magentic import AsyncStreamedStr, StreamedStr
 from magentic.streaming import (
     CachedAsyncIterable,
     CachedIterable,
+    adropwhile,
     agroupby,
     aiter_streamed_json_array,
+    apeek,
     async_iter,
     atakewhile,
     azip,
     iter_streamed_json_array,
+    peek,
 )
 
 
@@ -32,6 +35,46 @@ async def test_async_iter():
 @pytest.mark.asyncio
 async def test_azip(aiterable, expected):
     assert [x async for x in aiterable] == expected
+
+
+@pytest.mark.parametrize(
+    ("iterator", "expected_first", "expected_remaining"),
+    [
+        (iter([1, 2, 3]), 1, [1, 2, 3]),
+        (iter([1]), 1, [1]),
+    ],
+)
+def test_peek(iterator, expected_first, expected_remaining):
+    first, remaining = peek(iterator)
+    assert first == expected_first
+    assert list(remaining) == expected_remaining
+
+
+@pytest.mark.parametrize(
+    ("aiterator", "expected_first", "expected_remaining"),
+    [
+        (async_iter([1, 2, 3]), 1, [1, 2, 3]),
+        (async_iter([1]), 1, [1]),
+    ],
+)
+@pytest.mark.asyncio
+async def test_apeek(aiterator, expected_first, expected_remaining):
+    first, remaining = await apeek(aiterator)
+    assert first == expected_first
+    assert [x async for x in remaining] == expected_remaining
+
+
+@pytest.mark.parametrize(
+    ("predicate", "input", "expected"),
+    [
+        (lambda x: x < 3, async_iter(range(5)), [3, 4]),
+        (lambda x: x < 6, async_iter(range(5)), []),
+        (lambda x: x < 0, async_iter(range(5)), [0, 1, 2, 3, 4]),
+    ],
+)
+@pytest.mark.asyncio
+async def test_adropwhile(predicate, input, expected):
+    assert [x async for x in adropwhile(predicate, input)] == expected
 
 
 @pytest.mark.parametrize(
