@@ -479,14 +479,13 @@ class AnthropicChatModel(ChatModel):
             and first_chunk.content_block.type == "tool_use"
         ):
             try:
+                tool_calls = parse_streamed_tool_calls(response, tool_schemas)
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                    content = ParallelFunctionCall(
-                        parse_streamed_tool_calls(response, tool_schemas)
-                    )
+                    content = ParallelFunctionCall(tool_calls)
                     return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = next(parse_streamed_tool_calls(response, tool_schemas))
+                content = next(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
@@ -598,16 +597,13 @@ class AnthropicChatModel(ChatModel):
             and first_chunk.content_block.type == "tool_use"
         ):
             try:
+                tool_calls = aparse_streamed_tool_calls(response, tool_schemas)
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                    content = AsyncParallelFunctionCall(
-                        aparse_streamed_tool_calls(response, tool_schemas)
-                    )
+                    content = AsyncParallelFunctionCall(tool_calls)
                     return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = await anext(
-                    aparse_streamed_tool_calls(response, tool_schemas)
-                )
+                content = await anext(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
