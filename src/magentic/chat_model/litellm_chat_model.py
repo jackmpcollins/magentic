@@ -23,10 +23,10 @@ from magentic.chat_model.openai_chat_model import (
     STR_OR_FUNCTIONCALL_TYPE,
     AsyncFunctionToolSchema,
     FunctionToolSchema,
-    aparse_streamed_tool_calls,
+    _aparse_streamed_tool_calls,
+    _parse_streamed_tool_calls,
     discard_none_arguments,
     message_to_openai_message,
-    parse_streamed_tool_calls,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -174,13 +174,13 @@ class LitellmChatModel(ChatModel):
             try:
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
                     content = ParallelFunctionCall(
-                        parse_streamed_tool_calls(response, tool_schemas)
+                        _parse_streamed_tool_calls(response, tool_schemas)
                     )
                     return AssistantMessage(content)  # type: ignore[return-value]
 
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = next(parse_streamed_tool_calls(response, tool_schemas))
+                content = next(_parse_streamed_tool_calls(response, tool_schemas))
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
@@ -286,13 +286,13 @@ class LitellmChatModel(ChatModel):
             try:
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                     content = AsyncParallelFunctionCall(
-                        aparse_streamed_tool_calls(response, tool_schemas)
+                        _aparse_streamed_tool_calls(response, tool_schemas)
                     )
                     return AssistantMessage(content)  # type: ignore[return-value]
 
                 # Take only the first tool_call, silently ignore extra chunks
                 content = await anext(
-                    aparse_streamed_tool_calls(response, tool_schemas)
+                    _aparse_streamed_tool_calls(response, tool_schemas)
                 )
                 return AssistantMessage(content)  # type: ignore[return-value]
             except ValidationError as e:

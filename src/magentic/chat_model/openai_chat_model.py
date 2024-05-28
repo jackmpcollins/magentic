@@ -48,7 +48,9 @@ from magentic.streaming import (
     StreamedStr,
     achain,
     agroupby,
+    apeek,
     async_iter,
+    peek,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
@@ -242,10 +244,10 @@ def _get_tool_call_id_for_chunk(tool_call: ChoiceDeltaToolCall) -> Any:
     return tool_call.index if tool_call.index is not None else tool_call.id
 
 
-def parse_streamed_tool_calls(
+def _iter_streamed_tool_calls(
     response: Iterable[ChatCompletionChunk],
-    tool_schemas: list[FunctionToolSchema[T]],
-) -> Iterator[T]:
+) -> Iterator[Iterator[ChoiceDeltaToolCall]]:
+    """Group tool_call chunks into separate iterators."""
     all_tool_call_chunks = (
         tool_call
         for chunk in response
@@ -255,16 +257,13 @@ def parse_streamed_tool_calls(
     for _, tool_call_chunks in groupby(
         all_tool_call_chunks, _get_tool_call_id_for_chunk
     ):
-        first_chunk = next(tool_call_chunks)
-        tool_schema = select_tool_schema(first_chunk, tool_schemas)
-        tool_call = tool_schema.parse_tool_call(chain([first_chunk], tool_call_chunks))  # noqa: B031
-        yield tool_call
+        yield tool_call_chunks
 
 
-async def aparse_streamed_tool_calls(
+async def _aiter_streamed_tool_calls(
     response: AsyncIterable[ChatCompletionChunk],
-    tool_schemas: list[AsyncFunctionToolSchema[T]],
-) -> AsyncIterator[T]:
+) -> AsyncIterator[AsyncIterator[ChoiceDeltaToolCall]]:
+    """Async version of `_iter_streamed_tool_calls`."""
     all_tool_call_chunks = (
         tool_call
         async for chunk in response
@@ -274,11 +273,28 @@ async def aparse_streamed_tool_calls(
     async for _, tool_call_chunks in agroupby(
         all_tool_call_chunks, _get_tool_call_id_for_chunk
     ):
-        first_chunk = await anext(tool_call_chunks)
+        yield tool_call_chunks
+
+
+def _parse_streamed_tool_calls(
+    response: Iterable[ChatCompletionChunk],
+    tool_schemas: list[FunctionToolSchema[T]],
+) -> Iterator[T]:
+    for tool_call_chunks in _iter_streamed_tool_calls(response):
+        first_chunk, tool_call_chunks = peek(tool_call_chunks)
         tool_schema = select_tool_schema(first_chunk, tool_schemas)
-        tool_call = await tool_schema.aparse_tool_call(
-            achain(async_iter([first_chunk]), tool_call_chunks)
-        )
+        tool_call = tool_schema.parse_tool_call(tool_call_chunks)
+        yield tool_call
+
+
+async def _aparse_streamed_tool_calls(
+    response: AsyncIterable[ChatCompletionChunk],
+    tool_schemas: list[AsyncFunctionToolSchema[T]],
+) -> AsyncIterator[T]:
+    async for tool_call_chunks in _aiter_streamed_tool_calls(response):
+        first_chunk, tool_call_chunks = await apeek(tool_call_chunks)
+        tool_schema = select_tool_schema(first_chunk, tool_schemas)
+        tool_call = await tool_schema.aparse_tool_call(tool_call_chunks)
         yield tool_call
 
 
@@ -527,12 +543,12 @@ class OpenaiChatModel(ChatModel):
             try:
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
                     content = ParallelFunctionCall(
-                        parse_streamed_tool_calls(response, tool_schemas)
+                        _parse_streamed_tool_calls(response, tool_schemas)
                     )
                     return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = next(parse_streamed_tool_calls(response, tool_schemas))
+                content = next(_parse_streamed_tool_calls(response, tool_schemas))
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
@@ -638,13 +654,13 @@ class OpenaiChatModel(ChatModel):
             try:
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                     content = AsyncParallelFunctionCall(
-                        aparse_streamed_tool_calls(response, tool_schemas)
+                        _aparse_streamed_tool_calls(response, tool_schemas)
                     )
                     return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
 
                 # Take only the first tool_call, silently ignore extra chunks
                 content = await anext(
-                    aparse_streamed_tool_calls(response, tool_schemas)
+                    _aparse_streamed_tool_calls(response, tool_schemas)
                 )
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
