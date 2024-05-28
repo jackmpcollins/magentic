@@ -65,6 +65,18 @@ class Message(Generic[ContentT], ABC):
         raise NotImplementedError
 
 
+class _RawMessage(Message[ContentT], Generic[ContentT]):
+    """A message that gets passed directly as a `message` object to the LLM provider.
+
+    The content of this message should be a dict/object that matches the format
+    expected by the LLM provider's Python client.
+    """
+
+    def format(self, **kwargs: Any) -> "_RawMessage[ContentT]":
+        del kwargs
+        return _RawMessage(self.content)
+
+
 class SystemMessage(Message[str]):
     """A message to the LLM to guide the whole chat."""
 

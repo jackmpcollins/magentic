@@ -36,6 +36,7 @@ from magentic.chat_model.message import (
     SystemMessage,
     Usage,
     UserMessage,
+    _RawMessage,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -67,6 +68,11 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
     """Convert a Message to an OpenAI message."""
     # TODO: Add instructions for registering new Message type to this error message
     raise NotImplementedError(type(message))
+
+
+@message_to_openai_message.register(_RawMessage)
+def _(message: _RawMessage[ChatCompletionMessageParam]) -> ChatCompletionMessageParam:
+    return message.content
 
 
 @message_to_openai_message.register

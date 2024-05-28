@@ -12,6 +12,7 @@ from magentic.chat_model.message import (
     SystemMessage,
     Usage,
     UserMessage,
+    _RawMessage,
 )
 from magentic.chat_model.openai_chat_model import (
     OpenaiChatModel,
@@ -28,6 +29,10 @@ def plus(a: int, b: int) -> int:
 @pytest.mark.parametrize(
     ("message", "expected_openai_message"),
     [
+        (
+            _RawMessage({"role": "user", "content": "Hello"}),
+            {"role": "user", "content": "Hello"},
+        ),
         (SystemMessage("Hello"), {"role": "system", "content": "Hello"}),
         (UserMessage("Hello"), {"role": "user", "content": "Hello"}),
         (AssistantMessage("Hello"), {"role": "assistant", "content": "Hello"}),
