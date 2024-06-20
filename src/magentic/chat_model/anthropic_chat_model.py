@@ -46,11 +46,11 @@ from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
 try:
     import anthropic
+    from anthropic.lib.streaming import MessageStreamEvent
     from anthropic.types import (
         ContentBlockDeltaEvent,
         ContentBlockStartEvent,
         MessageParam,
-        MessageStreamEvent,
         ToolParam,
         ToolUseBlock,
     )
