@@ -1,6 +1,17 @@
 import logging
+import sys
 
-# Set log level to WARNING so logs are only created when explicitly enabled
+from magentic.settings import get_settings
+
+settings = get_settings()
+
 logger = logging.getLogger("magentic")
+
+if settings.verbose:
+    logger.addHandler(logging.StreamHandler(sys.stdout))
+
 if logger.level == logging.NOTSET:
-    logger.setLevel(logging.WARNING)
+    if settings.verbose:
+        logger.setLevel(logging.INFO)
+    else:
+        logger.setLevel(logging.WARNING)
