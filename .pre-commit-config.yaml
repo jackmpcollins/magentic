@@ -1,21 +1,30 @@
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-  - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-      - id: check-added-large-files
-      - id: check-toml
-      - id: check-yaml
-      - id: end-of-file-fixer
-      - id: trailing-whitespace
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.3.0
-    hooks:
-      - id: ruff
-        args: [--fix, --exit-non-zero-on-fix]
-      - id: ruff-format
-  - repo: https://github.com/adamchainz/blacken-docs
-    rev: "1.16.0"
-    hooks:
-      - id: blacken-docs
+    - repo: https://github.com/pre-commit/pre-commit-hooks
+      rev: v4.5.0
+      hooks:
+          - id: check-added-large-files
+          - id: check-toml
+          - id: check-yaml
+          - id: end-of-file-fixer
+          - id: trailing-whitespace
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      rev: v0.3.0
+      hooks:
+          - id: ruff
+            args: [--fix, --exit-non-zero-on-fix]
+          - id: ruff-format
+    - repo: https://github.com/adamchainz/blacken-docs
+      rev: "1.16.0"
+      hooks:
+          - id: blacken-docs
+
+    - repo: local
+      hooks:
+          - id: mypy
+            name: mypy
+            entry: poetry run mypy
+            language: system
+            types: [python]
+            args: [--config-file, pyproject.toml]
