@@ -2,7 +2,7 @@ import json
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch
-from itertools import chain, groupby
+from itertools import chain, dropwhile, groupby
 from typing import Any, AsyncIterable, Generic, Sequence, TypeVar, cast, overload
 
 from pydantic import ValidationError
@@ -39,8 +39,11 @@ from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
     achain,
+    adropwhile,
     agroupby,
+    apeek,
     async_iter,
+    peek,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
@@ -310,6 +313,70 @@ def _create_usage_ref_async(
     return usage_ref, agenerator(response)
 
 
+def _extract_thinking(
+    response: Iterator[ToolsBetaMessageStreamEvent],
+) -> tuple[str | None, Iterator[ToolsBetaMessageStreamEvent]]:
+    """Extract the <thinking>...</thinking> block from the response."""
+    first_chunk = next(response)
+    if not (
+        first_chunk.type == "content_block_start"
+        and first_chunk.content_block.type == "text"
+    ):
+        return None, chain([first_chunk], response)
+
+    second_chunk = next(response)
+    assert second_chunk.type == "content_block_delta"  # noqa: S101
+    assert second_chunk.delta.type == "text_delta"  # noqa: S101
+    if not second_chunk.delta.text.startswith("<thinking>"):
+        return None, chain([first_chunk, second_chunk], response)
+
+    thinking = second_chunk.delta.text.removeprefix("<thinking>").lstrip()
+    for chunk in response:
+        assert chunk.type == "content_block_delta"  # noqa: S101
+        assert chunk.delta.type == "text_delta"  # noqa: S101
+        thinking += chunk.delta.text
+        if "</thinking>" in thinking:
+            break
+    thinking = thinking.rstrip().removesuffix("</thinking>").rstrip()
+    first_chunk = next(response)
+    # content_block_stop encountered if switching to tool calls
+    if first_chunk.type == "content_block_stop":
+        first_chunk = next(response)
+    return thinking, chain([first_chunk], response)
+
+
+async def _aextract_thinking(
+    response: AsyncIterator[ToolsBetaMessageStreamEvent],
+) -> tuple[str | None, AsyncIterator[ToolsBetaMessageStreamEvent]]:
+    """Async version of `_extract_thinking`."""
+    first_chunk = await anext(response)
+    if not (
+        first_chunk.type == "content_block_start"
+        and first_chunk.content_block.type == "text"
+    ):
+        return None, achain(async_iter([first_chunk]), response)
+
+    second_chunk = await anext(response)
+    assert second_chunk.type == "content_block_delta"  # noqa: S101
+    assert second_chunk.delta.type == "text_delta"  # noqa: S101
+    if not second_chunk.delta.text.startswith("<thinking>"):
+        return None, achain(async_iter([first_chunk, second_chunk]), response)
+
+    thinking = second_chunk.delta.text.removeprefix("<thinking>").lstrip()
+    async for chunk in response:
+        assert chunk.type == "content_block_delta"  # noqa: S101
+        assert chunk.delta.type == "text_delta"  # noqa: S101
+        thinking += chunk.delta.text
+        if "</thinking>" in thinking:
+            break
+    thinking = thinking.rstrip().removesuffix("</thinking>").rstrip()
+    first_chunk = await anext(response)
+    # content_block_stop encountered if switching to tool calls
+    if first_chunk.type == "content_block_stop":
+        first_chunk = await anext(response)
+    return thinking, achain(async_iter([first_chunk]), response)
+
+
 R = TypeVar("R")
 
 
@@ -448,16 +515,16 @@ class AnthropicChatModel(ChatModel):
 
         response = _response_generator()
         usage_ref, response = _create_usage_ref(response)
-
-        first_chunk = next(response)
-        if first_chunk.type == "message_start":
-            first_chunk = next(response)
-        assert first_chunk.type == "content_block_start"  # noqa: S101
-        response = chain([first_chunk], response)
+        response = dropwhile(lambda x: x.type != "content_block_start", response)
+        _, response = _extract_thinking(response)
+        first_chunk, response = peek(response)
 
         if (
             first_chunk.type == "content_block_start"
             and first_chunk.content_block.type == "text"
+        ) or (
+            first_chunk.type == "content_block_delta"
+            and first_chunk.delta.type == "text_delta"
         ):
             streamed_str = StreamedStr(
                 chunk.delta.text
@@ -567,16 +634,16 @@ class AnthropicChatModel(ChatModel):
 
         response = _response_generator()
         usage_ref, response = _create_usage_ref_async(response)
-
-        first_chunk = await anext(response)
-        if first_chunk.type == "message_start":
-            first_chunk = await anext(response)
-        assert first_chunk.type == "content_block_start"  # noqa: S101
-        response = achain(async_iter([first_chunk]), response)
+        response = adropwhile(lambda x: x.type != "content_block_start", response)
+        _, response = await _aextract_thinking(response)
+        first_chunk, response = await apeek(response)
 
         if (
             first_chunk.type == "content_block_start"
             and first_chunk.content_block.type == "text"
+        ) or (
+            first_chunk.type == "content_block_delta"
+            and first_chunk.delta.type == "text_delta"
         ):
             async_streamed_str = AsyncStreamedStr(
                 chunk.delta.text
