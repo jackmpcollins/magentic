@@ -47,11 +47,11 @@ from magentic.typing import is_any_origin_subclass, is_origin_subclass
 try:
     import anthropic
     from anthropic.types import (
-        ToolParam,
         ContentBlockDeltaEvent,
         ContentBlockStartEvent,
         MessageParam,
         MessageStreamEvent,
+        ToolParam,
         ToolUseBlock,
     )
     from anthropic.types.message_create_params import ToolChoice
@@ -198,9 +198,7 @@ class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
 
 
 class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
-    async def aparse_tool_call(
-        self, chunks: AsyncIterable[MessageStreamEvent]
-    ) -> T:
+    async def aparse_tool_call(self, chunks: AsyncIterable[MessageStreamEvent]) -> T:
         return await self._function_schema.aparse_args(
             chunk.delta.partial_json
             async for chunk in chunks
