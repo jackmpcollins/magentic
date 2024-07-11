@@ -34,9 +34,9 @@ def prompt_chain(
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncPromptFunction[P, Any](
+                name=func.__name__,
+                signature=func_signature,
                 template=template,
-                parameters=list(func_signature.parameters.values()),
-                return_type=func_signature.return_annotation,
                 functions=functions,
                 model=model,
             )
@@ -62,9 +62,9 @@ def prompt_chain(
             return cast(Callable[P, R], awrapper)
 
         prompt_function = PromptFunction[P, R](
+            name=func.__name__,
+            signature=func_signature,
             template=template,
-            parameters=list(func_signature.parameters.values()),
-            return_type=func_signature.return_annotation,
             functions=functions,
             model=model,
         )

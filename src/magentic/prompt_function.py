@@ -8,7 +8,6 @@ from typing import (
     Generic,
     ParamSpec,
     Protocol,
-    Sequence,
     TypeVar,
     cast,
     overload,
@@ -32,23 +31,21 @@ class BasePromptFunction(Generic[P, R]):
 
     def __init__(
         self,
+        name: str,
+        signature: inspect.Signature,
         template: str,
-        parameters: Sequence[inspect.Parameter],
-        return_type: type[R],
         functions: list[Callable[..., Any]] | None = None,
         stop: list[str] | None = None,
         model: ChatModel | None = None,
     ):
-        self._signature = inspect.Signature(
-            parameters=parameters,
-            return_annotation=return_type,
-        )
+        self._name = name
+        self._signature = signature
         self._template = template
         self._functions = functions or []
         self._stop = stop
         self._model = model
 
-        self._return_types = list(split_union_type(return_type))
+        self._return_types = list(split_union_type(self._signature.return_annotation))
 
     @property
     def functions(self) -> list[Callable[..., Any]]:
@@ -144,9 +141,9 @@ def prompt(
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncPromptFunction[P, R](
+                name=func.__name__,
+                signature=func_signature,
                 template=template,
-                parameters=list(func_signature.parameters.values()),
-                return_type=func_signature.return_annotation,
                 functions=functions,
                 stop=stop,
                 model=model,
@@ -157,9 +154,9 @@ def prompt(
             )
 
         prompt_function = PromptFunction[P, R](
+            name=func.__name__,
+            signature=func_signature,
             template=template,
-            parameters=list(func_signature.parameters.values()),
-            return_type=func_signature.return_annotation,
             functions=functions,
             stop=stop,
             model=model,
