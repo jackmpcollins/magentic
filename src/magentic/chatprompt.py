@@ -16,6 +16,7 @@ from typing import (
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import Message
+from magentic.logger import logger
 from magentic.typing import split_union_type
 
 P = ParamSpec("P")
@@ -83,6 +84,7 @@ class ChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted chat prompt template."""
+        logger.info("ChatPromptFunction: %s%s", self._name, self._signature)
         message = self.model.complete(
             messages=self.format(*args, **kwargs),
             functions=self._functions,
@@ -97,6 +99,7 @@ class AsyncChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted chat prompt template."""
+        logger.info("AsyncChatPromptFunction: %s%s", self._name, self._signature)
         message = await self.model.acomplete(
             messages=self.format(*args, **kwargs),
             functions=self._functions,
