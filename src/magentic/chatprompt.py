@@ -40,23 +40,21 @@ class BaseChatPromptFunction(Generic[P, R]):
 
     def __init__(
         self,
+        name: str,
+        signature: inspect.Signature,
         messages: Sequence[Message[Any]],
-        parameters: Sequence[inspect.Parameter],
-        return_type: type[R],
         functions: list[Callable[..., Any]] | None = None,
         stop: list[str] | None = None,
         model: ChatModel | None = None,
     ):
-        self._signature = inspect.Signature(
-            parameters=parameters,
-            return_annotation=return_type,
-        )
+        self._name = name
+        self._signature = signature
         self._messages = messages
         self._functions = functions or []
         self._stop = stop
         self._model = model
 
-        self._return_types = list(split_union_type(return_type))
+        self._return_types = list(split_union_type(self._signature.return_annotation))
 
     @property
     def functions(self) -> list[Callable[..., Any]]:
@@ -171,9 +169,9 @@ def chatprompt(
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncChatPromptFunction[P, R](
+                name=func.__name__,
+                signature=func_signature,
                 messages=messages,
-                parameters=list(func_signature.parameters.values()),
-                return_type=func_signature.return_annotation,
                 functions=functions,
                 stop=stop,
                 model=model,
@@ -184,9 +182,9 @@ def chatprompt(
             )
 
         prompt_function = ChatPromptFunction[P, R](
+            name=func.__name__,
+            signature=func_signature,
             messages=messages,
-            parameters=list(func_signature.parameters.values()),
-            return_type=func_signature.return_annotation,
             functions=functions,
             stop=stop,
             model=model,
