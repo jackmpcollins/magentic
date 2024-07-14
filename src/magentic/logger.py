@@ -11,7 +11,4 @@ if settings.verbose:
     logger.addHandler(logging.StreamHandler(sys.stdout))
 
 if logger.level == logging.NOTSET:
-    if settings.verbose:
-        logger.setLevel(logging.INFO)
-    else:
-        logger.setLevel(logging.WARNING)
+    logger.setLevel(logging.INFO if settings.verbose else logging.WARNING)

@@ -55,7 +55,7 @@ class BaseChatPromptFunction(Generic[P, R]):
         self._stop = stop
         self._model = model
 
-        self._return_types = list(split_union_type(self._signature.return_annotation))
+        self._return_types = list(split_union_type(signature.return_annotation))
 
     @property
     def functions(self) -> list[Callable[..., Any]]:
