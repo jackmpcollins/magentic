@@ -8,11 +8,12 @@ from typing import (
     cast,
 )
 
+import logfire_api as logfire
+
 from magentic.chat import Chat
 from magentic.chat_model.base import ChatModel
 from magentic.function_call import FunctionCall
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction
-from magentic.tracer import tracer
 
 P = ParamSpec("P")
 R = TypeVar("R")
@@ -43,26 +44,26 @@ def prompt_chain(
                 model=model,
             )
 
-            @tracer.start_as_current_span(
-                f"prompt_chain: {func.__name__}{func_signature}"
-            )
             @wraps(func)
             async def awrapper(*args: P.args, **kwargs: P.kwargs) -> Any:
-                chat = await Chat.from_prompt(
-                    async_prompt_function, *args, **kwargs
-                ).asubmit()
-                num_calls = 0
-                while isinstance(chat.last_message.content, FunctionCall):
-                    if max_calls is not None and num_calls >= max_calls:
-                        msg = (
-                            f"Function {func.__name__} reached limit of"
-                            f" {max_calls} function calls"
-                        )
-                        raise MaxFunctionCallsError(msg)
-                    chat = await chat.aexec_function_call()
-                    chat = await chat.asubmit()
-                    num_calls += 1
-                return chat.last_message.content
+                with logfire.span(
+                    "Calling async prompt-chain {name}", name=func.__name__
+                ):
+                    chat = await Chat.from_prompt(
+                        async_prompt_function, *args, **kwargs
+                    ).asubmit()
+                    num_calls = 0
+                    while isinstance(chat.last_message.content, FunctionCall):
+                        if max_calls is not None and num_calls >= max_calls:
+                            msg = (
+                                f"Function {func.__name__} reached limit of"
+                                f" {max_calls} function calls"
+                            )
+                            raise MaxFunctionCallsError(msg)
+                        chat = await chat.aexec_function_call()
+                        chat = await chat.asubmit()
+                        num_calls += 1
+                    return chat.last_message.content
 
             return cast(Callable[P, R], awrapper)
 
@@ -75,21 +76,21 @@ def prompt_chain(
             model=model,
         )
 
-        @tracer.start_as_current_span(f"prompt_chain: {func.__name__}{func_signature}")
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
-            num_calls = 0
-            while isinstance(chat.last_message.content, FunctionCall):
-                if max_calls is not None and num_calls >= max_calls:
-                    msg = (
-                        f"Function {func.__name__} reached limit of"
-                        f" {max_calls} function calls"
-                    )
-                    raise MaxFunctionCallsError(msg)
-                chat = chat.exec_function_call().submit()
-                num_calls += 1
-            return cast(R, chat.last_message.content)
+            with logfire.span("Calling prompt-chain {name}", name=func.__name__):
+                chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
+                num_calls = 0
+                while isinstance(chat.last_message.content, FunctionCall):
+                    if max_calls is not None and num_calls >= max_calls:
+                        msg = (
+                            f"Function {func.__name__} reached limit of"
+                            f" {max_calls} function calls"
+                        )
+                        raise MaxFunctionCallsError(msg)
+                    chat = chat.exec_function_call().submit()
+                    num_calls += 1
+                return cast(R, chat.last_message.content)
 
         return wrapper
 

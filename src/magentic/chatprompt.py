@@ -13,10 +13,11 @@ from typing import (
     overload,
 )
 
+import logfire_api as logfire
+
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import Message
-from magentic.tracer import tracer
 from magentic.typing import split_union_type
 
 P = ParamSpec("P")
@@ -88,9 +89,7 @@ class ChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted chat prompt template."""
-        with tracer.start_as_current_span(
-            name=f"ChatPromptFunction: {self._name}{self._signature}"
-        ):
+        with logfire.span("Calling chatprompt-function {name}", name=self._name):
             message = self.model.complete(
                 messages=self.format(*args, **kwargs),
                 functions=self._functions,
@@ -105,9 +104,7 @@ class AsyncChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted chat prompt template."""
-        with tracer.start_as_current_span(
-            name=f"AsyncChatPromptFunction: {self._name}{self._signature}"
-        ):
+        with logfire.span("Calling async chatprompt-function {name}", name=self._name):
             message = await self.model.acomplete(
                 messages=self.format(*args, **kwargs),
                 functions=self._functions,

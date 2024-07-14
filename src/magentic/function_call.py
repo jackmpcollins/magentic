@@ -16,8 +16,9 @@ from typing import (
 )
 from uuid import uuid4
 
+import logfire_api as logfire
+
 from magentic.streaming import CachedAsyncIterable, CachedIterable
-from magentic.tracer import tracer
 
 T = TypeVar("T")
 P = ParamSpec("P")
@@ -43,8 +44,9 @@ class FunctionCall(Generic[T]):
         self._unique_id = _create_unique_id()
 
     def __call__(self) -> T:
-        with tracer.start_as_current_span(
-            name=f"{self._function.__name__}{inspect.signature(self._function)}"
+        with logfire.span(
+            "Executing function call {name}",
+            name=self._function.__name__,
         ):
             return self._function(*self._args, **self._kwargs)
 
@@ -85,7 +87,7 @@ class ParallelFunctionCall(Generic[T]):
         self._function_calls = CachedIterable(function_calls)
 
     def __call__(self) -> tuple[T, ...]:
-        with tracer.start_as_current_span(name=str(self)):
+        with logfire.span("Executing parallel function call"):
             return tuple(function_call() for function_call in self._function_calls)
 
     def __iter__(self) -> Iterator[FunctionCall[T]]:
@@ -99,7 +101,7 @@ class AsyncParallelFunctionCall(Generic[T]):
         self._function_calls = CachedAsyncIterable(function_calls)
 
     async def __call__(self) -> Tuple[T, ...]:
-        with tracer.start_as_current_span(name=str(self)):
+        with logfire.span("Executing async parallel function call"):
             tasks_and_results: list[asyncio.Task[T] | T] = []
             async for function_call in self._function_calls:
                 result = function_call()
