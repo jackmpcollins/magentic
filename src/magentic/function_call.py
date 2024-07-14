@@ -16,12 +16,8 @@ from typing import (
 )
 from uuid import uuid4
 
-from opentelemetry import trace
-
 from magentic.streaming import CachedAsyncIterable, CachedIterable
-
-tracer = trace.get_tracer(__name__)
-
+from magentic.tracer import tracer
 
 T = TypeVar("T")
 P = ParamSpec("P")

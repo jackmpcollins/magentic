@@ -8,14 +8,11 @@ from typing import (
     cast,
 )
 
-from opentelemetry import trace
-
 from magentic.chat import Chat
 from magentic.chat_model.base import ChatModel
 from magentic.function_call import FunctionCall
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction
-
-tracer = trace.get_tracer(__name__)
+from magentic.tracer import tracer
 
 P = ParamSpec("P")
 R = TypeVar("R")

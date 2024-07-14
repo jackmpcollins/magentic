@@ -13,14 +13,11 @@ from typing import (
     overload,
 )
 
-from opentelemetry import trace
-
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import Message
+from magentic.tracer import tracer
 from magentic.typing import split_union_type
-
-tracer = trace.get_tracer(__name__)
 
 P = ParamSpec("P")
 # TODO: Make `R` type Union of all possible return types except FunctionCall ?
