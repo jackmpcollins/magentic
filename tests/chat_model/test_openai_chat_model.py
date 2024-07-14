@@ -202,3 +202,8 @@ async def test_openai_chat_model_acomplete_usage_structured_output():
     assert isinstance(message.usage, Usage)
     assert message.usage.input_tokens > 0
     assert message.usage.output_tokens > 0
+
+
+def test_openai_chat_model_azure_omits_stream_options():
+    chat_model = OpenaiChatModel("gpt-3.5-turbo", api_type="azure")
+    assert chat_model._get_stream_options("azure") == openai.NOT_GIVEN
