@@ -6,19 +6,20 @@ from magentic.settings import get_settings
 
 logger = logging.getLogger("magentic")
 
-# Set default log level to WARNING so magentic INFO logs must be explicitly enabled
-if logger.level == logging.NOTSET:
-    logger.setLevel(logging.WARNING)
-
 
 @cache  # Can only be called once
-def set_verbose():
+def set_verbose() -> None:
     """Set the magentic logger to print INFO level messages to stdout."""
     logger.addHandler(logging.StreamHandler(sys.stdout))
     if logger.level > logging.INFO:
         logger.setLevel(logging.INFO)
 
 
-settings = get_settings()
-if settings.verbose:
-    set_verbose()
+def _setup_logger() -> None:
+    # Set default log level to WARNING so INFO logs must be explicitly enabled
+    if logger.level == logging.NOTSET:
+        logger.setLevel(logging.WARNING)
+
+    settings = get_settings()
+    if settings.verbose:
+        set_verbose()
