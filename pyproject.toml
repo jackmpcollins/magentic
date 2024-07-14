@@ -34,7 +34,6 @@ filetype = "*"
 litellm = {version = ">=1.41.12", optional = true}
 logfire-api = "*"
 openai = ">=1.26.0"
-opentelemetry-api = "*"
 pydantic = ">=2.0.0"
 pydantic-settings = ">=2.0.0"
 
