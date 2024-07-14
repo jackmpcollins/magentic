@@ -73,10 +73,10 @@ def prompt_chain(
 
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            logger.info("prompt_chain: %s%s", func.__name__, func_signature)
             chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
             num_calls = 0
             while isinstance(chat.last_message.content, FunctionCall):
-                logger.info("prompt_chain: %s%s", func.__name__, func_signature)
                 if max_calls is not None and num_calls >= max_calls:
                     msg = (
                         f"Function {func.__name__} reached limit of"
