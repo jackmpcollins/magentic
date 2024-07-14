@@ -62,7 +62,7 @@ class Chat:
             messages=[UserMessage(content=prompt.format(*args, **kwargs))],
             functions=prompt.functions,
             output_types=prompt.return_types,
-            model=prompt.model,
+            model=prompt._model,  # Keep `None` value if unset
         )
 
     @property
@@ -83,7 +83,7 @@ class Chat:
             messages=[*self._messages, message],
             functions=self._functions,
             output_types=self._output_types,
-            model=self.model,
+            model=self._model,  # Keep `None` value if unset
         )
 
     def add_user_message(self: Self, content: str) -> Self:

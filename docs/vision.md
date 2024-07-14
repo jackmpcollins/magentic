@@ -1,47 +1,58 @@
 # Vision
 
-GPT-4 Vision can be used with magentic by using the `UserImageMessage` message type. This allows the LLM to accept images as input. Currently this is only supported with the OpenAI backend (`OpenaiChatModel` with `"gpt-4-vision-preview"`).
+GPT-4 Vision can be used with magentic by using the `UserImageMessage` message type. This allows the LLM to accept images as input. Currently this is only supported with the OpenAI backend (`OpenaiChatModel`).
 
 !!! note "Return types"
 
-    GPT-4 Vision currently does not support function-calling/tools so functions using `@chatprompt` can only return `str`, `StreamedStr`, or `AsyncStreamedStr`.
+    `gpt-4-vision-preview` does not support function-calling/tools so only `str`, `StreamedStr`, and `AsyncStreamedStr` work as return types.
 
 !!! tip "`max_tokens`"
 
-    By default `max_tokens` has a low value, so you will likely need to increase it.
+    By default, `gpt-4-vision-preview` has a low value for `max_tokens` so you will likely need to increase it.
 
 For more information visit the [OpenAI Vision API documentation](https://platform.openai.com/docs/guides/vision).
 
 ## UserImageMessage
 
-The `UserImageMessage` can be used with `@chatprompt` alongside other messages. The LLM must be set to OpenAI's GPT4 Vision model `OpenaiChatModel("gpt-4-vision-preview")`. This can be done by passing the `model` parameter to `@chatprompt`, or through the other methods of [configuration](configuration.md).
+The `UserImageMessage` can be used in `@chatprompt` alongside other messages. The LLM must be set to an OpenAI model that supports vision, currently `gpt-4-vision-preview`, `gpt-4-turbo`, and `gpt-4o` (the default `ChatModel`). This can be done by passing the `model` parameter to `@chatprompt`, or through the other methods of [configuration](configuration.md).
 
 ```python
-from magentic import chatprompt, OpenaiChatModel, UserMessage
+from pydantic import BaseModel, Field
+
+from magentic import chatprompt, UserMessage
 from magentic.vision import UserImageMessage
 
 
 IMAGE_URL_WOODEN_BOARDWALK = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
 
 
+class ImageDetails(BaseModel):
+    description: str = Field(description="A brief description of the image.")
+    name: str = Field(description="A short name.")
+
+
 @chatprompt(
     UserMessage("Describe the following image in one sentence."),
     UserImageMessage(IMAGE_URL_WOODEN_BOARDWALK),
-    model=OpenaiChatModel("gpt-4-vision-preview", max_tokens=2000),
 )
-def describe_image() -> str: ...
+def describe_image() -> ImageDetails: ...
 
 
-describe_image()
-# 'A wooden boardwalk meanders through a lush green meadow under a blue sky with wispy clouds.'
+image_details = describe_image()
+print(image_details.name)
+# 'Wooden Boardwalk in Green Wetland'
+print(image_details.description)
+# 'A serene wooden boardwalk meanders through a lush green wetland under a blue sky dotted with clouds.'
 ```
+
+For more info on the `@chatprompt` decorator, see [Chat Prompting](chat-prompting.md).
 
 ## Placeholder
 
-To provide the image as a function parameter, use `Placeholder`. This substitutes a function argument into the message when the function is called.
+In the previous example, the image url was tied to the function. To provide the image as a function parameter, use `Placeholder`. This substitutes a function argument into the message when the function is called.
 
 ```python hl_lines="10"
-from magentic import chatprompt, OpenaiChatModel, Placeholder, UserMessage
+from magentic import chatprompt, Placeholder, UserMessage
 from magentic.vision import UserImageMessage
 
 
@@ -51,7 +62,6 @@ IMAGE_URL_WOODEN_BOARDWALK = "https://upload.wikimedia.org/wikipedia/commons/thu
 @chatprompt(
     UserMessage("Describe the following image in one sentence."),
     UserImageMessage(Placeholder(str, "image_url")),
-    model=OpenaiChatModel("gpt-4-vision-preview", max_tokens=2000),
 )
 def describe_image(image_url: str) -> str: ...
 
@@ -67,7 +77,7 @@ describe_image(IMAGE_URL_WOODEN_BOARDWALK)
 ```python
 import requests
 
-from magentic import chatprompt, OpenaiChatModel, Placeholder, UserMessage
+from magentic import chatprompt, Placeholder, UserMessage
 from magentic.vision import UserImageMessage
 
 
@@ -76,16 +86,16 @@ IMAGE_URL_WOODEN_BOARDWALK = "https://upload.wikimedia.org/wikipedia/commons/thu
 
 def url_to_bytes(url: str) -> bytes:
     """Get the content of a URL as bytes."""
-    
+
     # A custom user-agent is necessary to comply with Wikimedia user-agent policy
     # https://meta.wikimedia.org/wiki/User-Agent_policy
-    headers = {'User-Agent': 'MagenticExampleBot (https://magentic.dev/)'}
-    return requests.get(url, headers=headers).content
+    headers = {"User-Agent": "MagenticExampleBot (https://magentic.dev/)"}
+    return requests.get(url, headers=headers, timeout=10).content
+
 
 @chatprompt(
     UserMessage("Describe the following image in one sentence."),
     UserImageMessage(Placeholder(bytes, "image_bytes")),
-    model=OpenaiChatModel("gpt-4-vision-preview", max_tokens=2000),
 )
 def describe_image(image_bytes: bytes) -> str: ...
 

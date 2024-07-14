@@ -19,6 +19,7 @@ from opentelemetry import trace
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import UserMessage
+from magentic.logger import logger
 from magentic.typing import split_union_type
 
 tracer = trace.get_tracer(__name__)
@@ -36,13 +37,15 @@ class BasePromptFunction(Generic[P, R]):
 
     def __init__(
         self,
-        template: str,
+        name: str,
         parameters: Sequence[inspect.Parameter],
         return_type: type[R],
+        template: str,
         functions: list[Callable[..., Any]] | None = None,
         stop: list[str] | None = None,
         model: ChatModel | None = None,
     ):
+        self._name = name
         self._signature = inspect.Signature(
             parameters=parameters,
             return_annotation=return_type,
@@ -82,6 +85,7 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted prompt template."""
+        logger.info("PromptFunction: %s%s", self._name, self._signature)
         with tracer.start_as_current_span("prompt_function"):
             message = self.model.complete(
                 messages=[UserMessage(content=self.format(*args, **kwargs))],
@@ -97,6 +101,7 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted prompt template."""
+        logger.info("AsyncPromptFunction: %s%s", self._name, self._signature)
         with tracer.start_as_current_span("prompt_function"):
             message = await self.model.acomplete(
                 messages=[UserMessage(content=self.format(*args, **kwargs))],
@@ -150,24 +155,28 @@ def prompt(
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncPromptFunction[P, R](
-                template=template,
+                name=func.__name__,
                 parameters=list(func_signature.parameters.values()),
                 return_type=func_signature.return_annotation,
+                template=template,
                 functions=functions,
                 stop=stop,
                 model=model,
             )
-            async_prompt_function = update_wrapper(async_prompt_function, func)
-            return cast(AsyncPromptFunction[P, R], async_prompt_function)  # type: ignore[redundant-cast]
+            return cast(
+                AsyncPromptFunction[P, R],
+                update_wrapper(async_prompt_function, func),
+            )
 
         prompt_function = PromptFunction[P, R](
-            template=template,
+            name=func.__name__,
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
+            template=template,
             functions=functions,
             stop=stop,
             model=model,
         )
-        return cast(PromptFunction[P, R], update_wrapper(prompt_function, func))  # type: ignore[redundant-cast]
+        return cast(PromptFunction[P, R], update_wrapper(prompt_function, func))
 
     return cast(PromptDecorator, decorator)

@@ -16,6 +16,7 @@ from typing import (
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import Message
+from magentic.logger import logger
 from magentic.typing import split_union_type
 
 P = ParamSpec("P")
@@ -40,13 +41,15 @@ class BaseChatPromptFunction(Generic[P, R]):
 
     def __init__(
         self,
-        messages: Sequence[Message[Any]],
+        name: str,
         parameters: Sequence[inspect.Parameter],
         return_type: type[R],
+        messages: Sequence[Message[Any]],
         functions: list[Callable[..., Any]] | None = None,
         stop: list[str] | None = None,
         model: ChatModel | None = None,
     ):
+        self._name = name
         self._signature = inspect.Signature(
             parameters=parameters,
             return_annotation=return_type,
@@ -85,6 +88,7 @@ class ChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted chat prompt template."""
+        logger.info("ChatPromptFunction: %s%s", self._name, self._signature)
         message = self.model.complete(
             messages=self.format(*args, **kwargs),
             functions=self._functions,
@@ -99,6 +103,7 @@ class AsyncChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted chat prompt template."""
+        logger.info("AsyncChatPromptFunction: %s%s", self._name, self._signature)
         message = await self.model.acomplete(
             messages=self.format(*args, **kwargs),
             functions=self._functions,
@@ -171,24 +176,28 @@ def chatprompt(
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncChatPromptFunction[P, R](
-                messages=messages,
+                name=func.__name__,
                 parameters=list(func_signature.parameters.values()),
                 return_type=func_signature.return_annotation,
+                messages=messages,
                 functions=functions,
                 stop=stop,
                 model=model,
             )
-            async_prompt_function = update_wrapper(async_prompt_function, func)
-            return cast(AsyncChatPromptFunction[P, R], async_prompt_function)  # type: ignore[redundant-cast]
+            return cast(
+                AsyncChatPromptFunction[P, R],
+                update_wrapper(async_prompt_function, func),
+            )
 
         prompt_function = ChatPromptFunction[P, R](
-            messages=messages,
+            name=func.__name__,
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
+            messages=messages,
             functions=functions,
             stop=stop,
             model=model,
         )
-        return cast(ChatPromptFunction[P, R], update_wrapper(prompt_function, func))  # type: ignore[redundant-cast]
+        return cast(ChatPromptFunction[P, R], update_wrapper(prompt_function, func))
 
     return cast(ChatPromptDecorator, decorator)

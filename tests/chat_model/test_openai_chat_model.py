@@ -10,6 +10,7 @@ from magentic.chat_model.message import (
     FunctionResultMessage,
     Message,
     SystemMessage,
+    Usage,
     UserMessage,
 )
 from magentic.chat_model.openai_chat_model import (
@@ -17,6 +18,7 @@ from magentic.chat_model.openai_chat_model import (
     message_to_openai_message,
 )
 from magentic.function_call import FunctionCall, ParallelFunctionCall
+from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 
 def plus(a: int, b: int) -> int:
@@ -118,9 +120,8 @@ def test_openai_chat_model_api_key(monkeypatch):
     openai_api_key = os.environ["OPENAI_API_KEY"]
     monkeypatch.delenv("OPENAI_API_KEY")
 
-    chat_model = OpenaiChatModel("gpt-3.5-turbo")
     with pytest.raises(openai.OpenAIError):
-        chat_model.complete(messages=[UserMessage("Say hello!")])
+        chat_model = OpenaiChatModel("gpt-3.5-turbo")
 
     chat_model = OpenaiChatModel("gpt-3.5-turbo", api_key=openai_api_key)
     message = chat_model.complete(messages=[UserMessage("Say hello!")])
@@ -140,3 +141,64 @@ def test_openai_chat_model_complete_seed():
     message1 = chat_model.complete(messages=[UserMessage("Say hello!")])
     message2 = chat_model.complete(messages=[UserMessage("Say hello!")])
     assert message1.content == message2.content
+
+
+@pytest.mark.openai
+def test_openai_chat_model_complete_usage():
+    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    message = chat_model.complete(
+        messages=[UserMessage("Say hello!")], output_types=[StreamedStr]
+    )
+    str(message.content)  # Finish the stream
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
+
+
+@pytest.mark.openai
+def test_openai_chat_model_complete_usage_structured_output():
+    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    message = chat_model.complete(
+        messages=[UserMessage("Count to 5")], output_types=[list[int]]
+    )
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
+
+
+@pytest.mark.openai
+def test_openai_chat_model_complete_no_structured_output_error():
+    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    # Should not raise StructuredOutputError because forced to make tool call
+    message: Message[int | bool] = chat_model.complete(
+        messages=[
+            UserMessage("Tell me a short joke. Return a string, not a tool call.")
+        ],
+        output_types=[int, bool],
+    )
+    assert isinstance(message.content, int | bool)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_openai_chat_model_acomplete_usage():
+    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Say hello!")], output_types=[AsyncStreamedStr]
+    )
+    await message.content.to_string()  # Finish the stream
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_openai_chat_model_acomplete_usage_structured_output():
+    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Count to 5")], output_types=[list[int]]
+    )
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0

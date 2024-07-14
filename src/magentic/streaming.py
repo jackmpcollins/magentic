@@ -1,4 +1,5 @@
 import asyncio
+import textwrap
 from collections.abc import AsyncIterable, Iterable
 from dataclasses import dataclass
 from itertools import chain, dropwhile
@@ -30,6 +31,31 @@ async def achain(*aiterables: AsyncIterable[T]) -> AsyncIterator[T]:
     for aiterable in aiterables:
         async for item in aiterable:
             yield item
+
+
+def peek(iterator: Iterator[T]) -> tuple[T, Iterator[T]]:
+    """Returns the first item in the Iterator and a copy of the Iterator."""
+    first_item = next(iterator)
+    return first_item, chain([first_item], iterator)
+
+
+async def apeek(aiterator: AsyncIterator[T]) -> tuple[T, AsyncIterator[T]]:
+    """Async version of `peek`."""
+    first_item = await anext(aiterator)
+    return first_item, achain(async_iter([first_item]), aiterator)
+
+
+async def adropwhile(
+    predicate: Callable[[T], object], aiterable: AsyncIterable[T]
+) -> AsyncIterator[T]:
+    """Async version of `itertools.dropwhile`."""
+    aiterator = aiter(aiterable)
+    async for item in aiterator:
+        if not predicate(item):
+            yield item
+            break
+    async for item in aiterator:
+        yield item
 
 
 async def atakewhile(
@@ -199,6 +225,17 @@ class StreamedStr(Iterable[str]):
         """Convert the streamed string to a string."""
         return str(self)
 
+    def truncate(self, length: int) -> str:
+        """Truncate the streamed string to the specified length."""
+        chunks = []
+        current_length = 0
+        for chunk in self._chunks:
+            chunks.append(chunk)
+            current_length += len(chunk)
+            if current_length > length:
+                break
+        return textwrap.shorten("".join(chunks), width=length)
+
 
 class AsyncStreamedStr(AsyncIterable[str]):
     """Async version of `StreamedStr`."""
@@ -213,3 +250,14 @@ class AsyncStreamedStr(AsyncIterable[str]):
     async def to_string(self) -> str:
         """Convert the streamed string to a string."""
         return "".join([item async for item in self])
+
+    async def truncate(self, length: int) -> str:
+        """Truncate the streamed string to the specified length."""
+        chunks = []
+        current_length = 0
+        async for chunk in self._chunks:
+            chunks.append(chunk)
+            current_length += len(chunk)
+            if current_length > length:
+                break
+        return textwrap.shorten("".join(chunks), width=length)

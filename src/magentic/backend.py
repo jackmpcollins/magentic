@@ -9,6 +9,16 @@ def get_chat_model() -> ChatModel:
     settings = get_settings()
 
     match settings.backend:
+        case Backend.ANTHROPIC:
+            from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
+
+            return AnthropicChatModel(
+                model=settings.anthropic_model,
+                api_key=settings.anthropic_api_key,
+                base_url=settings.anthropic_base_url,
+                max_tokens=settings.anthropic_max_tokens,
+                temperature=settings.anthropic_temperature,
+            )
         case Backend.LITELLM:
             from magentic.chat_model.litellm_chat_model import LitellmChatModel
 
@@ -17,6 +27,17 @@ def get_chat_model() -> ChatModel:
                 api_base=settings.litellm_api_base,
                 max_tokens=settings.litellm_max_tokens,
                 temperature=settings.litellm_temperature,
+            )
+        case Backend.MISTRAL:
+            from magentic.chat_model.mistral_chat_model import MistralChatModel
+
+            return MistralChatModel(
+                model=settings.mistral_model,
+                api_key=settings.mistral_api_key,
+                base_url=settings.mistral_base_url,
+                max_tokens=settings.mistral_max_tokens,
+                seed=settings.mistral_seed,
+                temperature=settings.mistral_temperature,
             )
         case Backend.OPENAI:
             from magentic.chat_model.openai_chat_model import OpenaiChatModel

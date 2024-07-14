@@ -85,6 +85,7 @@ nav:
   - configuration.md
   - type-checking.md
   - Examples:
+      - examples/rag_github.ipynb
+      - examples/vision_renaming_screenshots.ipynb
       - examples/registering_custom_type.ipynb
-      - examples/retrieval_augmented_generation.ipynb
       - examples/chain_of_verification.ipynb

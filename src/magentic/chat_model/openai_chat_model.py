@@ -1,21 +1,26 @@
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
-from functools import singledispatch
-from itertools import chain, groupby, takewhile
-from typing import Any, Generic, Literal, TypeVar, cast, overload
-from uuid import uuid4
+from functools import singledispatch, wraps
+from itertools import chain, groupby
+from typing import Any, Generic, Literal, ParamSpec, Sequence, TypeVar, cast, overload
 
 import openai
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionMessageParam,
+    ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
 )
 from openai.types.chat.chat_completion_chunk import ChoiceDeltaToolCall
 from pydantic import ValidationError
 
-from magentic.chat_model.base import ChatModel, StructuredOutputError
+from magentic.chat_model.base import (
+    ChatModel,
+    StructuredOutputError,
+    avalidate_str_content,
+    validate_str_content,
+)
 from magentic.chat_model.function_schema import (
     AsyncFunctionSchema,
     BaseFunctionSchema,
@@ -29,12 +34,14 @@ from magentic.chat_model.message import (
     FunctionResultMessage,
     Message,
     SystemMessage,
+    Usage,
     UserMessage,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
     ParallelFunctionCall,
+    _create_unique_id,
 )
 from magentic.streaming import (
     AsyncStreamedStr,
@@ -42,7 +49,6 @@ from magentic.streaming import (
     achain,
     agroupby,
     async_iter,
-    atakewhile,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
@@ -121,7 +127,7 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
         "tool_calls": [
             {
                 # Can be random because no result will be inserted back into the chat
-                "id": str(uuid4()),
+                "id": _create_unique_id(),
                 "type": "function",
                 "function": {
                     "name": function_schema.name,
@@ -229,56 +235,45 @@ class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
         )
 
 
-def _iter_streamed_tool_calls(
-    response: Iterable[ChatCompletionChunk],
-) -> Iterator[Iterator[ChoiceDeltaToolCall]]:
-    """Group tool_call chunks into separate iterators."""
-    response = takewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
-    for _, tool_call_chunks in groupby(
-        response,
-        lambda chunk: chunk.choices[0].delta.tool_calls
-        and chunk.choices[0].delta.tool_calls[0].index,
-    ):
-        yield (
-            chunk.choices[0].delta.tool_calls[0]
-            for chunk in tool_call_chunks
-            if chunk.choices[0].delta.tool_calls
-        )
+def _get_tool_call_id_for_chunk(tool_call: ChoiceDeltaToolCall) -> Any:
+    """Returns an id that is consistent for chunks from the same tool_call."""
+    # openai keeps index consistent for chunks from the same tool_call, but id is null
+    # mistral has null index, but keeps id consistent
+    return tool_call.index if tool_call.index is not None else tool_call.id
 
 
 def parse_streamed_tool_calls(
     response: Iterable[ChatCompletionChunk],
     tool_schemas: list[FunctionToolSchema[T]],
 ) -> Iterator[T]:
-    for tool_call_chunks in _iter_streamed_tool_calls(response):
+    all_tool_call_chunks = (
+        tool_call
+        for chunk in response
+        if chunk.choices and chunk.choices[0].delta.tool_calls
+        for tool_call in chunk.choices[0].delta.tool_calls
+    )
+    for _, tool_call_chunks in groupby(
+        all_tool_call_chunks, _get_tool_call_id_for_chunk
+    ):
         first_chunk = next(tool_call_chunks)
         tool_schema = select_tool_schema(first_chunk, tool_schemas)
-        tool_call = tool_schema.parse_tool_call(chain([first_chunk], tool_call_chunks))
+        tool_call = tool_schema.parse_tool_call(chain([first_chunk], tool_call_chunks))  # noqa: B031
         yield tool_call
-
-
-async def _aiter_streamed_tool_calls(
-    response: AsyncIterable[ChatCompletionChunk],
-) -> AsyncIterator[AsyncIterator[ChoiceDeltaToolCall]]:
-    """Async version of `_iter_streamed_tool_calls`."""
-    response = atakewhile(lambda chunk: chunk.choices[0].delta.tool_calls, response)
-    async for _, tool_call_chunks in agroupby(
-        response,
-        lambda chunk: chunk.choices[0].delta.tool_calls
-        and chunk.choices[0].delta.tool_calls[0].index,
-    ):
-        yield (
-            chunk.choices[0].delta.tool_calls[0]
-            async for chunk in tool_call_chunks
-            if chunk.choices[0].delta.tool_calls
-        )
 
 
 async def aparse_streamed_tool_calls(
     response: AsyncIterable[ChatCompletionChunk],
     tool_schemas: list[AsyncFunctionToolSchema[T]],
 ) -> AsyncIterator[T]:
-    async for tool_call_chunks in _aiter_streamed_tool_calls(response):
+    all_tool_call_chunks = (
+        tool_call
+        async for chunk in response
+        if chunk.choices and chunk.choices[0].delta.tool_calls
+        for tool_call in chunk.choices[0].delta.tool_calls
+    )
+    async for _, tool_call_chunks in agroupby(
+        all_tool_call_chunks, _get_tool_call_id_for_chunk
+    ):
         first_chunk = await anext(tool_call_chunks)
         tool_schema = select_tool_schema(first_chunk, tool_schemas)
         tool_call = await tool_schema.aparse_tool_call(
@@ -287,102 +282,73 @@ async def aparse_streamed_tool_calls(
         yield tool_call
 
 
-def openai_chatcompletion_create(
-    api_key: str | None,
-    api_type: Literal["openai", "azure"],
-    base_url: str | None,
-    model: str,
-    messages: list[ChatCompletionMessageParam],
-    max_tokens: int | None = None,
-    seed: int | None = None,
-    stop: list[str] | None = None,
-    temperature: float | None = None,
-    tools: list[ChatCompletionToolParam] | None = None,
-    tool_choice: ChatCompletionToolChoiceOptionParam | None = None,
-) -> Iterator[ChatCompletionChunk]:
-    client_kwargs: dict[str, Any] = {
-        "api_key": api_key,
-    }
-    if api_type == "openai" and base_url:
-        client_kwargs["base_url"] = base_url
+def _create_usage_ref(
+    response: Iterable[ChatCompletionChunk],
+) -> tuple[list[Usage], Iterator[ChatCompletionChunk]]:
+    """Returns a pointer to a Usage object that is created at the end of the response."""
+    usage_ref: list[Usage] = []
 
-    client = (
-        openai.AzureOpenAI(**client_kwargs)
-        if api_type == "azure"
-        else openai.OpenAI(**client_kwargs)
-    )
+    def generator(
+        response: Iterable[ChatCompletionChunk],
+    ) -> Iterator[ChatCompletionChunk]:
+        for chunk in response:
+            if chunk.usage:
+                usage = Usage(
+                    input_tokens=chunk.usage.prompt_tokens,
+                    output_tokens=chunk.usage.completion_tokens,
+                )
+                usage_ref.append(usage)
+            yield chunk
 
-    # `openai.OpenAI().chat.completions.create` doesn't accept `None` for some args
-    # so only pass function args if there are functions
-    kwargs: dict[str, Any] = {}
-    if max_tokens is not None:
-        kwargs["max_tokens"] = max_tokens
-    if stop is not None:
-        kwargs["stop"] = stop
-    if tools:
-        kwargs["tools"] = tools
-    if tool_choice:
-        kwargs["tool_choice"] = tool_choice
-
-    response: Iterator[ChatCompletionChunk] = client.chat.completions.create(
-        model=model,
-        messages=messages,
-        seed=seed,
-        stream=True,
-        temperature=temperature,
-        **kwargs,
-    )
-    return response
+    return usage_ref, generator(response)
 
 
-async def openai_chatcompletion_acreate(
-    api_key: str | None,
-    api_type: Literal["openai", "azure"],
-    base_url: str | None,
-    model: str,
-    messages: list[ChatCompletionMessageParam],
-    max_tokens: int | None = None,
-    seed: int | None = None,
-    stop: list[str] | None = None,
-    temperature: float | None = None,
-    tools: list[ChatCompletionToolParam] | None = None,
-    tool_choice: ChatCompletionToolChoiceOptionParam | None = None,
-) -> AsyncIterator[ChatCompletionChunk]:
-    client_kwargs: dict[str, Any] = {
-        "api_key": api_key,
-    }
-    if api_type == "openai" and base_url:
-        client_kwargs["base_url"] = base_url
+def _create_usage_ref_async(
+    response: AsyncIterable[ChatCompletionChunk],
+) -> tuple[list[Usage], AsyncIterator[ChatCompletionChunk]]:
+    """Async version of `_create_usage_ref`."""
+    usage_ref: list[Usage] = []
 
-    client = (
-        openai.AsyncAzureOpenAI(**client_kwargs)
-        if api_type == "azure"
-        else openai.AsyncOpenAI(**client_kwargs)
-    )
-    # `openai.AsyncOpenAI().chat.completions.create` doesn't accept `None` for some args
-    # so only pass function args if there are functions
-    kwargs: dict[str, Any] = {}
-    if max_tokens is not None:
-        kwargs["max_tokens"] = max_tokens
-    if stop is not None:
-        kwargs["stop"] = stop
-    if tools:
-        kwargs["tools"] = tools
-    if tool_choice:
-        kwargs["tool_choice"] = tool_choice
+    async def agenerator(
+        response: AsyncIterable[ChatCompletionChunk],
+    ) -> AsyncIterator[ChatCompletionChunk]:
+        async for chunk in response:
+            if chunk.usage:
+                usage = Usage(
+                    input_tokens=chunk.usage.prompt_tokens,
+                    output_tokens=chunk.usage.completion_tokens,
+                )
+                usage_ref.append(usage)
+            yield chunk
 
-    response: AsyncIterator[ChatCompletionChunk] = await client.chat.completions.create(
-        model=model,
-        messages=messages,
-        seed=seed,
-        temperature=temperature,
-        stream=True,
-        **kwargs,
-    )
-    return response
+    return usage_ref, agenerator(response)
 
 
+P = ParamSpec("P")
 R = TypeVar("R")
+
+
+def discard_none_arguments(func: Callable[P, R]) -> Callable[P, R]:
+    """Decorator to discard function arguments with value `None`"""
+
+    @wraps(func)
+    def wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
+        non_none_kwargs = {
+            key: value for key, value in kwargs.items() if value is not None
+        }
+        return func(*args, **non_none_kwargs)  # type: ignore[arg-type]
+
+    return wrapped
+
+
+STR_OR_FUNCTIONCALL_TYPE = (
+    str,
+    StreamedStr,
+    AsyncStreamedStr,
+    FunctionCall,
+    ParallelFunctionCall,
+    AsyncParallelFunctionCall,
+)
 
 
 class OpenaiChatModel(ChatModel):
@@ -406,6 +372,22 @@ class OpenaiChatModel(ChatModel):
         self._max_tokens = max_tokens
         self._seed = seed
         self._temperature = temperature
+
+        match api_type:
+            case "openai":
+                self._client = openai.OpenAI(api_key=api_key, base_url=base_url)
+                self._async_client = openai.AsyncOpenAI(
+                    api_key=api_key, base_url=base_url
+                )
+            case "azure":
+                self._client = openai.AzureOpenAI(
+                    api_key=api_key,
+                    base_url=base_url,  # type: ignore[arg-type]
+                )
+                self._async_client = openai.AsyncAzureOpenAI(
+                    api_key=api_key,
+                    base_url=base_url,  # type: ignore[arg-type]
+                )
 
     @property
     def model(self) -> str:
@@ -434,6 +416,23 @@ class OpenaiChatModel(ChatModel):
     @property
     def temperature(self) -> float | None:
         return self._temperature
+
+    @staticmethod
+    def _get_stream_options() -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+        return {"include_usage": True}
+
+    @staticmethod
+    def _get_tool_choice(
+        *,
+        tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
+        allow_string_output: bool,
+    ) -> ChatCompletionToolChoiceOptionParam | openai.NotGiven:
+        """Create the tool choice argument."""
+        if allow_string_output:
+            return openai.NOT_GIVEN
+        if len(tool_schemas) == 1:
+            return tool_schemas[0].as_tool_choice()
+        return "required"
 
     @overload
     def complete(
@@ -471,9 +470,7 @@ class OpenaiChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(
-                type_, (str, StreamedStr, FunctionCall, ParallelFunctionCall)
-            )
+            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
         tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
 
@@ -481,10 +478,9 @@ class OpenaiChatModel(ChatModel):
         streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
-        response = openai_chatcompletion_create(
-            api_key=self.api_key,
-            api_type=self.api_type,
-            base_url=self.base_url,
+        response: Iterator[ChatCompletionChunk] = discard_none_arguments(
+            self._client.chat.completions.create
+        )(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
                 [message_to_openai_message(m) for m in messages]
@@ -492,53 +488,52 @@ class OpenaiChatModel(ChatModel):
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
+            stream=True,
+            stream_options=self._get_stream_options(),
             temperature=self.temperature,
-            tools=[schema.to_dict() for schema in tool_schemas],
-            tool_choice=(
-                tool_schemas[0].as_tool_choice()
-                if len(tool_schemas) == 1 and not allow_string_output
-                else None
+            tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
+        usage_ref, response = _create_usage_ref(response)
 
         first_chunk = next(response)
         # Azure OpenAI sends a chunk with empty choices first
         if len(first_chunk.choices) == 0:
             first_chunk = next(response)
         if (
-            first_chunk.choices[0].delta.content is None
-            and first_chunk.choices[0].delta.tool_calls is None
+            # Mistral tool call first chunk has content ""
+            not first_chunk.choices[0].delta.content
+            and not first_chunk.choices[0].delta.tool_calls
         ):
             first_chunk = next(response)
         response = chain([first_chunk], response)
 
-        if first_chunk.choices[0].delta.content is not None:
-            if not allow_string_output:
-                msg = (
-                    "String was returned by model but not expected. You may need to update"
-                    " your prompt to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg)
+        if first_chunk.choices[0].delta.content:
             streamed_str = StreamedStr(
                 chunk.choices[0].delta.content
                 for chunk in response
-                if chunk.choices[0].delta.content is not None
+                if chunk.choices and chunk.choices[0].delta.content is not None
             )
-            if streamed_str_in_output_types:
-                return AssistantMessage(streamed_str)  # type: ignore[return-value]
-            return AssistantMessage(str(streamed_str))
+            str_content = validate_str_content(
+                streamed_str,
+                allow_string_output=allow_string_output,
+                streamed=streamed_str_in_output_types,
+            )
+            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
-        if first_chunk.choices[0].delta.tool_calls is not None:
+        if first_chunk.choices[0].delta.tool_calls:
             try:
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
                     content = ParallelFunctionCall(
                         parse_streamed_tool_calls(response, tool_schemas)
                     )
-                    return AssistantMessage(content)  # type: ignore[return-value]
+                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
                 content = next(parse_streamed_tool_calls(response, tool_schemas))
-                return AssistantMessage(content)  # type: ignore[return-value]
+                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
@@ -584,7 +579,7 @@ class OpenaiChatModel(ChatModel):
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             async_function_schema_for_type(type_)
             for type_ in output_types
-            if not is_origin_subclass(type_, (str, AsyncStreamedStr, FunctionCall))
+            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
         tool_schemas = [AsyncFunctionToolSchema(schema) for schema in function_schemas]
 
@@ -594,10 +589,9 @@ class OpenaiChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        response = await openai_chatcompletion_acreate(
-            api_key=self.api_key,
-            api_type=self.api_type,
-            base_url=self.base_url,
+        response: AsyncIterator[ChatCompletionChunk] = await discard_none_arguments(
+            self._async_client.chat.completions.create
+        )(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
                 [message_to_openai_message(m) for m in messages]
@@ -605,55 +599,54 @@ class OpenaiChatModel(ChatModel):
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
+            stream=True,
+            stream_options=self._get_stream_options(),
             temperature=self.temperature,
-            tools=[schema.to_dict() for schema in tool_schemas],
-            tool_choice=(
-                tool_schemas[0].as_tool_choice()
-                if len(tool_schemas) == 1 and not allow_string_output
-                else None
+            tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
+        usage_ref, response = _create_usage_ref_async(response)
 
         first_chunk = await anext(response)
         # Azure OpenAI sends a chunk with empty choices first
         if len(first_chunk.choices) == 0:
             first_chunk = await anext(response)
         if (
-            first_chunk.choices[0].delta.content is None
-            and first_chunk.choices[0].delta.tool_calls is None
+            # Mistral tool call first chunk has content ""
+            not first_chunk.choices[0].delta.content
+            and not first_chunk.choices[0].delta.tool_calls
         ):
             first_chunk = await anext(response)
         response = achain(async_iter([first_chunk]), response)
 
-        if first_chunk.choices[0].delta.content is not None:
-            if not allow_string_output:
-                msg = (
-                    "String was returned by model but not expected. You may need to update"
-                    " your prompt to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg)
+        if first_chunk.choices[0].delta.content:
             async_streamed_str = AsyncStreamedStr(
                 chunk.choices[0].delta.content
                 async for chunk in response
-                if chunk.choices[0].delta.content is not None
+                if chunk.choices and chunk.choices[0].delta.content is not None
             )
-            if async_streamed_str_in_output_types:
-                return AssistantMessage(async_streamed_str)  # type: ignore[return-value]
-            return AssistantMessage(await async_streamed_str.to_string())
+            str_content = await avalidate_str_content(
+                async_streamed_str,
+                allow_string_output=allow_string_output,
+                streamed=async_streamed_str_in_output_types,
+            )
+            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
-        if first_chunk.choices[0].delta.tool_calls is not None:
+        if first_chunk.choices[0].delta.tool_calls:
             try:
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                     content = AsyncParallelFunctionCall(
                         aparse_streamed_tool_calls(response, tool_schemas)
                     )
-                    return AssistantMessage(content)  # type: ignore[return-value]
+                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
 
                 # Take only the first tool_call, silently ignore extra chunks
                 content = await anext(
                     aparse_streamed_tool_calls(response, tool_schemas)
                 )
-                return AssistantMessage(content)  # type: ignore[return-value]
+                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"

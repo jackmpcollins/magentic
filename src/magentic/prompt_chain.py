@@ -13,6 +13,7 @@ from opentelemetry import trace
 from magentic.chat import Chat
 from magentic.chat_model.base import ChatModel
 from magentic.function_call import FunctionCall
+from magentic.logger import logger
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction
 
 tracer = trace.get_tracer(__name__)
@@ -38,9 +39,10 @@ def prompt_chain(
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncPromptFunction[P, Any](
-                template=template,
+                name=func.__name__,
                 parameters=list(func_signature.parameters.values()),
                 return_type=func_signature.return_annotation,
+                template=template,
                 functions=functions,
                 model=model,
             )
@@ -48,6 +50,7 @@ def prompt_chain(
             @tracer.start_as_current_span(func.__name__)
             @wraps(func)
             async def awrapper(*args: P.args, **kwargs: P.kwargs) -> Any:
+                logger.info("prompt_chain: %s%s", func.__name__, func_signature)
                 chat = await Chat.from_prompt(
                     async_prompt_function, *args, **kwargs
                 ).asubmit()
@@ -67,9 +70,10 @@ def prompt_chain(
             return cast(Callable[P, R], awrapper)
 
         prompt_function = PromptFunction[P, R](
-            template=template,
+            name=func.__name__,
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
+            template=template,
             functions=functions,
             model=model,
         )
@@ -77,6 +81,7 @@ def prompt_chain(
         @tracer.start_as_current_span(func.__name__)
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            logger.info("prompt_chain: %s%s", func.__name__, func_signature)
             chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
             num_calls = 0
             while isinstance(chat.last_message.content, FunctionCall):

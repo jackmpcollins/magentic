@@ -702,7 +702,7 @@ def plus_with_basemodel(a: IntModel, b: IntModel) -> IntModel:
                 },
             },
         ),
-        pytest.param(
+        (
             plus_with_annotated,
             {
                 "name": "plus_with_annotated",
@@ -724,7 +724,6 @@ def plus_with_basemodel(a: IntModel, b: IntModel) -> IntModel:
                     "required": ["a", "b"],
                 },
             },
-            marks=pytest.mark.skip(reason="Waiting on pydantic#8634 release"),
         ),
         (
             plus_with_basemodel,
@@ -817,5 +816,23 @@ def test_function_call_function_schema_parse_args(function, args_str, expected_a
 def test_function_call_function_schema_serialize_args(
     function, expected_args_str, args
 ):
+    serialized_args = FunctionCallFunctionSchema(function).serialize_args(args)
+    assert json.loads(serialized_args) == json.loads(expected_args_str)
+
+
+@pytest.mark.parametrize(
+    ("function", "expected_args_str", "args"),
+    [
+        (
+            plus,
+            '{"a": "non-int", "b": {"value": 5}}',
+            FunctionCall(plus, "non-int", IntModel(value=5)),  # type: ignore[arg-type]
+        ),
+    ],
+)
+def test_function_call_function_schema_serialize_invalid_args(
+    function, expected_args_str, args
+):
+    """Invalid function arguments should serialize so LLM errors can be resubmitted."""
     serialized_args = FunctionCallFunctionSchema(function).serialize_args(args)
     assert json.loads(serialized_args) == json.loads(expected_args_str)

@@ -164,7 +164,7 @@ class AnyFunctionSchema(FunctionSchema[T], Generic[T]):
         return self._model.model_validate_json(args_json).value
 
     def serialize_args(self, value: T) -> str:
-        return self._model(value=value).model_dump_json()
+        return self._model.model_construct(value=value).model_dump_json()
 
 
 IterableT = TypeVar("IterableT", bound=Iterable[Any])
@@ -201,7 +201,7 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
         return self._model.model_validate({"value": iter_items}).value
 
     def serialize_args(self, value: IterableT) -> str:
-        return self._model(value=value).model_dump_json()
+        return self._model.model_construct(value=value).model_dump_json()
 
 
 AsyncIterableT = TypeVar("AsyncIterableT", bound=AsyncIterable[Any])
@@ -246,7 +246,9 @@ class AsyncIterableFunctionSchema(
         raise NotImplementedError
 
     async def aserialize_args(self, value: AsyncIterableT) -> str:
-        return self._model(value=[chunk async for chunk in value]).model_dump_json()
+        return self._model.model_construct(
+            value=[chunk async for chunk in value]
+        ).model_dump_json()
 
 
 @register_function_schema(dict)
@@ -405,4 +407,6 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
         )
 
     def serialize_args(self, value: FunctionCall[T]) -> str:
-        return self._model(**value.arguments).model_dump_json(exclude_unset=True)
+        return self._model.model_construct(**value.arguments).model_dump_json(
+            exclude_unset=True
+        )

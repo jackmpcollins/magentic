@@ -18,6 +18,7 @@ from uuid import uuid4
 
 from opentelemetry import trace
 
+from magentic.logger import logger
 from magentic.streaming import CachedAsyncIterable, CachedIterable
 
 tracer = trace.get_tracer(__name__)
@@ -25,6 +26,11 @@ tracer = trace.get_tracer(__name__)
 
 T = TypeVar("T")
 P = ParamSpec("P")
+
+
+def _create_unique_id() -> str:
+    # OpenAI has max length of 29 chars for function call IDs
+    return uuid4().hex[:29]
 
 
 class FunctionCall(Generic[T]):
@@ -39,9 +45,10 @@ class FunctionCall(Generic[T]):
         self._kwargs = kwargs
 
         # Used to correlate function call with result on serialization
-        self._unique_id = str(uuid4())
+        self._unique_id = _create_unique_id()
 
     def __call__(self) -> T:
+        logger.info("FunctionCall: %s", self)
         with tracer.start_as_current_span(name=self._function.__name__):
             return self._function(*self._args, **self._kwargs)
 
@@ -82,6 +89,7 @@ class ParallelFunctionCall(Generic[T]):
         self._function_calls = CachedIterable(function_calls)
 
     def __call__(self) -> tuple[T, ...]:
+        logger.info("ParallelFunctionCall: %s", self)
         return tuple(function_call() for function_call in self._function_calls)
 
     def __iter__(self) -> Iterator[FunctionCall[T]]:
@@ -95,6 +103,7 @@ class AsyncParallelFunctionCall(Generic[T]):
         self._function_calls = CachedAsyncIterable(function_calls)
 
     async def __call__(self) -> Tuple[T, ...]:
+        logger.info("AsyncParallelFunctionCall: %s", self)
         tasks_and_results: list[asyncio.Task[T] | T] = []
         async for function_call in self._function_calls:
             result = function_call()

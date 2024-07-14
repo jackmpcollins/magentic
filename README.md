@@ -1,16 +1,18 @@
 # magentic
 
-Easily integrate Large Language Models into your Python code. Simply use the `@prompt` decorator to create functions that return structured output from the LLM. Mix LLM queries and function calling with regular Python code to create complex logic.
+Easily integrate Large Language Models into your Python code. Simply use the `@prompt` and `@chatprompt` decorators to create functions that return structured output from the LLM. Mix LLM queries and function calling with regular Python code to create complex logic.
 
-`magentic` is
+## Features
 
-- **Compact:** Query LLMs without duplicating boilerplate code.
-- **Atomic:** Prompts are functions that can be individually tested and reasoned about.
-- **Transparent:** Create "chains" using regular Python code. Define all of your own prompts.
-- **Compatible:** Use `@prompt` functions as normal functions, including with decorators like `@lru_cache`.
-- **Type Annotated:** Works with linters and IDEs.
-
-Continue reading for sample usage, or go straight to the [examples directory](examples/).
+- [Structured Outputs] using pydantic models and built-in python types.
+- [Chat Prompting] to enable few-shot prompting with structured examples.
+- [Function Calling] and [Parallel Function Calling] via the `FunctionCall` and `ParallelFunctionCall` return types.
+- [Formatting] to naturally insert python objects into prompts.
+- [Asyncio]. Simply use `async def` when defining a magentic function.
+- [Streaming] structured outputs to use them as they are being generated.
+- [Vision] to easily get structured outputs from images.
+- Multiple LLM providers including OpenAI and Anthropic. See [Configuration].
+- [Type Annotations] to work nicely with linters and IDEs.
 
 ## Installation
 
@@ -24,9 +26,11 @@ or using poetry
 poetry add magentic
 ```
 
-Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variable or using `openai.api_key = "sk-..."`. See the [OpenAI Python library documentation](https://github.com/openai/openai-python#usage) for more information.
+Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variable. To configure a different LLM provider see [Configuration] for more.
 
 ## Usage
+
+### @prompt
 
 The `@prompt` decorator allows you to define a template for a Large Language Model (LLM) prompt as a Python function. When this function is called, the arguments are inserted into the template, then this prompt is sent to an LLM which generates the function output.
 
@@ -64,6 +68,44 @@ create_superhero("Garden Man")
 # Superhero(name='Garden Man', age=30, power='Control over plants', enemies=['Pollution Man', 'Concrete Woman'])
 ```
 
+See [Structured Outputs] for more.
+
+### @chatprompt
+
+The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages as a template rather than a single text prompt. This can be used to provide a system message or for few-shot prompting where you provide example responses to guide the model's output. Format fields denoted by curly braces `{example}` will be filled in all messages (except `FunctionResultMessage`).
+
+```python
+from magentic import chatprompt, AssistantMessage, SystemMessage, UserMessage
+from pydantic import BaseModel
+
+
+class Quote(BaseModel):
+    quote: str
+    character: str
+
+
+@chatprompt(
+    SystemMessage("You are a movie buff."),
+    UserMessage("What is your favorite quote from Harry Potter?"),
+    AssistantMessage(
+        Quote(
+            quote="It does not do to dwell on dreams and forget to live.",
+            character="Albus Dumbledore",
+        )
+    ),
+    UserMessage("What is your favorite quote from {movie}?"),
+)
+def get_movie_quote(movie: str) -> Quote: ...
+
+
+get_movie_quote("Iron Man")
+# Quote(quote='I am Iron Man.', character='Tony Stark')
+```
+
+See [Chat Prompting] for more.
+
+### FunctionCall
+
 An LLM can also decide to call functions. In this case the `@prompt`-decorated function returns a `FunctionCall` object which can be called to execute the function using the arguments provided by the LLM.
 
 ```python
@@ -72,23 +114,36 @@ from typing import Literal
 from magentic import prompt, FunctionCall
 
 
-def activate_oven(temperature: int, mode: Literal["broil", "bake", "roast"]) -> str:
-    """Turn the oven on with the provided settings."""
-    return f"Preheating to {temperature} F with mode {mode}"
+def search_twitter(query: str, category: Literal["latest", "people"]) -> str:
+    """Searches Twitter for a query."""
+    print(f"Searching Twitter for {query!r} in category {category!r}")
+    return "<twitter results>"
+
+
+def search_youtube(query: str, channel: str = "all") -> str:
+    """Searches YouTube for a query."""
+    print(f"Searching YouTube for {query!r} in channel {channel!r}")
+    return "<youtube results>"
 
 
 @prompt(
-    "Prepare the oven so I can make {food}",
-    functions=[activate_oven],
+    "Use the appropriate search function to answer: {question}",
+    functions=[search_twitter, search_youtube],
 )
-def configure_oven(food: str) -> FunctionCall[str]: ...
+def perform_search(question: str) -> FunctionCall[str]: ...
 
 
-output = configure_oven("cookies!")
-# FunctionCall(<function activate_oven at 0x1105a6200>, temperature=350, mode='bake')
+output = perform_search("What is the latest news on LLMs?")
+print(output)
+# > FunctionCall(<function search_twitter at 0x10c367d00>, 'LLMs', 'latest')
 output()
-# 'Preheating to 350 F with mode bake'
+# > Searching Twitter for 'Large Language Models news' in category 'latest'
+# '<twitter results>'
 ```
+
+See [Function Calling] for more.
+
+### @prompt_chain
 
 Sometimes the LLM requires making one or more function calls to generate a final answer. The `@prompt_chain` decorator will resolve `FunctionCall` objects automatically and pass the output back to the LLM to continue until the final answer is reached.
 
@@ -120,43 +175,20 @@ describe_weather("Boston")
 # 'The current weather in Boston is 72°F and it is sunny and windy.'
 ```
 
-LLM-powered functions created using `@prompt` and `@prompt_chain` can be supplied as `functions` to other `@prompt`/`@prompt_chain` decorators, just like regular python functions. This enables increasingly complex LLM-powered functionality, while allowing individual components to be tested and improved in isolation.
+LLM-powered functions created using `@prompt`, `@chatprompt` and `@prompt_chain` can be supplied as `functions` to other `@prompt`/`@prompt_chain` decorators, just like regular python functions. This enables increasingly complex LLM-powered functionality, while allowing individual components to be tested and improved in isolation.
 
-See the [examples directory](examples/) for more.
+<!-- Links -->
 
-### Chat Prompting
-
-The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages as a template rather than a single text prompt. This can be used to provide a system message or for few-shot prompting where you provide example responses to guide the model's output. Format fields denoted by curly braces `{example}` will be filled in all messages - use the `escape_braces` function to prevent a string being used as a template.
-
-```python
-from magentic import chatprompt, AssistantMessage, SystemMessage, UserMessage
-from magentic.chatprompt import escape_braces
-
-from pydantic import BaseModel
-
-
-class Quote(BaseModel):
-    quote: str
-    character: str
-
-
-@chatprompt(
-    SystemMessage("You are a movie buff."),
-    UserMessage("What is your favorite quote from Harry Potter?"),
-    AssistantMessage(
-        Quote(
-            quote="It does not do to dwell on dreams and forget to live.",
-            character="Albus Dumbledore",
-        )
-    ),
-    UserMessage("What is your favorite quote from {movie}?"),
-)
-def get_movie_quote(movie: str) -> Quote: ...
-
-
-get_movie_quote("Iron Man")
-# Quote(quote='I am Iron Man.', character='Tony Stark')
-```
+[Structured Outputs]: https://magentic.dev/structured-outputs
+[Chat Prompting]: https://magentic.dev/chat-prompting
+[Function Calling]: https://magentic.dev/function-calling
+[Parallel Function Calling]: https://magentic.dev/function-calling/#parallelfunctioncall
+[Formatting]: https://magentic.dev/formatting
+[Asyncio]: https://magentic.dev/asyncio
+[Streaming]: https://magentic.dev/streaming
+[Vision]: https://magentic.dev/vision
+[Configuration]: https://magentic.dev/configuration
+[Type Annotations]: https://magentic.dev/type-checking
 
 ### Streaming
 
@@ -210,7 +242,7 @@ for country, streamed_str in zip(countries, streamed_strs):
 
 ### Object Streaming
 
-Structured outputs can also be streamed from the LLM by using the return type annotation `Iterable` (or `AsyncIterable`). This allows each item to be processed while the next one is being generated. See the example in [examples/quiz](examples/quiz/) for how this can be used to improve user experience by quickly displaying/using the first item returned.
+Structured outputs can also be streamed from the LLM by using the return type annotation `Iterable` (or `AsyncIterable`). This allows each item to be processed while the next one is being generated.
 
 ```python
 from collections.abc import Iterable
@@ -239,6 +271,8 @@ for hero in create_superhero_team("The Food Dudes"):
 # 4.03s : name='Captain Carrot' age=35 power='Super strength and agility from eating carrots' enemies=['The Sugar Squad', 'The Greasy Gang']
 # 6.05s : name='Ice Cream Girl' age=25 power='Can create ice cream out of thin air' enemies=['The Hot Sauce Squad', 'The Healthy Eaters']
 ```
+
+See [Streaming] for more.
 
 ### Asyncio
 
@@ -286,6 +320,8 @@ print(len(out), time_elapsed, len(out) / time_elapsed)
 # 2206 18.72 117.78
 ```
 
+See [Asyncio] for more.
+
 ### Additional Features
 
 - The `functions` argument to `@prompt` can contain async/coroutine functions. When the corresponding `FunctionCall` objects are called the result must be awaited.
@@ -295,17 +331,36 @@ print(len(out), time_elapsed, len(out) / time_elapsed)
 
 ## Backend/LLM Configuration
 
-Currently two backends are available
+Magentic supports multiple "backends" (LLM providers). These are
 
-- `openai` : the default backend that uses the `openai` Python package. Supports all features.
-- `litellm` : uses the `litellm` Python package to enable querying LLMs from [many different providers](https://docs.litellm.ai/docs/providers). Install this with `pip install magentic[litellm]`. Note: some models may not support all features of `magentic` e.g. function calling/structured output and streaming.
+- `openai` : the default backend that uses the `openai` Python package. Supports all features of magentic.
+  ```python
+  from magentic import OpenaiChatModel
+  ```
+- `anthropic` : uses the `anthropic` Python package. Supports all features of magentic, however streaming responses are currently received all at once.
+  ```sh
+  pip install "magentic[anthropic]"
+  ```
+  ```python
+  from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
+  ```
+- `litellm` : uses the `litellm` Python package to enable querying LLMs from [many different providers](https://docs.litellm.ai/docs/providers). Note: some models may not support all features of `magentic` e.g. function calling/structured output and streaming.
+  ```sh
+  pip install "magentic[litellm]"
+  ```
+  ```python
+  from magentic.chat_model.litellm_chat_model import LitellmChatModel
+  ```
+- `mistral` : uses the `openai` Python package with some small modifications to make the API queries compatible with the Mistral API. Supports all features of magentic, however tool calls (including structured outputs) are not streamed so are received all at once. Note: a future version of magentic might switch to using the `mistral` Python package.
+  ```python
+  from magentic.chat_model.mistral_chat_model import MistralChatModel
+  ```
 
-The backend and LLM used by `magentic` can be configured in several ways. The order of precedence of configuration is
+The backend and LLM (`ChatModel`) used by `magentic` can be configured in several ways. When a magentic function is called, the `ChatModel` to use follows this order of preference
 
-1. Arguments explicitly passed when initializing an instance in Python
-1. Values set using a context manager in Python
-1. Environment variables
-1. Default values from [src/magentic/settings.py](src/magentic/settings.py)
+1. The `ChatModel` instance provided as the `model` argument to the magentic decorator
+1. The current chat model context, created using `with MyChatModel:`
+1. The global `ChatModel` created from environment variables and the default settings in [src/magentic/settings.py](https://github.com/jackmpcollins/magentic/src/magentic/settings.py)
 
 ```python
 from magentic import OpenaiChatModel, prompt
@@ -318,7 +373,7 @@ def say_hello() -> str: ...
 
 @prompt(
     "Say hello",
-    model=LitellmChatModel("ollama/llama2"),
+    model=LitellmChatModel("ollama_chat/llama3"),
 )
 def say_hello_litellm() -> str: ...
 
@@ -327,27 +382,39 @@ say_hello()  # Uses env vars or default settings
 
 with OpenaiChatModel("gpt-3.5-turbo", temperature=1):
     say_hello()  # Uses openai with gpt-3.5-turbo and temperature=1 due to context manager
-    say_hello_litellm()  # Uses litellm with ollama/llama2 because explicitly configured
+    say_hello_litellm()  # Uses litellm with ollama_chat/llama3 because explicitly configured
 ```
 
 The following environment variables can be set.
 
-| Environment Variable         | Description                            | Example                |
-| ---------------------------- | -------------------------------------- | ---------------------- |
-| MAGENTIC_BACKEND             | The package to use as the LLM backend  | openai                 |
-| MAGENTIC_LITELLM_MODEL       | LiteLLM model                          | claude-2               |
-| MAGENTIC_LITELLM_API_BASE    | The base url to query                  | http://localhost:11434 |
-| MAGENTIC_LITELLM_MAX_TOKENS  | LiteLLM max number of generated tokens | 1024                   |
-| MAGENTIC_LITELLM_TEMPERATURE | LiteLLM temperature                    | 0.5                    |
-| MAGENTIC_OPENAI_MODEL        | OpenAI model                           | gpt-4                  |
-| MAGENTIC_OPENAI_API_KEY      | OpenAI API key to be used by magentic  | sk-...                 |
-| MAGENTIC_OPENAI_API_TYPE     | Allowed options: "openai", "azure"     | azure                  |
-| MAGENTIC_OPENAI_BASE_URL     | Base URL for an OpenAI-compatible API  | http://localhost:8080  |
-| MAGENTIC_OPENAI_MAX_TOKENS   | OpenAI max number of generated tokens  | 1024                   |
-| MAGENTIC_OPENAI_SEED         | Seed for deterministic sampling        | 42                     |
-| MAGENTIC_OPENAI_TEMPERATURE  | OpenAI temperature                     | 0.5                    |
+| Environment Variable           | Description                              | Example                      |
+| ------------------------------ | ---------------------------------------- | ---------------------------- |
+| MAGENTIC_BACKEND               | The package to use as the LLM backend    | anthropic / openai / litellm |
+| MAGENTIC_VERBOSE               | If set, print magentic logs to stdout    | true                         |
+| MAGENTIC_ANTHROPIC_MODEL       | Anthropic model                          | claude-3-haiku-20240307      |
+| MAGENTIC_ANTHROPIC_API_KEY     | Anthropic API key to be used by magentic | sk-...                       |
+| MAGENTIC_ANTHROPIC_BASE_URL    | Base URL for an Anthropic-compatible API | http://localhost:8080        |
+| MAGENTIC_ANTHROPIC_MAX_TOKENS  | Max number of generated tokens           | 1024                         |
+| MAGENTIC_ANTHROPIC_TEMPERATURE | Temperature                              | 0.5                          |
+| MAGENTIC_LITELLM_MODEL         | LiteLLM model                            | claude-2                     |
+| MAGENTIC_LITELLM_API_BASE      | The base url to query                    | http://localhost:11434       |
+| MAGENTIC_LITELLM_MAX_TOKENS    | LiteLLM max number of generated tokens   | 1024                         |
+| MAGENTIC_LITELLM_TEMPERATURE   | LiteLLM temperature                      | 0.5                          |
+| MAGENTIC_MISTRAL_MODEL         | Mistral model                            | mistral-large-latest         |
+| MAGENTIC_MISTRAL_API_KEY       | Mistral API key to be used by magentic   | XEG...                       |
+| MAGENTIC_MISTRAL_BASE_URL      | Base URL for an Mistral-compatible API   | http://localhost:8080        |
+| MAGENTIC_MISTRAL_MAX_TOKENS    | Max number of generated tokens           | 1024                         |
+| MAGENTIC_MISTRAL_SEED          | Seed for deterministic sampling          | 42                           |
+| MAGENTIC_MISTRAL_TEMPERATURE   | Temperature                              | 0.5                          |
+| MAGENTIC_OPENAI_MODEL          | OpenAI model                             | gpt-4                        |
+| MAGENTIC_OPENAI_API_KEY        | OpenAI API key to be used by magentic    | sk-...                       |
+| MAGENTIC_OPENAI_API_TYPE       | Allowed options: "openai", "azure"       | azure                        |
+| MAGENTIC_OPENAI_BASE_URL       | Base URL for an OpenAI-compatible API    | http://localhost:8080        |
+| MAGENTIC_OPENAI_MAX_TOKENS     | OpenAI max number of generated tokens    | 1024                         |
+| MAGENTIC_OPENAI_SEED           | Seed for deterministic sampling          | 42                           |
+| MAGENTIC_OPENAI_TEMPERATURE    | OpenAI temperature                       | 0.5                          |
 
-When using the `openai` backend, setting the `MAGENTIC_OPENAI_BASE_URL` environment variable or using `OpenaiChatModel(..., base_url="http://localhost:8080")` in code allows you to use `magentic` with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LiteLLM OpenAI Proxy Server](https://docs.litellm.ai/docs/proxy_server), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support function calling then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
+When using the `openai` backend, setting the `MAGENTIC_OPENAI_BASE_URL` environment variable or using `OpenaiChatModel(..., base_url="http://localhost:8080")` in code allows you to use `magentic` with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LiteLLM OpenAI Proxy Server](https://docs.litellm.ai/docs/proxy_server), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support tool calls then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
 
 To use Azure with the openai backend you will need to set the `MAGENTIC_OPENAI_API_TYPE` environment variable to "azure" or use `OpenaiChatModel(..., api_type="azure")`, and also set the environment variables needed by the openai package to access Azure. See https://github.com/openai/openai-python#microsoft-azure-openai
 
