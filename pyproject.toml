@@ -43,7 +43,6 @@ litellm = ["litellm"]
 
 [tool.poetry.group.dev.dependencies]
 blacken-docs = "^1.16.0"
-logfire = "^0.46.1"
 mypy = "*"
 opentelemetry-exporter-otlp = "*"
 pytest = "*"
