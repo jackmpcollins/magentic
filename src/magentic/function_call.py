@@ -45,8 +45,7 @@ class FunctionCall(Generic[T]):
 
     def __call__(self) -> T:
         with logfire.span(
-            "Executing function call {name}",
-            name=self._function.__name__,
+            f"Executing function call {self._function.__name__}", **self.arguments
         ):
             return self._function(*self._args, **self._kwargs)
 

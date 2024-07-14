@@ -89,7 +89,10 @@ class ChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted chat prompt template."""
-        with logfire.span("Calling chatprompt-function {name}", name=self._name):
+        with logfire.span(
+            f"Calling chatprompt-function {self._name}",
+            **self._signature.bind(*args, **kwargs).arguments,
+        ):
             message = self.model.complete(
                 messages=self.format(*args, **kwargs),
                 functions=self._functions,
@@ -104,7 +107,10 @@ class AsyncChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted chat prompt template."""
-        with logfire.span("Calling async chatprompt-function {name}", name=self._name):
+        with logfire.span(
+            f"Calling async chatprompt-function {self._name}",
+            **self._signature.bind(*args, **kwargs).arguments,
+        ):
             message = await self.model.acomplete(
                 messages=self.format(*args, **kwargs),
                 functions=self._functions,

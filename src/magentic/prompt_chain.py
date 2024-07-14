@@ -47,7 +47,8 @@ def prompt_chain(
             @wraps(func)
             async def awrapper(*args: P.args, **kwargs: P.kwargs) -> Any:
                 with logfire.span(
-                    "Calling async prompt-chain {name}", name=func.__name__
+                    f"Calling async prompt-chain {func.__name__}",
+                    **func_signature.bind(*args, **kwargs).arguments,
                 ):
                     chat = await Chat.from_prompt(
                         async_prompt_function, *args, **kwargs
@@ -78,7 +79,10 @@ def prompt_chain(
 
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            with logfire.span("Calling prompt-chain {name}", name=func.__name__):
+            with logfire.span(
+                f"Calling prompt-chain {func.__name__}",
+                **func_signature.bind(*args, **kwargs).arguments,
+            ):
                 chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
                 num_calls = 0
                 while isinstance(chat.last_message.content, FunctionCall):

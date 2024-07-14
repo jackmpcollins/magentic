@@ -82,7 +82,10 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted prompt template."""
-        with logfire.span("Calling prompt-function {name}", name=self._name):
+        with logfire.span(
+            f"Calling prompt-function {self._name}",
+            **self._signature.bind(*args, **kwargs).arguments,
+        ):
             message = self.model.complete(
                 messages=[UserMessage(content=self.format(*args, **kwargs))],
                 functions=self._functions,
@@ -97,7 +100,10 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted prompt template."""
-        with logfire.span("Calling prompt-function {name}", name=self._name):
+        with logfire.span(
+            f"Calling async prompt-function {self._name}",
+            **self._signature.bind(*args, **kwargs).arguments,
+        ):
             message = await self.model.acomplete(
                 messages=[UserMessage(content=self.format(*args, **kwargs))],
                 functions=self._functions,
