@@ -1,8 +1,6 @@
 import inspect
 from typing import Any, Callable, Iterable, ParamSpec, TypeVar
 
-from opentelemetry import trace
-
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import (
@@ -18,8 +16,6 @@ from magentic.function_call import (
 )
 from magentic.prompt_function import BasePromptFunction
 from magentic.streaming import async_iter, azip
-
-tracer = trace.get_tracer(__name__)
 
 P = ParamSpec("P")
 Self = TypeVar("Self", bound="Chat")
@@ -94,7 +90,6 @@ class Chat:
         """Add an assistant message to the chat."""
         return self.add_message(AssistantMessage(content=content))
 
-    @tracer.start_as_current_span(name="Chat.submit")
     def submit(self: Self) -> Self:
         """Request an LLM message to be added to the chat."""
         output_message: AssistantMessage[Any] = self.model.complete(
@@ -113,7 +108,6 @@ class Chat:
         )
         return self.add_message(output_message)
 
-    @tracer.start_as_current_span(name="Chat.exec_function_call")
     def exec_function_call(self: Self) -> Self:
         """If the last message is a function call, execute it and add the result."""
         if isinstance(self.last_message.content, FunctionCall):
