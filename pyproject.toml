@@ -44,7 +44,6 @@ litellm = ["litellm"]
 [tool.poetry.group.dev.dependencies]
 blacken-docs = "^1.16.0"
 mypy = "*"
-opentelemetry-exporter-otlp = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-clarity = "*"
