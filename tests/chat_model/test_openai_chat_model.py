@@ -204,6 +204,9 @@ async def test_openai_chat_model_acomplete_usage_structured_output():
     assert message.usage.output_tokens > 0
 
 
-def test_openai_chat_model_azure_omits_stream_options():
+def test_openai_chat_model_azure_omits_stream_options(monkeypatch):
+    monkeypatch.setenv("AZURE_OPENAI_API_KEY", "test")
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "test")
+    monkeypatch.setenv("OPENAI_API_VERSION", "test")
     chat_model = OpenaiChatModel("gpt-3.5-turbo", api_type="azure")
-    assert chat_model._get_stream_options("azure") == openai.NOT_GIVEN
+    assert chat_model._get_stream_options() == openai.NOT_GIVEN
