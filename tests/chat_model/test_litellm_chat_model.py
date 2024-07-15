@@ -60,11 +60,11 @@ def test_litellm_chat_model_metadata(litellm_success_callback_calls):
 @pytest.mark.litellm_openai
 def test_litellm_chat_model_custom_llm_provider(litellm_success_callback_calls):
     """Test that provided custom_llm_provider is passed to the litellm success callback."""
-    chat_model = LitellmChatModel("gpt-3.5-turbo", custom_llm_provider="custom")
-    assert chat_model.custom_llm_provider == "custom"
+    chat_model = LitellmChatModel("gpt-3.5-turbo", custom_llm_provider="openai")
+    assert chat_model.custom_llm_provider == "openai"
     chat_model.complete(messages=[UserMessage("Say hello!")])
     callback_call = litellm_success_callback_calls[-1]
-    assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "custom"
+    assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "openai"
 
 
 @pytest.fixture()
@@ -73,15 +73,15 @@ def litellm_async_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
     original_success_callback = litellm.success_callback.copy()
     callback_calls: list[dict[str, Any]] = []
 
-    class AddCallToList(CustomLogger):  # type: ignore[misc]
+    class AddCallToList(CustomLogger):
         async def async_log_success_event(
             self, kwargs, response_obj, start_time, end_time
         ):
             callback_calls.append({"kwargs": kwargs})
 
-    litellm.callbacks = [AddCallToList()]
+    litellm.callbacks = [AddCallToList()]  # type: ignore[list-item]
     yield callback_calls
-    litellm.callbacks = original_success_callback
+    litellm.callbacks = original_success_callback  # type: ignore[assignment]
 
 
 @pytest.mark.asyncio
@@ -103,11 +103,11 @@ async def test_litellm_chat_model_custom_llm_provider_async(
     litellm_async_success_callback_calls,
 ):
     """Test that provided custom_llm_provider is passed to the litellm success callback."""
-    chat_model = LitellmChatModel("gpt-3.5-turbo", custom_llm_provider="custom")
-    assert chat_model.custom_llm_provider == "custom"
+    chat_model = LitellmChatModel("gpt-3.5-turbo", custom_llm_provider="openai")
+    assert chat_model.custom_llm_provider == "openai"
     await chat_model.acomplete(messages=[UserMessage("Say hello!")])
     callback_call = litellm_async_success_callback_calls[-1]
-    assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "custom"
+    assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "openai"
 
 
 @pytest.mark.parametrize(

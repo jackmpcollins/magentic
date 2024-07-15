@@ -46,15 +46,15 @@ from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
 try:
     import anthropic
-    from anthropic.types.beta.tools import (
+    from anthropic.lib.streaming import MessageStreamEvent
+    from anthropic.types import (
+        ContentBlockDeltaEvent,
+        ContentBlockStartEvent,
+        MessageParam,
         ToolParam,
-        ToolsBetaContentBlockDeltaEvent,
-        ToolsBetaContentBlockStartEvent,
-        ToolsBetaMessageParam,
-        ToolsBetaMessageStreamEvent,
         ToolUseBlock,
     )
-    from anthropic.types.beta.tools.message_create_params import ToolChoice
+    from anthropic.types.message_create_params import ToolChoice
 except ImportError as error:
     msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install 'magentic[anthropic]'`."
     raise ImportError(msg) from error
@@ -66,19 +66,19 @@ class AnthropicMessageRole(Enum):
 
 
 @singledispatch
-def message_to_anthropic_message(message: Message[Any]) -> ToolsBetaMessageParam:
+def message_to_anthropic_message(message: Message[Any]) -> MessageParam:
     """Convert a Message to an OpenAI message."""
     # TODO: Add instructions for registering new Message type to this error message
     raise NotImplementedError(type(message))
 
 
 @message_to_anthropic_message.register
-def _(message: UserMessage) -> ToolsBetaMessageParam:
+def _(message: UserMessage) -> MessageParam:
     return {"role": AnthropicMessageRole.USER.value, "content": message.content}
 
 
 @message_to_anthropic_message.register(AssistantMessage)
-def _(message: AssistantMessage[Any]) -> ToolsBetaMessageParam:
+def _(message: AssistantMessage[Any]) -> MessageParam:
     if isinstance(message.content, str):
         return {
             "role": AnthropicMessageRole.ASSISTANT.value,
@@ -137,7 +137,7 @@ def _(message: AssistantMessage[Any]) -> ToolsBetaMessageParam:
 
 
 @message_to_anthropic_message.register(FunctionResultMessage)
-def _(message: FunctionResultMessage[Any]) -> ToolsBetaMessageParam:
+def _(message: FunctionResultMessage[Any]) -> MessageParam:
     function_schema = function_schema_for_type(type(message.content))
     return {
         "role": AnthropicMessageRole.USER.value,
@@ -188,7 +188,7 @@ def select_tool_schema(
 
 
 class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
-    def parse_tool_call(self, chunks: Iterable[ToolsBetaMessageStreamEvent]) -> T:
+    def parse_tool_call(self, chunks: Iterable[MessageStreamEvent]) -> T:
         return self._function_schema.parse_args(
             chunk.delta.partial_json
             for chunk in chunks
@@ -198,9 +198,7 @@ class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
 
 
 class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
-    async def aparse_tool_call(
-        self, chunks: AsyncIterable[ToolsBetaMessageStreamEvent]
-    ) -> T:
+    async def aparse_tool_call(self, chunks: AsyncIterable[MessageStreamEvent]) -> T:
         return await self._function_schema.aparse_args(
             chunk.delta.partial_json
             async for chunk in chunks
@@ -210,11 +208,11 @@ class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
 
 
 def parse_streamed_tool_calls(
-    response: Iterable[ToolsBetaMessageStreamEvent],
+    response: Iterable[MessageStreamEvent],
     tool_schemas: Iterable[FunctionToolSchema[T]],
 ) -> Iterator[T]:
     all_tool_call_chunks = (
-        cast(ToolsBetaContentBlockStartEvent | ToolsBetaContentBlockDeltaEvent, chunk)
+        cast(ContentBlockStartEvent | ContentBlockDeltaEvent, chunk)
         for chunk in response
         if chunk.type in ("content_block_start", "content_block_delta")
     )
@@ -227,11 +225,11 @@ def parse_streamed_tool_calls(
 
 
 async def aparse_streamed_tool_calls(
-    response: AsyncIterable[ToolsBetaMessageStreamEvent],
+    response: AsyncIterable[MessageStreamEvent],
     tool_schemas: Iterable[AsyncFunctionToolSchema[T]],
 ) -> AsyncIterator[T]:
     all_tool_call_chunks = (
-        cast(ToolsBetaContentBlockStartEvent | ToolsBetaContentBlockDeltaEvent, chunk)
+        cast(ContentBlockStartEvent | ContentBlockDeltaEvent, chunk)
         async for chunk in response
         if chunk.type in ("content_block_start", "content_block_delta")
     )
@@ -257,14 +255,14 @@ def _extract_system_message(
 
 
 def _create_usage_ref(
-    response: Iterable[ToolsBetaMessageStreamEvent],
-) -> tuple[list[Usage], Iterator[ToolsBetaMessageStreamEvent]]:
+    response: Iterable[MessageStreamEvent],
+) -> tuple[list[Usage], Iterator[MessageStreamEvent]]:
     """Returns a pointer to a Usage object that is created at the end of the response."""
     usage_ref: list[Usage] = []
 
     def generator(
-        response: Iterable[ToolsBetaMessageStreamEvent],
-    ) -> Iterator[ToolsBetaMessageStreamEvent]:
+        response: Iterable[MessageStreamEvent],
+    ) -> Iterator[MessageStreamEvent]:
         message_start_usage = None
         output_tokens = None
         for chunk in response:
@@ -285,14 +283,14 @@ def _create_usage_ref(
 
 
 def _create_usage_ref_async(
-    response: AsyncIterable[ToolsBetaMessageStreamEvent],
-) -> tuple[list[Usage], AsyncIterator[ToolsBetaMessageStreamEvent]]:
+    response: AsyncIterable[MessageStreamEvent],
+) -> tuple[list[Usage], AsyncIterator[MessageStreamEvent]]:
     """Async version of `_create_usage_ref`."""
     usage_ref: list[Usage] = []
 
     async def agenerator(
-        response: AsyncIterable[ToolsBetaMessageStreamEvent],
-    ) -> AsyncIterator[ToolsBetaMessageStreamEvent]:
+        response: AsyncIterable[MessageStreamEvent],
+    ) -> AsyncIterator[MessageStreamEvent]:
         message_start_usage = None
         output_tokens = None
         async for chunk in response:
@@ -427,8 +425,8 @@ class AnthropicChatModel(ChatModel):
 
         system, messages = _extract_system_message(messages)
 
-        def _response_generator() -> Iterator[ToolsBetaMessageStreamEvent]:
-            with self._client.beta.tools.messages.stream(
+        def _response_generator() -> Iterator[MessageStreamEvent]:
+            with self._client.messages.stream(
                 model=self.model,
                 messages=[message_to_anthropic_message(m) for m in messages],
                 max_tokens=self.max_tokens,
@@ -544,8 +542,8 @@ class AnthropicChatModel(ChatModel):
 
         system, messages = _extract_system_message(messages)
 
-        async def _response_generator() -> AsyncIterator[ToolsBetaMessageStreamEvent]:
-            async with self._async_client.beta.tools.messages.stream(
+        async def _response_generator() -> AsyncIterator[MessageStreamEvent]:
+            async with self._async_client.messages.stream(
                 model=self.model,
                 messages=[message_to_anthropic_message(m) for m in messages],
                 max_tokens=self.max_tokens,

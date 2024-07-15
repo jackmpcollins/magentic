@@ -1,6 +1,6 @@
-from collections.abc import AsyncIterator, Callable, Iterable, Iterator
+from collections.abc import Callable, Iterable
 from itertools import chain
-from typing import TYPE_CHECKING, Any, TypeVar, cast, overload
+from typing import Any, TypeVar, cast, overload
 
 from pydantic import ValidationError
 
@@ -42,9 +42,7 @@ from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
 try:
     import litellm
-
-    if TYPE_CHECKING:
-        from litellm.utils import ModelResponse
+    from litellm.types.utils import ModelResponse
 except ImportError as error:
     msg = "To use LitellmChatModel you must install the `litellm` package using `pip install 'magentic[litellm]'`."
     raise ImportError(msg) from error
@@ -140,7 +138,7 @@ class LitellmChatModel(ChatModel):
         streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
-        response: Iterator[ModelResponse] = discard_none_arguments(litellm.completion)(
+        response = discard_none_arguments(litellm.completion)(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
             api_base=self.api_base,
@@ -152,11 +150,12 @@ class LitellmChatModel(ChatModel):
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=(
-                tool_schemas[0].as_tool_choice()
+                tool_schemas[0].as_tool_choice()  # type: ignore[unused-ignore]
                 if len(tool_schemas) == 1 and not allow_string_output
                 else None
             ),
         )
+        assert not isinstance(response, ModelResponse)  # noqa: S101
 
         first_chunk = next(response)
         # Azure OpenAI sends a chunk with empty choices first
@@ -248,9 +247,7 @@ class LitellmChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        response: AsyncIterator[ModelResponse] = await discard_none_arguments(
-            litellm.acompletion
-        )(
+        response = await discard_none_arguments(litellm.acompletion)(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
             api_base=self.api_base,
@@ -262,11 +259,12 @@ class LitellmChatModel(ChatModel):
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=(
-                tool_schemas[0].as_tool_choice()
+                tool_schemas[0].as_tool_choice()  # type: ignore[unused-ignore]
                 if len(tool_schemas) == 1 and not allow_string_output
                 else None
             ),
         )
+        assert not isinstance(response, ModelResponse)  # noqa: S101
 
         first_chunk = await anext(response)
         # Azure OpenAI sends a chunk with empty choices first
