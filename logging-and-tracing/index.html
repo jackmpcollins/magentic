@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://magentic.dev/vision/">
+        <link rel="canonical" href="https://magentic.dev/logging-and-tracing/">
       
       
-        <link rel="prev" href="../streaming/">
+        <link rel="prev" href="../vision/">
       
       
-        <link rel="next" href="../logging-and-tracing/">
+        <link rel="next" href="../configuration/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Vision - Magentic</title>
+        <title>Logging and Tracing - Magentic</title>
       
     
     
@@ -97,7 +97,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#vision" class="md-skip">
+        <a href="#logging-and-tracing" class="md-skip">
           Skip to content
         </a>
       
@@ -133,7 +133,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Vision
+              Logging and Tracing
             
           </span>
         </div>
@@ -413,6 +413,26 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Vision
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -429,7 +449,7 @@
           
   
   <span class="md-ellipsis">
-    Vision
+    Logging and Tracing
   </span>
   
 
@@ -440,7 +460,7 @@
         
   
   <span class="md-ellipsis">
-    Vision
+    Logging and Tracing
   </span>
   
 
@@ -464,27 +484,51 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#userimagemessage" class="md-nav__link">
+  <a href="#logging-to-stdout" class="md-nav__link">
     <span class="md-ellipsis">
-      UserImageMessage
+      Logging to stdout
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#placeholder" class="md-nav__link">
+  <a href="#using-pydantic-logfire" class="md-nav__link">
     <span class="md-ellipsis">
-      Placeholder
+      Using Pydantic Logfire
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#bytes" class="md-nav__link">
+  <a href="#configuring-opentelemetry" class="md-nav__link">
     <span class="md-ellipsis">
-      bytes
+      Configuring OpenTelemetry
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuring OpenTelemetry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#viewing-traces-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      Viewing Traces Locally
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-debug-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enabling Debug Logging
     </span>
   </a>
   
@@ -494,26 +538,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../logging-and-tracing/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Logging and Tracing
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -715,27 +739,51 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#userimagemessage" class="md-nav__link">
+  <a href="#logging-to-stdout" class="md-nav__link">
     <span class="md-ellipsis">
-      UserImageMessage
+      Logging to stdout
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#placeholder" class="md-nav__link">
+  <a href="#using-pydantic-logfire" class="md-nav__link">
     <span class="md-ellipsis">
-      Placeholder
+      Using Pydantic Logfire
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#bytes" class="md-nav__link">
+  <a href="#configuring-opentelemetry" class="md-nav__link">
     <span class="md-ellipsis">
-      bytes
+      Configuring OpenTelemetry
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuring OpenTelemetry">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#viewing-traces-locally" class="md-nav__link">
+    <span class="md-ellipsis">
+      Viewing Traces Locally
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#enabling-debug-logging" class="md-nav__link">
+    <span class="md-ellipsis">
+      Enabling Debug Logging
     </span>
   </a>
   
@@ -756,7 +804,7 @@
                   
 
   
-    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/vision.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/logging-and-tracing.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
     </a>
@@ -764,96 +812,120 @@
   
 
 
-<h1 id="vision">Vision<a class="headerlink" href="#vision" title="Permanent link">&para;</a></h1>
-<p>GPT-4 Vision can be used with magentic by using the <code>UserImageMessage</code> message type. This allows the LLM to accept images as input. Currently this is only supported with the OpenAI backend (<code>OpenaiChatModel</code>).</p>
-<div class="admonition note">
-<p class="admonition-title">Return types</p>
-<p><code>gpt-4-vision-preview</code> does not support function-calling/tools so only <code>str</code>, <code>StreamedStr</code>, and <code>AsyncStreamedStr</code> work as return types.</p>
-</div>
-<div class="admonition tip">
-<p class="admonition-title"><code>max_tokens</code></p>
-<p>By default, <code>gpt-4-vision-preview</code> has a low value for <code>max_tokens</code> so you will likely need to increase it.</p>
-</div>
-<p>For more information visit the <a href="https://platform.openai.com/docs/guides/vision">OpenAI Vision API documentation</a>.</p>
-<h2 id="userimagemessage">UserImageMessage<a class="headerlink" href="#userimagemessage" title="Permanent link">&para;</a></h2>
-<p>The <code>UserImageMessage</code> can be used in <code>@chatprompt</code> alongside other messages. The LLM must be set to an OpenAI model that supports vision, currently <code>gpt-4-vision-preview</code>, <code>gpt-4-turbo</code>, and <code>gpt-4o</code> (the default <code>ChatModel</code>). This can be done by passing the <code>model</code> parameter to <code>@chatprompt</code>, or through the other methods of <a href="../configuration/">configuration</a>.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
-
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
-
-
-<span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
-
-
-<span class="k">class</span> <span class="nc">ImageDetails</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;A brief description of the image.&quot;</span><span class="p">)</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;A short name.&quot;</span><span class="p">)</span>
-
-
-<span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">),</span>
-<span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ImageDetails</span><span class="p">:</span> <span class="o">...</span>
-
-
-<span class="n">image_details</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">image_details</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="c1"># &#39;Wooden Boardwalk in Green Wetland&#39;</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">image_details</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
-<span class="c1"># &#39;A serene wooden boardwalk meanders through a lush green wetland under a blue sky dotted with clouds.&#39;</span>
+<h1 id="logging-and-tracing">Logging and Tracing<a class="headerlink" href="#logging-and-tracing" title="Permanent link">&para;</a></h1>
+<p>magentic is instrumented for logging and tracing using <a href="https://pydantic.dev/logfire">Pydantic Logfire</a>. This also makes it compatible with OpenTelemetry.</p>
+<h2 id="logging-to-stdout">Logging to stdout<a class="headerlink" href="#logging-to-stdout" title="Permanent link">&para;</a></h2>
+<p>To print magentic spans and logs to stdout, first install the <code>logfire</code> Python package.</p>
+<div class="language-sh highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>logfire
 </code></pre></div>
-<p>For more info on the <code>@chatprompt</code> decorator, see <a href="../chat-prompting/">Chat Prompting</a>.</p>
-<h2 id="placeholder">Placeholder<a class="headerlink" href="#placeholder" title="Permanent link">&para;</a></h2>
-<p>In the previous example, the image url was tied to the function. To provide the image as a function parameter, use <code>Placeholder</code>. This substitutes a function argument into the message when the function is called.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<p>Then configure this as needed. See the <a href="https://docs.pydantic.dev/logfire/integrations/">Pydantic Logfire Integrations docs</a> for the full list of integrations and how to configure these.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">logfire</span>
 
-
-<span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
-
-
-<span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-<span class="hll">    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">)),</span>
-</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
-
-
-<span class="n">describe_image</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">)</span>
-<span class="c1"># &#39;A wooden boardwalk meanders through lush green wetlands under a partly cloudy blue sky.&#39;</span>
+<span class="n">logfire</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">send_to_logfire</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+<span class="n">logfire</span><span class="o">.</span><span class="n">instrument_openai</span><span class="p">()</span>  <span class="c1"># optional, to trace OpenAI API calls</span>
+<span class="c1"># logfire.instrument_anthropic()  # optional, to trace Anthropic API calls</span>
 </code></pre></div>
-<h2 id="bytes">bytes<a class="headerlink" href="#bytes" title="Permanent link">&para;</a></h2>
-<p><code>UserImageMessage</code> can also accept <code>bytes</code> as input. Like <code>str</code>, this can be passed directly or via <code>Placeholder</code>.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
+<p>Now when running magentic code, all spans and logs will be printed.</p>
+<div class="language-text highlight"><pre><span></span><code>23:02:34.197 Calling prompt-chain describe_weather
+23:02:34.221   Chat Completion with &#39;gpt-4o&#39; [LLM]
+23:02:35.364   streaming response from &#39;gpt-4o&#39; took 0.05s [LLM]
+23:02:35.365   Executing function call get_current_weather
+23:02:35.399   Chat Completion with &#39;gpt-4o&#39; [LLM]
+23:02:35.992   streaming response from &#39;gpt-4o&#39; took 0.12s [LLM]
+</code></pre></div>
+<h2 id="using-pydantic-logfire">Using Pydantic Logfire<a class="headerlink" href="#using-pydantic-logfire" title="Permanent link">&para;</a></h2>
+<p>Create a Pydantic Logfire account following their <a href="https://docs.pydantic.dev/logfire/guides/first_steps/">First Steps Guide</a>.</p>
+<p>After authenticating locally and creating a project, configure logfire</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">logfire</span>
 
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<span class="n">logfire</span><span class="o">.</span><span class="n">configure</span><span class="p">()</span>  <span class="c1"># note: `send_to_logfire` removed. This defaults to True</span>
+<span class="n">logfire</span><span class="o">.</span><span class="n">instrument_openai</span><span class="p">()</span>  <span class="c1"># optional, to trace OpenAI API calls</span>
+<span class="c1"># logfire.instrument_anthropic()  # optional, to trace Anthropic API calls</span>
+</code></pre></div>
+<p>Now calls to magentic prompt-functions, prompt-chains etc. will become visible in the Logfire UI.</p>
+<p><a class="glightbox" href="../assets/images/logfire_describe_weather.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="Logfire trace for get_current_weather" src="../assets/images/logfire_describe_weather.png" /></a></p>
+<h2 id="configuring-opentelemetry">Configuring OpenTelemetry<a class="headerlink" href="#configuring-opentelemetry" title="Permanent link">&para;</a></h2>
+<p>To enable instrumentation for use with OpenTelemetry, use the following logfire configuration</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">logfire</span>
 
-
-<span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
-
-
-<span class="k">def</span> <span class="nf">url_to_bytes</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the content of a URL as bytes.&quot;&quot;&quot;</span>
-
-    <span class="c1"># A custom user-agent is necessary to comply with Wikimedia user-agent policy</span>
-    <span class="c1"># https://meta.wikimedia.org/wiki/User-Agent_policy</span>
-    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="s2">&quot;MagenticExampleBot (https://magentic.dev/)&quot;</span><span class="p">}</span>
-    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
-
-
-<span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="s2">&quot;image_bytes&quot;</span><span class="p">)),</span>
+<span class="n">logfire</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span>
+    <span class="n">send_to_logfire</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">service_name</span><span class="o">=</span><span class="s2">&quot;magentic-test&quot;</span><span class="p">,</span>  <span class="c1"># optional, can be set using OTEL_SERVICE_NAME env var</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+<span class="n">logfire</span><span class="o">.</span><span class="n">instrument_openai</span><span class="p">()</span>  <span class="c1"># optional, to trace OpenAI API calls</span>
+<span class="c1"># logfire.instrument_anthropic()  # optional, to trace Anthropic API calls</span>
+</code></pre></div>
+<p>Now logs and traces for magentic (and OpenAI, Anthropic, ...) will be available to any OTEL tracers.</p>
+<h3 id="viewing-traces-locally">Viewing Traces Locally<a class="headerlink" href="#viewing-traces-locally" title="Permanent link">&para;</a></h3>
+<p>To view traces locally you can use <a href="https://www.jaegertracing.io/">Jaeger</a>.</p>
+<p>First start the Jaeger all-in-one docker container</p>
+<div class="language-sh highlight"><pre><span></span><code>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>--name<span class="w"> </span>jaeger<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span><span class="m">16686</span>:16686<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span><span class="m">4317</span>:4317<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>-p<span class="w"> </span><span class="m">4318</span>:4318<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>jaegertracing/all-in-one:1.58
+</code></pre></div>
+<p>Then navigate to <a href="http://localhost:16686">http://localhost:16686</a> to access the Jaeger UI. See the <a href="https://www.jaegertracing.io/docs/latest/getting-started/">Jaeger Getting Started Guide</a> for up-to-date instructions.</p>
+<p>Next, install the required OpenTelemetry exporter and configure OpenTelemetry to use this to send traces to Jaeger.</p>
+<div class="language-sh highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>opentelemetry-exporter-otlp
+</code></pre></div>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">opentelemetry</span> <span class="kn">import</span> <span class="n">trace</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.trace.export</span> <span class="kn">import</span> <span class="n">BatchSpanProcessor</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.exporter.otlp.proto.http.trace_exporter</span> <span class="kn">import</span> <span class="n">OTLPSpanExporter</span>
+
+<span class="n">trace</span><span class="o">.</span><span class="n">get_tracer_provider</span><span class="p">()</span><span class="o">.</span><span class="n">add_span_processor</span><span class="p">(</span><span class="n">BatchSpanProcessor</span><span class="p">(</span><span class="n">OTLPSpanExporter</span><span class="p">()))</span>
+</code></pre></div>
+<p>Now, traces for magentic code run locally will be visible in the Jaeger UI.</p>
+<p><a class="glightbox" href="../assets/images/jaeger_describe_weather.png" data-type="image" data-width="auto" data-height="auto" data-desc-position="bottom"><img alt="Jaeger trace for get_current_weather" src="../assets/images/jaeger_describe_weather.png" /></a></p>
+<h2 id="enabling-debug-logging">Enabling Debug Logging<a class="headerlink" href="#enabling-debug-logging" title="Permanent link">&para;</a></h2>
+<p>The neatest way to view the raw requests sent to LLM provider APIs is to use Logfire as described above. Another method is to enable debug logs for the LLM provider's Python package. The <code>openai</code> and <code>anthropic</code> packages use the standard library logger and expose an environment variable to set the log level. See the <a href="https://github.com/openai/openai-python/tree/65e29a2efa455a06deb59e243f27796c4ca2254c?tab=readme-ov-file#logging">Logging section of the openai README</a> or <a href="https://github.com/anthropics/anthropic-sdk-python#logging">Logging section of the anthropic README</a> for more information.</p>
+<p>Here's an example of what the debug log contains for a simple magentic prompt-function (formatted to improve readability).</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
+
+<span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">DEBUG</span><span class="p">)</span>
 
 
-<span class="n">image_bytes</span> <span class="o">=</span> <span class="n">url_to_bytes</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">)</span>
-<span class="n">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">)</span>
-<span class="c1"># &#39;The image shows a wooden boardwalk extending through a lush green wetland with a backdrop of blue skies and scattered clouds.&#39;</span>
+<span class="k">def</span> <span class="nf">plus</span><span class="p">(</span><span class="n">a</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">b</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+    <span class="k">return</span> <span class="n">a</span> <span class="o">+</span> <span class="n">b</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span>
+    <span class="s2">&quot;Say hello </span><span class="si">{n}</span><span class="s2"> times&quot;</span><span class="p">,</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">plus</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">say_hello</span><span class="p">(</span><span class="n">n</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+
+
+<span class="n">say_hello</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+<span class="c1"># ...</span>
+<span class="c1"># &gt; DEBUG:openai._base_client:Request options: {</span>
+<span class="c1">#     &quot;method&quot;: &quot;post&quot;,</span>
+<span class="c1">#     &quot;url&quot;: &quot;/chat/completions&quot;,</span>
+<span class="c1">#     &quot;files&quot;: None,</span>
+<span class="c1">#     &quot;json_data&quot;: {</span>
+<span class="c1">#         &quot;messages&quot;: [{&quot;role&quot;: &quot;user&quot;, &quot;content&quot;: &quot;Say hello 2 times&quot;}],</span>
+<span class="c1">#         &quot;model&quot;: &quot;gpt-3.5-turbo&quot;,</span>
+<span class="c1">#         &quot;functions&quot;: [</span>
+<span class="c1">#             {</span>
+<span class="c1">#                 &quot;name&quot;: &quot;plus&quot;,</span>
+<span class="c1">#                 &quot;parameters&quot;: {</span>
+<span class="c1">#                     &quot;properties&quot;: {</span>
+<span class="c1">#                         &quot;a&quot;: {&quot;title&quot;: &quot;A&quot;, &quot;type&quot;: &quot;integer&quot;},</span>
+<span class="c1">#                         &quot;b&quot;: {&quot;title&quot;: &quot;B&quot;, &quot;type&quot;: &quot;integer&quot;},</span>
+<span class="c1">#                     },</span>
+<span class="c1">#                     &quot;required&quot;: [&quot;a&quot;, &quot;b&quot;],</span>
+<span class="c1">#                     &quot;type&quot;: &quot;object&quot;,</span>
+<span class="c1">#                 },</span>
+<span class="c1">#             }</span>
+<span class="c1">#         ],</span>
+<span class="c1">#         &quot;max_tokens&quot;: None,</span>
+<span class="c1">#         &quot;stream&quot;: True,</span>
+<span class="c1">#         &quot;temperature&quot;: None,</span>
+<span class="c1">#     },</span>
+<span class="c1"># }</span>
+<span class="c1"># ...</span>
 </code></pre></div>
 
 
