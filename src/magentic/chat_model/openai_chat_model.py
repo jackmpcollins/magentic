@@ -436,8 +436,10 @@ class OpenaiChatModel(ChatModel):
         return "required"
 
     def _get_parallel_tool_calls(
-        self, output_types: Iterable[type]
+        self, *, tools_specified: bool, output_types: Iterable[type]
     ) -> bool | openai.NotGiven:
+        if not tools_specified:  # Enforced by OpenAI API
+            return openai.NOT_GIVEN
         if self.api_type == "azure":
             return openai.NOT_GIVEN
         if is_any_origin_subclass(output_types, ParallelFunctionCall):
@@ -507,7 +509,9 @@ class OpenaiChatModel(ChatModel):
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
-            parallel_tool_calls=self._get_parallel_tool_calls(output_types),
+            parallel_tool_calls=self._get_parallel_tool_calls(
+                tools_specified=bool(tool_schemas), output_types=output_types
+            ),
         )
         usage_ref, response = _create_usage_ref(response)
 
@@ -619,7 +623,9 @@ class OpenaiChatModel(ChatModel):
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
-            parallel_tool_calls=self._get_parallel_tool_calls(output_types),
+            parallel_tool_calls=self._get_parallel_tool_calls(
+                tools_specified=bool(tool_schemas), output_types=output_types
+            ),
         )
         usage_ref, response = _create_usage_ref_async(response)
 
