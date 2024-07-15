@@ -12,7 +12,6 @@ from magentic.function_call import (
     FunctionCall,
     ParallelFunctionCall,
 )
-from magentic.logger import _setup_logger
 from magentic.prompt_chain import prompt_chain
 from magentic.prompt_function import prompt
 from magentic.streaming import AsyncStreamedStr, StreamedStr
@@ -33,5 +32,3 @@ __all__ = [
     "AsyncStreamedStr",
     "StreamedStr",
 ]
-
-_setup_logger()
