@@ -16,8 +16,7 @@ from typing import (
 )
 from uuid import uuid4
 
-import logfire_api as logfire
-
+from magentic.logger import logfire
 from magentic.streaming import CachedAsyncIterable, CachedIterable
 
 T = TypeVar("T")
