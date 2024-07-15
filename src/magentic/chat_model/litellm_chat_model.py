@@ -1,7 +1,8 @@
 from collections.abc import Callable, Iterable
 from itertools import chain
-from typing import Any, TypeVar, cast, overload
+from typing import Any, Sequence, TypeVar, cast, overload
 
+from openai.types.chat import ChatCompletionToolChoiceOptionParam
 from pydantic import ValidationError
 
 from magentic.chat_model.base import (
@@ -22,6 +23,7 @@ from magentic.chat_model.message import (
 from magentic.chat_model.openai_chat_model import (
     STR_OR_FUNCTIONCALL_TYPE,
     AsyncFunctionToolSchema,
+    BaseFunctionToolSchema,
     FunctionToolSchema,
     aparse_streamed_tool_calls,
     discard_none_arguments,
@@ -95,6 +97,19 @@ class LitellmChatModel(ChatModel):
     def custom_llm_provider(self) -> str | None:
         return self._custom_llm_provider
 
+    @staticmethod
+    def _get_tool_choice(
+        *,
+        tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
+        allow_string_output: bool,
+    ) -> ChatCompletionToolChoiceOptionParam | None:
+        """Create the tool choice argument."""
+        if allow_string_output:
+            return None
+        if len(tool_schemas) == 1:
+            return tool_schemas[0].as_tool_choice()
+        return "required"
+
     @overload
     def complete(
         self,
@@ -149,10 +164,8 @@ class LitellmChatModel(ChatModel):
             stream=True,
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
-            tool_choice=(
-                tool_schemas[0].as_tool_choice()  # type: ignore[unused-ignore]
-                if len(tool_schemas) == 1 and not allow_string_output
-                else None
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
         assert not isinstance(response, ModelResponse)  # noqa: S101
@@ -260,10 +273,8 @@ class LitellmChatModel(ChatModel):
             stream=True,
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
-            tool_choice=(
-                tool_schemas[0].as_tool_choice()  # type: ignore[unused-ignore]
-                if len(tool_schemas) == 1 and not allow_string_output
-                else None
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
         assert not isinstance(response, ModelResponse)  # noqa: S101
