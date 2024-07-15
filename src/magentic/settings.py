@@ -14,8 +14,6 @@ class Backend(Enum):
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="MAGENTIC_")
 
-    verbose: bool = False
-
     backend: Backend = Backend.OPENAI
 
     anthropic_model: str = "claude-3-opus-20240229"

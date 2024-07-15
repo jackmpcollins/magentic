@@ -59,7 +59,6 @@ The following environment variables can be set.
 | Environment Variable           | Description                              | Example                      |
 | ------------------------------ | ---------------------------------------- | ---------------------------- |
 | MAGENTIC_BACKEND               | The package to use as the LLM backend    | anthropic / openai / litellm |
-| MAGENTIC_VERBOSE               | If set, print magentic logs to stdout    | true                         |
 | MAGENTIC_ANTHROPIC_MODEL       | Anthropic model                          | claude-3-haiku-20240307      |
 | MAGENTIC_ANTHROPIC_API_KEY     | Anthropic API key to be used by magentic | sk-...                       |
 | MAGENTIC_ANTHROPIC_BASE_URL    | Base URL for an Anthropic-compatible API | http://localhost:8080        |
