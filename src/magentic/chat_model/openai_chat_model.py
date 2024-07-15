@@ -417,8 +417,9 @@ class OpenaiChatModel(ChatModel):
     def temperature(self) -> float | None:
         return self._temperature
 
-    @staticmethod
-    def _get_stream_options() -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+        if self.api_type == "azure":
+            return openai.NOT_GIVEN
         return {"include_usage": True}
 
     @staticmethod
