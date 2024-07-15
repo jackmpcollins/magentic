@@ -30,6 +30,7 @@ theme:
     - search.suggest
 
 plugins:
+  - glightbox
   - mkdocs-jupyter:
       # ignore_h1_titles: true
       execute: false
@@ -82,6 +83,7 @@ nav:
   - asyncio.md
   - streaming.md
   - vision.md
+  - logging-and-tracing.md
   - configuration.md
   - type-checking.md
   - Examples:

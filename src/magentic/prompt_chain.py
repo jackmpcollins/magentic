@@ -8,6 +8,8 @@ from typing import (
     cast,
 )
 
+import logfire_api as logfire
+
 from magentic.chat import Chat
 from magentic.chat_model.base import ChatModel
 from magentic.function_call import FunctionCall
@@ -34,18 +36,54 @@ def prompt_chain(
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncPromptFunction[P, Any](
-                template=template,
+                name=func.__name__,
                 parameters=list(func_signature.parameters.values()),
                 return_type=func_signature.return_annotation,
+                template=template,
                 functions=functions,
                 model=model,
             )
 
             @wraps(func)
             async def awrapper(*args: P.args, **kwargs: P.kwargs) -> Any:
-                chat = await Chat.from_prompt(
-                    async_prompt_function, *args, **kwargs
-                ).asubmit()
+                with logfire.span(
+                    f"Calling async prompt-chain {func.__name__}",
+                    **func_signature.bind(*args, **kwargs).arguments,
+                ):
+                    chat = await Chat.from_prompt(
+                        async_prompt_function, *args, **kwargs
+                    ).asubmit()
+                    num_calls = 0
+                    while isinstance(chat.last_message.content, FunctionCall):
+                        if max_calls is not None and num_calls >= max_calls:
+                            msg = (
+                                f"Function {func.__name__} reached limit of"
+                                f" {max_calls} function calls"
+                            )
+                            raise MaxFunctionCallsError(msg)
+                        chat = await chat.aexec_function_call()
+                        chat = await chat.asubmit()
+                        num_calls += 1
+                    return chat.last_message.content
+
+            return cast(Callable[P, R], awrapper)
+
+        prompt_function = PromptFunction[P, R](
+            name=func.__name__,
+            parameters=list(func_signature.parameters.values()),
+            return_type=func_signature.return_annotation,
+            template=template,
+            functions=functions,
+            model=model,
+        )
+
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
+            with logfire.span(
+                f"Calling prompt-chain {func.__name__}",
+                **func_signature.bind(*args, **kwargs).arguments,
+            ):
+                chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
                 num_calls = 0
                 while isinstance(chat.last_message.content, FunctionCall):
                     if max_calls is not None and num_calls >= max_calls:
@@ -54,35 +92,9 @@ def prompt_chain(
                             f" {max_calls} function calls"
                         )
                         raise MaxFunctionCallsError(msg)
-                    chat = await chat.aexec_function_call()
-                    chat = await chat.asubmit()
+                    chat = chat.exec_function_call().submit()
                     num_calls += 1
-                return chat.last_message.content
-
-            return cast(Callable[P, R], awrapper)
-
-        prompt_function = PromptFunction[P, R](
-            template=template,
-            parameters=list(func_signature.parameters.values()),
-            return_type=func_signature.return_annotation,
-            functions=functions,
-            model=model,
-        )
-
-        @wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-            chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
-            num_calls = 0
-            while isinstance(chat.last_message.content, FunctionCall):
-                if max_calls is not None and num_calls >= max_calls:
-                    msg = (
-                        f"Function {func.__name__} reached limit of"
-                        f" {max_calls} function calls"
-                    )
-                    raise MaxFunctionCallsError(msg)
-                chat = chat.exec_function_call().submit()
-                num_calls += 1
-            return cast(R, chat.last_message.content)
+                return cast(R, chat.last_message.content)
 
         return wrapper
 

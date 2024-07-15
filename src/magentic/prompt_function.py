@@ -14,6 +14,8 @@ from typing import (
     overload,
 )
 
+import logfire_api as logfire
+
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import UserMessage
@@ -32,13 +34,15 @@ class BasePromptFunction(Generic[P, R]):
 
     def __init__(
         self,
-        template: str,
+        name: str,
         parameters: Sequence[inspect.Parameter],
         return_type: type[R],
+        template: str,
         functions: list[Callable[..., Any]] | None = None,
         stop: list[str] | None = None,
         model: ChatModel | None = None,
     ):
+        self._name = name
         self._signature = inspect.Signature(
             parameters=parameters,
             return_annotation=return_type,
@@ -78,13 +82,17 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Query the LLM with the formatted prompt template."""
-        message = self.model.complete(
-            messages=[UserMessage(content=self.format(*args, **kwargs))],
-            functions=self._functions,
-            output_types=self._return_types,
-            stop=self._stop,
-        )
-        return message.content
+        with logfire.span(
+            f"Calling prompt-function {self._name}",
+            **self._signature.bind(*args, **kwargs).arguments,
+        ):
+            message = self.model.complete(
+                messages=[UserMessage(content=self.format(*args, **kwargs))],
+                functions=self._functions,
+                output_types=self._return_types,
+                stop=self._stop,
+            )
+            return message.content
 
 
 class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
@@ -92,13 +100,17 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
 
     async def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
         """Asynchronously query the LLM with the formatted prompt template."""
-        message = await self.model.acomplete(
-            messages=[UserMessage(content=self.format(*args, **kwargs))],
-            functions=self._functions,
-            output_types=self._return_types,
-            stop=self._stop,
-        )
-        return message.content
+        with logfire.span(
+            f"Calling async prompt-function {self._name}",
+            **self._signature.bind(*args, **kwargs).arguments,
+        ):
+            message = await self.model.acomplete(
+                messages=[UserMessage(content=self.format(*args, **kwargs))],
+                functions=self._functions,
+                output_types=self._return_types,
+                stop=self._stop,
+            )
+            return message.content
 
 
 class PromptDecorator(Protocol):
@@ -144,9 +156,10 @@ def prompt(
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncPromptFunction[P, R](
-                template=template,
+                name=func.__name__,
                 parameters=list(func_signature.parameters.values()),
                 return_type=func_signature.return_annotation,
+                template=template,
                 functions=functions,
                 stop=stop,
                 model=model,
@@ -157,9 +170,10 @@ def prompt(
             )
 
         prompt_function = PromptFunction[P, R](
-            template=template,
+            name=func.__name__,
             parameters=list(func_signature.parameters.values()),
             return_type=func_signature.return_annotation,
+            template=template,
             functions=functions,
             stop=stop,
             model=model,

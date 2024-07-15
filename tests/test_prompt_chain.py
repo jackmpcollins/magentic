@@ -30,6 +30,7 @@ def test_prompt_chain():
 
 def test_prompt_chain_max_calls():
     mock_function = Mock()
+    mock_function.__name__ = "mock_function_name"
     mock_model = Mock()
     mock_model.complete.return_value = AssistantMessage(
         content=FunctionCall(mock_function)
@@ -74,6 +75,7 @@ async def test_async_prompt_chain():
 @pytest.mark.asyncio
 async def test_async_prompt_chain_max_calls():
     mock_function = Mock()
+    mock_function.__name__ = "mock_function_name"
     mock_model = AsyncMock()
     mock_model.acomplete.return_value = AssistantMessage(
         content=FunctionCall(mock_function)
