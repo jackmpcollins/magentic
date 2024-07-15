@@ -99,3 +99,58 @@ trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(OTLPSpanExport
 Now, traces for magentic code run locally will be visible in the Jaeger UI.
 
 ![Jaeger trace for get_current_weather](assets/images/jaeger_describe_weather.png)
+
+## Enabling Debug Logging
+
+The neatest way to view the raw requests sent to LLM provider APIs is to use Logfire as described above. Another method is to enable debug logs for the LLM provider's Python package. The `openai` and `anthropic` packages use the standard library logger and expose an environment variable to set the log level. See the [Logging section of the openai README](https://github.com/openai/openai-python/tree/65e29a2efa455a06deb59e243f27796c4ca2254c?tab=readme-ov-file#logging) or [Logging section of the anthropic README](https://github.com/anthropics/anthropic-sdk-python#logging) for more information.
+
+Here's an example of what the debug log contains for a simple magentic prompt-function (formatted to improve readability).
+
+```python
+import logging
+
+from magentic import prompt
+
+logging.basicConfig(level=logging.DEBUG)
+
+
+def plus(a: int, b: int) -> int:
+    return a + b
+
+
+@prompt(
+    "Say hello {n} times",
+    functions=[plus],
+)
+def say_hello(n: int) -> str: ...
+
+
+say_hello(2)
+# ...
+# > DEBUG:openai._base_client:Request options: {
+#     "method": "post",
+#     "url": "/chat/completions",
+#     "files": None,
+#     "json_data": {
+#         "messages": [{"role": "user", "content": "Say hello 2 times"}],
+#         "model": "gpt-3.5-turbo",
+#         "functions": [
+#             {
+#                 "name": "plus",
+#                 "parameters": {
+#                     "properties": {
+#                         "a": {"title": "A", "type": "integer"},
+#                         "b": {"title": "B", "type": "integer"},
+#                     },
+#                     "required": ["a", "b"],
+#                     "type": "object",
+#                 },
+#             }
+#         ],
+#         "max_tokens": None,
+#         "stream": True,
+#         "temperature": None,
+#     },
+# }
+# ...
+```
