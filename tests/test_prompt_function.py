@@ -167,7 +167,7 @@ def test_decorator_ignore_multiple_tool_calls():
 
     # Provide two return types so that `tool_choice` does not force a single tool call
     @prompt(
-        "Return the numbers 1 to 5, and also the numbers 6 to 10.",
+        "Return the numbers 1 to 5 in the first tool call. And numbers 6 to 10 in the second.",
         model=OpenaiChatModel("gpt-4-1106-preview"),
     )
     def get_list() -> list[int] | bool: ...
