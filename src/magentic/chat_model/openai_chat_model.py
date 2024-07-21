@@ -439,8 +439,9 @@ class OpenaiChatModel(ChatModel):
     def temperature(self) -> float | None:
         return self._temperature
 
-    @staticmethod
-    def _get_stream_options() -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+        if self.api_type == "azure":
+            return openai.NOT_GIVEN
         return {"include_usage": True}
 
     @staticmethod
@@ -455,6 +456,19 @@ class OpenaiChatModel(ChatModel):
         if len(tool_schemas) == 1:
             return tool_schemas[0].as_tool_choice()
         return "required"
+
+    def _get_parallel_tool_calls(
+        self, *, tools_specified: bool, output_types: Iterable[type]
+    ) -> bool | openai.NotGiven:
+        if not tools_specified:  # Enforced by OpenAI API
+            return openai.NOT_GIVEN
+        if self.api_type == "azure":
+            return openai.NOT_GIVEN
+        if is_any_origin_subclass(output_types, ParallelFunctionCall):
+            return openai.NOT_GIVEN
+        if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+            return openai.NOT_GIVEN
+        return False
 
     @overload
     def complete(
@@ -516,6 +530,9 @@ class OpenaiChatModel(ChatModel):
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
+            ),
+            parallel_tool_calls=self._get_parallel_tool_calls(
+                tools_specified=bool(tool_schemas), output_types=output_types
             ),
         )
         usage_ref, response = _create_usage_ref(response)
@@ -626,6 +643,9 @@ class OpenaiChatModel(ChatModel):
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
+            ),
+            parallel_tool_calls=self._get_parallel_tool_calls(
+                tools_specified=bool(tool_schemas), output_types=output_types
             ),
         )
         usage_ref, response = _create_usage_ref_async(response)

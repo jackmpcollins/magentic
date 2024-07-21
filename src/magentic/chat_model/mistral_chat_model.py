@@ -42,6 +42,11 @@ class _MistralOpenaiChatModel(OpenaiChatModel):
         """
         return openai.NOT_GIVEN if allow_string_output else _MistralToolChoice.ANY.value
 
+    def _get_parallel_tool_calls(
+        self, *, tools_specified: bool, output_types: Iterable[type]
+    ) -> bool | openai.NotGiven:
+        return openai.NOT_GIVEN
+
 
 R = TypeVar("R")
 
