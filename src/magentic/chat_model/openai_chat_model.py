@@ -1,3 +1,4 @@
+import json
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch, wraps
@@ -6,8 +7,10 @@ from typing import Any, Generic, Literal, ParamSpec, Sequence, TypeVar, cast, ov
 
 import openai
 from openai.types.chat import (
+    ChatCompletionAssistantMessageParam,
     ChatCompletionChunk,
     ChatCompletionMessageParam,
+    ChatCompletionMessageToolCallParam,
     ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
@@ -47,9 +50,11 @@ from magentic.function_call import (
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
+    aapply,
     achain,
     agroupby,
     apeek,
+    apply,
     async_iter,
     peek,
 )
@@ -302,6 +307,50 @@ async def _aparse_streamed_tool_calls(
         tool_schema = select_tool_schema(first_chunk, tool_schemas)
         tool_call = await tool_schema.aparse_tool_call(tool_call_chunks)
         yield tool_call
+
+
+def _join_streamed_tool_call(
+    tool_call_deltas: Iterable[ChoiceDeltaToolCall],
+) -> ChatCompletionMessageToolCallParam:
+    """Join chunks from a single streamed tool call into an OpenAI tool call dict."""
+    tool_id: str | None = None
+    tool_type: str = "function"
+    function_name: list[str] = []
+    function_arguments: list[str] = []
+    for tool_call_delta in tool_call_deltas:
+        if tool_call_delta.id:
+            tool_id = tool_call_delta.id
+        if tool_call_delta.type:
+            tool_type = tool_call_delta.type
+        if tool_call_delta.function:
+            if tool_call_delta.function.name:
+                function_name.append(tool_call_delta.function.name)
+            if tool_call_delta.function.arguments:
+                function_arguments.append(tool_call_delta.function.arguments)
+    return {
+        "id": tool_id or _create_unique_id(),
+        "type": tool_type,
+        "function": {
+            "name": "".join(function_name),
+            "arguments": "".join(function_arguments),
+        },
+    }
+
+
+def _join_streamed_tool_calls_to_message(
+    response: Iterable[ChatCompletionChunk],
+) -> _RawMessage[ChatCompletionAssistantMessageParam]:
+    """Join streamed tool calls into an OpenAI chat completion message."""
+    return _RawMessage(
+        {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": None,
+            "tool_calls": [
+                _join_streamed_tool_call(tool_call_chunks)
+                for tool_call_chunks in _iter_streamed_tool_calls(response)
+            ],
+        }
+    )
 
 
 def _create_usage_ref(
@@ -563,6 +612,8 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
+            all_tool_call_chunks: list[ChatCompletionChunk] = []
+            response = apply(all_tool_call_chunks.append, response)
             try:
                 tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
@@ -573,9 +624,11 @@ class OpenaiChatModel(ChatModel):
                 content = next(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
+                raw_message = _join_streamed_tool_calls_to_message(all_tool_call_chunks)
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
+                    f" Model output: {json.dumps(raw_message.content)}"
                 )
                 raise StructuredOutputError(msg) from e
 
@@ -676,6 +729,8 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
+            all_tool_call_chunks: list[ChatCompletionChunk] = []
+            response = aapply(all_tool_call_chunks.append, response)
             try:
                 tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
@@ -685,9 +740,11 @@ class OpenaiChatModel(ChatModel):
                 content = await anext(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
+                raw_message = _join_streamed_tool_calls_to_message(all_tool_call_chunks)
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
+                    f" Model output: {json.dumps(raw_message.content)}"
                 )
                 raise StructuredOutputError(msg) from e
 
