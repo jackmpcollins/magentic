@@ -227,7 +227,7 @@ def select_tool_schema(
             return tool_schema
 
     msg = f"Unknown tool call: {tool_call.model_dump_json()}"
-    raise ValueError(msg)
+    raise ValueError(msg)  # TODO: Create `UnknownToolCallError` for this
 
 
 class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):

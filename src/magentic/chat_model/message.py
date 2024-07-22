@@ -72,6 +72,8 @@ class _RawMessage(Message[ContentT], Generic[ContentT]):
     expected by the LLM provider's Python client.
     """
 
+    # TODO: Add Usage to _RawMessage
+
     def format(self, **kwargs: Any) -> "_RawMessage[ContentT]":
         del kwargs
         return _RawMessage(self.content)
@@ -166,3 +168,6 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
         del kwargs
         return FunctionResultMessage(self.content, self._function_call)
+
+
+# TODO: FunctionErrorMessage ? For errors that occur during function execution. Sets is_error=True for Anthropic
