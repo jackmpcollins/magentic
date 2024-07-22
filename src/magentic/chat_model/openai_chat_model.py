@@ -630,7 +630,17 @@ class OpenaiChatModel(ChatModel):
                     " to encourage the model to return a specific type."
                     f" Model output: {json.dumps(raw_message.content)}"
                 )
-                raise StructuredOutputError(msg) from e
+                # TODO: Use `FunctionResultMessage` or `FunctionErrorMessage` here
+                retry_message = _RawMessage(
+                    {
+                        "role": OpenaiMessageRole.TOOL.value,
+                        "tool_call_id": raw_message.content["tool_calls"][0]["id"],
+                        "content": str(e),
+                    }
+                )
+                raise StructuredOutputError(
+                    msg, output_message=raw_message, retry_message=retry_message
+                ) from e
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)

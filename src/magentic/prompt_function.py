@@ -17,8 +17,8 @@ from typing import (
 import logfire_api as logfire
 
 from magentic.backend import get_chat_model
-from magentic.chat_model.base import ChatModel
-from magentic.chat_model.message import UserMessage
+from magentic.chat_model.base import ChatModel, StructuredOutputError
+from magentic.chat_model.message import Message, UserMessage
 from magentic.typing import split_union_type
 
 P = ParamSpec("P")
@@ -40,6 +40,7 @@ class BasePromptFunction(Generic[P, R]):
         template: str,
         functions: list[Callable[..., Any]] | None = None,
         stop: list[str] | None = None,
+        max_retries: int = 0,
         model: ChatModel | None = None,
     ):
         self._name = name
@@ -50,6 +51,7 @@ class BasePromptFunction(Generic[P, R]):
         self._template = template
         self._functions = functions or []
         self._stop = stop
+        self._max_retries = max_retries
         self._model = model
 
         self._return_types = list(split_union_type(return_type))
@@ -86,13 +88,30 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
             f"Calling prompt-function {self._name}",
             **self._signature.bind(*args, **kwargs).arguments,
         ):
-            message = self.model.complete(
-                messages=[UserMessage(content=self.format(*args, **kwargs))],
-                functions=self._functions,
-                output_types=self._return_types,
-                stop=self._stop,
-            )
-            return message.content
+            messages: list[Message[Any]] = [
+                UserMessage(content=self.format(*args, **kwargs))
+            ]
+            # TODO: Add this logic to `chatprompt` and `Chat` too
+            # TODO: Create a wrapper ChatModel that handles retries using this logic ?
+            num_retries = 0
+            while True:
+                print("\nRetry", num_retries)  # noqa: T201
+                print(messages)  # noqa: T201
+                try:
+                    message = self.model.complete(
+                        messages=messages,
+                        functions=self._functions,
+                        output_types=self._return_types,
+                        stop=self._stop,
+                    )
+                except StructuredOutputError as e:
+                    if num_retries >= self._max_retries:
+                        raise
+                    num_retries += 1
+                    messages.append(e.output_message)
+                    messages.append(e.retry_message)
+                else:
+                    return message.content
 
 
 class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
@@ -132,6 +151,7 @@ def prompt(
     template: str,
     functions: list[Callable[..., Any]] | None = None,
     stop: list[str] | None = None,
+    max_retries: int = 0,
     model: ChatModel | None = None,
 ) -> PromptDecorator:
     """Convert a function into an LLM prompt template.
@@ -162,6 +182,7 @@ def prompt(
                 template=template,
                 functions=functions,
                 stop=stop,
+                max_retries=max_retries,
                 model=model,
             )
             return cast(
@@ -176,6 +197,7 @@ def prompt(
             template=template,
             functions=functions,
             stop=stop,
+            max_retries=max_retries,
             model=model,
         )
         return cast(PromptFunction[P, R], update_wrapper(prompt_function, func))

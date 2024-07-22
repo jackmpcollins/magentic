@@ -4,10 +4,7 @@ from collections.abc import Callable, Iterable
 from contextvars import ContextVar
 from typing import Any, TypeVar, overload
 
-from magentic.chat_model.message import (
-    AssistantMessage,
-    Message,
-)
+from magentic.chat_model.message import AssistantMessage, Message, UserMessage
 from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 R = TypeVar("R")
@@ -20,12 +17,21 @@ _chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
 class StructuredOutputError(Exception):
     """Raised when the LLM output could not be parsed."""
 
+    def __init__(
+        self, message: str, output_message: Message[Any], retry_message: Message[Any]
+    ):
+        super().__init__(message)
+        self.output_message = output_message
+        self.retry_message = retry_message
+
 
 _STRING_NOT_EXPECTED_ERROR_MESSAGE = (
     "String was returned by model but not expected. You may need to update"
     " your prompt to encourage the model to return a specific type."
     " Model output: {model_output!r}"
 )
+# TODO: Enable users to modify this prompt. Add to settings?
+_STRING_NOT_EXPECTED_RETRY_MESSAGE = "Use the tools provided. Do not return a string."
 
 
 def validate_str_content(
@@ -33,10 +39,12 @@ def validate_str_content(
 ) -> StreamedStr | str:
     """Raise error if string output not expected. Otherwise return correct string type."""
     if not allow_string_output:
-        msg = _STRING_NOT_EXPECTED_ERROR_MESSAGE.format(
-            model_output=streamed_str.truncate(100)
+        model_output = streamed_str.truncate(100)
+        raise StructuredOutputError(
+            _STRING_NOT_EXPECTED_ERROR_MESSAGE.format(model_output=model_output),
+            output_message=AssistantMessage(model_output),
+            retry_message=UserMessage(_STRING_NOT_EXPECTED_RETRY_MESSAGE),
         )
-        raise StructuredOutputError(msg)
     if streamed:
         return streamed_str
     return str(streamed_str)
@@ -47,10 +55,12 @@ async def avalidate_str_content(
 ) -> AsyncStreamedStr | str:
     """Async version of `validate_str_content`."""
     if not allow_string_output:
-        msg = _STRING_NOT_EXPECTED_ERROR_MESSAGE.format(
-            model_output=await async_streamed_str.truncate(100)
+        model_output = await async_streamed_str.truncate(100)
+        raise StructuredOutputError(
+            _STRING_NOT_EXPECTED_ERROR_MESSAGE.format(model_output=model_output),
+            output_message=AssistantMessage(model_output),
+            retry_message=UserMessage(_STRING_NOT_EXPECTED_RETRY_MESSAGE),
         )
-        raise StructuredOutputError(msg)
     if streamed:
         return async_streamed_str
     return await async_streamed_str.to_string()
