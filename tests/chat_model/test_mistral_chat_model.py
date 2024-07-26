@@ -1,6 +1,12 @@
 import pytest
+from pydantic import BaseModel
 
-from magentic.chat_model.message import Usage, UserMessage
+from magentic.chat_model.message import (
+    AssistantMessage,
+    SystemMessage,
+    Usage,
+    UserMessage,
+)
 from magentic.chat_model.mistral_chat_model import MistralChatModel
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -88,6 +94,30 @@ def test_mistral_chat_model_complete_parallel_function_call():
     )
     assert isinstance(message.content, ParallelFunctionCall)
     assert len(list(message.content)) == 2
+
+
+@pytest.mark.mistral
+def test_mistral_chat_model_few_shot_prompt():
+    class Quote(BaseModel):
+        quote: str
+        character: str
+
+    chat_model = MistralChatModel("mistral-large-latest")
+    message = chat_model.complete(
+        messages=[
+            SystemMessage("You are a movie buff."),
+            UserMessage("What is your favorite quote from Harry Potter?"),
+            AssistantMessage(
+                Quote(
+                    quote="It does not do to dwell on dreams and forget to live.",
+                    character="Albus Dumbledore",
+                )
+            ),
+            UserMessage("What is your favorite quote from {movie}?"),
+        ],
+        output_types=[Quote],
+    )
+    assert isinstance(message.content, Quote)
 
 
 @pytest.mark.parametrize(
