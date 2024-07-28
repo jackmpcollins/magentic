@@ -113,6 +113,9 @@ def test_mistral_chat_model_few_shot_prompt():
                     character="Albus Dumbledore",
                 )
             ),
+            # Mistral requires AssistantMessage after tool output
+            # TODO: Automatically add this in ChatModel.complete like for tool calls
+            AssistantMessage("."),
             UserMessage("What is your favorite quote from {movie}?"),
         ],
         output_types=[Quote],
