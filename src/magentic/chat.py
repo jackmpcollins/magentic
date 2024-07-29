@@ -114,7 +114,9 @@ class Chat:
             function_call = self.last_message.content
             result = function_call()
             return self.add_message(
-                FunctionResultMessage(content=result, unique_id=function_call.unique_id)
+                FunctionResultMessage(
+                    content=result, function_call_id=function_call.unique_id
+                )
             )
 
         if isinstance(self.last_message.content, ParallelFunctionCall):
@@ -125,7 +127,7 @@ class Chat:
             ):
                 chat = chat.add_message(
                     FunctionResultMessage(
-                        content=result, unique_id=function_call.unique_id
+                        content=result, function_call_id=function_call.unique_id
                     )
                 )
             return chat
@@ -141,7 +143,9 @@ class Chat:
             if inspect.isawaitable(result):
                 result = await result
             return self.add_message(
-                FunctionResultMessage(content=result, unique_id=function_call.unique_id)
+                FunctionResultMessage(
+                    content=result, function_call_id=function_call.unique_id
+                )
             )
 
         if isinstance(self.last_message.content, AsyncParallelFunctionCall):
@@ -153,7 +157,7 @@ class Chat:
             ):
                 chat = chat.add_message(
                     FunctionResultMessage(
-                        content=result, unique_id=function_call.unique_id
+                        content=result, function_call_id=function_call.unique_id
                     )
                 )
             return chat

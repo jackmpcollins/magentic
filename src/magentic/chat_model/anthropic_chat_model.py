@@ -144,7 +144,7 @@ def _(message: FunctionResultMessage[Any]) -> MessageParam:
         "content": [
             {
                 "type": "tool_result",
-                "tool_use_id": message.unique_id,
+                "tool_use_id": message.function_call_id,
                 "content": json.loads(function_schema.serialize_args(message.content)),
             }
         ],
