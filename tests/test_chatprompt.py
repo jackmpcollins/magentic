@@ -54,12 +54,12 @@ def test_escape_braces(text):
         (
             [
                 FunctionResultMessage(
-                    "Function result message with {param}", function_call_id="unique_id"
+                    "Function result message with {param}", unique_id="unique_id"
                 )
             ],
             [
                 FunctionResultMessage(
-                    "Function result message with {param}", function_call_id="unique_id"
+                    "Function result message with {param}", unique_id="unique_id"
                 )
             ],
         ),
