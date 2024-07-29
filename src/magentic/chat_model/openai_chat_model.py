@@ -156,7 +156,7 @@ def _(message: FunctionResultMessage[Any]) -> ChatCompletionMessageParam:
     function_schema = function_schema_for_type(type(message.content))
     return {
         "role": OpenaiMessageRole.TOOL.value,
-        "tool_call_id": message.function_call._unique_id,
+        "tool_call_id": message.unique_id,
         "content": function_schema.serialize_args(message.content),
     }
 

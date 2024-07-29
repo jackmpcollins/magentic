@@ -8,7 +8,6 @@ from magentic.chat_model.message import (
     Usage,
     UserMessage,
 )
-from magentic.function_call import FunctionCall
 
 
 def test_placeholder():
@@ -64,11 +63,9 @@ def test_function_result_message_format():
     def plus(a: int, b: int) -> int:
         return a + b
 
-    function_result_message = FunctionResultMessage(3, FunctionCall(plus, 1, 2))
+    function_result_message = FunctionResultMessage(3, "unique_id")
     function_result_message_formatted = function_result_message.format(foo="bar")
 
     assert_type(function_result_message_formatted, FunctionResultMessage[int])
     assert_type(function_result_message_formatted.content, int)
-    assert function_result_message_formatted == FunctionResultMessage(
-        3, FunctionCall(plus, 1, 2)
-    )
+    assert function_result_message_formatted == FunctionResultMessage(3, "unique_id")

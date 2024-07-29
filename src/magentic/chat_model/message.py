@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import (
     Any,
-    Awaitable,
     Generic,
     NamedTuple,
     TypeVar,
@@ -11,8 +10,6 @@ from typing import (
 )
 
 from typing_extensions import Self
-
-from magentic.function_call import FunctionCall
 
 T = TypeVar("T")
 
@@ -140,34 +137,17 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
 class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     """A message containing the result of a function call."""
 
-    @overload
-    def __init__(
-        self, content: ContentT, function_call: FunctionCall[Awaitable[ContentT]]
-    ): ...
-
-    @overload
-    def __init__(self, content: ContentT, function_call: FunctionCall[ContentT]): ...
-
-    def __init__(
-        self,
-        content: ContentT,
-        function_call: FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT],
-    ):
+    def __init__(self, content: ContentT, unique_id: str):
         super().__init__(content)
-        self._function_call = function_call
+        self._unique_id = unique_id
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.content!r}, {self._function_call!r})"
+        return f"{self.__class__.__name__}({self.content!r}, {self._unique_id!r})"
 
     @property
-    def function_call(
-        self,
-    ) -> FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT]:
-        return self._function_call
+    def unique_id(self) -> str:
+        return self._unique_id
 
     def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
         del kwargs
-        return FunctionResultMessage(self.content, self._function_call)
-
-
-# TODO: FunctionErrorMessage ? For errors that occur during function execution. Sets is_error=True for Anthropic
+        return FunctionResultMessage(self.content, self._unique_id)
