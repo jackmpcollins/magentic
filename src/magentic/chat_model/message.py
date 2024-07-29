@@ -137,7 +137,26 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
         return AssistantMessage(self.content)
 
 
-class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
+class ToolResultMessage(Message[ContentT], Generic[ContentT]):
+    """A message containing the result of a tool call."""
+
+    def __init__(self, content: ContentT, tool_call_id: str):
+        super().__init__(content)
+        self._tool_call_id = tool_call_id
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.content!r}, {self._tool_call_id!r})"
+
+    @property
+    def tool_call_id(self) -> str:
+        return self._tool_call_id
+
+    def format(self, **kwargs: Any) -> "ToolResultMessage[ContentT]":
+        del kwargs
+        return ToolResultMessage(self.content, self._tool_call_id)
+
+
+class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
     """A message containing the result of a function call."""
 
     @overload
@@ -153,7 +172,7 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
         content: ContentT,
         function_call: FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT],
     ):
-        super().__init__(content)
+        super().__init__(content, function_call._unique_id)
         self._function_call = function_call
 
     def __repr__(self) -> str:
@@ -168,6 +187,3 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
         del kwargs
         return FunctionResultMessage(self.content, self._function_call)
-
-
-# TODO: FunctionErrorMessage ? For errors that occur during function execution. Sets is_error=True for Anthropic

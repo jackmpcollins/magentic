@@ -34,9 +34,9 @@ from magentic.chat_model.function_schema import (
 )
 from magentic.chat_model.message import (
     AssistantMessage,
-    FunctionResultMessage,
     Message,
     SystemMessage,
+    ToolResultMessage,
     Usage,
     UserMessage,
     _RawMessage,
@@ -151,12 +151,12 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     }
 
 
-@message_to_openai_message.register(FunctionResultMessage)
-def _(message: FunctionResultMessage[Any]) -> ChatCompletionMessageParam:
+@message_to_openai_message.register(ToolResultMessage)
+def _(message: ToolResultMessage[Any]) -> ChatCompletionMessageParam:
     function_schema = function_schema_for_type(type(message.content))
     return {
         "role": OpenaiMessageRole.TOOL.value,
-        "tool_call_id": message.function_call._unique_id,
+        "tool_call_id": message.tool_call_id,
         "content": function_schema.serialize_args(message.content),
     }
 

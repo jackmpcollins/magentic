@@ -7,7 +7,6 @@ from typing import Any, AsyncIterable, Generic, Sequence, TypeVar, cast, overloa
 
 from pydantic import ValidationError
 
-from magentic import FunctionResultMessage
 from magentic.chat_model.base import (
     ChatModel,
     StructuredOutputError,
@@ -26,6 +25,7 @@ from magentic.chat_model.message import (
     AssistantMessage,
     Message,
     SystemMessage,
+    ToolResultMessage,
     Usage,
     UserMessage,
 )
@@ -136,15 +136,15 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
     }
 
 
-@message_to_anthropic_message.register(FunctionResultMessage)
-def _(message: FunctionResultMessage[Any]) -> MessageParam:
+@message_to_anthropic_message.register(ToolResultMessage)
+def _(message: ToolResultMessage[Any]) -> MessageParam:
     function_schema = function_schema_for_type(type(message.content))
     return {
         "role": AnthropicMessageRole.USER.value,
         "content": [
             {
                 "type": "tool_result",
-                "tool_use_id": message.function_call._unique_id,
+                "tool_use_id": message.tool_call_id,
                 "content": json.loads(function_schema.serialize_args(message.content)),
             }
         ],
