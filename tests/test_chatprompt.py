@@ -54,12 +54,12 @@ def test_escape_braces(text):
         (
             [
                 FunctionResultMessage(
-                    "Function result message with {param}", function_call=Mock()
+                    "Function result message with {param}", unique_id="unique_id"
                 )
             ],
             [
                 FunctionResultMessage(
-                    "Function result message with {param}", function_call=Mock()
+                    "Function result message with {param}", unique_id="unique_id"
                 )
             ],
         ),
@@ -179,7 +179,7 @@ def test_chatprompt_with_function_call_and_result():
     @chatprompt(
         UserMessage("Use the plus function to add 1 and 2."),
         AssistantMessage(plus_1_2),
-        FunctionResultMessage(3, plus_1_2),
+        FunctionResultMessage(3, plus_1_2.unique_id),
     )
     def do_math() -> str: ...
 
