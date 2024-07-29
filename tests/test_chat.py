@@ -1,5 +1,3 @@
-from unittest.mock import ANY
-
 import pytest
 
 from magentic.chat import Chat
@@ -78,7 +76,7 @@ def test_exec_function_call():
     )
     chat = chat.exec_function_call()
     assert len(chat.messages) == 3
-    assert chat.messages[2] == FunctionResultMessage(3, ANY)
+    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
 
 
 def test_exec_function_call_parallel_function_call():
@@ -98,8 +96,8 @@ def test_exec_function_call_parallel_function_call():
     )
     chat = chat.exec_function_call()
     assert len(chat.messages) == 4
-    assert chat.messages[2] == FunctionResultMessage(3, ANY)
-    assert chat.messages[3] == FunctionResultMessage(7, ANY)
+    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
+    assert chat.messages[3] == FunctionResultMessage(7, FunctionCall(plus, 3, 4))
 
 
 def test_exec_function_call_raises():
@@ -128,7 +126,7 @@ async def test_aexec_function_call_async_function():
     )
     chat = await chat.aexec_function_call()
     assert len(chat.messages) == 3
-    assert chat.messages[2] == FunctionResultMessage(3, ANY)
+    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(aplus, 1, 2))
 
 
 @pytest.mark.asyncio
@@ -145,7 +143,7 @@ async def test_aexec_function_call_not_async_function():
     )
     chat = await chat.aexec_function_call()
     assert len(chat.messages) == 3
-    assert chat.messages[2] == FunctionResultMessage(3, ANY)
+    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
 
 
 @pytest.mark.asyncio
@@ -166,8 +164,8 @@ async def test_aexec_function_call_async_parallel_function_call():
     )
     chat = await chat.aexec_function_call()
     assert len(chat.messages) == 4
-    assert chat.messages[2] == FunctionResultMessage(3, ANY)
-    assert chat.messages[3] == FunctionResultMessage(7, ANY)
+    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
+    assert chat.messages[3] == FunctionResultMessage(7, FunctionCall(plus, 3, 4))
 
 
 @pytest.mark.asyncio

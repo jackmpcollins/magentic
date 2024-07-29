@@ -41,7 +41,7 @@ class FunctionCall(Generic[T]):
         self._kwargs = kwargs
 
         # Used to correlate function call with result on serialization
-        self._unique_id = _create_unique_id()  # TODO: Allow setting this via param
+        self._unique_id = _create_unique_id()
 
     def __call__(self) -> T:
         with logfire.span(
@@ -67,11 +67,6 @@ class FunctionCall(Generic[T]):
             ]
         )
         return f"{type(self).__name__}({self._function!r}, {args_kwargs_repr})"
-
-    @property
-    def unique_id(self) -> str:
-        """A unique identifier for the function call."""
-        return self._unique_id
 
     @property
     def function(self):

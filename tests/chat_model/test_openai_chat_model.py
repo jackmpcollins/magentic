@@ -88,10 +88,10 @@ def plus(a: int, b: int) -> int:
             },
         ),
         (
-            FunctionResultMessage(3, "unique_id"),
+            FunctionResultMessage(3, FunctionCall(plus, 1, 2)),
             {
                 "role": "tool",
-                "tool_call_id": "unique_id",
+                "tool_call_id": ANY,
                 "content": '{"value":3}',
             },
         ),

@@ -143,7 +143,7 @@ plus_1_2 = FunctionCall(plus, 1, 2)
 @chatprompt(
     UserMessage("Use the plus function to add 1 and 2."),
     AssistantMessage(plus_1_2),
-    FunctionResultMessage(3, plus_1_2.unique_id),
+    FunctionResultMessage(3, plus_1_2),
     UserMessage("Now add 4 to the result."),
     functions=[plus],
 )
