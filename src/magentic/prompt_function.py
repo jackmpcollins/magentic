@@ -17,12 +17,9 @@ from typing import (
 import logfire_api as logfire
 
 from magentic.backend import get_chat_model
-from magentic.chat_model.base import ChatModel, StructuredOutputError
-from magentic.chat_model.message import (
-    Message,
-    ToolResultMessage,
-    UserMessage,
-)
+from magentic.chat_model.base import ChatModel
+from magentic.chat_model.message import UserMessage
+from magentic.chat_model.retry_chat_model import RetryChatModel
 from magentic.typing import split_union_type
 
 P = ParamSpec("P")
@@ -70,6 +67,11 @@ class BasePromptFunction(Generic[P, R]):
 
     @property
     def model(self) -> ChatModel:
+        if self._max_retries:
+            return RetryChatModel(
+                chat_model=self._model or get_chat_model(),
+                max_retries=self._max_retries,
+            )
         return self._model or get_chat_model()
 
     @property
@@ -92,34 +94,13 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
             f"Calling prompt-function {self._name}",
             **self._signature.bind(*args, **kwargs).arguments,
         ):
-            messages: list[Message[Any]] = [
-                UserMessage(content=self.format(*args, **kwargs))
-            ]
-            # TODO: Add this logic to `chatprompt` and `Chat` too
-            # TODO: Create a wrapper ChatModel that handles retries using this logic ?
-            num_retries = 0
-            while True:
-                print("\nRetry", num_retries)  # noqa: T201
-                print(messages)  # noqa: T201
-                try:
-                    message = self.model.complete(
-                        messages=messages,
-                        functions=self._functions,
-                        output_types=self._return_types,
-                        stop=self._stop,
-                    )
-                except StructuredOutputError as e:
-                    if num_retries >= self._max_retries:
-                        raise
-                    num_retries += 1
-                    messages.append(e.output_message)
-                    messages.append(
-                        ToolResultMessage(
-                            content=str(e.validation_error), tool_call_id=e.tool_call_id
-                        )
-                    )
-                else:
-                    return message.content
+            message = self.model.complete(
+                messages=[UserMessage(content=self.format(*args, **kwargs))],
+                functions=self._functions,
+                output_types=self._return_types,
+                stop=self._stop,
+            )
+            return message.content
 
 
 class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
