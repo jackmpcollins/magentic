@@ -18,7 +18,11 @@ import logfire_api as logfire
 
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel, StructuredOutputError
-from magentic.chat_model.message import Message, UserMessage
+from magentic.chat_model.message import (
+    Message,
+    ToolResultMessage,
+    UserMessage,
+)
 from magentic.typing import split_union_type
 
 P = ParamSpec("P")
@@ -109,7 +113,11 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
                         raise
                     num_retries += 1
                     messages.append(e.output_message)
-                    messages.append(e.retry_message)
+                    messages.append(
+                        ToolResultMessage(
+                            content=str(e.validation_error), tool_call_id=e.tool_call_id
+                        )
+                    )
                 else:
                     return message.content
 

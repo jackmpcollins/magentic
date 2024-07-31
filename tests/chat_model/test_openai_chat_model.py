@@ -1,10 +1,13 @@
 import os
+from typing import Annotated
 from unittest.mock import ANY
 
 import openai
 import pytest
 from openai.types.chat import ChatCompletionMessageParam
+from pydantic import AfterValidator, BaseModel
 
+from magentic.chat_model.base import StructuredOutputError
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
@@ -184,6 +187,22 @@ def test_openai_chat_model_complete_no_structured_output_error():
     assert isinstance(message.content, int | bool)
 
 
+@pytest.mark.openai
+def test_openai_chat_model_complete_raises_structured_output_error():
+    def raise_error(v):
+        raise ValueError(v)
+
+    class Test(BaseModel):
+        value: Annotated[int, AfterValidator(raise_error)]
+
+    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    with pytest.raises(StructuredOutputError):
+        chat_model.complete(
+            messages=[UserMessage("Return a test value of 42.")],
+            output_types=[Test],
+        )
+
+
 @pytest.mark.asyncio
 @pytest.mark.openai
 async def test_openai_chat_model_acomplete_usage():
@@ -207,6 +226,23 @@ async def test_openai_chat_model_acomplete_usage_structured_output():
     assert isinstance(message.usage, Usage)
     assert message.usage.input_tokens > 0
     assert message.usage.output_tokens > 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_openai_chat_model_acomplete_raises_structured_output_error():
+    def raise_error(v):
+        raise ValueError(v)
+
+    class Test(BaseModel):
+        value: Annotated[int, AfterValidator(raise_error)]
+
+    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    with pytest.raises(StructuredOutputError):
+        await chat_model.acomplete(
+            messages=[UserMessage("Return a test value of 42.")],
+            output_types=[Test],
+        )
 
 
 def test_openai_chat_model_azure_omits_stream_options(monkeypatch):

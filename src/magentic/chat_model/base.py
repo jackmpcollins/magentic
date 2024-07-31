@@ -4,7 +4,9 @@ from collections.abc import Callable, Iterable
 from contextvars import ContextVar
 from typing import Any, TypeVar, overload
 
-from magentic.chat_model.message import AssistantMessage, Message, UserMessage
+from pydantic import ValidationError
+
+from magentic.chat_model.message import AssistantMessage, Message
 from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 R = TypeVar("R")
@@ -14,24 +16,40 @@ _chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
 )
 
 
-class StructuredOutputError(Exception):
-    """Raised when the LLM output could not be parsed."""
+# TODO: Parent class with `output_message` attribute ?
+class StringNotAllowedError(Exception):
+    """Raised when a string is returned by the LLM but not expected."""
 
-    def __init__(
-        self, message: str, output_message: Message[Any], retry_message: Message[Any]
-    ):
-        super().__init__(message)
+    _MESSAGE = (
+        "A string was returned by the LLM but was not an allowed output type."
+        ' Consider updating the prompt to encourage the LLM to "use the tool".'
+        " Model output: {model_output!r}"
+    )
+
+    def __init__(self, output_message: Message[Any]):
+        super().__init__(self._MESSAGE.format(model_output=output_message))
         self.output_message = output_message
-        self.retry_message = retry_message
 
 
-_STRING_NOT_EXPECTED_ERROR_MESSAGE = (
-    "String was returned by model but not expected. You may need to update"
-    " your prompt to encourage the model to return a specific type."
-    " Model output: {model_output!r}"
-)
-# TODO: Enable users to modify this prompt. Add to settings?
-_STRING_NOT_EXPECTED_RETRY_MESSAGE = "Use the tools provided. Do not return a string."
+# TODO: Rename ? Applies to both structured output and tool/function calls.
+class StructuredOutputError(Exception):
+    """Raised when the LLM output could not be parsed into a tool call."""
+
+    _MESSAGE = (
+        "Failed to parse the LLM output to a structured object."
+        " Consider making the output type more lenient or enabling retries."
+        " Model output: {model_output!r}"
+    )
+
+    def __init__(self, output_message: Message[Any], tool_call_id: str):
+        super().__init__(self._MESSAGE.format(model_output=output_message))
+        self.output_message = output_message
+        self.tool_call_id = tool_call_id
+
+    @property
+    def validation_error(self) -> ValidationError | None:
+        """The cause of this error if it was a pydantic `ValidationError`."""
+        return self.__cause__ if isinstance(self.__cause__, ValidationError) else None
 
 
 def validate_str_content(
@@ -40,11 +58,7 @@ def validate_str_content(
     """Raise error if string output not expected. Otherwise return correct string type."""
     if not allow_string_output:
         model_output = streamed_str.truncate(100)
-        raise StructuredOutputError(
-            _STRING_NOT_EXPECTED_ERROR_MESSAGE.format(model_output=model_output),
-            output_message=AssistantMessage(model_output),
-            retry_message=UserMessage(_STRING_NOT_EXPECTED_RETRY_MESSAGE),
-        )
+        raise StringNotAllowedError(AssistantMessage(model_output))
     if streamed:
         return streamed_str
     return str(streamed_str)
@@ -56,11 +70,7 @@ async def avalidate_str_content(
     """Async version of `validate_str_content`."""
     if not allow_string_output:
         model_output = await async_streamed_str.truncate(100)
-        raise StructuredOutputError(
-            _STRING_NOT_EXPECTED_ERROR_MESSAGE.format(model_output=model_output),
-            output_message=AssistantMessage(model_output),
-            retry_message=UserMessage(_STRING_NOT_EXPECTED_RETRY_MESSAGE),
-        )
+        raise StringNotAllowedError(AssistantMessage(model_output))
     if streamed:
         return async_streamed_str
     return await async_streamed_str.to_string()

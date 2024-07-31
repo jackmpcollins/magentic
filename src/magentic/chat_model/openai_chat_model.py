@@ -1,4 +1,3 @@
-import json
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch, wraps
@@ -612,8 +611,9 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
-            all_tool_call_chunks: list[ChatCompletionChunk] = []
-            response = apply(all_tool_call_chunks.append, response)
+            cached_response: list[ChatCompletionChunk] = []
+            response = apply(cached_response.append, response)
+            # TODO: move try/except into _parse_streamed_tool_calls to raise during iteration ?
             try:
                 tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
@@ -623,23 +623,13 @@ class OpenaiChatModel(ChatModel):
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
                 content = next(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
+            # TODO: Catch UnknownToolCallError here
             except ValidationError as e:
-                raw_message = _join_streamed_tool_calls_to_message(all_tool_call_chunks)
-                msg = (
-                    "Failed to parse model output. You may need to update your prompt"
-                    " to encourage the model to return a specific type."
-                    f" Model output: {json.dumps(raw_message.content)}"
-                )
-                # TODO: Use `FunctionResultMessage` or `FunctionErrorMessage` here
-                retry_message = _RawMessage(
-                    {
-                        "role": OpenaiMessageRole.TOOL.value,
-                        "tool_call_id": raw_message.content["tool_calls"][0]["id"],
-                        "content": str(e),
-                    }
-                )
+                raw_message = _join_streamed_tool_calls_to_message(cached_response)
                 raise StructuredOutputError(
-                    msg, output_message=raw_message, retry_message=retry_message
+                    output_message=raw_message,
+                    # TODO: Confirm only one tool_call id is needed here
+                    tool_call_id=raw_message.content["tool_calls"][0]["id"],
                 ) from e
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
@@ -739,8 +729,8 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
-            all_tool_call_chunks: list[ChatCompletionChunk] = []
-            response = aapply(all_tool_call_chunks.append, response)
+            cached_response: list[ChatCompletionChunk] = []
+            response = aapply(cached_response.append, response)
             try:
                 tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
@@ -750,13 +740,11 @@ class OpenaiChatModel(ChatModel):
                 content = await anext(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
-                raw_message = _join_streamed_tool_calls_to_message(all_tool_call_chunks)
-                msg = (
-                    "Failed to parse model output. You may need to update your prompt"
-                    " to encourage the model to return a specific type."
-                    f" Model output: {json.dumps(raw_message.content)}"
-                )
-                raise StructuredOutputError(msg) from e
+                raw_message = _join_streamed_tool_calls_to_message(cached_response)
+                raise StructuredOutputError(
+                    output_message=raw_message,
+                    tool_call_id=raw_message.content["tool_calls"][0]["id"],
+                ) from e
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
