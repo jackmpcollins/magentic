@@ -1,4 +1,5 @@
 from collections.abc import Callable, Iterable
+from functools import singledispatchmethod
 from typing import Any, TypeVar, overload
 
 import logfire_api as logfire
@@ -27,6 +28,19 @@ class RetryChatModel(ChatModel):
     ):
         self._chat_model = chat_model
         self._max_retries = max_retries
+
+    @singledispatchmethod
+    def _make_retry_messages(self, error: Exception) -> list[Message[Any]]:
+        raise NotImplementedError
+
+    @_make_retry_messages.register
+    def _(self, error: ToolSchemaParseError) -> list[Message[Any]]:
+        return [
+            error.output_message,
+            ToolResultMessage(
+                content=str(error.validation_error), tool_call_id=error.tool_call_id
+            ),
+        ]
 
     @overload
     def complete(
@@ -74,12 +88,7 @@ class RetryChatModel(ChatModel):
                 except ToolSchemaParseError as e:
                     if num_retry >= self._max_retries:
                         raise
-                    messages.append(e.output_message)
-                    messages.append(
-                        ToolResultMessage(
-                            content=str(e.validation_error), tool_call_id=e.tool_call_id
-                        )
-                    )
+                    messages += self._make_retry_messages(e)
                 else:
                     return message
 
@@ -136,12 +145,7 @@ class RetryChatModel(ChatModel):
                 except ToolSchemaParseError as e:
                     if num_retry >= self._max_retries:
                         raise
-                    messages.append(e.output_message)
-                    messages.append(
-                        ToolResultMessage(
-                            content=str(e.validation_error), tool_call_id=e.tool_call_id
-                        )
-                    )
+                    messages += self._make_retry_messages(e)
                 else:
                     return message
 
