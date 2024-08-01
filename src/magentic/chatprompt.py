@@ -18,6 +18,7 @@ import logfire_api as logfire
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import Message
+from magentic.chat_model.retry_chat_model import RetryChatModel
 from magentic.typing import split_union_type
 
 P = ParamSpec("P")
@@ -48,6 +49,7 @@ class BaseChatPromptFunction(Generic[P, R]):
         messages: Sequence[Message[Any]],
         functions: list[Callable[..., Any]] | None = None,
         stop: list[str] | None = None,
+        max_retries: int = 0,
         model: ChatModel | None = None,
     ):
         self._name = name
@@ -58,6 +60,7 @@ class BaseChatPromptFunction(Generic[P, R]):
         self._messages = messages
         self._functions = functions or []
         self._stop = stop
+        self._max_retries = max_retries
         self._model = model
 
         self._return_types = list(split_union_type(return_type))
@@ -68,6 +71,11 @@ class BaseChatPromptFunction(Generic[P, R]):
 
     @property
     def model(self) -> ChatModel:
+        if self._max_retries:
+            return RetryChatModel(
+                chat_model=self._model or get_chat_model(),
+                max_retries=self._max_retries,
+            )
         return self._model or get_chat_model()
 
     @property
@@ -140,6 +148,7 @@ def chatprompt(
     *messages: Message[Any],
     functions: list[Callable[..., Any]] | None = None,
     stop: list[str] | None = None,
+    max_retries: int = 0,
     model: ChatModel | None = None,
 ) -> ChatPromptDecorator:
     """Convert a function into an LLM chat prompt template.
@@ -189,6 +198,7 @@ def chatprompt(
                 messages=messages,
                 functions=functions,
                 stop=stop,
+                max_retries=max_retries,
                 model=model,
             )
             return cast(
@@ -203,6 +213,7 @@ def chatprompt(
             messages=messages,
             functions=functions,
             stop=stop,
+            max_retries=max_retries,
             model=model,
         )
         return cast(ChatPromptFunction[P, R], update_wrapper(prompt_function, func))
