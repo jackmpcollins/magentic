@@ -138,14 +138,18 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
 
 @message_to_anthropic_message.register(ToolResultMessage)
 def _(message: ToolResultMessage[Any]) -> MessageParam:
-    function_schema = function_schema_for_type(type(message.content))
+    if isinstance(message.content, str):
+        content = message.content
+    else:
+        function_schema = function_schema_for_type(type(message.content))
+        content = json.loads(function_schema.serialize_args(message.content))
     return {
         "role": AnthropicMessageRole.USER.value,
         "content": [
             {
                 "type": "tool_result",
                 "tool_use_id": message.tool_call_id,
-                "content": json.loads(function_schema.serialize_args(message.content)),
+                "content": content,
             }
         ],
     }

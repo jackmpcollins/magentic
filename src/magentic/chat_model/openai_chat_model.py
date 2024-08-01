@@ -152,11 +152,15 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
 
 @message_to_openai_message.register(ToolResultMessage)
 def _(message: ToolResultMessage[Any]) -> ChatCompletionMessageParam:
-    function_schema = function_schema_for_type(type(message.content))
+    if isinstance(message.content, str):
+        content = message.content
+    else:
+        function_schema = function_schema_for_type(type(message.content))
+        content = function_schema.serialize_args(message.content)
     return {
         "role": OpenaiMessageRole.TOOL.value,
         "tool_call_id": message.tool_call_id,
-        "content": function_schema.serialize_args(message.content),
+        "content": content,
     }
 
 
