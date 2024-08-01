@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from magentic.chat_model.base import (
     ChatModel,
-    StructuredOutputError,
+    ToolSchemaParseError,
     avalidate_str_content,
     validate_str_content,
 )
@@ -494,7 +494,7 @@ class AnthropicChatModel(ChatModel):
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
                 )
-                raise StructuredOutputError(msg) from e
+                raise ToolSchemaParseError(msg) from e
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
@@ -612,7 +612,7 @@ class AnthropicChatModel(ChatModel):
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
                 )
-                raise StructuredOutputError(msg) from e
+                raise ToolSchemaParseError(msg) from e
 
         msg = "Could not determine response type"
         raise ValueError(msg)

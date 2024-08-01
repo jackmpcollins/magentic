@@ -31,12 +31,11 @@ class StringNotAllowedError(Exception):
         self.output_message = output_message
 
 
-# TODO: Rename ? Applies to both structured output and tool/function calls.
-class StructuredOutputError(Exception):
-    """Raised when the LLM output could not be parsed into a tool call."""
+class ToolSchemaParseError(Exception):
+    """Raised when the LLM output could not be parsed by the tool schema."""
 
     _MESSAGE = (
-        "Failed to parse the LLM output to a structured object."
+        "Failed to parse the LLM output into the tool schema."
         " Consider making the output type more lenient or enabling retries."
         " Model output: {model_output!r}"
     )

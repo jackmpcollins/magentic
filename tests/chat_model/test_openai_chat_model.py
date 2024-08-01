@@ -7,7 +7,7 @@ import pytest
 from openai.types.chat import ChatCompletionMessageParam
 from pydantic import AfterValidator, BaseModel
 
-from magentic.chat_model.base import StructuredOutputError
+from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
@@ -196,7 +196,7 @@ def test_openai_chat_model_complete_raises_structured_output_error():
         value: Annotated[int, AfterValidator(raise_error)]
 
     chat_model = OpenaiChatModel("gpt-3.5-turbo")
-    with pytest.raises(StructuredOutputError):
+    with pytest.raises(ToolSchemaParseError):
         chat_model.complete(
             messages=[UserMessage("Return a test value of 42.")],
             output_types=[Test],
@@ -238,7 +238,7 @@ async def test_openai_chat_model_acomplete_raises_structured_output_error():
         value: Annotated[int, AfterValidator(raise_error)]
 
     chat_model = OpenaiChatModel("gpt-3.5-turbo")
-    with pytest.raises(StructuredOutputError):
+    with pytest.raises(ToolSchemaParseError):
         await chat_model.acomplete(
             messages=[UserMessage("Return a test value of 42.")],
             output_types=[Test],

@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from magentic.chat_model.base import (
     ChatModel,
-    StructuredOutputError,
+    ToolSchemaParseError,
     avalidate_str_content,
     validate_str_content,
 )
@@ -197,7 +197,7 @@ class LitellmChatModel(ChatModel):
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
                 )
-                raise StructuredOutputError(msg) from e
+                raise ToolSchemaParseError(msg) from e
 
         if first_chunk.choices[0].delta.content is not None:
             streamed_str = StreamedStr(
@@ -303,7 +303,7 @@ class LitellmChatModel(ChatModel):
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
                 )
-                raise StructuredOutputError(msg) from e
+                raise ToolSchemaParseError(msg) from e
 
         if first_chunk.choices[0].delta.content is not None:
             async_streamed_str = AsyncStreamedStr(

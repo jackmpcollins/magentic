@@ -5,7 +5,7 @@ import logfire_api as logfire
 
 from magentic.chat_model.base import (
     ChatModel,
-    StructuredOutputError,
+    ToolSchemaParseError,
 )
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -71,7 +71,7 @@ class RetryChatModel(ChatModel):
                         output_types=output_types,
                         stop=stop,
                     )
-                except StructuredOutputError as e:
+                except ToolSchemaParseError as e:
                     if num_retry >= self._max_retries:
                         raise
                     messages.append(e.output_message)
@@ -133,7 +133,7 @@ class RetryChatModel(ChatModel):
                         output_types=output_types,
                         stop=stop,
                     )
-                except StructuredOutputError as e:
+                except ToolSchemaParseError as e:
                     if num_retry >= self._max_retries:
                         raise
                     messages.append(e.output_message)

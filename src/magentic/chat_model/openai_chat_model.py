@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from magentic.chat_model.base import (
     ChatModel,
-    StructuredOutputError,
+    ToolSchemaParseError,
     avalidate_str_content,
     validate_str_content,
 )
@@ -305,7 +305,7 @@ def _parse_streamed_tool_calls(
     # TODO: Catch unknown tool call error here
     except ValidationError as e:
         raw_message = _join_streamed_tool_calls_to_message(cached_response)
-        raise StructuredOutputError(  # TODO: Explicitly add ValidationError attributes
+        raise ToolSchemaParseError(  # TODO: Explicitly add ValidationError attributes
             output_message=raw_message,
             tool_call_id=raw_message.content["tool_calls"][0]["id"],
             validation_error=e,
@@ -327,7 +327,7 @@ async def _aparse_streamed_tool_calls(
     # TODO: Catch unknown tool call error here
     except ValidationError as e:
         raw_message = _join_streamed_tool_calls_to_message(cached_response)
-        raise StructuredOutputError(
+        raise ToolSchemaParseError(
             output_message=raw_message,
             tool_call_id=raw_message.content["tool_calls"][0]["id"],
             validation_error=e,
