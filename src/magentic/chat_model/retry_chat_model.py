@@ -29,6 +29,7 @@ class RetryChatModel(ChatModel):
         self._chat_model = chat_model
         self._max_retries = max_retries
 
+    # TODO: Make this public to allow modifying error handling behavior
     @singledispatchmethod
     def _make_retry_messages(self, error: Exception) -> list[Message[Any]]:
         raise NotImplementedError
@@ -85,6 +86,7 @@ class RetryChatModel(ChatModel):
                         output_types=output_types,
                         stop=stop,
                     )
+                # TODO: Get list of caught exceptions from _make_retry_messages registered types
                 except ToolSchemaParseError as e:
                     if num_retry >= self._max_retries:
                         raise

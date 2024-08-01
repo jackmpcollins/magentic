@@ -302,10 +302,10 @@ def _parse_streamed_tool_calls(
             tool_schema = select_tool_schema(first_chunk, tool_schemas)
             tool_call = tool_schema.parse_tool_call(tool_call_chunks)
             yield tool_call
-    # TODO: Catch unknown tool call error here
+    # TODO: Catch/raise unknown tool call error here
     except ValidationError as e:
         raw_message = _join_streamed_tool_calls_to_message(cached_response)
-        raise ToolSchemaParseError(  # TODO: Explicitly add ValidationError attributes
+        raise ToolSchemaParseError(
             output_message=raw_message,
             tool_call_id=raw_message.content["tool_calls"][0]["id"],
             validation_error=e,
@@ -324,7 +324,7 @@ async def _aparse_streamed_tool_calls(
             tool_schema = select_tool_schema(first_chunk, tool_schemas)
             tool_call = await tool_schema.aparse_tool_call(tool_call_chunks)
             yield tool_call
-    # TODO: Catch unknown tool call error here
+    # TODO: Catch/raise unknown tool call error here
     except ValidationError as e:
         raw_message = _join_streamed_tool_calls_to_message(cached_response)
         raise ToolSchemaParseError(
