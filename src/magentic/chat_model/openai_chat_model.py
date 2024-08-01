@@ -307,7 +307,7 @@ def _parse_streamed_tool_calls(
         raw_message = _join_streamed_tool_calls_to_message(cached_response)
         raise ToolSchemaParseError(
             output_message=raw_message,
-            tool_call_id=raw_message.content["tool_calls"][0]["id"],
+            tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index]
             validation_error=e,
         ) from e
 
@@ -329,7 +329,7 @@ async def _aparse_streamed_tool_calls(
         raw_message = _join_streamed_tool_calls_to_message(cached_response)
         raise ToolSchemaParseError(
             output_message=raw_message,
-            tool_call_id=raw_message.content["tool_calls"][0]["id"],
+            tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index]
             validation_error=e,
         ) from e
 
@@ -339,7 +339,7 @@ def _join_streamed_tool_call(
 ) -> ChatCompletionMessageToolCallParam:
     """Join chunks from a single streamed tool call into an OpenAI tool call dict."""
     tool_id: str | None = None
-    tool_type: str = "function"
+    tool_type: Literal["function"] = "function"
     function_name: list[str] = []
     function_arguments: list[str] = []
     for tool_call_delta in tool_call_deltas:
