@@ -290,22 +290,42 @@ def _parse_streamed_tool_calls(
     response: Iterable[ChatCompletionChunk],
     tool_schemas: list[FunctionToolSchema[T]],
 ) -> Iterator[T]:
-    for tool_call_chunks in _iter_streamed_tool_calls(response):
-        first_chunk, tool_call_chunks = peek(tool_call_chunks)
-        tool_schema = select_tool_schema(first_chunk, tool_schemas)
-        tool_call = tool_schema.parse_tool_call(tool_call_chunks)
-        yield tool_call
+    cached_response: list[ChatCompletionChunk] = []
+    response = apply(cached_response.append, response)
+    try:
+        for tool_call_chunks in _iter_streamed_tool_calls(response):
+            first_chunk, tool_call_chunks = peek(tool_call_chunks)
+            tool_schema = select_tool_schema(first_chunk, tool_schemas)
+            tool_call = tool_schema.parse_tool_call(tool_call_chunks)
+            yield tool_call
+    # TODO: Catch unknown tool call error here
+    except ValidationError as e:
+        raw_message = _join_streamed_tool_calls_to_message(cached_response)
+        raise StructuredOutputError(  # TODO: Explicitly add ValidationError attributes
+            output_message=raw_message,
+            tool_call_id=raw_message.content["tool_calls"][0]["id"],
+        ) from e
 
 
 async def _aparse_streamed_tool_calls(
     response: AsyncIterable[ChatCompletionChunk],
     tool_schemas: list[AsyncFunctionToolSchema[T]],
 ) -> AsyncIterator[T]:
-    async for tool_call_chunks in _aiter_streamed_tool_calls(response):
-        first_chunk, tool_call_chunks = await apeek(tool_call_chunks)
-        tool_schema = select_tool_schema(first_chunk, tool_schemas)
-        tool_call = await tool_schema.aparse_tool_call(tool_call_chunks)
-        yield tool_call
+    cached_response: list[ChatCompletionChunk] = []
+    response = aapply(cached_response.append, response)
+    try:
+        async for tool_call_chunks in _aiter_streamed_tool_calls(response):
+            first_chunk, tool_call_chunks = await apeek(tool_call_chunks)
+            tool_schema = select_tool_schema(first_chunk, tool_schemas)
+            tool_call = await tool_schema.aparse_tool_call(tool_call_chunks)
+            yield tool_call
+    # TODO: Catch unknown tool call error here
+    except ValidationError as e:
+        raw_message = _join_streamed_tool_calls_to_message(cached_response)
+        raise StructuredOutputError(
+            output_message=raw_message,
+            tool_call_id=raw_message.content["tool_calls"][0]["id"],
+        ) from e
 
 
 def _join_streamed_tool_call(
@@ -611,26 +631,13 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
-            cached_response: list[ChatCompletionChunk] = []
-            response = apply(cached_response.append, response)
-            # TODO: move try/except into _parse_streamed_tool_calls to raise during iteration ?
-            try:
-                tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
-                if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                    content = ParallelFunctionCall(tool_calls)
-                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-                # Take only the first tool_call, silently ignore extra chunks
-                # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = next(tool_calls)
+            tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
+            if is_any_origin_subclass(output_types, ParallelFunctionCall):
+                content = ParallelFunctionCall(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-            # TODO: Catch UnknownToolCallError here
-            except ValidationError as e:
-                raw_message = _join_streamed_tool_calls_to_message(cached_response)
-                raise StructuredOutputError(
-                    output_message=raw_message,
-                    # TODO: Confirm only one tool_call id is needed here
-                    tool_call_id=raw_message.content["tool_calls"][0]["id"],
-                ) from e
+            # Take only the first tool_call, silently ignore extra chunks
+            content = next(tool_calls)
+            return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
@@ -731,20 +738,13 @@ class OpenaiChatModel(ChatModel):
         if first_chunk.choices[0].delta.tool_calls:
             cached_response: list[ChatCompletionChunk] = []
             response = aapply(cached_response.append, response)
-            try:
-                tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
-                if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                    content = AsyncParallelFunctionCall(tool_calls)
-                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-                # Take only the first tool_call, silently ignore extra chunks
-                content = await anext(tool_calls)
+            tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
+            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+                content = AsyncParallelFunctionCall(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-            except ValidationError as e:
-                raw_message = _join_streamed_tool_calls_to_message(cached_response)
-                raise StructuredOutputError(
-                    output_message=raw_message,
-                    tool_call_id=raw_message.content["tool_calls"][0]["id"],
-                ) from e
+            # Take only the first tool_call, silently ignore extra chunks
+            content = await anext(tool_calls)
+            return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
