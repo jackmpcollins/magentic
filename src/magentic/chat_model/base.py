@@ -41,15 +41,16 @@ class StructuredOutputError(Exception):
         " Model output: {model_output!r}"
     )
 
-    def __init__(self, output_message: Message[Any], tool_call_id: str):
+    def __init__(
+        self,
+        output_message: Message[Any],
+        tool_call_id: str,
+        validation_error: ValidationError,
+    ):
         super().__init__(self._MESSAGE.format(model_output=output_message))
         self.output_message = output_message
         self.tool_call_id = tool_call_id
-
-    @property
-    def validation_error(self) -> ValidationError | None:
-        """The cause of this error if it was a pydantic `ValidationError`."""
-        return self.__cause__ if isinstance(self.__cause__, ValidationError) else None
+        self.validation_error = validation_error
 
 
 def validate_str_content(

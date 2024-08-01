@@ -308,6 +308,7 @@ def _parse_streamed_tool_calls(
         raise StructuredOutputError(  # TODO: Explicitly add ValidationError attributes
             output_message=raw_message,
             tool_call_id=raw_message.content["tool_calls"][0]["id"],
+            validation_error=e,
         ) from e
 
 
@@ -329,6 +330,7 @@ async def _aparse_streamed_tool_calls(
         raise StructuredOutputError(
             output_message=raw_message,
             tool_call_id=raw_message.content["tool_calls"][0]["id"],
+            validation_error=e,
         ) from e
 
 
