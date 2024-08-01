@@ -27,7 +27,7 @@ class StringNotAllowedError(Exception):
     )
 
     def __init__(self, output_message: Message[Any]):
-        super().__init__(self._MESSAGE.format(model_output=output_message))
+        super().__init__(self._MESSAGE.format(model_output=output_message.content))
         self.output_message = output_message
 
 
@@ -47,7 +47,7 @@ class StructuredOutputError(Exception):
         tool_call_id: str,
         validation_error: ValidationError,
     ):
-        super().__init__(self._MESSAGE.format(model_output=output_message))
+        super().__init__(self._MESSAGE.format(model_output=output_message.content))
         self.output_message = output_message
         self.tool_call_id = tool_call_id
         self.validation_error = validation_error
