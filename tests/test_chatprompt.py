@@ -1,7 +1,7 @@
 """Tests for @chatprompt decorator."""
 
 from inspect import getdoc
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import ANY, AsyncMock, Mock
 
 import pytest
 from pydantic import BaseModel
@@ -54,12 +54,14 @@ def test_escape_braces(text):
         (
             [
                 FunctionResultMessage(
-                    "Function result message with {param}", function_call=Mock()
+                    "Function result message with {param}",
+                    function_call=FunctionCall(ANY),
                 )
             ],
             [
                 FunctionResultMessage(
-                    "Function result message with {param}", function_call=Mock()
+                    "Function result message with {param}",
+                    function_call=FunctionCall(ANY),
                 )
             ],
         ),

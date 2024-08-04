@@ -132,18 +132,40 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
         return AssistantMessage(self.content)
 
 
-class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
-    """A message containing the result of a function call."""
+class ToolResultMessage(Message[ContentT], Generic[ContentT]):
+    """A message containing the result of a tool call."""
 
     role: Literal["tool"] = "tool"
+    tool_call_id: str
+
+    def __init__(self, content: ContentT, tool_call_id: str, **data: Any):
+        super().__init__(content=content, tool_call_id=tool_call_id, **data)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.content!r}, {self.tool_call_id=!r})"
+
+    def format(self, **kwargs: Any) -> "ToolResultMessage[ContentT]":
+        del kwargs
+        return ToolResultMessage(self.content, self.tool_call_id)
+
+
+class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
+    """A message containing the result of a function call."""
+
+    _function_call: FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT]
 
     @overload
     def __init__(
-        self, content: ContentT, function_call: FunctionCall[Awaitable[ContentT]]
+        self,
+        content: ContentT,
+        function_call: FunctionCall[Awaitable[ContentT]],
+        **data: Any,
     ): ...
 
     @overload
-    def __init__(self, content: ContentT, function_call: FunctionCall[ContentT]): ...
+    def __init__(
+        self, content: ContentT, function_call: FunctionCall[ContentT], **data: Any
+    ): ...
 
     def __init__(
         self,
@@ -151,8 +173,17 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
         function_call: FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT],
         **data: Any,
     ):
-        super().__init__(content=content, **data)
+        super().__init__(content=content, tool_call_id=function_call._unique_id, **data)
         self._function_call = function_call
+
+    # TODO: Include tool_call_id in equality check ?
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, type(self)):
+            return NotImplemented
+        return (
+            self.content == other.content
+            and self._function_call == other._function_call
+        )
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.content!r}, {self._function_call!r})"

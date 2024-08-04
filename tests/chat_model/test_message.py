@@ -1,4 +1,4 @@
-from unittest.mock import MagicMock
+from unittest.mock import ANY, MagicMock
 
 import pytest
 from pydantic import BaseModel
@@ -9,6 +9,7 @@ from magentic.chat_model.message import (
     FunctionResultMessage,
     Placeholder,
     SystemMessage,
+    ToolResultMessage,
     Usage,
     UserMessage,
 )
@@ -23,6 +24,27 @@ def test_placeholder():
 
     assert_type(placeholder, Placeholder[Country])
     assert placeholder.name == "country"
+
+
+@pytest.mark.parametrize(
+    ("message", "message_model_dump"),
+    [
+        (SystemMessage("Hello"), {"role": "system", "content": "Hello"}),
+        (UserMessage("Hello"), {"role": "user", "content": "Hello"}),
+        (AssistantMessage("Hello"), {"role": "assistant", "content": "Hello"}),
+        (AssistantMessage(42), {"role": "assistant", "content": 42}),
+        (
+            ToolResultMessage(3, "unique_id"),
+            {"role": "tool", "content": 3, "tool_call_id": "unique_id"},
+        ),
+        (
+            FunctionResultMessage(3, FunctionCall(MagicMock(), 1, 2)),
+            {"role": "tool", "content": 3, "tool_call_id": ANY},
+        ),
+    ],
+)
+def test_message_model_dump(message, message_model_dump):
+    assert message.model_dump() == message_model_dump
 
 
 @pytest.mark.parametrize(
