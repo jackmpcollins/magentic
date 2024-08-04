@@ -3,6 +3,7 @@ from typing import (
     Any,
     Awaitable,
     Generic,
+    Literal,
     NamedTuple,
     TypeVar,
     cast,
@@ -62,6 +63,8 @@ class Message(BaseModel, Generic[ContentT], ABC):
 class SystemMessage(Message[str]):
     """A message to the LLM to guide the whole chat."""
 
+    role: Literal["system"] = "system"
+
     def __init__(self, content: str, **data: Any):
         super().__init__(content=content, **data)
 
@@ -71,6 +74,8 @@ class SystemMessage(Message[str]):
 
 class UserMessage(Message[str]):
     """A message sent by a user to an LLM chat model."""
+
+    role: Literal["user"] = "user"
 
     def __init__(self, content: str, **data: Any):
         super().__init__(content=content, **data)
@@ -89,6 +94,7 @@ class Usage(NamedTuple):
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
+    role: Literal["assistant"] = "assistant"
     _usage_ref: list[Usage] | None = PrivateAttr(None)
 
     def __init__(self, content: ContentT, **data: Any):
@@ -128,6 +134,8 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
 
 class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
     """A message containing the result of a function call."""
+
+    role: Literal["tool"] = "tool"
 
     @overload
     def __init__(
