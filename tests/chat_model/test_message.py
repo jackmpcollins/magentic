@@ -1,3 +1,6 @@
+from unittest.mock import MagicMock
+
+import pytest
 from pydantic import BaseModel
 from typing_extensions import assert_type
 
@@ -5,6 +8,7 @@ from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
     Placeholder,
+    SystemMessage,
     Usage,
     UserMessage,
 )
@@ -19,6 +23,25 @@ def test_placeholder():
 
     assert_type(placeholder, Placeholder[Country])
     assert placeholder.name == "country"
+
+
+@pytest.mark.parametrize(
+    ("message", "message_repr"),
+    [
+        (SystemMessage("Hello"), "SystemMessage('Hello')"),
+        (UserMessage("Hello"), "UserMessage('Hello')"),
+        (AssistantMessage("Hello"), "AssistantMessage('Hello')"),
+        (AssistantMessage(42), "AssistantMessage(42)"),
+        (
+            FunctionResultMessage(
+                3, FunctionCall(MagicMock(__repr__=lambda x: "plus_repr"), 1, 2)
+            ),
+            "FunctionResultMessage(3, FunctionCall(plus_repr, 1, 2))",
+        ),
+    ],
+)
+def test_message_repr(message, message_repr):
+    assert repr(message) == message_repr
 
 
 def test_user_message_format():

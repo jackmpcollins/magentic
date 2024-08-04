@@ -50,6 +50,9 @@ class Message(BaseModel, Generic[ContentT], ABC):
     def __init__(self, content: ContentT, **data: Any):
         super().__init__(content=content, **data)
 
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.content!r})"
+
     @abstractmethod
     def format(self, **kwargs: Any) -> "Message[Any]":
         """Format the message using the provided substitutions."""
