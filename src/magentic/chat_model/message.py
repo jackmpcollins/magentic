@@ -10,6 +10,7 @@ from typing import (
     overload,
 )
 
+from pydantic import BaseModel, PrivateAttr
 from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
@@ -41,23 +42,13 @@ class Placeholder(Generic[T]):
 ContentT = TypeVar("ContentT")
 
 
-class Message(Generic[ContentT], ABC):
+class Message(BaseModel, Generic[ContentT], ABC):
     """A message sent to or from an LLM chat model."""
 
-    def __init__(self, content: ContentT):
-        self._content = content
+    content: ContentT
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        return type(self) is type(other) and self.content == other.content
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.content!r})"
-
-    @property
-    def content(self) -> ContentT:
-        return self._content
+    def __init__(self, content: ContentT, **data: Any):
+        super().__init__(content=content, **data)
 
     @abstractmethod
     def format(self, **kwargs: Any) -> "Message[Any]":
@@ -68,12 +59,18 @@ class Message(Generic[ContentT], ABC):
 class SystemMessage(Message[str]):
     """A message to the LLM to guide the whole chat."""
 
+    def __init__(self, content: str, **data: Any):
+        super().__init__(content=content, **data)
+
     def format(self, **kwargs: Any) -> "SystemMessage":
         return SystemMessage(self.content.format(**kwargs))
 
 
 class UserMessage(Message[str]):
     """A message sent by a user to an LLM chat model."""
+
+    def __init__(self, content: str, **data: Any):
+        super().__init__(content=content, **data)
 
     def format(self, **kwargs: Any) -> "UserMessage":
         return UserMessage(self.content.format(**kwargs))
@@ -89,7 +86,10 @@ class Usage(NamedTuple):
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
-    _usage_ref: list[Usage] | None = None
+    _usage_ref: list[Usage] | None = PrivateAttr(None)
+
+    def __init__(self, content: ContentT, **data: Any):
+        super().__init__(content=content, **data)
 
     @classmethod
     def _with_usage(cls, content: ContentT, usage_ref: list[Usage]) -> Self:
@@ -138,8 +138,9 @@ class FunctionResultMessage(Message[ContentT], Generic[ContentT]):
         self,
         content: ContentT,
         function_call: FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT],
+        **data: Any,
     ):
-        super().__init__(content)
+        super().__init__(content=content, **data)
         self._function_call = function_call
 
     def __repr__(self) -> str:

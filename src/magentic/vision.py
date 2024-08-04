@@ -17,6 +17,9 @@ ImageContentT = TypeVar("ImageContentT")
 class UserImageMessage(Message[ImageContentT], Generic[ImageContentT]):
     """A message containing an image sent by a user to an LLM chat model."""
 
+    def __init__(self, content: ImageContentT, **data: Any):
+        super().__init__(content=content, **data)
+
     @overload
     def format(
         self: "UserImageMessage[Placeholder[T]]", **kwargs: Any
