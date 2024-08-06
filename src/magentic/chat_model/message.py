@@ -1,17 +1,19 @@
 from abc import ABC, abstractmethod
 from typing import (
+    Annotated,
     Any,
     Awaitable,
     Generic,
     Literal,
     NamedTuple,
     TypeVar,
+    Union,
     cast,
     get_origin,
     overload,
 )
 
-from pydantic import BaseModel, PrivateAttr
+from pydantic import BaseModel, Field, PrivateAttr
 from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
@@ -188,3 +190,16 @@ class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
     def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
         del kwargs
         return FunctionResultMessage(self.content, self._function_call)
+
+
+AnyMessage = Annotated[
+    Union[
+        SystemMessage,
+        UserMessage,
+        AssistantMessage[Any],
+        ToolResultMessage[Any],
+        # Do not include FunctionResultMessage which also uses "tool" role
+    ],
+    Field(discriminator="role"),
+]
+"""Union of all message types."""

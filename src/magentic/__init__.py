@@ -1,8 +1,10 @@
 from magentic.chat_model.message import (
+    AnyMessage,
     AssistantMessage,
     FunctionResultMessage,
     Placeholder,
     SystemMessage,
+    ToolResultMessage,
     UserMessage,
 )
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
@@ -17,10 +19,12 @@ from magentic.prompt_function import prompt
 from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 __all__ = [
+    "AnyMessage",
     "AssistantMessage",
     "FunctionResultMessage",
     "Placeholder",
     "SystemMessage",
+    "ToolResultMessage",
     "UserMessage",
     "OpenaiChatModel",
     "chatprompt",
