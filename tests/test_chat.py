@@ -1,3 +1,5 @@
+from typing import Awaitable
+
 import pytest
 
 from magentic.chat import Chat
@@ -116,7 +118,7 @@ async def test_aexec_function_call_async_function():
     async def aplus(a: int, b: int) -> int:
         return a + b
 
-    aplus_1_2 = FunctionCall(aplus, 1, 2)
+    aplus_1_2: FunctionCall[Awaitable[int]] = FunctionCall(aplus, 1, 2)
     chat = Chat(
         messages=[
             UserMessage(content="What is 1 plus 2?"),
@@ -158,7 +160,9 @@ async def test_aexec_function_call_async_parallel_function_call():
         messages=[
             UserMessage(content="What is 1 plus 2? And 3 plus 4?"),
             AssistantMessage(
-                content=AsyncParallelFunctionCall(async_iter([plus_1_2, plus_3_4]))
+                content=AsyncParallelFunctionCall(
+                    async_iter([plus_1_2, plus_3_4])  # type: ignore[list-item]
+                )
             ),
         ],
         functions=[plus],
