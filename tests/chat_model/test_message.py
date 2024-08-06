@@ -105,6 +105,19 @@ def test_assistant_message_format_placeholder():
     assert assistant_message_formatted == AssistantMessage(Country(name="USA"))
 
 
+def test_function_result_message_eq():
+    def plus(a: int, b: int) -> int:
+        return a + b
+
+    func_call = FunctionCall(plus, 1, 2)
+    function_result_message = FunctionResultMessage(3, func_call)
+    assert function_result_message == function_result_message
+    assert function_result_message == FunctionResultMessage(3, func_call)
+    # Different unique ids internally => not equal, despite equal FunctionCalls
+    assert function_result_message != FunctionResultMessage(3, FunctionCall(plus, 1, 2))
+    assert function_result_message != FunctionResultMessage(7, FunctionCall(plus, 3, 4))
+
+
 def test_function_result_message_format():
     def plus(a: int, b: int) -> int:
         return a + b

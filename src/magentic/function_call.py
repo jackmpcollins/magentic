@@ -57,7 +57,6 @@ class FunctionCall(Generic[T]):
             and self._function == other._function
             and self._args == other._args
             and self._kwargs == other._kwargs
-            # TODO: Compare unique_id?
         )
 
     def __repr__(self) -> str:

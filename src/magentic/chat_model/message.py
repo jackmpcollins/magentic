@@ -176,15 +176,6 @@ class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
         super().__init__(content=content, tool_call_id=function_call._unique_id, **data)
         self._function_call = function_call
 
-    # TODO: Include tool_call_id in equality check ?
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        return (
-            self.content == other.content
-            and self._function_call == other._function_call
-        )
-
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.content!r}, {self._function_call!r})"
 
