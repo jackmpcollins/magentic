@@ -67,37 +67,36 @@ def test_exec_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
+    plus_1_2 = FunctionCall(plus, 1, 2)
     chat = Chat(
         messages=[
             UserMessage(content="What is 1 plus 2?"),
-            AssistantMessage(content=FunctionCall(plus, 1, 2)),
+            AssistantMessage(content=plus_1_2),
         ],
         functions=[plus],
     )
     chat = chat.exec_function_call()
     assert len(chat.messages) == 3
-    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
+    assert chat.messages[2] == FunctionResultMessage(3, plus_1_2)
 
 
 def test_exec_function_call_parallel_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
+    plus_1_2 = FunctionCall(plus, 1, 2)
+    plus_3_4 = FunctionCall(plus, 3, 4)
     chat = Chat(
         messages=[
             UserMessage(content="What is 1 plus 2? And 3 plus 4?"),
-            AssistantMessage(
-                content=ParallelFunctionCall(
-                    [FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)]
-                )
-            ),
+            AssistantMessage(content=ParallelFunctionCall([plus_1_2, plus_3_4])),
         ],
         functions=[plus],
     )
     chat = chat.exec_function_call()
     assert len(chat.messages) == 4
-    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
-    assert chat.messages[3] == FunctionResultMessage(7, FunctionCall(plus, 3, 4))
+    assert chat.messages[2] == FunctionResultMessage(3, plus_1_2)
+    assert chat.messages[3] == FunctionResultMessage(7, plus_3_4)
 
 
 def test_exec_function_call_raises():
@@ -117,16 +116,17 @@ async def test_aexec_function_call_async_function():
     async def aplus(a: int, b: int) -> int:
         return a + b
 
+    aplus_1_2 = FunctionCall(aplus, 1, 2)
     chat = Chat(
         messages=[
             UserMessage(content="What is 1 plus 2?"),
-            AssistantMessage(content=FunctionCall(aplus, 1, 2)),
+            AssistantMessage(content=aplus_1_2),
         ],
         functions=[aplus],
     )
     chat = await chat.aexec_function_call()
     assert len(chat.messages) == 3
-    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(aplus, 1, 2))
+    assert chat.messages[2] == FunctionResultMessage(3, aplus_1_2)
 
 
 @pytest.mark.asyncio
@@ -134,16 +134,17 @@ async def test_aexec_function_call_not_async_function():
     def plus(a: int, b: int) -> int:
         return a + b
 
+    plus_1_2 = FunctionCall(plus, 1, 2)
     chat = Chat(
         messages=[
             UserMessage(content="What is 1 plus 2?"),
-            AssistantMessage(content=FunctionCall(plus, 1, 2)),
+            AssistantMessage(content=plus_1_2),
         ],
         functions=[plus],
     )
     chat = await chat.aexec_function_call()
     assert len(chat.messages) == 3
-    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
+    assert chat.messages[2] == FunctionResultMessage(3, plus_1_2)
 
 
 @pytest.mark.asyncio
@@ -151,21 +152,21 @@ async def test_aexec_function_call_async_parallel_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
 
+    plus_1_2 = FunctionCall(plus, 1, 2)
+    plus_3_4 = FunctionCall(plus, 3, 4)
     chat = Chat(
         messages=[
             UserMessage(content="What is 1 plus 2? And 3 plus 4?"),
             AssistantMessage(
-                content=AsyncParallelFunctionCall(
-                    async_iter([FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)])
-                )
+                content=AsyncParallelFunctionCall(async_iter([plus_1_2, plus_3_4]))
             ),
         ],
         functions=[plus],
     )
     chat = await chat.aexec_function_call()
     assert len(chat.messages) == 4
-    assert chat.messages[2] == FunctionResultMessage(3, FunctionCall(plus, 1, 2))
-    assert chat.messages[3] == FunctionResultMessage(7, FunctionCall(plus, 3, 4))
+    assert chat.messages[2] == FunctionResultMessage(3, plus_1_2)
+    assert chat.messages[3] == FunctionResultMessage(7, plus_3_4)
 
 
 @pytest.mark.asyncio
