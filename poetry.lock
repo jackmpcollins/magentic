@@ -1797,13 +1797,13 @@ proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "
 
 [[package]]
 name = "logfire"
-version = "0.46.1"
+version = "0.49.0"
 description = "The best Python observability tool! 🪵🔥"
 optional = false
 python-versions = "*"
 files = [
-    {file = "logfire-0.46.1-py2.py3-none-any.whl", hash = "sha256:d66ff558bdbdb4a92da0a20bdf79b79d99d5ee5c97098e60acb78637b112042a"},
-    {file = "logfire-0.46.1.tar.gz", hash = "sha256:f2c56076627de2ab6a60bc835124dc2abed83fad0eb8414644a407c80271a647"},
+    {file = "logfire-0.49.0-py2.py3-none-any.whl", hash = "sha256:0013aee5c84740883b17bb9639d344be569c3e76073afa2c1529acba1b80947d"},
+    {file = "logfire-0.49.0.tar.gz", hash = "sha256:0f108d6ad8a44a1bf711ad65d71a62a2f6426d70b8d61ad5bb0e391a28e98433"},
 ]
 
 [package.dependencies]
@@ -1824,6 +1824,7 @@ django = ["opentelemetry-instrumentation-django (>=0.42b0)"]
 fastapi = ["opentelemetry-instrumentation-fastapi (>=0.42b0)"]
 flask = ["opentelemetry-instrumentation-flask (>=0.42b0)"]
 httpx = ["opentelemetry-instrumentation-httpx (>=0.42b0)"]
+mysql = ["opentelemetry-instrumentation-mysql (>=0.42b0)"]
 psycopg = ["opentelemetry-instrumentation-psycopg (>=0.42b0)", "packaging"]
 psycopg2 = ["opentelemetry-instrumentation-psycopg2 (>=0.42b0)", "packaging"]
 pymongo = ["opentelemetry-instrumentation-pymongo (>=0.42b0)"]
@@ -1835,13 +1836,13 @@ system-metrics = ["opentelemetry-instrumentation-system-metrics (>=0.42b0)"]
 
 [[package]]
 name = "logfire-api"
-version = "0.46.1"
+version = "0.49.0"
 description = "Shim for the Logfire SDK which does nothing unless Logfire is installed"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "logfire_api-0.46.1-py3-none-any.whl", hash = "sha256:8f457f549942a782622b7963948da4d6336c1c959a049ee56f4ffdf7a99ac0ef"},
-    {file = "logfire_api-0.46.1.tar.gz", hash = "sha256:aee780a15deeec0434f519ddc29a029bdc2083ce8f42ab23bb1f41156605e49f"},
+    {file = "logfire_api-0.49.0-py3-none-any.whl", hash = "sha256:61545a828714a68b04889212bad4a77de518cee3abda7b1025c89effc1607d4b"},
+    {file = "logfire_api-0.49.0.tar.gz", hash = "sha256:3468ef43764ebbf4cd67fa377ab4d768cee88a2235573c59eb0ed667b7e59e5a"},
 ]
 
 [[package]]
@@ -3106,13 +3107,13 @@ extra = ["pygments (>=2.12)"]
 
 [[package]]
 name = "pytest"
-version = "8.2.2"
+version = "8.3.2"
 description = "pytest: simple powerful testing with Python"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pytest-8.2.2-py3-none-any.whl", hash = "sha256:c434598117762e2bd304e526244f67bf66bbd7b5d6cf22138be51ff661980343"},
-    {file = "pytest-8.2.2.tar.gz", hash = "sha256:de4bb8104e201939ccdc688b27a89a7be2079b22e2bd2b07f806b6ba71117977"},
+    {file = "pytest-8.3.2-py3-none-any.whl", hash = "sha256:4ba08f9ae7dcf84ded419494d229b48d0903ea6407b030eaec46df5e6a73bba5"},
+    {file = "pytest-8.3.2.tar.gz", hash = "sha256:c132345d12ce551242c87269de812483f5bcc87cdbb4722e48487ba194f9fdce"},
 ]
 
 [package.dependencies]
@@ -3120,7 +3121,7 @@ colorama = {version = "*", markers = "sys_platform == \"win32\""}
 exceptiongroup = {version = ">=1.0.0rc8", markers = "python_version < \"3.11\""}
 iniconfig = "*"
 packaging = "*"
-pluggy = ">=1.5,<2.0"
+pluggy = ">=1.5,<2"
 tomli = {version = ">=1", markers = "python_version < \"3.11\""}
 
 [package.extras]
@@ -4516,4 +4517,4 @@ litellm = ["litellm"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "dc1ad9f1cf3fd3715003d9326ee39d7fe3e82d6ff594a56e25bcdb1c7c97427c"
+content-hash = "e068616f49f935587954d1e2d03ff3ad819a414ab8b9718d3d0785e78d317eac"
