@@ -1,10 +1,11 @@
 from unittest.mock import ANY, MagicMock
 
 import pytest
-from pydantic import BaseModel
+from pydantic import BaseModel, TypeAdapter
 from typing_extensions import assert_type
 
 from magentic.chat_model.message import (
+    AnyMessage,
     AssistantMessage,
     FunctionResultMessage,
     Placeholder,
@@ -129,3 +130,18 @@ def test_function_result_message_format():
     assert_type(function_result_message_formatted, FunctionResultMessage[int])
     assert_type(function_result_message_formatted.content, int)
     assert function_result_message_formatted == FunctionResultMessage(3, func_call)
+
+
+def test_any_message():
+    messages = [
+        {"role": "system", "content": "Hello"},
+        {"role": "user", "content": "Hello"},
+        {"role": "assistant", "content": "Hello"},
+        {"role": "tool", "content": 3, "tool_call_id": "unique_id"},
+    ]
+    assert TypeAdapter(list[AnyMessage]).validate_python(messages) == [
+        SystemMessage("Hello"),
+        UserMessage("Hello"),
+        AssistantMessage("Hello"),
+        ToolResultMessage(3, "unique_id"),
+    ]
