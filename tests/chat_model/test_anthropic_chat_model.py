@@ -74,7 +74,7 @@ def test_anthropic_chat_model_complete_function_call():
     message = chat_model.complete(
         messages=[UserMessage("Use the tool to sum 1 and 2")],
         functions=[plus],
-        output_types=[FunctionCall[int]],  # type: ignore[misc]
+        output_types=[FunctionCall[int]],
     )
     assert isinstance(message.content, FunctionCall)
 
@@ -160,7 +160,7 @@ async def test_anthropic_chat_model_acomplete_function_call():
     message = await chat_model.acomplete(
         messages=[UserMessage("Use the tool to sum 1 and 2")],
         functions=[plus],
-        output_types=[FunctionCall[int]],  # type: ignore[misc]
+        output_types=[FunctionCall[int]],
     )
     assert isinstance(message.content, FunctionCall)
 
