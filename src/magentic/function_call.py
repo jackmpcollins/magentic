@@ -93,6 +93,7 @@ class ParallelFunctionCall(Generic[T]):
         yield from self._function_calls
 
 
+# TODO: Separate type vars for awaitable and non-awaitable results to fix typing?
 class AsyncParallelFunctionCall(Generic[T]):
     """Async version of `ParallelFunctionCall`."""
 

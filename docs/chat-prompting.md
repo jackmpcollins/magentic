@@ -153,3 +153,45 @@ def do_math() -> FunctionCall[int]: ...
 do_math()
 # FunctionCall(<function plus at 0x10a0829e0>, 3, 4)
 ```
+
+## AnyMessage
+
+The `AnyMessage` type can be used for (de)serialization of `Message` objects, or as a return type in prompt-functions. This allows you to create prompt-functions to do things like summarize a chat history into fewer messages, or even to create a set of messages that you can use in a chatprompt-function.
+
+```python
+from magentic import AnyMessage, prompt
+
+
+@prompt("Create an example of few-shot prompting for a chatbot")
+def make_few_shot_prompt() -> list[AnyMessage]: ...
+
+
+make_few_shot_prompt()
+# [SystemMessage('You are a helpful and knowledgeable assistant. You answer questions promptly and accurately. Always be polite and concise.'),
+#  UserMessage('What’s the weather like today?'),
+#  AssistantMessage[Any]('The weather today is sunny with a high of 75°F (24°C) and a low of 55°F (13°C). No chance of rain.'),
+#  UserMessage('Can you explain the theory of relativity in simple terms?'),
+#  AssistantMessage[Any]('Sure! The theory of relativity, developed by Albert Einstein, has two main parts: Special Relativity and General Relativity. Special Relativity is about how time and space are linked for objects moving at a consistent speed in a straight line. It shows that time can slow down or speed up depending on how fast you are moving compared to something else. General Relativity adds gravity into the mix and shows that massive objects cause space to bend and warp, which we feel as gravity.'),
+#  UserMessage('How do I bake a chocolate cake?'),
+#  AssistantMessage[Any]("Here's a simple recipe for a chocolate cake:\n\nIngredients:\n- 1 and 3/4 cups all-purpose flour\n- 1 and 1/2 cups granulated sugar\n- 3/4 cup cocoa powder\n- 1 and 1/2 teaspoons baking powder\n- 1 and 1/2 teaspoons baking soda\n- 1 teaspoon salt\n- 2 large eggs\n- 1 cup whole milk\n- 1/2 cup vegetable oil\n- 2 teaspoons vanilla extract\n- 1 cup boiling water\n\nInstructions:\n1. Preheat your oven to 350°F (175°C). Grease and flour two 9-inch round baking pans.\n2. In a large bowl, whisk together the flour, sugar, cocoa powder, baking powder, baking soda, and salt.\n3. Add the eggs, milk, oil, and vanilla. Beat on medium speed for 2 minutes.\n4. Stir in the boiling water (batter will be thin).\n5. Pour the batter evenly into the prepared pans.\n6. Bake for 30 to 35 minutes or until a toothpick inserted into the center comes out clean.\n7. Cool the cakes in the pans for 10 minutes, then remove them from the pans and cool completely on a wire rack.\n8. Frost with your favorite chocolate frosting and enjoy!")]
+```
+
+For (de)serialization, check out `TypeAdapter` from pydantic. See more on [the pydantic Type Adapter docs page](https://docs.pydantic.dev/latest/concepts/type_adapter/).
+
+```python
+from magentic import AnyMessage
+from pydantic import TypeAdapter
+
+
+messages = [
+    {"role": "system", "content": "Hello"},
+    {"role": "user", "content": "Hello"},
+    {"role": "assistant", "content": "Hello"},
+    {"role": "tool", "content": 3, "tool_call_id": "unique_id"},
+]
+TypeAdapter(list[AnyMessage]).validate_python(messages)
+# [SystemMessage('Hello'),
+#  UserMessage('Hello'),
+#  AssistantMessage[Any]('Hello'),
+#  ToolResultMessage[Any](3, self.tool_call_id='unique_id')]
+```
