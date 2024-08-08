@@ -3,7 +3,7 @@ import textwrap
 from collections.abc import AsyncIterable, Iterable
 from dataclasses import dataclass
 from itertools import chain, dropwhile
-from typing import AsyncIterator, Callable, Iterator, TypeVar
+from typing import Any, AsyncIterator, Callable, Iterator, TypeVar
 
 T = TypeVar("T")
 
@@ -12,6 +12,22 @@ async def async_iter(iterable: Iterable[T]) -> AsyncIterator[T]:
     """Get an AsyncIterator for an Iterable."""
     for item in iterable:
         yield item
+
+
+def apply(func: Callable[[T], Any], iterable: Iterable[T]) -> Iterator[T]:
+    """Apply a function to each item in an iterable and yield the original item."""
+    for chunk in iterable:
+        func(chunk)
+        yield chunk
+
+
+async def aapply(
+    func: Callable[[T], Any], aiterable: AsyncIterable[T]
+) -> AsyncIterator[T]:
+    """Async version of `apply`."""
+    async for chunk in aiterable:
+        func(chunk)
+        yield chunk
 
 
 async def azip(*aiterables: AsyncIterable[T]) -> AsyncIterator[tuple[T, ...]]:

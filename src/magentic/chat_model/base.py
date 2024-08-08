@@ -4,10 +4,9 @@ from collections.abc import Callable, Iterable
 from contextvars import ContextVar
 from typing import Any, TypeVar, overload
 
-from magentic.chat_model.message import (
-    AssistantMessage,
-    Message,
-)
+from pydantic import ValidationError
+
+from magentic.chat_model.message import AssistantMessage, Message
 from magentic.streaming import AsyncStreamedStr, StreamedStr
 
 R = TypeVar("R")
@@ -17,15 +16,40 @@ _chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
 )
 
 
-class StructuredOutputError(Exception):
-    """Raised when the LLM output could not be parsed."""
+# TODO: Parent class with `output_message` attribute ?
+class StringNotAllowedError(Exception):
+    """Raised when a string is returned by the LLM but not expected."""
+
+    _MESSAGE = (
+        "A string was returned by the LLM but was not an allowed output type."
+        ' Consider updating the prompt to encourage the LLM to "use the tool".'
+        " Model output: {model_output!r}"
+    )
+
+    def __init__(self, output_message: Message[Any]):
+        super().__init__(self._MESSAGE.format(model_output=output_message.content))
+        self.output_message = output_message
 
 
-_STRING_NOT_EXPECTED_ERROR_MESSAGE = (
-    "String was returned by model but not expected. You may need to update"
-    " your prompt to encourage the model to return a specific type."
-    " Model output: {model_output!r}"
-)
+class ToolSchemaParseError(Exception):
+    """Raised when the LLM output could not be parsed by the tool schema."""
+
+    _MESSAGE = (
+        "Failed to parse the LLM output into the tool schema."
+        " Consider making the output type more lenient or enabling retries."
+        " Model output: {model_output!r}"
+    )
+
+    def __init__(
+        self,
+        output_message: Message[Any],
+        tool_call_id: str,
+        validation_error: ValidationError,
+    ):
+        super().__init__(self._MESSAGE.format(model_output=output_message.content))
+        self.output_message = output_message
+        self.tool_call_id = tool_call_id
+        self.validation_error = validation_error
 
 
 def validate_str_content(
@@ -33,10 +57,8 @@ def validate_str_content(
 ) -> StreamedStr | str:
     """Raise error if string output not expected. Otherwise return correct string type."""
     if not allow_string_output:
-        msg = _STRING_NOT_EXPECTED_ERROR_MESSAGE.format(
-            model_output=streamed_str.truncate(100)
-        )
-        raise StructuredOutputError(msg)
+        model_output = streamed_str.truncate(100)
+        raise StringNotAllowedError(AssistantMessage(model_output))
     if streamed:
         return streamed_str
     return str(streamed_str)
@@ -47,10 +69,8 @@ async def avalidate_str_content(
 ) -> AsyncStreamedStr | str:
     """Async version of `validate_str_content`."""
     if not allow_string_output:
-        msg = _STRING_NOT_EXPECTED_ERROR_MESSAGE.format(
-            model_output=await async_streamed_str.truncate(100)
-        )
-        raise StructuredOutputError(msg)
+        model_output = await async_streamed_str.truncate(100)
+        raise StringNotAllowedError(AssistantMessage(model_output))
     if streamed:
         return async_streamed_str
     return await async_streamed_str.to_string()

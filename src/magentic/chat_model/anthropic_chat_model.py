@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from magentic.chat_model.base import (
     ChatModel,
-    StructuredOutputError,
+    ToolSchemaParseError,
     avalidate_str_content,
     validate_str_content,
 )
@@ -138,14 +138,18 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
 
 @message_to_anthropic_message.register(ToolResultMessage)
 def _(message: ToolResultMessage[Any]) -> MessageParam:
-    function_schema = function_schema_for_type(type(message.content))
+    if isinstance(message.content, str):
+        content = message.content
+    else:
+        function_schema = function_schema_for_type(type(message.content))
+        content = json.loads(function_schema.serialize_args(message.content))
     return {
         "role": AnthropicMessageRole.USER.value,
         "content": [
             {
                 "type": "tool_result",
                 "tool_use_id": message.tool_call_id,
-                "content": json.loads(function_schema.serialize_args(message.content)),
+                "content": content,
             }
         ],
     }
@@ -477,21 +481,20 @@ class AnthropicChatModel(ChatModel):
             and first_chunk.content_block.type == "tool_use"
         ):
             try:
+                tool_calls = parse_streamed_tool_calls(response, tool_schemas)
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                    content = ParallelFunctionCall(
-                        parse_streamed_tool_calls(response, tool_schemas)
-                    )
+                    content = ParallelFunctionCall(tool_calls)
                     return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = next(parse_streamed_tool_calls(response, tool_schemas))
+                content = next(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
                 )
-                raise StructuredOutputError(msg) from e
+                raise ToolSchemaParseError(msg) from e
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
@@ -596,23 +599,20 @@ class AnthropicChatModel(ChatModel):
             and first_chunk.content_block.type == "tool_use"
         ):
             try:
+                tool_calls = aparse_streamed_tool_calls(response, tool_schemas)
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                    content = AsyncParallelFunctionCall(
-                        aparse_streamed_tool_calls(response, tool_schemas)
-                    )
+                    content = AsyncParallelFunctionCall(tool_calls)
                     return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
                 # Take only the first tool_call, silently ignore extra chunks
                 # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = await anext(
-                    aparse_streamed_tool_calls(response, tool_schemas)
-                )
+                content = await anext(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
             except ValidationError as e:
                 msg = (
                     "Failed to parse model output. You may need to update your prompt"
                     " to encourage the model to return a specific type."
                 )
-                raise StructuredOutputError(msg) from e
+                raise ToolSchemaParseError(msg) from e
 
         msg = "Could not determine response type"
         raise ValueError(msg)
