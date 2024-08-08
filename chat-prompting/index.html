@@ -414,6 +414,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#anymessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      AnyMessage
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -789,6 +798,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#anymessage" class="md-nav__link">
+    <span class="md-ellipsis">
+      AnyMessage
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -945,6 +963,41 @@
 
 <span class="n">do_math</span><span class="p">()</span>
 <span class="c1"># FunctionCall(&lt;function plus at 0x10a0829e0&gt;, 3, 4)</span>
+</code></pre></div>
+<h2 id="anymessage">AnyMessage<a class="headerlink" href="#anymessage" title="Permanent link">&para;</a></h2>
+<p>The <code>AnyMessage</code> type can be used for (de)serialization of <code>Message</code> objects, or as a return type in prompt-functions. This allows you to create prompt-functions to do things like summarize a chat history into fewer messages, or even to create a set of messages that you can use in a chatprompt-function.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">AnyMessage</span><span class="p">,</span> <span class="n">prompt</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Create an example of few-shot prompting for a chatbot&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">make_few_shot_prompt</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">[</span><span class="n">AnyMessage</span><span class="p">]:</span> <span class="o">...</span>
+
+
+<span class="n">make_few_shot_prompt</span><span class="p">()</span>
+<span class="c1"># [SystemMessage(&#39;You are a helpful and knowledgeable assistant. You answer questions promptly and accurately. Always be polite and concise.&#39;),</span>
+<span class="c1">#  UserMessage(&#39;What’s the weather like today?&#39;),</span>
+<span class="c1">#  AssistantMessage[Any](&#39;The weather today is sunny with a high of 75°F (24°C) and a low of 55°F (13°C). No chance of rain.&#39;),</span>
+<span class="c1">#  UserMessage(&#39;Can you explain the theory of relativity in simple terms?&#39;),</span>
+<span class="c1">#  AssistantMessage[Any](&#39;Sure! The theory of relativity, developed by Albert Einstein, has two main parts: Special Relativity and General Relativity. Special Relativity is about how time and space are linked for objects moving at a consistent speed in a straight line. It shows that time can slow down or speed up depending on how fast you are moving compared to something else. General Relativity adds gravity into the mix and shows that massive objects cause space to bend and warp, which we feel as gravity.&#39;),</span>
+<span class="c1">#  UserMessage(&#39;How do I bake a chocolate cake?&#39;),</span>
+<span class="c1">#  AssistantMessage[Any](&quot;Here&#39;s a simple recipe for a chocolate cake:\n\nIngredients:\n- 1 and 3/4 cups all-purpose flour\n- 1 and 1/2 cups granulated sugar\n- 3/4 cup cocoa powder\n- 1 and 1/2 teaspoons baking powder\n- 1 and 1/2 teaspoons baking soda\n- 1 teaspoon salt\n- 2 large eggs\n- 1 cup whole milk\n- 1/2 cup vegetable oil\n- 2 teaspoons vanilla extract\n- 1 cup boiling water\n\nInstructions:\n1. Preheat your oven to 350°F (175°C). Grease and flour two 9-inch round baking pans.\n2. In a large bowl, whisk together the flour, sugar, cocoa powder, baking powder, baking soda, and salt.\n3. Add the eggs, milk, oil, and vanilla. Beat on medium speed for 2 minutes.\n4. Stir in the boiling water (batter will be thin).\n5. Pour the batter evenly into the prepared pans.\n6. Bake for 30 to 35 minutes or until a toothpick inserted into the center comes out clean.\n7. Cool the cakes in the pans for 10 minutes, then remove them from the pans and cool completely on a wire rack.\n8. Frost with your favorite chocolate frosting and enjoy!&quot;)]</span>
+</code></pre></div>
+<p>For (de)serialization, check out <code>TypeAdapter</code> from pydantic. See more on <a href="https://docs.pydantic.dev/latest/concepts/type_adapter/">the pydantic Type Adapter docs page</a>.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">AnyMessage</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">TypeAdapter</span>
+
+
+<span class="n">messages</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;system&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;user&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;assistant&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="s2">&quot;Hello&quot;</span><span class="p">},</span>
+    <span class="p">{</span><span class="s2">&quot;role&quot;</span><span class="p">:</span> <span class="s2">&quot;tool&quot;</span><span class="p">,</span> <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s2">&quot;tool_call_id&quot;</span><span class="p">:</span> <span class="s2">&quot;unique_id&quot;</span><span class="p">},</span>
+<span class="p">]</span>
+<span class="n">TypeAdapter</span><span class="p">(</span><span class="nb">list</span><span class="p">[</span><span class="n">AnyMessage</span><span class="p">])</span><span class="o">.</span><span class="n">validate_python</span><span class="p">(</span><span class="n">messages</span><span class="p">)</span>
+<span class="c1"># [SystemMessage(&#39;Hello&#39;),</span>
+<span class="c1">#  UserMessage(&#39;Hello&#39;),</span>
+<span class="c1">#  AssistantMessage[Any](&#39;Hello&#39;),</span>
+<span class="c1">#  ToolResultMessage[Any](3, self.tool_call_id=&#39;unique_id&#39;)]</span>
 </code></pre></div>
 
 
