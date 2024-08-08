@@ -1797,13 +1797,13 @@ proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "
 
 [[package]]
 name = "logfire"
-version = "0.46.1"
+version = "0.49.0"
 description = "The best Python observability tool! 🪵🔥"
 optional = false
 python-versions = "*"
 files = [
-    {file = "logfire-0.46.1-py2.py3-none-any.whl", hash = "sha256:d66ff558bdbdb4a92da0a20bdf79b79d99d5ee5c97098e60acb78637b112042a"},
-    {file = "logfire-0.46.1.tar.gz", hash = "sha256:f2c56076627de2ab6a60bc835124dc2abed83fad0eb8414644a407c80271a647"},
+    {file = "logfire-0.49.0-py2.py3-none-any.whl", hash = "sha256:0013aee5c84740883b17bb9639d344be569c3e76073afa2c1529acba1b80947d"},
+    {file = "logfire-0.49.0.tar.gz", hash = "sha256:0f108d6ad8a44a1bf711ad65d71a62a2f6426d70b8d61ad5bb0e391a28e98433"},
 ]
 
 [package.dependencies]
@@ -1824,6 +1824,7 @@ django = ["opentelemetry-instrumentation-django (>=0.42b0)"]
 fastapi = ["opentelemetry-instrumentation-fastapi (>=0.42b0)"]
 flask = ["opentelemetry-instrumentation-flask (>=0.42b0)"]
 httpx = ["opentelemetry-instrumentation-httpx (>=0.42b0)"]
+mysql = ["opentelemetry-instrumentation-mysql (>=0.42b0)"]
 psycopg = ["opentelemetry-instrumentation-psycopg (>=0.42b0)", "packaging"]
 psycopg2 = ["opentelemetry-instrumentation-psycopg2 (>=0.42b0)", "packaging"]
 pymongo = ["opentelemetry-instrumentation-pymongo (>=0.42b0)"]
@@ -4516,4 +4517,4 @@ litellm = ["litellm"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "dc1ad9f1cf3fd3715003d9326ee39d7fe3e82d6ff594a56e25bcdb1c7c97427c"
+content-hash = "e068616f49f935587954d1e2d03ff3ad819a414ab8b9718d3d0785e78d317eac"
