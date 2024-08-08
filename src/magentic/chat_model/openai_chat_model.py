@@ -148,6 +148,7 @@ def _(message: ToolResultMessage[Any]) -> ChatCompletionMessageParam:
     }
 
 
+# TODO: Use ToolResultMessage to solve this at magentic level
 def _add_missing_tool_calls_responses(
     messages: list[ChatCompletionMessageParam],
 ) -> list[ChatCompletionMessageParam]:
