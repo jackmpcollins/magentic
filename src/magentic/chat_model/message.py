@@ -1,15 +1,19 @@
 from abc import ABC, abstractmethod
 from typing import (
+    Annotated,
     Any,
     Awaitable,
     Generic,
+    Literal,
     NamedTuple,
     TypeVar,
+    Union,
     cast,
     get_origin,
     overload,
 )
 
+from pydantic import BaseModel, Field, PrivateAttr
 from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
@@ -41,23 +45,16 @@ class Placeholder(Generic[T]):
 ContentT = TypeVar("ContentT")
 
 
-class Message(Generic[ContentT], ABC):
+class Message(BaseModel, Generic[ContentT], ABC):
     """A message sent to or from an LLM chat model."""
 
-    def __init__(self, content: ContentT):
-        self._content = content
+    content: ContentT
 
-    def __eq__(self, other: object) -> bool:
-        if not isinstance(other, type(self)):
-            return NotImplemented
-        return type(self) is type(other) and self.content == other.content
+    def __init__(self, content: ContentT, **data: Any):
+        super().__init__(content=content, **data)
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.content!r})"
-
-    @property
-    def content(self) -> ContentT:
-        return self._content
+        return f"{self.__class__.__name__}({self.content!r})"
 
     @abstractmethod
     def format(self, **kwargs: Any) -> "Message[Any]":
@@ -82,12 +79,22 @@ class _RawMessage(Message[ContentT], Generic[ContentT]):
 class SystemMessage(Message[str]):
     """A message to the LLM to guide the whole chat."""
 
+    role: Literal["system"] = "system"
+
+    def __init__(self, content: str, **data: Any):
+        super().__init__(content=content, **data)
+
     def format(self, **kwargs: Any) -> "SystemMessage":
         return SystemMessage(self.content.format(**kwargs))
 
 
 class UserMessage(Message[str]):
     """A message sent by a user to an LLM chat model."""
+
+    role: Literal["user"] = "user"
+
+    def __init__(self, content: str, **data: Any):
+        super().__init__(content=content, **data)
 
     def format(self, **kwargs: Any) -> "UserMessage":
         return UserMessage(self.content.format(**kwargs))
@@ -103,7 +110,11 @@ class Usage(NamedTuple):
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
-    _usage_ref: list[Usage] | None = None
+    role: Literal["assistant"] = "assistant"
+    _usage_ref: list[Usage] | None = PrivateAttr(None)
+
+    def __init__(self, content: ContentT, **data: Any):
+        super().__init__(content=content, **data)
 
     @classmethod
     def _with_usage(cls, content: ContentT, usage_ref: list[Usage]) -> Self:
@@ -140,39 +151,45 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
 class ToolResultMessage(Message[ContentT], Generic[ContentT]):
     """A message containing the result of a tool call."""
 
-    def __init__(self, content: ContentT, tool_call_id: str):
-        super().__init__(content)
-        self._tool_call_id = tool_call_id
+    role: Literal["tool"] = "tool"
+    tool_call_id: str
+
+    def __init__(self, content: ContentT, tool_call_id: str, **data: Any):
+        super().__init__(content=content, tool_call_id=tool_call_id, **data)
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}({self.content!r}, {self._tool_call_id!r})"
-
-    @property
-    def tool_call_id(self) -> str:
-        return self._tool_call_id
+        return f"{self.__class__.__name__}({self.content!r}, {self.tool_call_id=!r})"
 
     def format(self, **kwargs: Any) -> "ToolResultMessage[ContentT]":
         del kwargs
-        return ToolResultMessage(self.content, self._tool_call_id)
+        return ToolResultMessage(self.content, self.tool_call_id)
 
 
 class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
     """A message containing the result of a function call."""
 
+    _function_call: FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT]
+
     @overload
     def __init__(
-        self, content: ContentT, function_call: FunctionCall[Awaitable[ContentT]]
+        self,
+        content: ContentT,
+        function_call: FunctionCall[Awaitable[ContentT]],
+        **data: Any,
     ): ...
 
     @overload
-    def __init__(self, content: ContentT, function_call: FunctionCall[ContentT]): ...
+    def __init__(
+        self, content: ContentT, function_call: FunctionCall[ContentT], **data: Any
+    ): ...
 
     def __init__(
         self,
         content: ContentT,
         function_call: FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT],
+        **data: Any,
     ):
-        super().__init__(content, function_call._unique_id)
+        super().__init__(content=content, tool_call_id=function_call._unique_id, **data)
         self._function_call = function_call
 
     def __repr__(self) -> str:
@@ -187,3 +204,16 @@ class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
     def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
         del kwargs
         return FunctionResultMessage(self.content, self._function_call)
+
+
+AnyMessage = Annotated[
+    Union[
+        SystemMessage,
+        UserMessage,
+        AssistantMessage[Any],
+        ToolResultMessage[Any],
+        # Do not include FunctionResultMessage which also uses "tool" role
+    ],
+    Field(discriminator="role"),
+]
+"""Union of all message types."""

@@ -1,5 +1,5 @@
 import os
-from typing import Annotated
+from typing import Annotated, Any
 from unittest.mock import ANY
 
 import openai
@@ -106,6 +106,9 @@ def test_message_to_openai_message(message, expected_openai_message):
 
 def test_message_to_openai_message_raises():
     class CustomMessage(Message[str]):
+        def __init__(self, content: str, **data: Any):
+            super().__init__(content, **data)
+
         def format(self, **kwargs):
             del kwargs
             return CustomMessage(self.content)
