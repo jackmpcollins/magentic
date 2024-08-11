@@ -69,6 +69,9 @@ class _RawMessage(Message[ContentT], Generic[ContentT]):
     expected by the LLM provider's Python client.
     """
 
+    def __init__(self, content: ContentT, **data: Any):
+        super().__init__(content=content, **data)
+
     # TODO: Add Usage to _RawMessage
 
     def format(self, **kwargs: Any) -> "_RawMessage[ContentT]":
