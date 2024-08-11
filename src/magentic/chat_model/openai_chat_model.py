@@ -743,8 +743,6 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
-            cached_response: list[ChatCompletionChunk] = []
-            response = aapply(cached_response.append, response)
             tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
             if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                 content = AsyncParallelFunctionCall(tool_calls)
