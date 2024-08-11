@@ -211,7 +211,7 @@ class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
         )
 
 
-def parse_streamed_tool_calls(
+def _parse_streamed_tool_calls(
     response: Iterable[MessageStreamEvent],
     tool_schemas: Iterable[FunctionToolSchema[T]],
 ) -> Iterator[T]:
@@ -228,7 +228,7 @@ def parse_streamed_tool_calls(
         yield tool_schema.parse_tool_call(tool_call_chunks)  # noqa: B031
 
 
-async def aparse_streamed_tool_calls(
+async def _aparse_streamed_tool_calls(
     response: AsyncIterable[MessageStreamEvent],
     tool_schemas: Iterable[AsyncFunctionToolSchema[T]],
 ) -> AsyncIterator[T]:
@@ -481,7 +481,7 @@ class AnthropicChatModel(ChatModel):
             and first_chunk.content_block.type == "tool_use"
         ):
             try:
-                tool_calls = parse_streamed_tool_calls(response, tool_schemas)
+                tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
                 if is_any_origin_subclass(output_types, ParallelFunctionCall):
                     content = ParallelFunctionCall(tool_calls)
                     return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
@@ -599,7 +599,7 @@ class AnthropicChatModel(ChatModel):
             and first_chunk.content_block.type == "tool_use"
         ):
             try:
-                tool_calls = aparse_streamed_tool_calls(response, tool_schemas)
+                tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
                 if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
                     content = AsyncParallelFunctionCall(tool_calls)
                     return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
