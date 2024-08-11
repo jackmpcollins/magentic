@@ -3,11 +3,9 @@ from itertools import chain
 from typing import Any, Sequence, TypeVar, cast, overload
 
 from openai.types.chat import ChatCompletionToolChoiceOptionParam
-from pydantic import ValidationError
 
 from magentic.chat_model.base import (
     ChatModel,
-    ToolSchemaParseError,
     avalidate_str_content,
     validate_str_content,
 )
@@ -183,21 +181,14 @@ class LitellmChatModel(ChatModel):
 
         # Check tool calls before content because both might be present
         if first_chunk.choices[0].delta.tool_calls is not None:
-            try:
-                tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
-                if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                    content = ParallelFunctionCall(tool_calls)
-                    return AssistantMessage(content)  # type: ignore[return-value]
-                # Take only the first tool_call, silently ignore extra chunks
-                # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = next(tool_calls)
+            tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
+            if is_any_origin_subclass(output_types, ParallelFunctionCall):
+                content = ParallelFunctionCall(tool_calls)
                 return AssistantMessage(content)  # type: ignore[return-value]
-            except ValidationError as e:
-                msg = (
-                    "Failed to parse model output. You may need to update your prompt"
-                    " to encourage the model to return a specific type."
-                )
-                raise ToolSchemaParseError(msg) from e
+            # Take only the first tool_call, silently ignore extra chunks
+            # TODO: Create generator here that raises error or warns if multiple tool_calls
+            content = next(tool_calls)
+            return AssistantMessage(content)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.content is not None:
             streamed_str = StreamedStr(
@@ -290,20 +281,13 @@ class LitellmChatModel(ChatModel):
 
         # Check tool calls before content because both might be present
         if first_chunk.choices[0].delta.tool_calls is not None:
-            try:
-                tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
-                if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                    content = AsyncParallelFunctionCall(tool_calls)
-                    return AssistantMessage(content)  # type: ignore[return-value]
-                # Take only the first tool_call, silently ignore extra chunks
-                content = await anext(tool_calls)
+            tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
+            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+                content = AsyncParallelFunctionCall(tool_calls)
                 return AssistantMessage(content)  # type: ignore[return-value]
-            except ValidationError as e:
-                msg = (
-                    "Failed to parse model output. You may need to update your prompt"
-                    " to encourage the model to return a specific type."
-                )
-                raise ToolSchemaParseError(msg) from e
+            # Take only the first tool_call, silently ignore extra chunks
+            content = await anext(tool_calls)
+            return AssistantMessage(content)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.content is not None:
             async_streamed_str = AsyncStreamedStr(
