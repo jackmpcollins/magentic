@@ -75,6 +75,7 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
 
 @message_to_openai_message.register(_RawMessage)
 def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
+    # TODO: Validate the message content
     return message.content  # type: ignore[no-any-return]
 
 

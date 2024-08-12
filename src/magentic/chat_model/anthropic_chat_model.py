@@ -78,6 +78,12 @@ def message_to_anthropic_message(message: Message[Any]) -> MessageParam:
     raise NotImplementedError(type(message))
 
 
+@message_to_anthropic_message.register(_RawMessage)
+def _(message: _RawMessage[Any]) -> MessageParam:
+    # TODO: Validate the message content
+    return message.content  # type: ignore[no-any-return]
+
+
 @message_to_anthropic_message.register
 def _(message: UserMessage) -> MessageParam:
     return {"role": AnthropicMessageRole.USER.value, "content": message.content}
@@ -274,7 +280,7 @@ def _parse_streamed_tool_calls(
         raw_message = _join_streamed_response_to_message(cached_response)
         raise ToolSchemaParseError(
             output_message=raw_message,
-            tool_call_id="TODO",
+            tool_call_id=raw_message.content["content"][0]["id"],  # type: ignore[index,unused-ignore]
             validation_error=e,
         ) from e
 
@@ -298,7 +304,7 @@ async def _aparse_streamed_tool_calls(
         raw_message = _join_streamed_response_to_message(cached_response)
         raise ToolSchemaParseError(
             output_message=raw_message,
-            tool_call_id="TODO",
+            tool_call_id=raw_message.content["content"][0]["id"],  # type: ignore[index,unused-ignore]
             validation_error=e,
         ) from e
 
