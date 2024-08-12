@@ -52,6 +52,7 @@ from magentic.typing import is_any_origin_subclass, is_origin_subclass
 try:
     import anthropic
     from anthropic.lib.streaming import MessageStreamEvent
+    from anthropic.lib.streaming._messages import accumulate_event
     from anthropic.types import (
         ContentBlockDeltaEvent,
         ContentBlockStartEvent,
@@ -240,16 +241,14 @@ async def _aiter_streamed_tool_calls(
         yield tool_call_chunks
 
 
-def _join_streamed_tool_calls_to_message(
+def _join_streamed_response_to_message(
     response: list[MessageStreamEvent],
 ) -> _RawMessage[MessageParam]:
-    # TODO: Implement this
-    return _RawMessage(
-        {
-            "role": "assistant",
-            "content": "error",
-        }
-    )
+    snapshot = None
+    for event in response:
+        snapshot = accumulate_event(event=event, current_snapshot=snapshot)
+    assert snapshot is not None  # noqa: S101
+    return _RawMessage(snapshot.model_dump())
 
 
 def _parse_streamed_tool_calls(
@@ -268,7 +267,7 @@ def _parse_streamed_tool_calls(
             yield tool_call
     # TODO: Catch/raise unknown tool call error here
     except ValidationError as e:
-        raw_message = _join_streamed_tool_calls_to_message(cached_response)
+        raw_message = _join_streamed_response_to_message(cached_response)
         raise ToolSchemaParseError(
             output_message=raw_message,
             tool_call_id="TODO",
@@ -292,7 +291,7 @@ async def _aparse_streamed_tool_calls(
             yield tool_call
     # TODO: Catch/raise unknown tool call error here
     except ValidationError as e:
-        raw_message = _join_streamed_tool_calls_to_message(cached_response)
+        raw_message = _join_streamed_response_to_message(cached_response)
         raise ToolSchemaParseError(
             output_message=raw_message,
             tool_call_id="TODO",
