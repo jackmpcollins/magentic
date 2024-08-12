@@ -507,11 +507,11 @@ class AnthropicChatModel(ChatModel):
         response = _response_generator()
         usage_ref, response = _create_usage_ref(response)
 
+        message_start_chunk = next(response)
+        assert message_start_chunk.type == "message_start"  # noqa: S101
         first_chunk = next(response)
-        if first_chunk.type == "message_start":
-            first_chunk = next(response)
         assert first_chunk.type == "content_block_start"  # noqa: S101
-        response = chain([first_chunk], response)
+        response = chain([message_start_chunk, first_chunk], response)
 
         if (
             first_chunk.type == "content_block_start"
@@ -618,11 +618,11 @@ class AnthropicChatModel(ChatModel):
         response = _response_generator()
         usage_ref, response = _create_usage_ref_async(response)
 
+        message_start_chunk = await anext(response)
+        assert message_start_chunk.type == "message_start"  # noqa: S101
         first_chunk = await anext(response)
-        if first_chunk.type == "message_start":
-            first_chunk = await anext(response)
         assert first_chunk.type == "content_block_start"  # noqa: S101
-        response = achain(async_iter([first_chunk]), response)
+        response = achain(async_iter([message_start_chunk, first_chunk]), response)
 
         if (
             first_chunk.type == "content_block_start"
