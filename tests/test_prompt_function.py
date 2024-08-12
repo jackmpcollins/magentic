@@ -1,11 +1,11 @@
 """Tests for PromptFunction."""
 
 from inspect import getdoc
-from typing import Awaitable
+from typing import Annotated, Awaitable
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel
 
 from magentic.chat_model.message import AssistantMessage, UserMessage
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
@@ -184,6 +184,24 @@ def test_decorator_return_streamed_str():
     assert isinstance(output, StreamedStr)
 
 
+@pytest.mark.openai
+def test_decorator_max_retries():
+    def assert_is_ireland(v):
+        if v != "Ireland":
+            msg = "Country must be Ireland."
+            raise ValueError(msg)
+        return v
+
+    class Country(BaseModel):
+        name: Annotated[str, AfterValidator(assert_is_ireland)]
+
+    @prompt("Return a country.", max_retries=3)
+    def get_country() -> Country: ...
+
+    country = get_country()
+    assert country.name == "Ireland"
+
+
 @pytest.mark.asyncio
 async def test_async_promptfunction_call():
     mock_model = AsyncMock()
@@ -224,6 +242,25 @@ async def test_async_decorator_return_async_streamed_str():
 
     output = await get_capital("Ireland")
     assert isinstance(output, AsyncStreamedStr)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_async_decorator_max_retries():
+    def assert_is_ireland(v):
+        if v != "Ireland":
+            msg = "Country must be Ireland."
+            raise ValueError(msg)
+        return v
+
+    class Country(BaseModel):
+        name: Annotated[str, AfterValidator(assert_is_ireland)]
+
+    @prompt("Return a country.", max_retries=3)
+    async def get_country() -> Country: ...
+
+    country = await get_country()
+    assert country.name == "Ireland"
 
 
 @pytest.mark.asyncio
