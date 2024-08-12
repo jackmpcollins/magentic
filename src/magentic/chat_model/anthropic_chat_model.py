@@ -246,9 +246,13 @@ def _join_streamed_response_to_message(
 ) -> _RawMessage[MessageParam]:
     snapshot = None
     for event in response:
-        snapshot = accumulate_event(event=event, current_snapshot=snapshot)
+        snapshot = accumulate_event(
+            event=event,  # type: ignore[arg-type]
+            current_snapshot=snapshot,
+        )
     assert snapshot is not None  # noqa: S101
-    return _RawMessage(snapshot.model_dump())
+    snapshot_content = snapshot.model_dump()["content"]
+    return _RawMessage({"role": snapshot.role, "content": snapshot_content})
 
 
 def _parse_streamed_tool_calls(
