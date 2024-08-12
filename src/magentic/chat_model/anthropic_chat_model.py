@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from magentic.chat_model.base import (
     ChatModel,
-    StructuredOutputError,
+    ToolSchemaParseError,
     avalidate_str_content,
     validate_str_content,
 )
@@ -28,6 +28,7 @@ from magentic.chat_model.message import (
     ToolResultMessage,
     Usage,
     UserMessage,
+    _RawMessage,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -38,15 +39,20 @@ from magentic.function_call import (
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
+    aapply,
     achain,
     agroupby,
+    apeek,
+    apply,
     async_iter,
+    peek,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
 try:
     import anthropic
     from anthropic.lib.streaming import MessageStreamEvent
+    from anthropic.lib.streaming._messages import accumulate_event
     from anthropic.types import (
         ContentBlockDeltaEvent,
         ContentBlockStartEvent,
@@ -70,6 +76,12 @@ def message_to_anthropic_message(message: Message[Any]) -> MessageParam:
     """Convert a Message to an OpenAI message."""
     # TODO: Add instructions for registering new Message type to this error message
     raise NotImplementedError(type(message))
+
+
+@message_to_anthropic_message.register(_RawMessage)
+def _(message: _RawMessage[Any]) -> MessageParam:
+    # TODO: Validate the message content
+    return message.content  # type: ignore[no-any-return]
 
 
 @message_to_anthropic_message.register
@@ -138,14 +150,18 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
 
 @message_to_anthropic_message.register(ToolResultMessage)
 def _(message: ToolResultMessage[Any]) -> MessageParam:
-    function_schema = function_schema_for_type(type(message.content))
+    if isinstance(message.content, str):
+        content = message.content
+    else:
+        function_schema = function_schema_for_type(type(message.content))
+        content = json.loads(function_schema.serialize_args(message.content))
     return {
         "role": AnthropicMessageRole.USER.value,
         "content": [
             {
                 "type": "tool_result",
                 "tool_use_id": message.tool_call_id,
-                "content": json.loads(function_schema.serialize_args(message.content)),
+                "content": content,
             }
         ],
     }
@@ -207,38 +223,90 @@ class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
         )
 
 
-def parse_streamed_tool_calls(
+def _iter_streamed_tool_calls(
     response: Iterable[MessageStreamEvent],
-    tool_schemas: Iterable[FunctionToolSchema[T]],
-) -> Iterator[T]:
+) -> Iterator[Iterator[ContentBlockStartEvent | ContentBlockDeltaEvent]]:
     all_tool_call_chunks = (
         cast(ContentBlockStartEvent | ContentBlockDeltaEvent, chunk)
         for chunk in response
         if chunk.type in ("content_block_start", "content_block_delta")
     )
     for _, tool_call_chunks in groupby(all_tool_call_chunks, lambda x: x.index):
-        first_chunk = next(tool_call_chunks)
-        assert first_chunk.type == "content_block_start"  # noqa: S101
-        assert first_chunk.content_block.type == "tool_use"  # noqa: S101
-        tool_schema = select_tool_schema(first_chunk.content_block, tool_schemas)
-        yield tool_schema.parse_tool_call(tool_call_chunks)  # noqa: B031
+        yield tool_call_chunks
 
 
-async def aparse_streamed_tool_calls(
+async def _aiter_streamed_tool_calls(
     response: AsyncIterable[MessageStreamEvent],
-    tool_schemas: Iterable[AsyncFunctionToolSchema[T]],
-) -> AsyncIterator[T]:
+) -> AsyncIterator[AsyncIterator[ContentBlockStartEvent | ContentBlockDeltaEvent]]:
     all_tool_call_chunks = (
         cast(ContentBlockStartEvent | ContentBlockDeltaEvent, chunk)
         async for chunk in response
         if chunk.type in ("content_block_start", "content_block_delta")
     )
     async for _, tool_call_chunks in agroupby(all_tool_call_chunks, lambda x: x.index):
-        first_chunk = await anext(tool_call_chunks)
-        assert first_chunk.type == "content_block_start"  # noqa: S101
-        assert first_chunk.content_block.type == "tool_use"  # noqa: S101
-        tool_schema = select_tool_schema(first_chunk.content_block, tool_schemas)
-        yield await tool_schema.aparse_tool_call(tool_call_chunks)
+        yield tool_call_chunks
+
+
+def _join_streamed_response_to_message(
+    response: list[MessageStreamEvent],
+) -> _RawMessage[MessageParam]:
+    snapshot = None
+    for event in response:
+        snapshot = accumulate_event(
+            event=event,  # type: ignore[arg-type]
+            current_snapshot=snapshot,
+        )
+    assert snapshot is not None  # noqa: S101
+    snapshot_content = snapshot.model_dump()["content"]
+    return _RawMessage({"role": snapshot.role, "content": snapshot_content})
+
+
+def _parse_streamed_tool_calls(
+    response: Iterable[MessageStreamEvent],
+    tool_schemas: Iterable[FunctionToolSchema[T]],
+) -> Iterator[T]:
+    cached_response: list[MessageStreamEvent] = []
+    response = apply(cached_response.append, response)
+    try:
+        for tool_call_chunks in _iter_streamed_tool_calls(response):
+            first_chunk, tool_call_chunks = peek(tool_call_chunks)
+            assert first_chunk.type == "content_block_start"  # noqa: S101
+            assert first_chunk.content_block.type == "tool_use"  # noqa: S101
+            tool_schema = select_tool_schema(first_chunk.content_block, tool_schemas)
+            tool_call = tool_schema.parse_tool_call(tool_call_chunks)
+            yield tool_call
+    # TODO: Catch/raise unknown tool call error here
+    except ValidationError as e:
+        raw_message = _join_streamed_response_to_message(cached_response)
+        raise ToolSchemaParseError(
+            output_message=raw_message,
+            tool_call_id=raw_message.content["content"][0]["id"],  # type: ignore[index,unused-ignore]
+            validation_error=e,
+        ) from e
+
+
+async def _aparse_streamed_tool_calls(
+    response: AsyncIterable[MessageStreamEvent],
+    tool_schemas: Iterable[AsyncFunctionToolSchema[T]],
+) -> AsyncIterator[T]:
+    cached_response: list[MessageStreamEvent] = []
+    response = aapply(cached_response.append, response)
+    try:
+        async for tool_call_chunks in _aiter_streamed_tool_calls(response):
+            first_chunk, tool_call_chunks = await apeek(tool_call_chunks)
+            assert first_chunk.type == "content_block_start"  # noqa: S101
+            assert first_chunk.content_block.type == "tool_use"  # noqa: S101
+            tool_schema = select_tool_schema(first_chunk.content_block, tool_schemas)
+            tool_call = await tool_schema.aparse_tool_call(tool_call_chunks)
+            yield tool_call
+    # TODO: Catch/raise unknown tool call error here
+    except ValidationError as e:
+        raw_message = _join_streamed_response_to_message(cached_response)
+        raise ToolSchemaParseError(
+            output_message=raw_message,
+            tool_call_id=raw_message.content["content"][0]["id"],  # type: ignore[index,unused-ignore]
+            validation_error=e,
+        ) from e
 
 
 def _extract_system_message(
@@ -449,11 +517,11 @@ class AnthropicChatModel(ChatModel):
         response = _response_generator()
         usage_ref, response = _create_usage_ref(response)
 
+        message_start_chunk = next(response)
+        assert message_start_chunk.type == "message_start"  # noqa: S101
         first_chunk = next(response)
-        if first_chunk.type == "message_start":
-            first_chunk = next(response)
         assert first_chunk.type == "content_block_start"  # noqa: S101
-        response = chain([first_chunk], response)
+        response = chain([message_start_chunk, first_chunk], response)
 
         if (
             first_chunk.type == "content_block_start"
@@ -476,22 +544,14 @@ class AnthropicChatModel(ChatModel):
             first_chunk.type == "content_block_start"
             and first_chunk.content_block.type == "tool_use"
         ):
-            try:
-                if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                    content = ParallelFunctionCall(
-                        parse_streamed_tool_calls(response, tool_schemas)
-                    )
-                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-                # Take only the first tool_call, silently ignore extra chunks
-                # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = next(parse_streamed_tool_calls(response, tool_schemas))
+            tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
+            if is_any_origin_subclass(output_types, ParallelFunctionCall):
+                content = ParallelFunctionCall(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-            except ValidationError as e:
-                msg = (
-                    "Failed to parse model output. You may need to update your prompt"
-                    " to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg) from e
+            # Take only the first tool_call, silently ignore extra chunks
+            # TODO: Create generator here that raises error or warns if multiple tool_calls
+            content = next(tool_calls)
+            return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
@@ -568,11 +628,11 @@ class AnthropicChatModel(ChatModel):
         response = _response_generator()
         usage_ref, response = _create_usage_ref_async(response)
 
+        message_start_chunk = await anext(response)
+        assert message_start_chunk.type == "message_start"  # noqa: S101
         first_chunk = await anext(response)
-        if first_chunk.type == "message_start":
-            first_chunk = await anext(response)
         assert first_chunk.type == "content_block_start"  # noqa: S101
-        response = achain(async_iter([first_chunk]), response)
+        response = achain(async_iter([message_start_chunk, first_chunk]), response)
 
         if (
             first_chunk.type == "content_block_start"
@@ -595,24 +655,14 @@ class AnthropicChatModel(ChatModel):
             first_chunk.type == "content_block_start"
             and first_chunk.content_block.type == "tool_use"
         ):
-            try:
-                if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                    content = AsyncParallelFunctionCall(
-                        aparse_streamed_tool_calls(response, tool_schemas)
-                    )
-                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-                # Take only the first tool_call, silently ignore extra chunks
-                # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = await anext(
-                    aparse_streamed_tool_calls(response, tool_schemas)
-                )
+            tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
+            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+                content = AsyncParallelFunctionCall(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-            except ValidationError as e:
-                msg = (
-                    "Failed to parse model output. You may need to update your prompt"
-                    " to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg) from e
+            # Take only the first tool_call, silently ignore extra chunks
+            # TODO: Create generator here that raises error or warns if multiple tool_calls
+            content = await anext(tool_calls)
+            return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
 
         msg = "Could not determine response type"
         raise ValueError(msg)

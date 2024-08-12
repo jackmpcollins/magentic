@@ -1,9 +1,11 @@
-from typing import Any, Iterator
+from typing import Annotated, Any, Iterator
 
 import litellm
 import pytest
 from litellm.integrations.custom_logger import CustomLogger
+from pydantic import AfterValidator, BaseModel
 
+from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.litellm_chat_model import LitellmChatModel
 from magentic.chat_model.message import UserMessage
 from magentic.function_call import (
@@ -67,6 +69,22 @@ def test_litellm_chat_model_custom_llm_provider(litellm_success_callback_calls):
     assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "openai"
 
 
+@pytest.mark.litellm_openai
+def test_litellm_chat_model_complete_raises_tool_schema_parse_error():
+    def raise_error(v):
+        raise ValueError(v)
+
+    class Test(BaseModel):
+        value: Annotated[int, AfterValidator(raise_error)]
+
+    chat_model = LitellmChatModel("gpt-3.5-turbo")
+    with pytest.raises(ToolSchemaParseError):
+        chat_model.complete(
+            messages=[UserMessage("Return a test value of 42.")],
+            output_types=[Test],
+        )
+
+
 @pytest.fixture()
 def litellm_async_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
     """A list of calls to the `async_log_success_event` callback"""
@@ -108,6 +126,23 @@ async def test_litellm_chat_model_custom_llm_provider_async(
     await chat_model.acomplete(messages=[UserMessage("Say hello!")])
     callback_call = litellm_async_success_callback_calls[-1]
     assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "openai"
+
+
+@pytest.mark.asyncio
+@pytest.mark.litellm_openai
+async def test_litellm_chat_model_acomplete_raises_tool_schema_parse_error():
+    def raise_error(v):
+        raise ValueError(v)
+
+    class Test(BaseModel):
+        value: Annotated[int, AfterValidator(raise_error)]
+
+    chat_model = LitellmChatModel("gpt-3.5-turbo")
+    with pytest.raises(ToolSchemaParseError):
+        await chat_model.acomplete(
+            messages=[UserMessage("Return a test value of 42.")],
+            output_types=[Test],
+        )
 
 
 @pytest.mark.parametrize(
