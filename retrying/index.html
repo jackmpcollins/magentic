@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://magentic.dev/vision/">
+        <link rel="canonical" href="https://magentic.dev/retrying/">
       
       
-        <link rel="prev" href="../streaming/">
+        <link rel="prev" href="../vision/">
       
       
-        <link rel="next" href="../retrying/">
+        <link rel="next" href="../logging-and-tracing/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Vision - Magentic</title>
+        <title>Retrying - Magentic</title>
       
     
     
@@ -97,7 +97,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#vision" class="md-skip">
+        <a href="#retrying" class="md-skip">
           Skip to content
         </a>
       
@@ -133,7 +133,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Vision
+              Retrying
             
           </span>
         </div>
@@ -413,6 +413,26 @@
       
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../vision/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Vision
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
     
   
   
@@ -429,7 +449,7 @@
           
   
   <span class="md-ellipsis">
-    Vision
+    Retrying
   </span>
   
 
@@ -440,7 +460,7 @@
         
   
   <span class="md-ellipsis">
-    Vision
+    Retrying
   </span>
   
 
@@ -464,29 +484,26 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#userimagemessage" class="md-nav__link">
+  <a href="#llm-assisted-retries" class="md-nav__link">
     <span class="md-ellipsis">
-      UserImageMessage
+      LLM-Assisted Retries
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="LLM-Assisted Retries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#retrychatmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      RetryChatModel
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#placeholder" class="md-nav__link">
-    <span class="md-ellipsis">
-      Placeholder
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bytes" class="md-nav__link">
-    <span class="md-ellipsis">
-      bytes
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -494,26 +511,6 @@
   
 </nav>
       
-    </li>
-  
-
-    
-      
-      
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../retrying/" class="md-nav__link">
-        
-  
-  <span class="md-ellipsis">
-    Retrying
-  </span>
-  
-
-      </a>
     </li>
   
 
@@ -735,29 +732,26 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#userimagemessage" class="md-nav__link">
+  <a href="#llm-assisted-retries" class="md-nav__link">
     <span class="md-ellipsis">
-      UserImageMessage
+      LLM-Assisted Retries
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="LLM-Assisted Retries">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#retrychatmodel" class="md-nav__link">
+    <span class="md-ellipsis">
+      RetryChatModel
     </span>
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#placeholder" class="md-nav__link">
-    <span class="md-ellipsis">
-      Placeholder
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#bytes" class="md-nav__link">
-    <span class="md-ellipsis">
-      bytes
-    </span>
-  </a>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -776,7 +770,7 @@
                   
 
   
-    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/vision.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/retrying.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4v-2m10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1 2.1 2.1Z"/></svg>
     </a>
@@ -784,96 +778,68 @@
   
 
 
-<h1 id="vision">Vision<a class="headerlink" href="#vision" title="Permanent link">&para;</a></h1>
-<p>GPT-4 Vision can be used with magentic by using the <code>UserImageMessage</code> message type. This allows the LLM to accept images as input. Currently this is only supported with the OpenAI backend (<code>OpenaiChatModel</code>).</p>
-<div class="admonition note">
-<p class="admonition-title">Return types</p>
-<p><code>gpt-4-vision-preview</code> does not support function-calling/tools so only <code>str</code>, <code>StreamedStr</code>, and <code>AsyncStreamedStr</code> work as return types.</p>
-</div>
-<div class="admonition tip">
-<p class="admonition-title"><code>max_tokens</code></p>
-<p>By default, <code>gpt-4-vision-preview</code> has a low value for <code>max_tokens</code> so you will likely need to increase it.</p>
-</div>
-<p>For more information visit the <a href="https://platform.openai.com/docs/guides/vision">OpenAI Vision API documentation</a>.</p>
-<h2 id="userimagemessage">UserImageMessage<a class="headerlink" href="#userimagemessage" title="Permanent link">&para;</a></h2>
-<p>The <code>UserImageMessage</code> can be used in <code>@chatprompt</code> alongside other messages. The LLM must be set to an OpenAI model that supports vision, currently <code>gpt-4-vision-preview</code>, <code>gpt-4-turbo</code>, and <code>gpt-4o</code> (the default <code>ChatModel</code>). This can be done by passing the <code>model</code> parameter to <code>@chatprompt</code>, or through the other methods of <a href="../configuration/">configuration</a>.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
+<h1 id="retrying">Retrying<a class="headerlink" href="#retrying" title="Permanent link">&para;</a></h1>
+<h2 id="llm-assisted-retries">LLM-Assisted Retries<a class="headerlink" href="#llm-assisted-retries" title="Permanent link">&para;</a></h2>
+<p>Occasionally the LLM returns an output that cannot be parsed into any of the output types or function calls that were requested. Additionally, the pydantic models you define might have extra validation that is not represented by the type annotations alone. In these cases, LLM-assisted retries can be used to automatically resubmit the output as well as the associated error message back to the LLM, giving it another opportunity with more information to meet the output schema requirements.</p>
+<p>To enable retries, simply set the <code>max_retries</code> parameter to a non-zero value in <code>@prompt</code> or <code>@chatprompt</code>.</p>
+<p>In this example</p>
+<ul>
+<li>the LLM first returns a country that is not Ireland</li>
+<li>then the pydantic model validation fails with error "Country must be Ireland"</li>
+<li>the original output as well as a message containing the error are resubmitted to the LLM</li>
+<li>the LLM correctly meets the output requirement returning "Ireland"</li>
+</ul>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span>
 
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
+<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">AfterValidator</span><span class="p">,</span> <span class="n">BaseModel</span>
 
 
-<span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
+<span class="k">def</span> <span class="nf">assert_is_ireland</span><span class="p">(</span><span class="n">v</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="s2">&quot;Ireland&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Country must be Ireland&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">v</span>
 
 
-<span class="k">class</span> <span class="nc">ImageDetails</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">description</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;A brief description of the image.&quot;</span><span class="p">)</span>
-    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;A short name.&quot;</span><span class="p">)</span>
+<span class="k">class</span> <span class="nc">Country</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="n">name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AfterValidator</span><span class="p">(</span><span class="n">assert_is_ireland</span><span class="p">)]</span>
+    <span class="n">capital</span><span class="p">:</span> <span class="nb">str</span>
 
 
-<span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">),</span>
+<span class="nd">@prompt</span><span class="p">(</span>
+    <span class="s2">&quot;Return a country&quot;</span><span class="p">,</span>
+    <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ImageDetails</span><span class="p">:</span> <span class="o">...</span>
+<span class="k">def</span> <span class="nf">get_country</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Country</span><span class="p">:</span> <span class="o">...</span>
 
 
-<span class="n">image_details</span> <span class="o">=</span> <span class="n">describe_image</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">image_details</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
-<span class="c1"># &#39;Wooden Boardwalk in Green Wetland&#39;</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">image_details</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
-<span class="c1"># &#39;A serene wooden boardwalk meanders through a lush green wetland under a blue sky dotted with clouds.&#39;</span>
+<span class="n">get_country</span><span class="p">()</span>
+<span class="c1"># 05:13:55.607 Calling prompt-function get_country</span>
+<span class="c1"># 05:13:55.622   LLM-assisted retries enabled. Max 3</span>
+<span class="c1"># 05:13:55.627     Chat Completion with &#39;gpt-4o&#39; [LLM]</span>
+<span class="c1"># 05:13:56.309     streaming response from &#39;gpt-4o&#39; took 0.11s [LLM]</span>
+<span class="c1"># 05:13:56.310     Retrying Chat Completion. Attempt 1.</span>
+<span class="c1"># 05:13:56.322     Chat Completion with &#39;gpt-4o&#39; [LLM]</span>
+<span class="c1"># 05:13:57.456     streaming response from &#39;gpt-4o&#39; took 0.00s [LLM]</span>
+<span class="c1">#</span>
+<span class="c1"># Country(name=&#39;Ireland&#39;, capital=&#39;Dublin&#39;)</span>
 </code></pre></div>
-<p>For more info on the <code>@chatprompt</code> decorator, see <a href="../chat-prompting/">Chat Prompting</a>.</p>
-<h2 id="placeholder">Placeholder<a class="headerlink" href="#placeholder" title="Permanent link">&para;</a></h2>
-<p>In the previous example, the image url was tied to the function. To provide the image as a function parameter, use <code>Placeholder</code>. This substitutes a function argument into the message when the function is called.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<p>LLM-Assisted retries are intended to address cases where the LLM failed to generate valid output. Errors due to LLM provider rate limiting, internet connectivity issues, or other issues that cannot be solved by reprompting the LLM should be handled using other methods. For example <a href="https://github.com/jd/tenacity">jd/tenacity</a> or <a href="https://github.com/hynek/stamina">hynek/stamina</a> to retry a Python function.</p>
+<h3 id="retrychatmodel">RetryChatModel<a class="headerlink" href="#retrychatmodel" title="Permanent link">&para;</a></h3>
+<p>Under the hood, LLM-assisted retries are implemented using the <code>RetryChatModel</code> which wraps any other <code>ChatModel</code>, catches exceptions, and resubmits them to the LLM. To implement your own retry handling you can follow the pattern of this class. Please file a <a href="https://github.com/jackmpcollins/magentic/issues">GitHub issue</a> if you encounter exceptions that should be included in the LLM-assisted retries.</p>
+<p>To use the <code>RetryChatModel</code> directly rather than via the <code>max_retries</code> parameter, simply pass it as the <code>model</code> argument to the decorator. Extending the example above</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">OpenaiChatModel</span>
+<span class="kn">from</span> <span class="nn">magentic.chat_model.retry_chat_model</span> <span class="kn">import</span> <span class="n">RetryChatModel</span>
 
 
-<span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
-
-
-<span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-<span class="hll">    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">)),</span>
-</span><span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
-
-
-<span class="n">describe_image</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">)</span>
-<span class="c1"># &#39;A wooden boardwalk meanders through lush green wetlands under a partly cloudy blue sky.&#39;</span>
-</code></pre></div>
-<h2 id="bytes">bytes<a class="headerlink" href="#bytes" title="Permanent link">&para;</a></h2>
-<p><code>UserImageMessage</code> can also accept <code>bytes</code> as input. Like <code>str</code>, this can be passed directly or via <code>Placeholder</code>.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
-
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
-
-
-<span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
-
-
-<span class="k">def</span> <span class="nf">url_to_bytes</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bytes</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the content of a URL as bytes.&quot;&quot;&quot;</span>
-
-    <span class="c1"># A custom user-agent is necessary to comply with Wikimedia user-agent policy</span>
-    <span class="c1"># https://meta.wikimedia.org/wiki/User-Agent_policy</span>
-    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;User-Agent&quot;</span><span class="p">:</span> <span class="s2">&quot;MagenticExampleBot (https://magentic.dev/)&quot;</span><span class="p">}</span>
-    <span class="k">return</span> <span class="n">requests</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span><span class="o">.</span><span class="n">content</span>
-
-
-<span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="s2">&quot;image_bytes&quot;</span><span class="p">)),</span>
+<span class="nd">@prompt</span><span class="p">(</span>
+    <span class="s2">&quot;Return a country&quot;</span><span class="p">,</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">RetryChatModel</span><span class="p">(</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">),</span> <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+<span class="k">def</span> <span class="nf">get_country</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Country</span><span class="p">:</span> <span class="o">...</span>
 
 
-<span class="n">image_bytes</span> <span class="o">=</span> <span class="n">url_to_bytes</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">)</span>
-<span class="n">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">)</span>
-<span class="c1"># &#39;The image shows a wooden boardwalk extending through a lush green wetland with a backdrop of blue skies and scattered clouds.&#39;</span>
+<span class="n">get_country</span><span class="p">()</span>
 </code></pre></div>
 
 
