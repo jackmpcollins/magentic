@@ -7,7 +7,4 @@ logger = logging.getLogger("magentic")
 if logger.level == logging.NOTSET:
     logger.setLevel(logging.WARNING)
 
-logfire = logfire_api.with_settings(
-    custom_scope_suffix="magentic",  # TODO: This should be scope, not suffix
-    otel_scope_version="",  # TODO: Not currently accepted
-)
+logfire = logfire_api.Logfire(otel_scope="magentic")
