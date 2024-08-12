@@ -83,6 +83,7 @@ nav:
   - asyncio.md
   - streaming.md
   - vision.md
+  - retrying.md
   - logging-and-tracing.md
   - configuration.md
   - type-checking.md

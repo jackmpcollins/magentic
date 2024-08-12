@@ -35,7 +35,7 @@ def is_origin_subclass(
     type_: type, cls_or_tuple: TypeT | tuple[TypeT, ...]
 ) -> TypeGuard[TypeT]:
     """Check if the unsubscripted type is a subclass of the given class(es)."""
-    if type_ is Any:
+    if type_ is Any:  # type: ignore[comparison-overlap]
         return False
     return issubclass(get_origin(type_) or type_, cls_or_tuple)
 

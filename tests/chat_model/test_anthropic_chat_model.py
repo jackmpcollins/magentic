@@ -1,6 +1,10 @@
+from typing import Annotated
+
 import pytest
+from pydantic import AfterValidator, BaseModel
 
 from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
+from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.message import Message, Usage, UserMessage
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -65,6 +69,22 @@ def test_anthropic_chat_model_complete_no_structured_output_error():
 
 
 @pytest.mark.anthropic
+def test_anthropic_chat_model_complete_raises_tool_schema_parse_error():
+    def raise_error(v):
+        raise ValueError(v)
+
+    class Test(BaseModel):
+        value: Annotated[int, AfterValidator(raise_error)]
+
+    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    with pytest.raises(ToolSchemaParseError):
+        chat_model.complete(
+            messages=[UserMessage("Return a test value of 42.")],
+            output_types=[Test],
+        )
+
+
+@pytest.mark.anthropic
 def test_anthropic_chat_model_complete_function_call():
     def plus(a: int, b: int) -> int:
         """Sum two numbers."""
@@ -74,7 +94,7 @@ def test_anthropic_chat_model_complete_function_call():
     message = chat_model.complete(
         messages=[UserMessage("Use the tool to sum 1 and 2")],
         functions=[plus],
-        output_types=[FunctionCall[int]],  # type: ignore[misc]
+        output_types=[FunctionCall[int]],
     )
     assert isinstance(message.content, FunctionCall)
 
@@ -151,6 +171,23 @@ async def test_anthropic_chat_model_acomplete_usage_structured_output():
 
 @pytest.mark.asyncio
 @pytest.mark.anthropic
+async def test_anthropic_chat_model_acomplete_raises_tool_schema_parse_error():
+    def raise_error(v):
+        raise ValueError(v)
+
+    class Test(BaseModel):
+        value: Annotated[int, AfterValidator(raise_error)]
+
+    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    with pytest.raises(ToolSchemaParseError):
+        await chat_model.acomplete(
+            messages=[UserMessage("Return a test value of 42.")],
+            output_types=[Test],
+        )
+
+
+@pytest.mark.asyncio
+@pytest.mark.anthropic
 async def test_anthropic_chat_model_acomplete_function_call():
     def plus(a: int, b: int) -> int:
         """Sum two numbers."""
@@ -160,7 +197,7 @@ async def test_anthropic_chat_model_acomplete_function_call():
     message = await chat_model.acomplete(
         messages=[UserMessage("Use the tool to sum 1 and 2")],
         functions=[plus],
-        output_types=[FunctionCall[int]],  # type: ignore[misc]
+        output_types=[FunctionCall[int]],
     )
     assert isinstance(message.content, FunctionCall)
 

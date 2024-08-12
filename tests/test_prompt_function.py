@@ -1,11 +1,11 @@
 """Tests for PromptFunction."""
 
 from inspect import getdoc
-from typing import Awaitable
+from typing import Annotated, Awaitable
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pydantic import BaseModel
+from pydantic import AfterValidator, BaseModel
 
 from magentic.chat_model.message import AssistantMessage, UserMessage
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
@@ -167,7 +167,7 @@ def test_decorator_ignore_multiple_tool_calls():
 
     # Provide two return types so that `tool_choice` does not force a single tool call
     @prompt(
-        "Return the numbers 1 to 5, and also the numbers 6 to 10.",
+        "Return the numbers 1 to 5 in the first tool call. And numbers 6 to 10 in the second.",
         model=OpenaiChatModel("gpt-4-1106-preview"),
     )
     def get_list() -> list[int] | bool: ...
@@ -182,6 +182,24 @@ def test_decorator_return_streamed_str():
 
     output = get_capital("Ireland")
     assert isinstance(output, StreamedStr)
+
+
+@pytest.mark.openai
+def test_decorator_max_retries():
+    def assert_is_ireland(v):
+        if v != "Ireland":
+            msg = "Country must be Ireland."
+            raise ValueError(msg)
+        return v
+
+    class Country(BaseModel):
+        name: Annotated[str, AfterValidator(assert_is_ireland)]
+
+    @prompt("Return a country.", max_retries=3)
+    def get_country() -> Country: ...
+
+    country = get_country()
+    assert country.name == "Ireland"
 
 
 @pytest.mark.asyncio
@@ -224,6 +242,25 @@ async def test_async_decorator_return_async_streamed_str():
 
     output = await get_capital("Ireland")
     assert isinstance(output, AsyncStreamedStr)
+
+
+@pytest.mark.asyncio
+@pytest.mark.openai
+async def test_async_decorator_max_retries():
+    def assert_is_ireland(v):
+        if v != "Ireland":
+            msg = "Country must be Ireland."
+            raise ValueError(msg)
+        return v
+
+    class Country(BaseModel):
+        name: Annotated[str, AfterValidator(assert_is_ireland)]
+
+    @prompt("Return a country.", max_retries=3)
+    async def get_country() -> Country: ...
+
+    country = await get_country()
+    assert country.name == "Ireland"
 
 
 @pytest.mark.asyncio

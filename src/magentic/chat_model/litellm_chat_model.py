@@ -1,12 +1,11 @@
 from collections.abc import Callable, Iterable
 from itertools import chain
-from typing import Any, TypeVar, cast, overload
+from typing import Any, Sequence, TypeVar, cast, overload
 
-from pydantic import ValidationError
+from openai.types.chat import ChatCompletionToolChoiceOptionParam
 
 from magentic.chat_model.base import (
     ChatModel,
-    StructuredOutputError,
     avalidate_str_content,
     validate_str_content,
 )
@@ -22,11 +21,12 @@ from magentic.chat_model.message import (
 from magentic.chat_model.openai_chat_model import (
     STR_OR_FUNCTIONCALL_TYPE,
     AsyncFunctionToolSchema,
+    BaseFunctionToolSchema,
     FunctionToolSchema,
-    aparse_streamed_tool_calls,
+    _aparse_streamed_tool_calls,
+    _parse_streamed_tool_calls,
     discard_none_arguments,
     message_to_openai_message,
-    parse_streamed_tool_calls,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -95,6 +95,19 @@ class LitellmChatModel(ChatModel):
     def custom_llm_provider(self) -> str | None:
         return self._custom_llm_provider
 
+    @staticmethod
+    def _get_tool_choice(
+        *,
+        tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
+        allow_string_output: bool,
+    ) -> ChatCompletionToolChoiceOptionParam | None:
+        """Create the tool choice argument."""
+        if allow_string_output:
+            return None
+        if len(tool_schemas) == 1:
+            return tool_schemas[0].as_tool_choice()
+        return "required"
+
     @overload
     def complete(
         self,
@@ -149,10 +162,8 @@ class LitellmChatModel(ChatModel):
             stream=True,
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
-            tool_choice=(
-                tool_schemas[0].as_tool_choice()  # type: ignore[unused-ignore]
-                if len(tool_schemas) == 1 and not allow_string_output
-                else None
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
         assert not isinstance(response, ModelResponse)  # noqa: S101
@@ -170,23 +181,14 @@ class LitellmChatModel(ChatModel):
 
         # Check tool calls before content because both might be present
         if first_chunk.choices[0].delta.tool_calls is not None:
-            try:
-                if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                    content = ParallelFunctionCall(
-                        parse_streamed_tool_calls(response, tool_schemas)
-                    )
-                    return AssistantMessage(content)  # type: ignore[return-value]
-
-                # Take only the first tool_call, silently ignore extra chunks
-                # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = next(parse_streamed_tool_calls(response, tool_schemas))
+            tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
+            if is_any_origin_subclass(output_types, ParallelFunctionCall):
+                content = ParallelFunctionCall(tool_calls)
                 return AssistantMessage(content)  # type: ignore[return-value]
-            except ValidationError as e:
-                msg = (
-                    "Failed to parse model output. You may need to update your prompt"
-                    " to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg) from e
+            # Take only the first tool_call, silently ignore extra chunks
+            # TODO: Create generator here that raises error or warns if multiple tool_calls
+            content = next(tool_calls)
+            return AssistantMessage(content)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.content is not None:
             streamed_str = StreamedStr(
@@ -260,10 +262,8 @@ class LitellmChatModel(ChatModel):
             stream=True,
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
-            tool_choice=(
-                tool_schemas[0].as_tool_choice()  # type: ignore[unused-ignore]
-                if len(tool_schemas) == 1 and not allow_string_output
-                else None
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         )
         assert not isinstance(response, ModelResponse)  # noqa: S101
@@ -281,24 +281,13 @@ class LitellmChatModel(ChatModel):
 
         # Check tool calls before content because both might be present
         if first_chunk.choices[0].delta.tool_calls is not None:
-            try:
-                if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                    content = AsyncParallelFunctionCall(
-                        aparse_streamed_tool_calls(response, tool_schemas)
-                    )
-                    return AssistantMessage(content)  # type: ignore[return-value]
-
-                # Take only the first tool_call, silently ignore extra chunks
-                content = await anext(
-                    aparse_streamed_tool_calls(response, tool_schemas)
-                )
+            tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
+            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+                content = AsyncParallelFunctionCall(tool_calls)
                 return AssistantMessage(content)  # type: ignore[return-value]
-            except ValidationError as e:
-                msg = (
-                    "Failed to parse model output. You may need to update your prompt"
-                    " to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg) from e
+            # Take only the first tool_call, silently ignore extra chunks
+            content = await anext(tool_calls)
+            return AssistantMessage(content)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.content is not None:
             async_streamed_str = AsyncStreamedStr(

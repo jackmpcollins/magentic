@@ -20,7 +20,7 @@ ignore_missing_imports = true
 
 [tool.poetry]
 name = "magentic"
-version = "0.27.0"
+version = "0.29.0"
 description = "Seamlessly integrate LLMs as Python functions"
 license = "MIT"
 authors = ["Jack Collins"]
@@ -44,13 +44,14 @@ litellm = ["litellm"]
 
 [tool.poetry.group.dev.dependencies]
 blacken-docs = "^1.16.0"
+logfire = ">=0.46.1,<0.50.0"
 mypy = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pytest-clarity = "*"
 pytest-cov = "*"
 python-dotenv = "^1.0.1"
-ruff = ">=0.3,<0.5"
+ruff = ">=0.3,<0.6"
 
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.5.3"

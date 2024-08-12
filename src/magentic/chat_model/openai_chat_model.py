@@ -8,6 +8,7 @@ import openai
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionMessageParam,
+    ChatCompletionMessageToolCallParam,
     ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
@@ -17,7 +18,7 @@ from pydantic import ValidationError
 
 from magentic.chat_model.base import (
     ChatModel,
-    StructuredOutputError,
+    ToolSchemaParseError,
     avalidate_str_content,
     validate_str_content,
 )
@@ -31,11 +32,12 @@ from magentic.chat_model.function_schema import (
 )
 from magentic.chat_model.message import (
     AssistantMessage,
-    FunctionResultMessage,
     Message,
     SystemMessage,
+    ToolResultMessage,
     Usage,
     UserMessage,
+    _RawMessage,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -46,9 +48,13 @@ from magentic.function_call import (
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
+    aapply,
     achain,
     agroupby,
+    apeek,
+    apply,
     async_iter,
+    peek,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 
@@ -65,6 +71,12 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
     """Convert a Message to an OpenAI message."""
     # TODO: Add instructions for registering new Message type to this error message
     raise NotImplementedError(type(message))
+
+
+@message_to_openai_message.register(_RawMessage)
+def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
+    # TODO: Validate the message content
+    return message.content  # type: ignore[no-any-return]
 
 
 @message_to_openai_message.register
@@ -138,16 +150,21 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     }
 
 
-@message_to_openai_message.register(FunctionResultMessage)
-def _(message: FunctionResultMessage[Any]) -> ChatCompletionMessageParam:
-    function_schema = function_schema_for_type(type(message.content))
+@message_to_openai_message.register(ToolResultMessage)
+def _(message: ToolResultMessage[Any]) -> ChatCompletionMessageParam:
+    if isinstance(message.content, str):
+        content = message.content
+    else:
+        function_schema = function_schema_for_type(type(message.content))
+        content = function_schema.serialize_args(message.content)
     return {
         "role": OpenaiMessageRole.TOOL.value,
-        "tool_call_id": message.function_call._unique_id,
-        "content": function_schema.serialize_args(message.content),
+        "tool_call_id": message.tool_call_id,
+        "content": content,
     }
 
 
+# TODO: Use ToolResultMessage to solve this at magentic level
 def _add_missing_tool_calls_responses(
     messages: list[ChatCompletionMessageParam],
 ) -> list[ChatCompletionMessageParam]:
@@ -214,7 +231,7 @@ def select_tool_schema(
             return tool_schema
 
     msg = f"Unknown tool call: {tool_call.model_dump_json()}"
-    raise ValueError(msg)
+    raise ValueError(msg)  # TODO: Create `UnknownToolCallError` for this
 
 
 class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
@@ -242,10 +259,10 @@ def _get_tool_call_id_for_chunk(tool_call: ChoiceDeltaToolCall) -> Any:
     return tool_call.index if tool_call.index is not None else tool_call.id
 
 
-def parse_streamed_tool_calls(
+def _iter_streamed_tool_calls(
     response: Iterable[ChatCompletionChunk],
-    tool_schemas: list[FunctionToolSchema[T]],
-) -> Iterator[T]:
+) -> Iterator[Iterator[ChoiceDeltaToolCall]]:
+    """Group tool_call chunks into separate iterators."""
     all_tool_call_chunks = (
         tool_call
         for chunk in response
@@ -255,16 +272,13 @@ def parse_streamed_tool_calls(
     for _, tool_call_chunks in groupby(
         all_tool_call_chunks, _get_tool_call_id_for_chunk
     ):
-        first_chunk = next(tool_call_chunks)
-        tool_schema = select_tool_schema(first_chunk, tool_schemas)
-        tool_call = tool_schema.parse_tool_call(chain([first_chunk], tool_call_chunks))  # noqa: B031
-        yield tool_call
+        yield tool_call_chunks
 
 
-async def aparse_streamed_tool_calls(
+async def _aiter_streamed_tool_calls(
     response: AsyncIterable[ChatCompletionChunk],
-    tool_schemas: list[AsyncFunctionToolSchema[T]],
-) -> AsyncIterator[T]:
+) -> AsyncIterator[AsyncIterator[ChoiceDeltaToolCall]]:
+    """Async version of `_iter_streamed_tool_calls`."""
     all_tool_call_chunks = (
         tool_call
         async for chunk in response
@@ -274,12 +288,96 @@ async def aparse_streamed_tool_calls(
     async for _, tool_call_chunks in agroupby(
         all_tool_call_chunks, _get_tool_call_id_for_chunk
     ):
-        first_chunk = await anext(tool_call_chunks)
-        tool_schema = select_tool_schema(first_chunk, tool_schemas)
-        tool_call = await tool_schema.aparse_tool_call(
-            achain(async_iter([first_chunk]), tool_call_chunks)
-        )
-        yield tool_call
+        yield tool_call_chunks
+
+
+def _parse_streamed_tool_calls(
+    response: Iterable[ChatCompletionChunk],
+    tool_schemas: list[FunctionToolSchema[T]],
+) -> Iterator[T]:
+    cached_response: list[ChatCompletionChunk] = []
+    response = apply(cached_response.append, response)
+    try:
+        for tool_call_chunks in _iter_streamed_tool_calls(response):
+            first_chunk, tool_call_chunks = peek(tool_call_chunks)
+            tool_schema = select_tool_schema(first_chunk, tool_schemas)
+            tool_call = tool_schema.parse_tool_call(tool_call_chunks)
+            yield tool_call
+    # TODO: Catch/raise unknown tool call error here
+    except ValidationError as e:
+        raw_message = _join_streamed_tool_calls_to_message(cached_response)
+        raise ToolSchemaParseError(
+            output_message=raw_message,
+            tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index,unused-ignore]
+            validation_error=e,
+        ) from e
+
+
+async def _aparse_streamed_tool_calls(
+    response: AsyncIterable[ChatCompletionChunk],
+    tool_schemas: list[AsyncFunctionToolSchema[T]],
+) -> AsyncIterator[T]:
+    cached_response: list[ChatCompletionChunk] = []
+    response = aapply(cached_response.append, response)
+    try:
+        async for tool_call_chunks in _aiter_streamed_tool_calls(response):
+            first_chunk, tool_call_chunks = await apeek(tool_call_chunks)
+            tool_schema = select_tool_schema(first_chunk, tool_schemas)
+            tool_call = await tool_schema.aparse_tool_call(tool_call_chunks)
+            yield tool_call
+    # TODO: Catch/raise unknown tool call error here
+    except ValidationError as e:
+        raw_message = _join_streamed_tool_calls_to_message(cached_response)
+        raise ToolSchemaParseError(
+            output_message=raw_message,
+            tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index,unused-ignore]
+            validation_error=e,
+        ) from e
+
+
+def _join_streamed_tool_call(
+    tool_call_deltas: Iterable[ChoiceDeltaToolCall],
+) -> ChatCompletionMessageToolCallParam:
+    """Join chunks from a single streamed tool call into an OpenAI tool call dict."""
+    tool_id: str | None = None
+    tool_type: Literal["function"] = "function"
+    function_name: list[str] = []
+    function_arguments: list[str] = []
+    for tool_call_delta in tool_call_deltas:
+        if tool_call_delta.id:
+            tool_id = tool_call_delta.id
+        if tool_call_delta.type:
+            tool_type = tool_call_delta.type
+        if tool_call_delta.function:
+            if tool_call_delta.function.name:
+                function_name.append(tool_call_delta.function.name)
+            if tool_call_delta.function.arguments:
+                function_arguments.append(tool_call_delta.function.arguments)
+    return {
+        "id": tool_id or _create_unique_id(),
+        "type": tool_type,
+        "function": {
+            "name": "".join(function_name),
+            "arguments": "".join(function_arguments),
+        },
+    }
+
+
+def _join_streamed_tool_calls_to_message(
+    response: Iterable[ChatCompletionChunk],
+    # TODO: Type as ChatCompletionAssistantMessageParam. Issue: https://github.com/pydantic/pydantic/issues/10105
+) -> _RawMessage[Any]:
+    """Join streamed tool calls into an OpenAI chat completion message."""
+    return _RawMessage(
+        {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": None,
+            "tool_calls": [
+                _join_streamed_tool_call(tool_call_chunks)
+                for tool_call_chunks in _iter_streamed_tool_calls(response)
+            ],
+        }
+    )
 
 
 def _create_usage_ref(
@@ -417,8 +515,9 @@ class OpenaiChatModel(ChatModel):
     def temperature(self) -> float | None:
         return self._temperature
 
-    @staticmethod
-    def _get_stream_options() -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+        if self.api_type == "azure":
+            return openai.NOT_GIVEN
         return {"include_usage": True}
 
     @staticmethod
@@ -433,6 +532,19 @@ class OpenaiChatModel(ChatModel):
         if len(tool_schemas) == 1:
             return tool_schemas[0].as_tool_choice()
         return "required"
+
+    def _get_parallel_tool_calls(
+        self, *, tools_specified: bool, output_types: Iterable[type]
+    ) -> bool | openai.NotGiven:
+        if not tools_specified:  # Enforced by OpenAI API
+            return openai.NOT_GIVEN
+        if self.api_type == "azure":
+            return openai.NOT_GIVEN
+        if is_any_origin_subclass(output_types, ParallelFunctionCall):
+            return openai.NOT_GIVEN
+        if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+            return openai.NOT_GIVEN
+        return False
 
     @overload
     def complete(
@@ -495,6 +607,9 @@ class OpenaiChatModel(ChatModel):
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
+            parallel_tool_calls=self._get_parallel_tool_calls(
+                tools_specified=bool(tool_schemas), output_types=output_types
+            ),
         )
         usage_ref, response = _create_usage_ref(response)
 
@@ -524,22 +639,13 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
-            try:
-                if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                    content = ParallelFunctionCall(
-                        parse_streamed_tool_calls(response, tool_schemas)
-                    )
-                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-                # Take only the first tool_call, silently ignore extra chunks
-                # TODO: Create generator here that raises error or warns if multiple tool_calls
-                content = next(parse_streamed_tool_calls(response, tool_schemas))
+            tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
+            if is_any_origin_subclass(output_types, ParallelFunctionCall):
+                content = ParallelFunctionCall(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-            except ValidationError as e:
-                msg = (
-                    "Failed to parse model output. You may need to update your prompt"
-                    " to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg) from e
+            # Take only the first tool_call, silently ignore extra chunks
+            content = next(tool_calls)
+            return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
@@ -606,6 +712,9 @@ class OpenaiChatModel(ChatModel):
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
+            parallel_tool_calls=self._get_parallel_tool_calls(
+                tools_specified=bool(tool_schemas), output_types=output_types
+            ),
         )
         usage_ref, response = _create_usage_ref_async(response)
 
@@ -635,24 +744,13 @@ class OpenaiChatModel(ChatModel):
             return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
 
         if first_chunk.choices[0].delta.tool_calls:
-            try:
-                if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                    content = AsyncParallelFunctionCall(
-                        aparse_streamed_tool_calls(response, tool_schemas)
-                    )
-                    return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-
-                # Take only the first tool_call, silently ignore extra chunks
-                content = await anext(
-                    aparse_streamed_tool_calls(response, tool_schemas)
-                )
+            tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
+            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+                content = AsyncParallelFunctionCall(tool_calls)
                 return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-            except ValidationError as e:
-                msg = (
-                    "Failed to parse model output. You may need to update your prompt"
-                    " to encourage the model to return a specific type."
-                )
-                raise StructuredOutputError(msg) from e
+            # Take only the first tool_call, silently ignore extra chunks
+            content = await anext(tool_calls)
+            return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
 
         msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
         raise ValueError(msg)
