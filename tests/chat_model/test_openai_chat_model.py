@@ -191,7 +191,7 @@ def test_openai_chat_model_complete_no_structured_output_error():
 
 
 @pytest.mark.openai
-def test_openai_chat_model_complete_raises_structured_output_error():
+def test_openai_chat_model_complete_raises_tool_schema_parse_error():
     def raise_error(v):
         raise ValueError(v)
 
@@ -233,7 +233,7 @@ async def test_openai_chat_model_acomplete_usage_structured_output():
 
 @pytest.mark.asyncio
 @pytest.mark.openai
-async def test_openai_chat_model_acomplete_raises_structured_output_error():
+async def test_openai_chat_model_acomplete_raises_tool_schema_parse_error():
     def raise_error(v):
         raise ValueError(v)
 
