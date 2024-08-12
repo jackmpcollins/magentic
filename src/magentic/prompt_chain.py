@@ -8,11 +8,10 @@ from typing import (
     cast,
 )
 
-import logfire_api as logfire
-
 from magentic.chat import Chat
 from magentic.chat_model.base import ChatModel
 from magentic.function_call import FunctionCall
+from magentic.logger import logfire
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction
 
 P = ParamSpec("P")

@@ -14,12 +14,11 @@ from typing import (
     overload,
 )
 
-import logfire_api as logfire
-
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import UserMessage
 from magentic.chat_model.retry_chat_model import RetryChatModel
+from magentic.logger import logfire
 from magentic.typing import split_union_type
 
 P = ParamSpec("P")
