@@ -6,7 +6,6 @@ from typing import Any, Generic, Literal, ParamSpec, Sequence, TypeVar, cast, ov
 
 import openai
 from openai.types.chat import (
-    ChatCompletionAssistantMessageParam,
     ChatCompletionChunk,
     ChatCompletionMessageParam,
     ChatCompletionMessageToolCallParam,
@@ -75,8 +74,8 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
 
 
 @message_to_openai_message.register(_RawMessage)
-def _(message: _RawMessage[ChatCompletionMessageParam]) -> ChatCompletionMessageParam:
-    return message.content
+def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
+    return message.content  # type: ignore[no-any-return]
 
 
 @message_to_openai_message.register
@@ -308,7 +307,7 @@ def _parse_streamed_tool_calls(
         raw_message = _join_streamed_tool_calls_to_message(cached_response)
         raise ToolSchemaParseError(
             output_message=raw_message,
-            tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index]
+            tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index,unused-ignore]
             validation_error=e,
         ) from e
 
@@ -330,7 +329,7 @@ async def _aparse_streamed_tool_calls(
         raw_message = _join_streamed_tool_calls_to_message(cached_response)
         raise ToolSchemaParseError(
             output_message=raw_message,
-            tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index]
+            tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index,unused-ignore]
             validation_error=e,
         ) from e
 
@@ -365,7 +364,8 @@ def _join_streamed_tool_call(
 
 def _join_streamed_tool_calls_to_message(
     response: Iterable[ChatCompletionChunk],
-) -> _RawMessage[ChatCompletionAssistantMessageParam]:
+    # TODO: Type as ChatCompletionAssistantMessageParam. Issue: https://github.com/pydantic/pydantic/issues/10105
+) -> _RawMessage[Any]:
     """Join streamed tool calls into an OpenAI chat completion message."""
     return _RawMessage(
         {
