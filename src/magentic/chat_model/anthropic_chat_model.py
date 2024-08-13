@@ -194,6 +194,32 @@ def _(message: ToolResultMessage[Any]) -> MessageParam:
     }
 
 
+# TODO: Move this to the magentic level by allowing `UserMessage` have a list of content
+def _combine_messages(messages: Iterable[MessageParam]) -> list[MessageParam]:
+    """Combine messages with the same role, to get alternating roles.
+
+    Alternating roles is a requirement of the Anthropic API.
+    """
+    combined_messages: list[MessageParam] = []
+    for message_group in groupby(messages, lambda x: x["role"]):
+        role, messages = message_group
+        content = []
+        for message in messages:
+            if isinstance(message["content"], list):
+                content.extend(message["content"])
+            elif isinstance(message["content"], str):
+                content.append({"type": "text", "text": message["content"]})
+            else:
+                content.append(message["content"])
+        combined_messages.append(
+            {
+                "role": role,  # type: ignore[assignment]
+                "content": content,
+            }
+        )
+    return combined_messages
+
+
 T = TypeVar("T")
 BaseFunctionSchemaT = TypeVar("BaseFunctionSchemaT", bound=BaseFunctionSchema[Any])
 
@@ -523,7 +549,9 @@ class AnthropicChatModel(ChatModel):
         def _response_generator() -> Iterator[MessageStreamEvent]:
             with self._client.messages.stream(
                 model=self.model,
-                messages=[message_to_anthropic_message(m) for m in messages],
+                messages=_combine_messages(
+                    [message_to_anthropic_message(m) for m in messages]
+                ),
                 max_tokens=self.max_tokens,
                 stop_sequences=stop or anthropic.NOT_GIVEN,
                 system=system,
@@ -633,7 +661,9 @@ class AnthropicChatModel(ChatModel):
         async def _response_generator() -> AsyncIterator[MessageStreamEvent]:
             async with self._async_client.messages.stream(
                 model=self.model,
-                messages=[message_to_anthropic_message(m) for m in messages],
+                messages=_combine_messages(
+                    [message_to_anthropic_message(m) for m in messages]
+                ),
                 max_tokens=self.max_tokens,
                 stop_sequences=stop or anthropic.NOT_GIVEN,
                 system=system,
