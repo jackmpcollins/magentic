@@ -1,3 +1,4 @@
+import base64
 from abc import ABC, abstractmethod
 from typing import (
     Annotated,
@@ -13,7 +14,8 @@ from typing import (
     overload,
 )
 
-from pydantic import BaseModel, Field, PrivateAttr
+import filetype
+from pydantic import BaseModel, Field, PrivateAttr, RootModel
 from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
@@ -91,15 +93,39 @@ class SystemMessage(Message[str]):
         return SystemMessage(self.content.format(**kwargs))
 
 
-class UserMessage(Message[str]):
+class ImageBytes(RootModel[bytes]):
+    @property
+    def mime_type(self) -> str | None:
+        return filetype.guess_mime(self.root)
+
+    def as_base64(self) -> str:
+        return base64.b64encode(self.root).decode("utf-8")
+
+    def format(self, **kwargs: Any) -> "ImageBytes":
+        del kwargs
+        return self
+
+
+class ImageUrl(RootModel[str]):
+    def format(self, **kwargs: Any) -> "ImageUrl":
+        del kwargs
+        return self
+
+
+# TODO: TypeVar for content
+class UserMessage(Message[str | list[str | ImageBytes | ImageUrl]]):
     """A message sent by a user to an LLM chat model."""
 
     role: Literal["user"] = "user"
 
-    def __init__(self, content: str, **data: Any):
+    def __init__(self, content: str | list[str | ImageBytes | ImageUrl], **data: Any):
         super().__init__(content=content, **data)
 
     def format(self, **kwargs: Any) -> "UserMessage":
+        if isinstance(self.content, str):
+            return UserMessage(self.content.format(**kwargs))
+        if isinstance(self.content, list):
+            return UserMessage([block.format(**kwargs) for block in self.content])
         return UserMessage(self.content.format(**kwargs))
 
 

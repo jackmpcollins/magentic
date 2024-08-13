@@ -25,6 +25,7 @@ from magentic.chat_model.function_schema import (
 )
 from magentic.chat_model.message import (
     AssistantMessage,
+    ImageBytes,
     Message,
     SystemMessage,
     ToolResultMessage,
@@ -89,7 +90,30 @@ def _(message: _RawMessage[Any]) -> MessageParam:
 
 @message_to_anthropic_message.register
 def _(message: UserMessage) -> MessageParam:
-    return {"role": AnthropicMessageRole.USER.value, "content": message.content}
+    if isinstance(message.content, str):
+        return {"role": AnthropicMessageRole.USER.value, "content": message.content}
+    if isinstance(message.content, list):
+        content = []
+        for block in message.content:
+            if isinstance(block, str):
+                content.append({"type": "text", "text": block})
+            elif isinstance(block, ImageBytes):
+                content.append(
+                    {
+                        "type": "image",
+                        "source": {
+                            "type": "base64",
+                            "media_type": block.mime_type,
+                            "data": block.as_base64(),
+                        },
+                    }
+                )
+            else:
+                msg = f"Invalid content type for UserMessage: {type(block)}"
+                raise TypeError(msg)
+        return {"role": AnthropicMessageRole.USER.value, "content": content}
+    msg = f"Invalid content type for UserMessage: {type(message.content)}"
+    raise TypeError(msg)
 
 
 @message_to_anthropic_message.register(UserImageMessage)

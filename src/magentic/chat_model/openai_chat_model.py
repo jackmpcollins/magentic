@@ -34,6 +34,8 @@ from magentic.chat_model.function_schema import (
 )
 from magentic.chat_model.message import (
     AssistantMessage,
+    ImageBytes,
+    ImageUrl,
     Message,
     SystemMessage,
     ToolResultMessage,
@@ -89,7 +91,29 @@ def _(message: SystemMessage) -> ChatCompletionMessageParam:
 
 @message_to_openai_message.register
 def _(message: UserMessage) -> ChatCompletionMessageParam:
-    return {"role": OpenaiMessageRole.USER.value, "content": message.content}
+    if isinstance(message.content, str):
+        return {"role": OpenaiMessageRole.USER.value, "content": message.content}
+    if isinstance(message.content, list):
+        content = []
+        for block in message.content:
+            if isinstance(block, str):
+                content.append({"type": "text", "text": block})
+            elif isinstance(block, ImageBytes):
+                content.append(
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{block.mime_type};base64,{block.as_base64()}"
+                        },
+                    }
+                )
+            elif isinstance(block, ImageUrl):
+                content.append({"type": "image_url", "image_url": {"url": block.root}})
+            else:
+                msg = f"Invalid block type: {type(block)}"
+                raise TypeError(msg)
+    msg = f"Invalid content type: {type(message.content)}"
+    raise TypeError(msg)
 
 
 @message_to_openai_message.register(UserImageMessage)
