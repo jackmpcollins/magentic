@@ -211,12 +211,7 @@ def _combine_messages(messages: Iterable[MessageParam]) -> list[MessageParam]:
                 content.append({"type": "text", "text": message["content"]})
             else:
                 content.append(message["content"])
-        combined_messages.append(
-            {
-                "role": role,  # type: ignore[assignment]
-                "content": content,
-            }
-        )
+        combined_messages.append({"role": role, "content": content})
     return combined_messages
 
 
