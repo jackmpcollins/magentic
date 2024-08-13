@@ -785,18 +785,14 @@
 
 
 <h1 id="vision">Vision<a class="headerlink" href="#vision" title="Permanent link">&para;</a></h1>
-<p>GPT-4 Vision can be used with magentic by using the <code>UserImageMessage</code> message type. This allows the LLM to accept images as input. Currently this is only supported with the OpenAI backend (<code>OpenaiChatModel</code>).</p>
+<p>Image inputs can be provided to LLMs in magentic by using the <code>UserImageMessage</code> message type.</p>
 <div class="admonition note">
-<p class="admonition-title">Return types</p>
-<p><code>gpt-4-vision-preview</code> does not support function-calling/tools so only <code>str</code>, <code>StreamedStr</code>, and <code>AsyncStreamedStr</code> work as return types.</p>
+<p class="admonition-title">Anthropic Image URLs</p>
+<p>Anthropic models currently do not support supplying an image as a url, just bytes.</p>
 </div>
-<div class="admonition tip">
-<p class="admonition-title"><code>max_tokens</code></p>
-<p>By default, <code>gpt-4-vision-preview</code> has a low value for <code>max_tokens</code> so you will likely need to increase it.</p>
-</div>
-<p>For more information visit the <a href="https://platform.openai.com/docs/guides/vision">OpenAI Vision API documentation</a>.</p>
+<p>For more information visit the <a href="https://platform.openai.com/docs/guides/vision">OpenAI Vision API documentation</a> or the <a href="https://docs.anthropic.com/en/docs/build-with-claude/vision#example-multiple-images">Anthropic Vision API documentation</a>.</p>
 <h2 id="userimagemessage">UserImageMessage<a class="headerlink" href="#userimagemessage" title="Permanent link">&para;</a></h2>
-<p>The <code>UserImageMessage</code> can be used in <code>@chatprompt</code> alongside other messages. The LLM must be set to an OpenAI model that supports vision, currently <code>gpt-4-vision-preview</code>, <code>gpt-4-turbo</code>, and <code>gpt-4o</code> (the default <code>ChatModel</code>). This can be done by passing the <code>model</code> parameter to <code>@chatprompt</code>, or through the other methods of <a href="../configuration/">configuration</a>.</p>
+<p>The <code>UserImageMessage</code> can be used in <code>@chatprompt</code> alongside other messages. The LLM must be set to an OpenAI or Anthropic model that supports vision, for example <code>gpt-4o</code> (the default <code>ChatModel</code>). This can be done by passing the <code>model</code> parameter to <code>@chatprompt</code>, or through the other methods of <a href="../configuration/">configuration</a>.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
 
 <span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">UserMessage</span>
