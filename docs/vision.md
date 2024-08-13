@@ -1,20 +1,16 @@
 # Vision
 
-GPT-4 Vision can be used with magentic by using the `UserImageMessage` message type. This allows the LLM to accept images as input. Currently this is only supported with the OpenAI backend (`OpenaiChatModel`).
+Image inputs can be provided to LLMs in magentic by using the `UserImageMessage` message type.
 
-!!! note "Return types"
+!!! note "Anthropic Image URLs"
 
-    `gpt-4-vision-preview` does not support function-calling/tools so only `str`, `StreamedStr`, and `AsyncStreamedStr` work as return types.
+    Anthropic models currently do not support supplying an image as a url, just bytes.
 
-!!! tip "`max_tokens`"
-
-    By default, `gpt-4-vision-preview` has a low value for `max_tokens` so you will likely need to increase it.
-
-For more information visit the [OpenAI Vision API documentation](https://platform.openai.com/docs/guides/vision).
+For more information visit the [OpenAI Vision API documentation](https://platform.openai.com/docs/guides/vision) or the [Anthropic Vision API documentation](https://docs.anthropic.com/en/docs/build-with-claude/vision#example-multiple-images).
 
 ## UserImageMessage
 
-The `UserImageMessage` can be used in `@chatprompt` alongside other messages. The LLM must be set to an OpenAI model that supports vision, currently `gpt-4-vision-preview`, `gpt-4-turbo`, and `gpt-4o` (the default `ChatModel`). This can be done by passing the `model` parameter to `@chatprompt`, or through the other methods of [configuration](configuration.md).
+The `UserImageMessage` can be used in `@chatprompt` alongside other messages. The LLM must be set to an OpenAI or Anthropic model that supports vision, for example `gpt-4o` (the default `ChatModel`). This can be done by passing the `model` parameter to `@chatprompt`, or through the other methods of [configuration](configuration.md).
 
 ```python
 from pydantic import BaseModel, Field
