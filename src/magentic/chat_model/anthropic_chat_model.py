@@ -1,3 +1,4 @@
+import base64
 import json
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
@@ -5,6 +6,7 @@ from functools import singledispatch
 from itertools import chain, groupby
 from typing import Any, AsyncIterable, Generic, Sequence, TypeVar, cast, overload
 
+import filetype
 from pydantic import ValidationError
 
 from magentic.chat_model.base import (
@@ -48,6 +50,7 @@ from magentic.streaming import (
     peek,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
+from magentic.vision import UserImageMessage
 
 try:
     import anthropic
@@ -87,6 +90,30 @@ def _(message: _RawMessage[Any]) -> MessageParam:
 @message_to_anthropic_message.register
 def _(message: UserMessage) -> MessageParam:
     return {"role": AnthropicMessageRole.USER.value, "content": message.content}
+
+
+@message_to_anthropic_message.register(UserImageMessage)
+def _(message: UserImageMessage[Any]) -> MessageParam:
+    if isinstance(message.content, bytes):
+        mime_type = filetype.guess_mime(message.content)
+        base64_image = base64.b64encode(message.content).decode("utf-8")
+    else:
+        msg = f"Invalid content type: {type(message.content)}"
+        raise TypeError(msg)
+
+    return {
+        "role": AnthropicMessageRole.USER.value,
+        "content": [
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": mime_type,
+                    "data": base64_image,
+                },
+            }
+        ],
+    }
 
 
 @message_to_anthropic_message.register(AssistantMessage)
