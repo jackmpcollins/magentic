@@ -1,3 +1,4 @@
+import base64
 import json
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
@@ -5,6 +6,7 @@ from functools import singledispatch
 from itertools import chain, groupby
 from typing import Any, AsyncIterable, Generic, Sequence, TypeVar, cast, overload
 
+import filetype
 from pydantic import ValidationError
 
 from magentic.chat_model.base import (
@@ -48,6 +50,7 @@ from magentic.streaming import (
     peek,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
+from magentic.vision import UserImageMessage
 
 try:
     import anthropic
@@ -87,6 +90,30 @@ def _(message: _RawMessage[Any]) -> MessageParam:
 @message_to_anthropic_message.register
 def _(message: UserMessage) -> MessageParam:
     return {"role": AnthropicMessageRole.USER.value, "content": message.content}
+
+
+@message_to_anthropic_message.register(UserImageMessage)
+def _(message: UserImageMessage[Any]) -> MessageParam:
+    if isinstance(message.content, bytes):
+        mime_type = filetype.guess_mime(message.content)
+        base64_image = base64.b64encode(message.content).decode("utf-8")
+    else:
+        msg = f"Invalid content type: {type(message.content)}"
+        raise TypeError(msg)
+
+    return {
+        "role": AnthropicMessageRole.USER.value,
+        "content": [
+            {
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": mime_type,
+                    "data": base64_image,
+                },
+            }
+        ],
+    }
 
 
 @message_to_anthropic_message.register(AssistantMessage)
@@ -165,6 +192,27 @@ def _(message: ToolResultMessage[Any]) -> MessageParam:
             }
         ],
     }
+
+
+# TODO: Move this to the magentic level by allowing `UserMessage` have a list of content
+def _combine_messages(messages: Iterable[MessageParam]) -> list[MessageParam]:
+    """Combine messages with the same role, to get alternating roles.
+
+    Alternating roles is a requirement of the Anthropic API.
+    """
+    combined_messages: list[MessageParam] = []
+    for message_group in groupby(messages, lambda x: x["role"]):
+        role, messages = message_group
+        content = []
+        for message in messages:
+            if isinstance(message["content"], list):
+                content.extend(message["content"])
+            elif isinstance(message["content"], str):
+                content.append({"type": "text", "text": message["content"]})
+            else:
+                content.append(message["content"])
+        combined_messages.append({"role": role, "content": content})
+    return combined_messages
 
 
 T = TypeVar("T")
@@ -496,7 +544,9 @@ class AnthropicChatModel(ChatModel):
         def _response_generator() -> Iterator[MessageStreamEvent]:
             with self._client.messages.stream(
                 model=self.model,
-                messages=[message_to_anthropic_message(m) for m in messages],
+                messages=_combine_messages(
+                    [message_to_anthropic_message(m) for m in messages]
+                ),
                 max_tokens=self.max_tokens,
                 stop_sequences=stop or anthropic.NOT_GIVEN,
                 system=system,
@@ -606,7 +656,9 @@ class AnthropicChatModel(ChatModel):
         async def _response_generator() -> AsyncIterator[MessageStreamEvent]:
             async with self._async_client.messages.stream(
                 model=self.model,
-                messages=[message_to_anthropic_message(m) for m in messages],
+                messages=_combine_messages(
+                    [message_to_anthropic_message(m) for m in messages]
+                ),
                 max_tokens=self.max_tokens,
                 stop_sequences=stop or anthropic.NOT_GIVEN,
                 system=system,
