@@ -1,9 +1,11 @@
+import base64
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from enum import Enum
 from functools import singledispatch, wraps
 from itertools import chain, groupby
 from typing import Any, Generic, Literal, ParamSpec, Sequence, TypeVar, cast, overload
 
+import filetype
 import openai
 from openai.types.chat import (
     ChatCompletionChunk,
@@ -57,6 +59,7 @@ from magentic.streaming import (
     peek,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
+from magentic.vision import UserImageMessage
 
 
 class OpenaiMessageRole(Enum):
@@ -87,6 +90,24 @@ def _(message: SystemMessage) -> ChatCompletionMessageParam:
 @message_to_openai_message.register
 def _(message: UserMessage) -> ChatCompletionMessageParam:
     return {"role": OpenaiMessageRole.USER.value, "content": message.content}
+
+
+@message_to_openai_message.register(UserImageMessage)
+def _(message: UserImageMessage[Any]) -> ChatCompletionMessageParam:
+    if isinstance(message.content, bytes):
+        mime_type = filetype.guess_mime(message.content)
+        base64_image = base64.b64encode(message.content).decode("utf-8")
+        url = f"data:{mime_type};base64,{base64_image}"
+    elif isinstance(message.content, str):
+        url = message.content
+    else:
+        msg = f"Invalid content type: {type(message.content)}"
+        raise TypeError(msg)
+
+    return {
+        "role": OpenaiMessageRole.USER.value,
+        "content": [{"type": "image_url", "image_url": {"url": url, "detail": "auto"}}],
+    }
 
 
 @message_to_openai_message.register(AssistantMessage)
