@@ -5,11 +5,10 @@ from collections.abc import AsyncIterable, Callable, Iterable
 from functools import singledispatch
 from typing import Any, Generic, TypeVar, cast, get_args, get_origin
 
-import openai
 from openai.types.shared_params import FunctionDefinition
 from pydantic import BaseModel, TypeAdapter, create_model
 
-from magentic._pydantic import get_pydantic_config
+from magentic._pydantic import ConfigDict, get_pydantic_config, json_schema
 from magentic.function_call import FunctionCall
 from magentic.streaming import (
     aiter_streamed_json_array,
@@ -46,10 +45,17 @@ class BaseFunctionSchema(ABC, Generic[T]):
         """The parameters the functions accepts as a JSON Schema object."""
         ...
 
+    @property
+    def strict(self) -> bool | None:
+        """Whether to enable strict schema adherence when generating the function call."""
+        return None
+
     def dict(self) -> FunctionDefinition:
         schema: FunctionDefinition = {"name": self.name, "parameters": self.parameters}
         if self.description:
             schema["description"] = self.description
+        if self.strict is not None:
+            schema["strict"] = self.strict
         return schema
 
 
@@ -155,10 +161,11 @@ class AnyFunctionSchema(FunctionSchema[T], Generic[T]):
 
     @property
     def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.model_json_schema().copy()
-        model_schema.pop("title", None)
-        model_schema.pop("description", None)
-        return model_schema
+        return json_schema(self._model)
+
+    @property
+    def strict(self) -> bool | None:
+        return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> T:
         args_json = "".join(chunks)
@@ -192,10 +199,11 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
 
     @property
     def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.model_json_schema().copy()
-        model_schema.pop("title", None)
-        model_schema.pop("description", None)
-        return model_schema
+        return json_schema(self._model)
+
+    @property
+    def strict(self) -> bool | None:
+        return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> IterableT:
         iter_items = (
@@ -234,10 +242,11 @@ class AsyncIterableFunctionSchema(
 
     @property
     def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.model_json_schema().copy()
-        model_schema.pop("title", None)
-        model_schema.pop("description", None)
-        return model_schema
+        return json_schema(self._model)
+
+    @property
+    def strict(self) -> bool | None:
+        return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     async def aparse_args(self, chunks: AsyncIterable[str]) -> AsyncIterableT:
         aiter_items = (
@@ -302,19 +311,11 @@ class BaseModelFunctionSchema(FunctionSchema[BaseModelT], Generic[BaseModelT]):
 
     @property
     def parameters(self) -> dict[str, Any]:
-        if self._model.model_config.get("openai_strict", False):
-            tool_param = openai.pydantic_function_tool(self._model)
-            return tool_param["function"].get("parameters", {})
-        model_schema = self._model.model_json_schema().copy()
-        model_schema.pop("title", None)
-        model_schema.pop("description", None)
-        return model_schema
+        return json_schema(self._model)
 
-    def dict(self) -> FunctionDefinition:
-        schema = super().dict()
-        if self._model.model_config.get("openai_strict", False):
-            schema["strict"] = True
-        return schema
+    @property
+    def strict(self) -> bool | None:
+        return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> BaseModelT:
         args_json = "".join(chunks)
@@ -375,9 +376,11 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
 
     @property
     def parameters(self) -> dict[str, Any]:
-        schema: dict[str, Any] = self._model.model_json_schema().copy()
-        schema.pop("title", None)
-        return schema
+        return json_schema(self._model)
+
+    @property
+    def strict(self) -> bool | None:
+        return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> FunctionCall[T]:
         args_json = "".join(chunks)
