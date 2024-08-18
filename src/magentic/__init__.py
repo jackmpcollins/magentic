@@ -1,4 +1,5 @@
 from ._pydantic import ConfigDict as ConfigDict
+from ._pydantic import with_config as with_config
 from .chat_model.message import AnyMessage as AnyMessage
 from .chat_model.message import AssistantMessage as AssistantMessage
 from .chat_model.message import FunctionResultMessage as FunctionResultMessage
