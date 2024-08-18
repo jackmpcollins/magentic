@@ -428,6 +428,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#configdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      ConfigDict
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -797,6 +806,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#configdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      ConfigDict
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -989,6 +1007,22 @@
 <span class="k">def</span> <span class="nf">activate_oven</span><span class="p">(</span>
 <span class="hll">    <span class="n">temperature</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Temp in Fahrenheit&quot;</span><span class="p">,</span> <span class="n">lt</span><span class="o">=</span><span class="mi">500</span><span class="p">)],</span>
 </span>    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;broil&quot;</span><span class="p">,</span> <span class="s2">&quot;bake&quot;</span><span class="p">,</span> <span class="s2">&quot;roast&quot;</span><span class="p">],</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn the oven on with the provided settings.&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Preheating to </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2"> F with mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span>
+</code></pre></div>
+<h2 id="configdict">ConfigDict<a class="headerlink" href="#configdict" title="Permanent link">&para;</a></h2>
+<p>Also like with <code>BaseModel</code>, pydantic's (or magentic's) <code>ConfigDict</code> can be used with functions to configure behavior. Under the hood, the function gets converted to a pydantic model, with every function parameter becoming a field on that model. See the <a href="../structured-outputs/">Structured Outputs</a> docs page for more information including the list of configuration options added by magentic.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span><span class="p">,</span> <span class="n">Literal</span>
+
+<span class="hll"><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">ConfigDict</span><span class="p">,</span> <span class="n">with_config</span>
+</span><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">Field</span>
+
+
+<span class="hll"><span class="nd">@with_config</span><span class="p">(</span><span class="n">ConfigDict</span><span class="p">(</span><span class="n">openai_strict</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+</span><span class="k">def</span> <span class="nf">activate_oven</span><span class="p">(</span>
+    <span class="n">temperature</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="n">Field</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s2">&quot;Temp in Fahrenheit&quot;</span><span class="p">,</span> <span class="n">lt</span><span class="o">=</span><span class="mi">500</span><span class="p">)],</span>
+    <span class="n">mode</span><span class="p">:</span> <span class="n">Literal</span><span class="p">[</span><span class="s2">&quot;broil&quot;</span><span class="p">,</span> <span class="s2">&quot;bake&quot;</span><span class="p">,</span> <span class="s2">&quot;roast&quot;</span><span class="p">],</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn the oven on with the provided settings.&quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;Preheating to </span><span class="si">{</span><span class="n">temperature</span><span class="si">}</span><span class="s2"> F with mode </span><span class="si">{</span><span class="n">mode</span><span class="si">}</span><span class="s2">&quot;</span>

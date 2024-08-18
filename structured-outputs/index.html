@@ -363,6 +363,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#configdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      ConfigDict
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#json-schema" class="md-nav__link">
     <span class="md-ellipsis">
       JSON Schema
@@ -793,6 +802,15 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#configdict" class="md-nav__link">
+    <span class="md-ellipsis">
+      ConfigDict
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#json-schema" class="md-nav__link">
     <span class="md-ellipsis">
       JSON Schema
@@ -901,7 +919,36 @@
 <span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Create a Superhero named </span><span class="si">{name}</span><span class="s2">.&quot;</span><span class="p">)</span>
 <span class="k">def</span> <span class="nf">create_superhero</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Superhero</span><span class="p">:</span> <span class="o">...</span>
 </code></pre></div>
+<h3 id="configdict">ConfigDict<a class="headerlink" href="#configdict" title="Permanent link">&para;</a></h3>
+<p>Pydantic also supports configuring the <code>BaseModel</code> by setting the <code>model_config</code> attribute. Magentic extends pydantic's <code>ConfigDict</code> class to add the following additional configuration options</p>
+<ul>
+<li><code>openai_strict: bool</code> Indicates whether to use <a href="https://platform.openai.com/docs/guides/structured-outputs/introduction">OpenAI's Structured Outputs feature</a>.</li>
+</ul>
+<p>See the <a href="https://docs.pydantic.dev/latest/api/config/">pydantic Configuration docs</a> for the inherited configuration options.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="hll"><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">ConfigDict</span>
+</span><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
+
+
+<span class="k">class</span> <span class="nc">Superhero</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+<span class="hll">    <span class="n">model_config</span> <span class="o">=</span> <span class="n">ConfigDict</span><span class="p">(</span><span class="n">openai_strict</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</span>
+    <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">age</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">power</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">enemies</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Create a Superhero named </span><span class="si">{name}</span><span class="s2">.&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">create_superhero</span><span class="p">(</span><span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Superhero</span><span class="p">:</span> <span class="o">...</span>
+
+
+<span class="n">create_superhero</span><span class="p">(</span><span class="s2">&quot;Garden Man&quot;</span><span class="p">)</span>
+</code></pre></div>
 <h3 id="json-schema">JSON Schema<a class="headerlink" href="#json-schema" title="Permanent link">&para;</a></h3>
+<div class="admonition note">
+<p class="admonition-title">OpenAI Structured Outputs</p>
+<p>Setting <code>openai_strict=True</code> results in a different JSON schema than that from <code>.model_json_schema()</code> being sent to the LLM. Use <code>openai.pydantic_function_tool(Superhero)</code> to generate the JSON schema in this case.</p>
+</div>
 <p>You can generate the JSON schema for the pydantic model using the <code>.model_json_schema()</code> method. This is what is sent to the LLM.</p>
 <p>Running <code>Superhero.model_json_schema()</code> for the above definition reveals the following JSON schema</p>
 <div class="language-python highlight"><pre><span></span><code><span class="p">{</span>
