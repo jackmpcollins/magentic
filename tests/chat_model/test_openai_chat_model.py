@@ -7,6 +7,7 @@ import pytest
 from openai.types.chat import ChatCompletionMessageParam
 from pydantic import AfterValidator, BaseModel
 
+from magentic._pydantic import ConfigDict, with_config
 from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -152,6 +153,37 @@ def test_openai_chat_model_complete_seed():
     message1 = chat_model.complete(messages=[UserMessage("Say hello!")])
     message2 = chat_model.complete(messages=[UserMessage("Say hello!")])
     assert message1.content == message2.content
+
+
+@pytest.mark.openai
+def test_openai_chat_model_complete_pydantic_model_openai_strict():
+    class CapitalCity(BaseModel):
+        model_config = ConfigDict(openai_strict=True)
+        capital: str
+        country: str
+
+    chat_model = OpenaiChatModel("gpt-4o")
+    message = chat_model.complete(
+        messages=[UserMessage("What is the capital of Ireland?")],
+        output_types=[CapitalCity],
+    )
+    assert isinstance(message.content, CapitalCity)
+
+
+@pytest.mark.openai
+def test_openai_chat_model_complete_function_call_openai_strict():
+    @with_config(ConfigDict(openai_strict=True))
+    def plus(a: int, b: int) -> int:
+        """Sum two numbers."""
+        return a + b
+
+    chat_model = OpenaiChatModel("gpt-4o")
+    message = chat_model.complete(
+        messages=[UserMessage("Use the tool to sum 1 and 2")],
+        functions=[plus],
+        output_types=[FunctionCall[int]],
+    )
+    assert isinstance(message.content, FunctionCall)
 
 
 @pytest.mark.openai

@@ -198,3 +198,23 @@ def activate_oven(
     """Turn the oven on with the provided settings."""
     return f"Preheating to {temperature} F with mode {mode}"
 ```
+
+## ConfigDict
+
+Also like with `BaseModel`, pydantic's (or magentic's) `ConfigDict` can be used with functions to configure behavior. Under the hood, the function gets converted to a pydantic model, with every function parameter becoming a field on that model. See the [Structured Outputs](structured-outputs.md) docs page for more information including the list of configuration options added by magentic.
+
+```python hl_lines="3 7"
+from typing import Annotated, Literal
+
+from magentic import ConfigDict, with_config
+from pydantic import Field
+
+
+@with_config(ConfigDict(openai_strict=True))
+def activate_oven(
+    temperature: Annotated[int, Field(description="Temp in Fahrenheit", lt=500)],
+    mode: Literal["broil", "bake", "roast"],
+) -> str:
+    """Turn the oven on with the provided settings."""
+    return f"Preheating to {temperature} F with mode {mode}"
+```

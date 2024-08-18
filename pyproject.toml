@@ -34,8 +34,8 @@ anthropic = {version = ">=0.27.0", optional = true}
 filetype = "*"
 litellm = {version = ">=1.41.12", optional = true}
 logfire-api = "*"
-openai = ">=1.26.0"
-pydantic = ">=2.0.0"
+openai = ">=1.40.0"
+pydantic = ">=2.7.0"
 pydantic-settings = ">=2.0.0"
 
 [tool.poetry.extras]
