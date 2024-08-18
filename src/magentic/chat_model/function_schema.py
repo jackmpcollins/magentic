@@ -9,6 +9,7 @@ import openai
 from openai.types.shared_params import FunctionDefinition
 from pydantic import BaseModel, TypeAdapter, create_model
 
+from magentic._pydantic import get_pydantic_config
 from magentic.function_call import FunctionCall
 from magentic.streaming import (
     aiter_streamed_json_array,
@@ -136,18 +137,17 @@ def register_function_schema(
     return _register
 
 
-class Output(BaseModel, Generic[T]):
-    value: T
-
-
 @register_function_schema(object)
 class AnyFunctionSchema(FunctionSchema[T], Generic[T]):
     """The most generic FunctionSchema that should work for most types supported by pydantic."""
 
     def __init__(self, output_type: type[T]):
         self._output_type = output_type
-        # https://github.com/python/mypy/issues/14458
-        self._model = Output[output_type]  # type: ignore[valid-type]
+        self._model = create_model(
+            "Output",
+            __config__=get_pydantic_config(output_type),
+            value=(output_type, ...),
+        )
 
     @property
     def name(self) -> str:
@@ -162,7 +162,7 @@ class AnyFunctionSchema(FunctionSchema[T], Generic[T]):
 
     def parse_args(self, chunks: Iterable[str]) -> T:
         args_json = "".join(chunks)
-        return self._model.model_validate_json(args_json).value
+        return cast(T, self._model.model_validate_json(args_json).value)  # type: ignore[attr-defined]
 
     def serialize_args(self, value: T) -> str:
         return self._model.model_construct(value=value).model_dump_json()
@@ -180,8 +180,11 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
         self._item_type_adapter = TypeAdapter(
             args[0] if (args := get_args(output_type)) else Any
         )
-        # https://github.com/python/mypy/issues/14458
-        self._model = Output[output_type]  # type: ignore[valid-type]
+        self._model = create_model(
+            "Output",
+            __config__=get_pydantic_config(output_type),
+            value=(output_type, ...),
+        )
 
     @property
     def name(self) -> str:
@@ -199,7 +202,7 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
             self._item_type_adapter.validate_json(item)
             for item in iter_streamed_json_array(chunks)
         )
-        return self._model.model_validate({"value": iter_items}).value
+        return cast(IterableT, self._model.model_validate({"value": iter_items}).value)  # type: ignore[attr-defined]
 
     def serialize_args(self, value: IterableT) -> str:
         return self._model.model_construct(value=value).model_dump_json()
@@ -216,11 +219,14 @@ class AsyncIterableFunctionSchema(
 
     def __init__(self, output_type: type[AsyncIterableT]):
         self._output_type = output_type
-        item_type = args[0] if (args := get_args(output_type)) else Any
+        item_type: type | Any = args[0] if (args := get_args(output_type)) else Any
         self._item_type_adapter = TypeAdapter(item_type)
-        # Convert to list so pydantic can handle for schema generation
-        # But keep the type hint using AsyncIterableT for type checking
-        self._model = Output[list[item_type]]  # type: ignore[valid-type]
+        self._model = create_model(
+            "Output",
+            __config__=get_pydantic_config(output_type),
+            # Convert to list so pydantic can handle for schema generation
+            value=(list[item_type], ...),  # type: ignore[valid-type]
+        )
 
     @property
     def name(self) -> str:
@@ -258,7 +264,9 @@ class DictFunctionSchema(FunctionSchema[T], Generic[T]):
 
     def __init__(self, output_type: type[T]):
         self._output_type = output_type
-        self._type_adapter = TypeAdapter(output_type)
+        self._type_adapter = TypeAdapter(
+            output_type, config=get_pydantic_config(output_type)
+        )
 
     @property
     def name(self) -> str:
@@ -347,7 +355,7 @@ def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
             (param.annotation if param.annotation != inspect._empty else Any),
             (param.default if param.default != inspect._empty else ...),
         )
-    return create_model("FuncModel", **fields)
+    return create_model("FuncModel", __config__=get_pydantic_config(func), **fields)
 
 
 class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
