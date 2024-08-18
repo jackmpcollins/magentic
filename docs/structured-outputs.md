@@ -77,9 +77,9 @@ create_superhero("Garden Man")
 
 ### JSON Schema
 
-> !!! note "OpenAI Structured Outputs"
+!!! note "OpenAI Structured Outputs"
 
-    Setting `openai_strict=True` results in a different JSON schema than that from `.model_json_schema()` being sent to the LLM.
+    Setting `openai_strict=True` results in a different JSON schema than that from `.model_json_schema()` being sent to the LLM. Use `openai.pydantic_function_tool(Superhero)` to generate the JSON schema in this case.
 
 You can generate the JSON schema for the pydantic model using the `.model_json_schema()` method. This is what is sent to the LLM.
 
