@@ -7,7 +7,7 @@ from typing import Annotated, Any, Generic, TypeVar, get_origin
 import pytest
 from pydantic import BaseModel, Field, create_model
 
-from magentic._pydantic import ConfigDict
+from magentic._pydantic import ConfigDict, with_config
 from magentic.chat_model.function_schema import (
     AnyFunctionSchema,
     AsyncIterableFunctionSchema,
@@ -611,6 +611,11 @@ def plus_with_basemodel(a: IntModel, b: IntModel) -> IntModel:
     return IntModel(value=a.value + b.value)
 
 
+@with_config(ConfigDict(openai_strict=True))
+def plus_with_config_openai_strict(a: int, b: int) -> int:
+    return a + b
+
+
 @pytest.mark.parametrize(
     ("function", "json_schema"),
     [
@@ -786,6 +791,23 @@ def plus_with_basemodel(a: IntModel, b: IntModel) -> IntModel:
                     "required": ["a", "b"],
                     "type": "object",
                 },
+            },
+        ),
+        (
+            plus_with_config_openai_strict,
+            {
+                "name": "plus_with_config_openai_strict",
+                "parameters": {
+                    "additionalProperties": False,
+                    "properties": {
+                        "a": {"title": "A", "type": "integer"},
+                        "b": {"title": "B", "type": "integer"},
+                    },
+                    "required": ["a", "b"],
+                    "title": "FuncModel",
+                    "type": "object",
+                },
+                "strict": True,
             },
         ),
     ],
