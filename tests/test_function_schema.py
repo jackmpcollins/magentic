@@ -7,6 +7,7 @@ from typing import Annotated, Any, Generic, TypeVar, get_origin
 import pytest
 from pydantic import BaseModel, Field
 
+from magentic._pydantic import ConfigDict
 from magentic.chat_model.function_schema import (
     AnyFunctionSchema,
     AsyncIterableFunctionSchema,
@@ -471,32 +472,72 @@ def test_dict_function_schema_serialize_args(type_, expected_args_str, args):
     assert json.loads(serialized_args) == json.loads(expected_args_str)
 
 
-def test_base_model_function_schema():
-    class User(BaseModel):
-        name: str
-        age: Annotated[int, Field(description="Age", gt=0, examples=[10, 20])]
+class User(BaseModel):
+    name: str
+    age: Annotated[int, Field(description="Age", gt=0, examples=[10, 20])]
 
-    function_schema = BaseModelFunctionSchema(User)
 
-    assert function_schema.name == "return_user"
-    assert function_schema.dict() == {
-        "name": "return_user",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                # TODO: Remove "title" keys from schema
-                "name": {"title": "Name", "type": "string"},
-                "age": {
-                    "description": "Age",
-                    "examples": [10, 20],
-                    "exclusiveMinimum": 0,
-                    "title": "Age",
-                    "type": "integer",
+class OpenaiStrictUser(BaseModel):
+    model_config = ConfigDict(openai_strict=True)
+    name: str
+    age: Annotated[int, Field(description="Age", gt=0, examples=[10, 20])]
+
+
+@pytest.mark.parametrize(
+    ("type_", "json_schema"),
+    [
+        (
+            User,
+            {
+                "name": "return_user",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "name": {"title": "Name", "type": "string"},
+                        "age": {
+                            "description": "Age",
+                            "examples": [10, 20],
+                            "exclusiveMinimum": 0,
+                            "title": "Age",
+                            "type": "integer",
+                        },
+                    },
+                    "required": ["name", "age"],
                 },
             },
-            "required": ["name", "age"],
-        },
-    }
+        ),
+        (
+            OpenaiStrictUser,
+            {
+                "name": "return_openaistrictuser",
+                "parameters": {
+                    "additionalProperties": False,
+                    "properties": {
+                        "age": {
+                            "description": "Age",
+                            "examples": [10, 20],
+                            "exclusiveMinimum": 0,
+                            "title": "Age",
+                            "type": "integer",
+                        },
+                        "name": {"title": "Name", "type": "string"},
+                    },
+                    "required": ["name", "age"],
+                    "title": "OpenaiStrictUser",
+                    "type": "object",
+                },
+                "strict": True,
+            },
+        ),
+    ],
+)
+def test_base_model_function_schema(type_, json_schema):
+    function_schema = BaseModelFunctionSchema(type_)
+    assert function_schema.dict() == json_schema
+
+
+def test_base_model_function_schema_parse_args():
+    function_schema = BaseModelFunctionSchema(User)
     assert function_schema.parse_args('{"name": "Alice", "age": 99}') == User(
         name="Alice", age=99
     )

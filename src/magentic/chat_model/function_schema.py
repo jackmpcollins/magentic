@@ -5,6 +5,7 @@ from collections.abc import AsyncIterable, Callable, Iterable
 from functools import singledispatch
 from typing import Any, Generic, TypeVar, cast, get_args, get_origin
 
+import openai
 from openai.types.shared_params import FunctionDefinition
 from pydantic import BaseModel, TypeAdapter, create_model
 
@@ -293,10 +294,19 @@ class BaseModelFunctionSchema(FunctionSchema[BaseModelT], Generic[BaseModelT]):
 
     @property
     def parameters(self) -> dict[str, Any]:
+        if self._model.model_config.get("openai_strict", False):
+            tool_param = openai.pydantic_function_tool(self._model)
+            return tool_param["function"].get("parameters", {})
         model_schema = self._model.model_json_schema().copy()
         model_schema.pop("title", None)
         model_schema.pop("description", None)
         return model_schema
+
+    def dict(self) -> FunctionDefinition:
+        schema = super().dict()
+        if self._model.model_config.get("openai_strict", False):
+            schema["strict"] = True
+        return schema
 
     def parse_args(self, chunks: Iterable[str]) -> BaseModelT:
         args_json = "".join(chunks)

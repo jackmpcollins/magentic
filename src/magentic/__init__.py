@@ -1,3 +1,4 @@
+from magentic._pydantic import ConfigDict as ConfigDict
 from magentic.chat_model.message import (
     AnyMessage,
     AssistantMessage,
