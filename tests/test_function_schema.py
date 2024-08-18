@@ -5,7 +5,7 @@ from collections import OrderedDict
 from typing import Annotated, Any, Generic, TypeVar, get_origin
 
 import pytest
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, create_model
 
 from magentic._pydantic import ConfigDict
 from magentic.chat_model.function_schema import (
@@ -472,22 +472,15 @@ def test_dict_function_schema_serialize_args(type_, expected_args_str, args):
     assert json.loads(serialized_args) == json.loads(expected_args_str)
 
 
-class User(BaseModel):
-    name: str
-    age: Annotated[int, Field(description="Age", gt=0, examples=[10, 20])]
-
-
-class OpenaiStrictUser(BaseModel):
-    model_config = ConfigDict(openai_strict=True)
-    name: str
-    age: Annotated[int, Field(description="Age", gt=0, examples=[10, 20])]
-
-
 @pytest.mark.parametrize(
     ("type_", "json_schema"),
     [
         (
-            User,
+            create_model(
+                "User",
+                name=(str, ...),
+                age=(int, Field(description="Age", gt=0, examples=[10, 20])),
+            ),
             {
                 "name": "return_user",
                 "parameters": {
@@ -507,9 +500,14 @@ class OpenaiStrictUser(BaseModel):
             },
         ),
         (
-            OpenaiStrictUser,
+            create_model(
+                "User",
+                __config__=ConfigDict(openai_strict=True),
+                name=(str, ...),
+                age=(int, Field(description="Age", gt=0, examples=[10, 20])),
+            ),
             {
-                "name": "return_openaistrictuser",
+                "name": "return_user",
                 "parameters": {
                     "additionalProperties": False,
                     "properties": {
@@ -523,7 +521,7 @@ class OpenaiStrictUser(BaseModel):
                         "name": {"title": "Name", "type": "string"},
                     },
                     "required": ["name", "age"],
-                    "title": "OpenaiStrictUser",
+                    "title": "User",
                     "type": "object",
                 },
                 "strict": True,
