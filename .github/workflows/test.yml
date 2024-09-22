@@ -33,23 +33,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pipx install poetry
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.10"
-          cache: "poetry"
-      - run: poetry install --all-extras
-      - run: poetry run ruff check --output-format=github .
-      - run: poetry run ruff format --check .
-      - run: poetry run mypy .
-      - run: poetry run pytest -vv tests/
+      - name: Install UV
+        run: pip install uv
+      - name: Install dependencies
+        run: uv pip install -e .[all]
+      - run: uv pip run ruff check --output-format=github .
+      - run: uv pip run ruff format --check .
+      - run: uv pip run mypy .
+      - run: uv pip run pytest -vv tests/
       # Do not use `github.event.inputs` because it converts booleans to strings
       # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
       - if: inputs.anthropic
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: poetry run pytest -vv tests/ -m 'anthropic'
+        run: uv pip run pytest -vv tests/ -m 'anthropic'
       - if: inputs.litellm_anthropic
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

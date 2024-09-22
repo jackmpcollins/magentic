@@ -1,6 +1,36 @@
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+[project]
+name = "magentic"
+version = "0.32.0"
+description = "Seamlessly integrate LLMs as Python functions"
+readme = "README.md"
+requires-python = ">=3.10,<4.0"
+dependencies = [
+    "anthropic>=0.27.0",
+    "filetype>=1.2.0",
+    "litellm>=1.41.12",
+    "logfire-api>=0.1.0",
+    "openai>=1.40.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.0.0",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic"]
+litellm = ["litellm"]
+
+[tool.uv]
+sources = { magentic = { workspace = true } }
+
+[tool.pytest.ini_options]
+addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not litellm_anthropic and not litellm_openai and not mistral and not litellm_ollama and not openai'"
+markers = [
+    "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
+    "litellm_anthropic: Tests that query the Anthropic API via litellm. Requires the ANTHROPIC_API_KEY environment variable to be set.",
+    "litellm_ollama: Tests that query Ollama. Requires ollama to be installed and running on localhost:11434.",
+    "litellm_openai: Tests that query the OpenAI API via litellm. Requires the OPENAI_API_KEY environment variable to be set.",
+    "mistral: Tests that query the Mistral API (via openai). Requires the MISTRAL_API_KEY environment variable to be set.",
+    "openai: Tests that query the OpenAI API. Requires the OPENAI_API_KEY environment variable to be set.",
+]
 
 [tool.mypy]
 check_untyped_defs = true
@@ -18,67 +48,8 @@ module = [
 ]
 ignore_missing_imports = true
 
-[tool.poetry]
-name = "magentic"
-version = "0.32.0"
-description = "Seamlessly integrate LLMs as Python functions"
-license = "MIT"
-authors = ["Jack Collins"]
-readme = "README.md"
-homepage = "https://magentic.dev/"
-repository = "https://github.com/jackmpcollins/magentic"
-
-[tool.poetry.dependencies]
-python = ">=3.10,<4.0"
-anthropic = {version = ">=0.27.0", optional = true}
-filetype = "*"
-litellm = {version = ">=1.41.12", optional = true}
-logfire-api = "*"
-openai = ">=1.40.0"
-pydantic = ">=2.7.0"
-pydantic-settings = ">=2.0.0"
-
-[tool.poetry.extras]
-anthropic = ["anthropic"]
-litellm = ["litellm"]
-
-[tool.poetry.group.dev.dependencies]
-blacken-docs = "^1.16.0"
-logfire = ">=0.46.1,<0.50.0"
-mypy = "*"
-pytest = "*"
-pytest-asyncio = "*"
-pytest-clarity = "*"
-pytest-cov = "*"
-python-dotenv = "^1.0.1"
-ruff = ">=0.3,<0.6"
-
-[tool.poetry.group.docs.dependencies]
-mkdocs = "^1.5.3"
-mkdocs-glightbox = "^0.4.0"
-mkdocs-jupyter = "^0.24.6"
-mkdocs-material = "^9.5.11"
-
-[tool.poetry.group.examples.dependencies]
-ghapi = "^1.0.5"
-jupyter = "*"
-pandas = "^2.2.1"
-
-[tool.pytest.ini_options]
-addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not litellm_anthropic and not litellm_openai and not mistral and not litellm_ollama and not openai'"
-markers = [
-    "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
-    "litellm_anthropic: Tests that query the Anthropic API via litellm. Requires the ANTHROPIC_API_KEY environment variable to be set.",
-    "litellm_ollama: Tests that query Ollama. Requires ollama to be installed and running on localhost:11434.",
-    "litellm_openai: Tests that query the OpenAI API via litellm. Requires the OPENAI_API_KEY environment variable to be set.",
-    "mistral: Tests that query the Mistral API (via openai). Requires the MISTRAL_API_KEY environment variable to be set.",
-    "openai: Tests that query the OpenAI API. Requires the OPENAI_API_KEY environment variable to be set.",
-]
-
 [tool.ruff]
 include = ["*.py", "*.pyi", "**/pyproject.toml", "*.ipynb"]
-# Use `ruff linter` to list available linters
-# https://beta.ruff.rs/docs/rules/
 
 [tool.ruff.lint]
 select = ["ALL"]

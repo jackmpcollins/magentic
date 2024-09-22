@@ -21,10 +21,10 @@ Easily integrate Large Language Models into your Python code. Simply use the `@p
 pip install magentic
 ```
 
-or using poetry
+or using uv
 
 ```sh
-poetry add magentic
+uv add magentic
 ```
 
 Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variable. To configure a different LLM provider see [Configuration] for more.
