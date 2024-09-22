@@ -135,13 +135,13 @@ files = [
 
 [[package]]
 name = "anthropic"
-version = "0.31.0"
+version = "0.34.2"
 description = "The official Python library for the anthropic API"
 optional = true
 python-versions = ">=3.7"
 files = [
-    {file = "anthropic-0.31.0-py3-none-any.whl", hash = "sha256:77f7a428e1723b79a571c2427ae885d9257c68f700726dff7ce684c3972d6598"},
-    {file = "anthropic-0.31.0.tar.gz", hash = "sha256:14f8f65231859a65ec9aacbbea070e412c8bd41a5d3f36793dac4292c3c78d3a"},
+    {file = "anthropic-0.34.2-py3-none-any.whl", hash = "sha256:f50a628eb71e2c76858b106c8cbea278c45c6bd2077cb3aff716a112abddc9fc"},
+    {file = "anthropic-0.34.2.tar.gz", hash = "sha256:808ea19276f26646bfde9ee535669735519376e4eeb301a2974fc69892be1d6e"},
 ]
 
 [package.dependencies]
@@ -1671,13 +1671,13 @@ test = ["jupyter-server (>=2.0.0)", "pytest (>=7.0)", "pytest-jupyter[server] (>
 
 [[package]]
 name = "jupyterlab"
-version = "4.2.3"
+version = "4.2.5"
 description = "JupyterLab computational environment"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "jupyterlab-4.2.3-py3-none-any.whl", hash = "sha256:0b59d11808e84bb84105c73364edfa867dd475492429ab34ea388a52f2e2e596"},
-    {file = "jupyterlab-4.2.3.tar.gz", hash = "sha256:df6e46969ea51d66815167f23d92f105423b7f1f06fa604d4f44aeb018c82c7b"},
+    {file = "jupyterlab-4.2.5-py3-none-any.whl", hash = "sha256:73b6e0775d41a9fee7ee756c80f58a6bed4040869ccc21411dc559818874d321"},
+    {file = "jupyterlab-4.2.5.tar.gz", hash = "sha256:ae7f3a1b8cb88b4f55009ce79fa7c06f99d70cd63601ee4aa91815d054f46f75"},
 ]
 
 [package.dependencies]
@@ -1701,7 +1701,7 @@ dev = ["build", "bump2version", "coverage", "hatch", "pre-commit", "pytest-cov",
 docs = ["jsx-lexer", "myst-parser", "pydata-sphinx-theme (>=0.13.0)", "pytest", "pytest-check-links", "pytest-jupyter", "sphinx (>=1.8,<7.3.0)", "sphinx-copybutton"]
 docs-screenshots = ["altair (==5.3.0)", "ipython (==8.16.1)", "ipywidgets (==8.1.2)", "jupyterlab-geojson (==3.4.0)", "jupyterlab-language-pack-zh-cn (==4.1.post2)", "matplotlib (==3.8.3)", "nbconvert (>=7.0.0)", "pandas (==2.2.1)", "scipy (==1.12.0)", "vega-datasets (==0.9.0)"]
 test = ["coverage", "pytest (>=7.0)", "pytest-check-links (>=0.7)", "pytest-console-scripts", "pytest-cov", "pytest-jupyter (>=0.5.3)", "pytest-timeout", "pytest-tornasync", "requests", "requests-cache", "virtualenv"]
-upgrade-extension = ["copier (>=8,<10)", "jinja2-time (<0.3)", "pydantic (<2.0)", "pyyaml-include (<2.0)", "tomli-w (<2.0)"]
+upgrade-extension = ["copier (>=9,<10)", "jinja2-time (<0.3)", "pydantic (<3.0)", "pyyaml-include (<3.0)", "tomli-w (<2.0)"]
 
 [[package]]
 name = "jupyterlab-pygments"
@@ -1781,13 +1781,13 @@ test-ui = ["calysto-bash"]
 
 [[package]]
 name = "litellm"
-version = "1.41.21"
+version = "1.44.27"
 description = "Library to easily interface with LLM API providers"
 optional = true
 python-versions = "!=2.7.*,!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,!=3.5.*,!=3.6.*,!=3.7.*,>=3.8"
 files = [
-    {file = "litellm-1.41.21-py3-none-any.whl", hash = "sha256:8d1b2b141cdf6caf4d7186dae6afb1c996f2c26598d5e6d8b7224693c305bb28"},
-    {file = "litellm-1.41.21.tar.gz", hash = "sha256:40592a3323e51c0eb687ac002e4c916a7a34b239eb69e1fc96c874e725832354"},
+    {file = "litellm-1.44.27-py3-none-any.whl", hash = "sha256:88d514aba2041f7805632db343225f8a71230409a7ce3210911be5e6f6ec13b6"},
+    {file = "litellm-1.44.27.tar.gz", hash = "sha256:34f11d802a373465648defe619ae6e0dd72d524c0fa9fd11096da2669b134048"},
 ]
 
 [package.dependencies]
@@ -1796,7 +1796,7 @@ click = "*"
 importlib-metadata = ">=6.8.0"
 jinja2 = ">=3.1.2,<4.0.0"
 jsonschema = ">=4.22.0,<5.0.0"
-openai = ">=1.27.0"
+openai = ">=1.40.0"
 pydantic = ">=2.0.0,<3.0.0"
 python-dotenv = ">=0.2.0"
 requests = ">=2.31.0,<3.0.0"
@@ -1804,8 +1804,8 @@ tiktoken = ">=0.7.0"
 tokenizers = "*"
 
 [package.extras]
-extra-proxy = ["azure-identity (>=1.15.0,<2.0.0)", "azure-keyvault-secrets (>=4.8.0,<5.0.0)", "google-cloud-kms (>=2.21.3,<3.0.0)", "prisma (==0.11.0)", "pynacl (>=1.5.0,<2.0.0)", "resend (>=0.8.0,<0.9.0)"]
-proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "cryptography (>=42.0.5,<43.0.0)", "fastapi (>=0.111.0,<0.112.0)", "fastapi-sso (>=0.10.0,<0.11.0)", "gunicorn (>=22.0.0,<23.0.0)", "orjson (>=3.9.7,<4.0.0)", "python-multipart (>=0.0.9,<0.0.10)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)"]
+extra-proxy = ["azure-identity (>=1.15.0,<2.0.0)", "azure-keyvault-secrets (>=4.8.0,<5.0.0)", "google-cloud-kms (>=2.21.3,<3.0.0)", "prisma (==0.11.0)", "resend (>=0.8.0,<0.9.0)"]
+proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "cryptography (>=42.0.5,<43.0.0)", "fastapi (>=0.111.0,<0.112.0)", "fastapi-sso (>=0.10.0,<0.11.0)", "gunicorn (>=22.0.0,<23.0.0)", "orjson (>=3.9.7,<4.0.0)", "pynacl (>=1.5.0,<2.0.0)", "python-multipart (>=0.0.9,<0.0.10)", "pyyaml (>=6.0.1,<7.0.0)", "rq", "uvicorn (>=0.22.0,<0.23.0)"]
 
 [[package]]
 name = "logfire"
@@ -1848,13 +1848,13 @@ system-metrics = ["opentelemetry-instrumentation-system-metrics (>=0.42b0)"]
 
 [[package]]
 name = "logfire-api"
-version = "0.49.0"
+version = "0.52.0"
 description = "Shim for the Logfire SDK which does nothing unless Logfire is installed"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "logfire_api-0.49.0-py3-none-any.whl", hash = "sha256:61545a828714a68b04889212bad4a77de518cee3abda7b1025c89effc1607d4b"},
-    {file = "logfire_api-0.49.0.tar.gz", hash = "sha256:3468ef43764ebbf4cd67fa377ab4d768cee88a2235573c59eb0ed667b7e59e5a"},
+    {file = "logfire_api-0.52.0-py3-none-any.whl", hash = "sha256:6eb85d996331da3d319ecb5bac18f055b00d755ac685272c4d3ad935307cc0e9"},
+    {file = "logfire_api-0.52.0.tar.gz", hash = "sha256:5eab90630f9b389b7e692afc0dd5dbd4aa15fefd5b45eb18a5b849ce8e580948"},
 ]
 
 [[package]]
@@ -2397,13 +2397,13 @@ files = [
 
 [[package]]
 name = "notebook"
-version = "7.2.1"
+version = "7.2.2"
 description = "Jupyter Notebook - A web-based notebook environment for interactive computing"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "notebook-7.2.1-py3-none-any.whl", hash = "sha256:f45489a3995746f2195a137e0773e2130960b51c9ac3ce257dbc2705aab3a6ca"},
-    {file = "notebook-7.2.1.tar.gz", hash = "sha256:4287b6da59740b32173d01d641f763d292f49c30e7a51b89c46ba8473126341e"},
+    {file = "notebook-7.2.2-py3-none-any.whl", hash = "sha256:c89264081f671bc02eec0ed470a627ed791b9156cad9285226b31611d3e9fe1c"},
+    {file = "notebook-7.2.2.tar.gz", hash = "sha256:2ef07d4220421623ad3fe88118d687bc0450055570cdd160814a59cf3a1c516e"},
 ]
 
 [package.dependencies]
@@ -3069,13 +3069,13 @@ typing-extensions = ">=4.6.0,<4.7.0 || >4.7.0"
 
 [[package]]
 name = "pydantic-settings"
-version = "2.3.4"
+version = "2.5.2"
 description = "Settings management using Pydantic"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "pydantic_settings-2.3.4-py3-none-any.whl", hash = "sha256:11ad8bacb68a045f00e4f862c7a718c8a9ec766aa8fd4c32e39a0594b207b53a"},
-    {file = "pydantic_settings-2.3.4.tar.gz", hash = "sha256:c5802e3d62b78e82522319bbc9b8f8ffb28ad1c988a99311d04f2a6051fca0a7"},
+    {file = "pydantic_settings-2.5.2-py3-none-any.whl", hash = "sha256:2c912e55fd5794a59bf8c832b9de832dcfdf4778d79ff79b708744eed499a907"},
+    {file = "pydantic_settings-2.5.2.tar.gz", hash = "sha256:f90b139682bee4d2065273d5185d71d37ea46cfe57e1b5ae184fc6a0b2484ca0"},
 ]
 
 [package.dependencies]
@@ -3083,6 +3083,7 @@ pydantic = ">=2.7.0"
 python-dotenv = ">=0.21.0"
 
 [package.extras]
+azure-key-vault = ["azure-identity (>=1.16.0)", "azure-keyvault-secrets (>=4.8.0)"]
 toml = ["tomli (>=2.0.1)"]
 yaml = ["pyyaml (>=6.0.1)"]
 
