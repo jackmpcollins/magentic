@@ -37,15 +37,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version-file: '.python-version'
-      - name: Cache UV
-        uses: actions/cache@v3
+      - name: Set up UV
+        uses: astral-sh/setup-uv@v1
         with:
-          path: ~/.cache/uv
-          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
-      - name: Install UV
-        run: pip install uv
+          uv-version: latest
       - name: Install dependencies
         run: uv pip install -e .[all]
       - run: uv pip run ruff check --output-format=github .
