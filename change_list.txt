@@ -15,6 +15,7 @@
   - Added optional dependencies:
     - `anthropic`
     - `litellm`
+  - Installed `ruff` linter to address GitHub Actions workflow failure.
 
 - **Configuration Changes**
   - Updated `tool.uv.sources` to specify the `magentic` workspace.
@@ -30,6 +31,8 @@
 - **Build and Test**
   - Successfully built the project using `uv build`.
   - Ensured the project can be packaged correctly with UV.
+  - Ran tests successfully with 259 passed, 114 deselected, and 8 warnings.
+  - Achieved a total test coverage of 72%.
 
 - **Version and Constraints**
   - Maintained the project version number as `0.32.0`.
