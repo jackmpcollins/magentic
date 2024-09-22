@@ -11,6 +11,7 @@
     - `openai>=1.40.0`
     - `pydantic>=2.7.0`
     - `pydantic-settings>=2.0.0`
+    - `pytest-asyncio>=0.18.0`
   - Added optional dependencies:
     - `anthropic`
     - `litellm`
