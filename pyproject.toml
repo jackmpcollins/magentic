@@ -5,34 +5,32 @@ description = "Seamlessly integrate LLMs as Python functions"
 readme = "README.md"
 requires-python = ">=3.10,<4.0"
 dependencies = [
-    "anthropic>=0.27.0",
     "filetype>=1.2.0",
-    "litellm>=1.41.12",
     "logfire-api>=0.1.0",
     "openai>=1.40.0",
     "pydantic>=2.7.0",
     "pydantic-settings>=2.0.0",
-    "pytest>=7.0.0",
-    "pytest-cov>=4.0.0",
-    "pytest-asyncio>=0.18.0",
 ]
 
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.27.0"]
 litellm = ["litellm>=1.41.12"]
 
-[tool.uv]
-sources = { magentic = { workspace = true } }
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.pytest.ini_options]
-addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not litellm_anthropic and not litellm_openai and not mistral and not litellm_ollama and not openai'"
-markers = [
-    "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
-    "litellm_anthropic: Tests that query the Anthropic API via litellm. Requires the ANTHROPIC_API_KEY environment variable to be set.",
-    "litellm_ollama: Tests that query Ollama. Requires ollama to be installed and running on localhost:11434.",
-    "litellm_openai: Tests that query the OpenAI API via litellm. Requires the OPENAI_API_KEY environment variable to be set.",
-    "mistral: Tests that query the Mistral API (via openai). Requires the MISTRAL_API_KEY environment variable to be set.",
-    "openai: Tests that query the OpenAI API. Requires the OPENAI_API_KEY environment variable to be set.",
+[tool.uv]
+dev-dependencies = [
+    "blacken-docs>=1.16.0",
+    "logfire>=0.46.1,<0.50.0",
+    "mypy",
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.18.0",
+    "pytest-clarity>=0.1.0",
+    "pytest-cov>=4.0.0",
+    "python-dotenv>=1.0.1",
+    "ruff>=0.3,<0.6",
 ]
 
 [tool.mypy]
@@ -51,33 +49,44 @@ module = [
 ]
 ignore_missing_imports = true
 
+[tool.pytest.ini_options]
+addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not litellm_anthropic and not litellm_openai and not mistral and not litellm_ollama and not openai'"
+markers = [
+    "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
+    "litellm_anthropic: Tests that query the Anthropic API via litellm. Requires the ANTHROPIC_API_KEY environment variable to be set.",
+    "litellm_ollama: Tests that query Ollama. Requires ollama to be installed and running on localhost:11434.",
+    "litellm_openai: Tests that query the OpenAI API via litellm. Requires the OPENAI_API_KEY environment variable to be set.",
+    "mistral: Tests that query the Mistral API (via openai). Requires the MISTRAL_API_KEY environment variable to be set.",
+    "openai: Tests that query the OpenAI API. Requires the OPENAI_API_KEY environment variable to be set.",
+]
+
 [tool.ruff]
 include = ["*.py", "*.pyi", "**/pyproject.toml", "*.ipynb"]
 
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-   "C90",  # mccabe
-     "D",  # pydocstyle
-   "ANN",  # flake8-annotations
-     "A",  # flake8-builtins
-   "COM",  # flake8-commas
-    "FA",  # flake8-future-annotations
-   "INP",  # flake8-no-pep420
-"PIE790",  # flake8-pie: Unnecessary `...` literal
-   "SLF",  # flake8-self
-   "ARG",  # flake8-unused-arguments
-    "TD",  # flake8-todos
-   "FIX",  # flake8-fixme
-    "PL",  # Pylint
-# Compatibility with ruff formatter
-  "E501",
-"ISC001",
-  "Q000",
-  "Q001",
-  "Q002",
-  "Q003",
-  "W191",
+    "C90",    # mccabe
+    "D",      # pydocstyle
+    "ANN",    # flake8-annotations
+    "A",      # flake8-builtins
+    "COM",    # flake8-commas
+    "FA",     # flake8-future-annotations
+    "INP",    # flake8-no-pep420
+    "PIE790", # flake8-pie: Unnecessary `...` literal
+    "SLF",    # flake8-self
+    "ARG",    # flake8-unused-arguments
+    "TD",     # flake8-todos
+    "FIX",    # flake8-fixme
+    "PL",     # Pylint
+    # Compatibility with ruff formatter
+    "E501",
+    "ISC001",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "W191",
 ]
 
 [tool.ruff.lint.flake8-pytest-style]
@@ -88,11 +97,11 @@ known-first-party = ["magentic"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/examples/*" = [
-  "T20",  # flake8-print
+    "T20", # flake8-print
 ]
 "examples/*" = [
-  "T20",  # flake8-print
+    "T20", # flake8-print
 ]
 "tests/*" = [
-    "S",  # flake8-bandit
+    "S", # flake8-bandit
 ]
