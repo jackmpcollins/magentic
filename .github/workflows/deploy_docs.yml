@@ -15,16 +15,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Set up Python
         uses: actions/setup-python@v5
-        with:
-          python-version-file: ".python-version"
-      - name: Set up UV
+      - name: Set up uv
         uses: astral-sh/setup-uv@v2
         with:
           uv-version: latest
       - name: Install dependencies
-        run: uv pip install -e .[docs]
+        run: uv sync --all-extras --dev
       - name: Build documentation
-        run: uv pip run mkdocs build
+        run: uv run mkdocs build
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
