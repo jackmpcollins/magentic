@@ -56,7 +56,7 @@ ruff = "^0.6.7"
 [tool.poetry.group.docs.dependencies]
 mkdocs = "^1.5.3"
 mkdocs-glightbox = "^0.4.0"
-mkdocs-jupyter = "^0.24.6"
+mkdocs-jupyter = ">=0.24.6,<0.26.0"
 mkdocs-material = "^9.5.11"
 
 [tool.poetry.group.examples.dependencies]
