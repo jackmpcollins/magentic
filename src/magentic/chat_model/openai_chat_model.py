@@ -1,9 +1,16 @@
 import base64
-from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
+from collections.abc import (
+    AsyncIterable,
+    AsyncIterator,
+    Callable,
+    Iterable,
+    Iterator,
+    Sequence,
+)
 from enum import Enum
 from functools import singledispatch, wraps
 from itertools import chain, groupby
-from typing import Any, Generic, Literal, ParamSpec, Sequence, TypeVar, cast, overload
+from typing import Any, Generic, Literal, ParamSpec, TypeVar, cast, overload
 
 import filetype
 import openai

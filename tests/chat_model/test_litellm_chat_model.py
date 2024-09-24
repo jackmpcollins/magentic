@@ -1,4 +1,5 @@
-from typing import Annotated, Any, Iterator
+from collections.abc import Iterator
+from typing import Annotated, Any
 
 import litellm
 import pytest

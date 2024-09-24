@@ -1,7 +1,8 @@
 """Tests for PromptFunction."""
 
+from collections.abc import Awaitable
 from inspect import getdoc
-from typing import Annotated, Awaitable
+from typing import Annotated
 from unittest.mock import AsyncMock, Mock
 
 import pytest

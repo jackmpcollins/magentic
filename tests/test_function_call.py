@@ -1,5 +1,5 @@
 import inspect
-from typing import Awaitable
+from typing import TYPE_CHECKING
 
 import pytest
 from typing_extensions import assert_type
@@ -10,6 +10,9 @@ from magentic.function_call import (
     ParallelFunctionCall,
 )
 from magentic.streaming import async_iter
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
 
 
 def plus(a: int, b: int) -> int:

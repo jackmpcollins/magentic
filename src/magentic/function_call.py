@@ -1,16 +1,17 @@
 import asyncio
 import inspect
-from typing import (
-    Any,
+from collections.abc import (
     AsyncIterable,
     AsyncIterator,
     Awaitable,
     Callable,
-    Generic,
     Iterable,
     Iterator,
+)
+from typing import (
+    Any,
+    Generic,
     ParamSpec,
-    Tuple,
     TypeVar,
     cast,
 )
@@ -99,7 +100,7 @@ class AsyncParallelFunctionCall(Generic[T]):
     def __init__(self, function_calls: AsyncIterable[FunctionCall[Awaitable[T] | T]]):
         self._function_calls = CachedAsyncIterable(function_calls)
 
-    async def __call__(self) -> Tuple[T, ...]:
+    async def __call__(self) -> tuple[T, ...]:
         with logfire.span("Executing async parallel function call"):
             tasks_and_results: list[asyncio.Task[T] | T] = []
             async for function_call in self._function_calls:

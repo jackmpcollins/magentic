@@ -1,9 +1,9 @@
 import asyncio
 import textwrap
-from collections.abc import AsyncIterable, Iterable
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from dataclasses import dataclass
 from itertools import chain, dropwhile
-from typing import Any, AsyncIterator, Callable, Iterator, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 

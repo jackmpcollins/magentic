@@ -1,6 +1,7 @@
 import typing
+from collections.abc import Iterable
 from types import NoneType
-from typing import Any, Generic, Iterable, TypeVar
+from typing import Any, Generic, TypeVar
 
 import pytest
 from pydantic import BaseModel
