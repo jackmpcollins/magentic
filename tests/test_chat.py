@@ -1,4 +1,4 @@
-from typing import Awaitable
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -15,6 +15,9 @@ from magentic.function_call import (
 )
 from magentic.prompt_function import prompt
 from magentic.streaming import async_iter
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
 
 
 def test_chat_from_prompt():

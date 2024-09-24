@@ -1,13 +1,11 @@
 import inspect
+from collections.abc import Awaitable, Callable, Sequence
 from functools import update_wrapper
 from typing import (
     Any,
-    Awaitable,
-    Callable,
     Generic,
     ParamSpec,
     Protocol,
-    Sequence,
     TypeVar,
     cast,
     overload,

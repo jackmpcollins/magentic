@@ -1,9 +1,8 @@
 import inspect
 import types
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import (
     Any,
-    Iterable,
     TypeGuard,
     TypeVar,
     Union,

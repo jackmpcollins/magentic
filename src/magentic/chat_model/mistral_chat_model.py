@@ -1,6 +1,7 @@
 import os
+from collections.abc import Callable, Iterable, Sequence
 from enum import Enum
-from typing import Any, Callable, Iterable, Sequence, TypeVar, overload
+from typing import Any, TypeVar, overload
 
 import openai
 from openai.types.chat import ChatCompletionStreamOptionsParam

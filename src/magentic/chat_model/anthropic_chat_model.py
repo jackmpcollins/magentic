@@ -1,10 +1,17 @@
 import base64
 import json
-from collections.abc import AsyncIterator, Callable, Iterable, Iterator
+from collections.abc import (
+    AsyncIterable,
+    AsyncIterator,
+    Callable,
+    Iterable,
+    Iterator,
+    Sequence,
+)
 from enum import Enum
 from functools import singledispatch
 from itertools import chain, groupby
-from typing import Any, AsyncIterable, Generic, Sequence, TypeVar, cast, overload
+from typing import Any, Generic, TypeVar, cast, overload
 
 import filetype
 from pydantic import ValidationError

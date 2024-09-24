@@ -1,6 +1,6 @@
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from itertools import chain
-from typing import Any, Sequence, TypeVar, cast, overload
+from typing import Any, TypeVar, cast, overload
 
 from openai.types.chat import ChatCompletionToolChoiceOptionParam
 
