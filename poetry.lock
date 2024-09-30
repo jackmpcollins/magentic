@@ -1808,13 +1808,13 @@ proxy = ["PyJWT (>=2.8.0,<3.0.0)", "apscheduler (>=3.10.4,<4.0.0)", "backoff", "
 
 [[package]]
 name = "logfire"
-version = "0.49.0"
+version = "1.0.0"
 description = "The best Python observability tool! 🪵🔥"
 optional = false
 python-versions = "*"
 files = [
-    {file = "logfire-0.49.0-py2.py3-none-any.whl", hash = "sha256:0013aee5c84740883b17bb9639d344be569c3e76073afa2c1529acba1b80947d"},
-    {file = "logfire-0.49.0.tar.gz", hash = "sha256:0f108d6ad8a44a1bf711ad65d71a62a2f6426d70b8d61ad5bb0e391a28e98433"},
+    {file = "logfire-1.0.0-py2.py3-none-any.whl", hash = "sha256:b5b2db9140ad1ea82fd9296d63b3d1f65ca8d1d3edc6ca927b7c6d25273cdc4c"},
+    {file = "logfire-1.0.0.tar.gz", hash = "sha256:9f1de3c688e52dbb187d8c294e1bf44df5f54fdfae284cfb31070ba1e40d6407"},
 ]
 
 [package.dependencies]
@@ -4488,4 +4488,4 @@ litellm = ["litellm"]
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4.0"
-content-hash = "7213b7a355c1cc7ccbceee2c2b5abf3bdbd1b1eb0855aee627c4d4856561651a"
+content-hash = "7cf32cb54314f45e26ba6e81fbad5390e07e10831c715dfd4d34c58c4149d935"
