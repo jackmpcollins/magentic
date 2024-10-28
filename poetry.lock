@@ -1847,13 +1847,13 @@ system-metrics = ["opentelemetry-instrumentation-system-metrics (>=0.42b0)"]
 
 [[package]]
 name = "logfire-api"
-version = "0.53.0"
+version = "1.3.1"
 description = "Shim for the Logfire SDK which does nothing unless Logfire is installed"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "logfire_api-0.53.0-py3-none-any.whl", hash = "sha256:54f4b60796b8862f1185269d2c634e5174787b5c2cfe45e4f4cb368322623656"},
-    {file = "logfire_api-0.53.0.tar.gz", hash = "sha256:a77047aa700e9b8e1cf8dbc10a5e159718b0c4d15e728263d92e4922cfb3813a"},
+    {file = "logfire_api-1.3.1-py3-none-any.whl", hash = "sha256:767288ac5b807a4ef8324497abe86109ab36bd51a6cb3b5fc64182646ec46e94"},
+    {file = "logfire_api-1.3.1.tar.gz", hash = "sha256:fae8483f95db8d8d47b1011ef9608a770f3509f268c45bedfbfd1541c3818771"},
 ]
 
 [[package]]
