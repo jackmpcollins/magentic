@@ -59,6 +59,10 @@ module = [
 ]
 ignore_missing_imports = true
 
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+
 [tool.pytest.ini_options]
 addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not litellm_anthropic and not litellm_openai and not mistral and not litellm_ollama and not openai'"
 markers = [
