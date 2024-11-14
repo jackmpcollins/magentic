@@ -33,38 +33,37 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: pipx install poetry
       - name: Set up Python
         uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-          cache: "poetry"
-      - run: poetry install --all-extras
-      - run: poetry run ruff check --output-format=github .
-      - run: poetry run ruff format --check .
-      - run: poetry run mypy .
-      - run: poetry run pytest -vv tests/
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v2
+      - name: Install dependencies
+        run: uv sync
+      - run: uv run ruff check --output-format=github .
+      - run: uv run ruff format --check .
+      - run: uv run mypy .
+      - run: uv run pytest -vv tests/
       # Do not use `github.event.inputs` because it converts booleans to strings
       # https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onworkflow_dispatchinputs
       - if: inputs.anthropic
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: poetry run pytest -vv tests/ -m 'anthropic'
+        run: uv run pytest -vv tests/ -m 'anthropic'
       - if: inputs.litellm_anthropic
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: poetry run pytest -vv tests/ -m 'litellm_anthropic'
+        run: uv run pytest -vv tests/ -m 'litellm_anthropic'
       - if: inputs.litellm_openai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
-        run: poetry run pytest -vv tests/ -m 'litellm_openai'
+        run: uv run pytest -vv tests/ -m 'litellm_openai'
       - if: inputs.mistral
         env:
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
-        run: poetry run pytest -vv tests/ -m 'mistral'
+        run: uv run pytest -vv tests/ -m 'mistral'
       - if: inputs.openai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
-        run: poetry run pytest -vv tests/ -m 'openai'
+        run: uv run pytest -vv tests/ -m 'openai'
