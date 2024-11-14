@@ -38,7 +38,7 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v2
       - name: Install dependencies
-        run: uv sync --all-extras --dev
+        run: uv sync
       - run: uv run ruff check --output-format=github .
       - run: uv run ruff format --check .
       - run: uv run mypy .

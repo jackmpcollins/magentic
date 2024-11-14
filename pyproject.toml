@@ -30,6 +30,9 @@ dev = [
     "pytest-cov>=4.0.0",
     "python-dotenv>=1.0.1",
     "ruff>=0.3",
+    # optional-dependencies
+    "anthropic",
+    "litellm",
 ]
 docs = [
     "blacken-docs>=1.16.0",
@@ -119,3 +122,6 @@ known-first-party = ["magentic"]
 "tests/*" = [
     "S", # flake8-bandit
 ]
+
+[tool.uv]
+default-groups = ["dev", "docs"]

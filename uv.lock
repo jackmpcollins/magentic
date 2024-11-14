@@ -1387,6 +1387,8 @@ litellm = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "anthropic" },
+    { name = "litellm" },
     { name = "logfire" },
     { name = "mypy" },
     { name = "pytest" },
@@ -1422,6 +1424,8 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "anthropic" },
+    { name = "litellm" },
     { name = "logfire", specifier = ">=0.46.1,<0.50.0" },
     { name = "mypy" },
     { name = "pytest", specifier = ">=7.0.0" },
