@@ -34,7 +34,7 @@ def test_litellm_chat_model_complete_openai(prompt, output_types, expected_outpu
     assert isinstance(message.content, expected_output_type)
 
 
-@pytest.fixture()
+@pytest.fixture
 def litellm_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
     """A list of calls to the `litellm.success_callback`"""
     original_success_callback = litellm.success_callback.copy()
@@ -86,7 +86,7 @@ def test_litellm_chat_model_complete_raises_tool_schema_parse_error():
         )
 
 
-@pytest.fixture()
+@pytest.fixture
 def litellm_async_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
     """A list of calls to the `async_log_success_event` callback"""
     original_success_callback = litellm.success_callback.copy()

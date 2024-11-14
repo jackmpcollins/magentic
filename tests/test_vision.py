@@ -13,12 +13,12 @@ from magentic.chatprompt import chatprompt
 from magentic.vision import UserImageMessage
 
 
-@pytest.fixture()
+@pytest.fixture
 def image_bytes_jpg() -> bytes:
     return Path("tests/data/python-powered.jpg").read_bytes()
 
 
-@pytest.fixture()
+@pytest.fixture
 def image_bytes_png() -> bytes:
     return Path("tests/data/python-powered.png").read_bytes()
 
