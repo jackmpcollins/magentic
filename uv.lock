@@ -1,5 +1,5 @@
 version = 1
-requires-python = ">=3.10, <4.0"
+requires-python = ">=3.10"
 resolution-markers = [
     "python_full_version < '3.11'",
     "python_full_version == '3.11.*'",
