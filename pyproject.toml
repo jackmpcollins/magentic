@@ -20,18 +20,10 @@ litellm = ["litellm>=1.41.12"]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv]
-dev-dependencies = [
-    "blacken-docs>=1.16.0",
-    "ghapi>=1.0.5",
-    "jupyter",
+[dependency-groups]
+dev = [
     "logfire>=0.46.1,<0.50.0",
-    "mkdocs>=1.5.3",
-    "mkdocs-glightbox>=0.4.0",
-    "mkdocs-jupyter>=0.24.6",
-    "mkdocs-material>=9.5.11",
     "mypy",
-    "pandas>=2.2.1",
     "pytest>=7.0.0",
     "pytest-asyncio>=0.18.0",
     "pytest-clarity>=0.1.0",
@@ -39,6 +31,14 @@ dev-dependencies = [
     "python-dotenv>=1.0.1",
     "ruff>=0.3",
 ]
+docs = [
+    "blacken-docs>=1.16.0",
+    "mkdocs>=1.5.3",
+    "mkdocs-glightbox>=0.4.0",
+    "mkdocs-jupyter>=0.24.6",
+    "mkdocs-material>=9.5.11",
+]
+examples = ["ghapi>=1.0.5", "jupyter", "pandas>=2.2.1"]
 
 [tool.mypy]
 check_untyped_defs = true
