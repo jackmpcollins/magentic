@@ -184,7 +184,7 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
 
     def __init__(self, output_type: type[IterableT]):
         self._output_type = output_type
-        self._item_type_adapter = TypeAdapter(
+        self._item_type_adapter: TypeAdapter[Any] = TypeAdapter(
             args[0] if (args := get_args(output_type)) else Any
         )
         self._model = create_model(
