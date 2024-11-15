@@ -16,9 +16,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
       - name: Set up uv
-        uses: astral-sh/setup-uv@v2
-        with:
-          uv-version: latest
+        uses: astral-sh/setup-uv@v3
       - name: Install dependencies
         run: uv sync
       - name: Build documentation
