@@ -22,7 +22,13 @@ def vcr_config():
         return response
 
     return {
-        "filter_headers": ["authorization", "openai-organization"],
+        "filter_headers": [
+            # openai
+            "authorization",
+            "openai-organization",
+            # anthropic
+            "x-api-key",
+        ],
         "before_record_response": before_record_response,
     }
 
@@ -32,6 +38,6 @@ def pytest_collection_modifyitems(
 ) -> None:
     for item in items:
         # Apply vcr marker to all LLM tests
-        llm_markers = ["openai"]
+        llm_markers = ["anthropic", "openai"]
         if any(marker in item.keywords for marker in llm_markers):
             item.add_marker(pytest.mark.vcr)

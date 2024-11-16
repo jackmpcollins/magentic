@@ -65,7 +65,7 @@ venvPath = "."
 venv = ".venv"
 
 [tool.pytest.ini_options]
-addopts = "--cov=magentic --cov-report=term-missing --record-mode=once --block-network -m 'not anthropic and not litellm_anthropic and not litellm_openai and not mistral and not litellm_ollama'"
+addopts = "--cov=magentic --cov-report=term-missing --record-mode=once --block-network -m 'not litellm_anthropic and not litellm_openai and not mistral and not litellm_ollama'"
 markers = [
     "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
     "litellm_anthropic: Tests that query the Anthropic API via litellm. Requires the ANTHROPIC_API_KEY environment variable to be set.",
