@@ -22,6 +22,9 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "anthropic",
+    "inline-snapshot>=0.14.0",
+    "litellm",
     "logfire>=0.46.1,<0.50.0",
     "mypy",
     "pytest>=7.0.0",
@@ -30,9 +33,6 @@ dev = [
     "pytest-cov>=4.0.0",
     "python-dotenv>=1.0.1",
     "ruff>=0.3",
-    # optional-dependencies
-    "anthropic",
-    "litellm",
 ]
 docs = [
     "blacken-docs>=1.16.0",

@@ -888,6 +888,24 @@ wheels = [
 ]
 
 [[package]]
+name = "inline-snapshot"
+version = "0.14.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "asttokens" },
+    { name = "black" },
+    { name = "click" },
+    { name = "executing" },
+    { name = "rich" },
+    { name = "tomli", marker = "python_full_version < '3.11'" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/45/a9/b6b9db4f2ef1e3261460701a429f8248e517cb8d18e27ff05f4690ac0a73/inline_snapshot-0.14.0.tar.gz", hash = "sha256:54fdf7831055d06a2423054875d640102865a164cc8291a8086e44dd9b4fd316", size = 209662 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5e/a3/8ca14974625632d56d7e9f899d76d15dc4acd94ec15c179ca528beadeb4a/inline_snapshot-0.14.0-py3-none-any.whl", hash = "sha256:dc246d28b720f6050404b72cc1d171b0671e1494249197753d23771ff228748c", size = 31807 },
+]
+
+[[package]]
 name = "ipykernel"
 version = "6.29.5"
 source = { registry = "https://pypi.org/simple" }
@@ -1388,6 +1406,7 @@ litellm = [
 [package.dev-dependencies]
 dev = [
     { name = "anthropic" },
+    { name = "inline-snapshot" },
     { name = "litellm" },
     { name = "logfire" },
     { name = "mypy" },
@@ -1425,6 +1444,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "anthropic" },
+    { name = "inline-snapshot", specifier = ">=0.14.0" },
     { name = "litellm" },
     { name = "logfire", specifier = ">=0.46.1,<0.50.0" },
     { name = "mypy" },
