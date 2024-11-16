@@ -325,6 +325,6 @@ def test_decorator_with_context_manager(monkeypatch):
 
     assert say_hello.model.model == get_settings().openai_model  # type: ignore[attr-defined]
 
-    with OpenaiChatModel("gpt-3.5-turbo"):
-        assert say_hello.model.model == "gpt-3.5-turbo"  # type: ignore[attr-defined]
+    with OpenaiChatModel("gpt-4o"):
+        assert say_hello.model.model == "gpt-4o"  # type: ignore[attr-defined]
         assert say_hello_gpt4.model.model == "gpt-4"  # type: ignore[attr-defined]

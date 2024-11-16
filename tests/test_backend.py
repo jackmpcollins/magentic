@@ -81,7 +81,7 @@ def test_backend_litellm_chat_model(monkeypatch):
 @pytest.mark.openai
 def test_openai_chat_model_completion():
     model = OpenaiChatModel(
-        model="gpt-3.5-turbo",
+        model="gpt-4o",
         max_tokens=5,
         temperature=0.5,
     )
