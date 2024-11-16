@@ -1,0 +1,239 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Return a country."}], "model":
+      "gpt-4o", "parallel_tool_calls": false, "stream": true, "stream_options": {"include_usage":
+      true}, "tool_choice": {"type": "function", "function": {"name": "return_country"}},
+      "tools": [{"type": "function", "function": {"name": "return_country", "parameters":
+      {"properties": {"name": {"title": "Name", "type": "string"}}, "required": ["name"],
+      "type": "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '439'
+      content-type:
+      - application/json
+      host:
+      - api.openai.com
+      user-agent:
+      - OpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"chatcmpl-AU9UZipZ8xDJl7GFgAuLyFkFGnJ9p","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_159d8341cc","choices":[{"index":0,"delta":{"role":"assistant","content":null,"tool_calls":[{"index":0,"id":"call_wdEg17NjgwLbqVdKjq6MKLJ1","type":"function","function":{"name":"return_country","arguments":""}}],"refusal":null},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZipZ8xDJl7GFgAuLyFkFGnJ9p","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_159d8341cc","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\""}}]},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZipZ8xDJl7GFgAuLyFkFGnJ9p","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_159d8341cc","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"name"}}]},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZipZ8xDJl7GFgAuLyFkFGnJ9p","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_159d8341cc","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\":\""}}]},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZipZ8xDJl7GFgAuLyFkFGnJ9p","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_159d8341cc","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"Canada"}}]},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZipZ8xDJl7GFgAuLyFkFGnJ9p","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_159d8341cc","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\"}"}}]},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZipZ8xDJl7GFgAuLyFkFGnJ9p","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_159d8341cc","choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZipZ8xDJl7GFgAuLyFkFGnJ9p","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_159d8341cc","choices":[],"usage":{"prompt_tokens":53,"completion_tokens":5,"total_tokens":58,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e367cd11df226b0-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sat, 16 Nov 2024 09:34:51 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-processing-ms:
+      - '238'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-ratelimit-limit-requests:
+      - '500'
+      x-ratelimit-limit-tokens:
+      - '30000'
+      x-ratelimit-remaining-requests:
+      - '499'
+      x-ratelimit-remaining-tokens:
+      - '29978'
+      x-ratelimit-reset-requests:
+      - 120ms
+      x-ratelimit-reset-tokens:
+      - 44ms
+      x-request-id:
+      - req_55c15dbef4c2f0a4026078c4d3051d04
+    status:
+      code: 200
+      message: OK
+- request:
+    body: '{"messages": [{"role": "user", "content": "Return a country."}, {"role":
+      "assistant", "content": null, "tool_calls": [{"id": "call_wdEg17NjgwLbqVdKjq6MKLJ1",
+      "type": "function", "function": {"name": "return_country", "arguments": "{\"name\":\"Canada\"}"}}]},
+      {"role": "tool", "tool_call_id": "call_wdEg17NjgwLbqVdKjq6MKLJ1", "content":
+      "1 validation error for Country\nname\n  Value error, Country must be Ireland.
+      [type=value_error, input_value=''Canada'', input_type=str]\n    For further
+      information visit https://errors.pydantic.dev/2.9/v/value_error"}], "model":
+      "gpt-4o", "parallel_tool_calls": false, "stream": true, "stream_options": {"include_usage":
+      true}, "tool_choice": {"type": "function", "function": {"name": "return_country"}},
+      "tools": [{"type": "function", "function": {"name": "return_country", "parameters":
+      {"properties": {"name": {"title": "Name", "type": "string"}}, "required": ["name"],
+      "type": "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '931'
+      content-type:
+      - application/json
+      cookie:
+      - __cf_bm=sPO4iMakhVSeN2qInDys83OtESskcGEQtUulfF25yU8-1731749691-1.0.1.1-bndGTvCeKjcqqi0MUQq4bEF3.atEdhQbF.8VGPbpjf1qoXcYhD5.v59eEOEpo6RpfegQYZGaUOPOT_fbY7Au1A;
+        _cfuvid=sCef7lr9GC3CdWBEwnTFFR7tRfAdsuJ0FQJjudsAOpQ-1731749691329-0.0.1.1-604800000
+      host:
+      - api.openai.com
+      user-agent:
+      - OpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"chatcmpl-AU9UZl5mf807mUw8xigORAVUueic3","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_bb84311112","choices":[{"index":0,"delta":{"role":"assistant","content":null,"tool_calls":[{"index":0,"id":"call_cH1CgAuhZ0YHubyQGGfxl42Q","type":"function","function":{"name":"return_country","arguments":""}}],"refusal":null},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZl5mf807mUw8xigORAVUueic3","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_bb84311112","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"{\""}}]},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZl5mf807mUw8xigORAVUueic3","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_bb84311112","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"name"}}]},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZl5mf807mUw8xigORAVUueic3","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_bb84311112","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\":\""}}]},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZl5mf807mUw8xigORAVUueic3","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_bb84311112","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"Ireland"}}]},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZl5mf807mUw8xigORAVUueic3","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_bb84311112","choices":[{"index":0,"delta":{"tool_calls":[{"index":0,"function":{"arguments":"\"}"}}]},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZl5mf807mUw8xigORAVUueic3","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_bb84311112","choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UZl5mf807mUw8xigORAVUueic3","object":"chat.completion.chunk","created":1731749691,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_bb84311112","choices":[],"usage":{"prompt_tokens":125,"completion_tokens":5,"total_tokens":130,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e367cd34ff326b0-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sat, 16 Nov 2024 09:34:51 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-processing-ms:
+      - '356'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-ratelimit-limit-requests:
+      - '500'
+      x-ratelimit-limit-tokens:
+      - '30000'
+      x-ratelimit-remaining-requests:
+      - '499'
+      x-ratelimit-remaining-tokens:
+      - '29913'
+      x-ratelimit-reset-requests:
+      - 120ms
+      x-ratelimit-reset-tokens:
+      - 172ms
+      x-request-id:
+      - req_d1d6dffe6036d31153d701cfd53dead1
+    status:
+      code: 200
+      message: OK
+version: 1
