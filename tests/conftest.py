@@ -6,6 +6,7 @@ from dotenv import load_dotenv
 
 @pytest.fixture(autouse=True, scope="session")
 def _load_dotenv():
+    # Load .env file so API keys are available when rewriting VCR cassettes
     load_dotenv()
 
 
