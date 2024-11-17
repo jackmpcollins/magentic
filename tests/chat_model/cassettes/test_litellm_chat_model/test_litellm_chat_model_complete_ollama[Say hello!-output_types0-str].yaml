@@ -1,0 +1,157 @@
+interactions:
+- request:
+    body: '{"model": "llama3.1", "messages": [{"role": "user", "content": "Say hello!"}],
+      "options": {}, "stream": true}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '109'
+      content-type:
+      - application/json
+      host:
+      - localhost:11434
+      user-agent:
+      - python-httpx/0.27.2
+    method: POST
+    uri: http://localhost:11434/api/chat
+  response:
+    body:
+      string: '{"model":"llama3.1","created_at":"2024-11-17T08:41:58.01856Z","message":{"role":"assistant","content":"Hello"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:58.110078Z","message":{"role":"assistant","content":"!"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:58.205749Z","message":{"role":"assistant","content":"
+        How"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:58.306306Z","message":{"role":"assistant","content":"
+        are"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:58.397683Z","message":{"role":"assistant","content":"
+        you"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:58.488401Z","message":{"role":"assistant","content":"
+        today"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:58.579851Z","message":{"role":"assistant","content":"?"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:58.671951Z","message":{"role":"assistant","content":"
+        Is"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:58.763943Z","message":{"role":"assistant","content":"
+        there"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:58.855374Z","message":{"role":"assistant","content":"
+        something"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:58.946026Z","message":{"role":"assistant","content":"
+        I"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.037282Z","message":{"role":"assistant","content":"
+        can"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.119938Z","message":{"role":"assistant","content":"
+        help"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.203584Z","message":{"role":"assistant","content":"
+        you"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.289934Z","message":{"role":"assistant","content":"
+        with"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.380588Z","message":{"role":"assistant","content":"
+        or"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.46176Z","message":{"role":"assistant","content":"
+        would"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.544232Z","message":{"role":"assistant","content":"
+        you"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.627553Z","message":{"role":"assistant","content":"
+        like"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.710636Z","message":{"role":"assistant","content":"
+        to"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.798031Z","message":{"role":"assistant","content":"
+        chat"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.882501Z","message":{"role":"assistant","content":"?"},"done":false}
+
+        {"model":"llama3.1","created_at":"2024-11-17T08:41:59.964165Z","message":{"role":"assistant","content":""},"done_reason":"stop","done":true,"total_duration":2544046375,"load_duration":36060083,"prompt_eval_count":13,"prompt_eval_duration":560000000,"eval_count":23,"eval_duration":1946000000}
+
+        '
+    headers:
+      Content-Type:
+      - application/x-ndjson
+      Date:
+      - Sun, 17 Nov 2024 08:41:58 GMT
+      Transfer-Encoding:
+      - chunked
+    status:
+      code: 200
+      message: OK
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - identity
+      Connection:
+      - keep-alive
+      X-Amzn-Trace-Id:
+      - 0d3eeb7e-5033-456d-b3a8-c21ce5176ca9
+      user-agent:
+      - unknown/None; hf_hub/0.26.2; python/3.10.15
+    method: HEAD
+    uri: https://huggingface.co/llama3.1/resolve/main/tokenizer.json
+  response:
+    body:
+      string: ''
+    headers:
+      Access-Control-Allow-Origin:
+      - https://huggingface.co
+      Access-Control-Expose-Headers:
+      - X-Repo-Commit,X-Request-Id,X-Error-Code,X-Error-Message,X-Total-Count,ETag,Link,Accept-Ranges,Content-Range
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '29'
+      Content-Type:
+      - text/plain; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 08:42:00 GMT
+      ETag:
+      - W/"1d-DMkJvg8tpLoaQbsiq9Mz7l2CJyI"
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Vary:
+      - Origin
+      Via:
+      - 1.1 a282f7d4f5ae65b33d809fbc6ea8641c.cloudfront.net (CloudFront)
+      WWW-Authenticate:
+      - Bearer realm="Authentication required", charset="UTF-8"
+      X-Amz-Cf-Id:
+      - veTgRtB9BJnRGjMR8eQV52rEcilrsML2_pBHhMYgJbLth-W7ZsQp1w==
+      X-Amz-Cf-Pop:
+      - SFO5-P1
+      X-Cache:
+      - Error from cloudfront
+      X-Error-Message:
+      - Invalid username or password.
+      X-Powered-By:
+      - huggingface-moon
+      X-Request-Id:
+      - Root=1-6739ac58-37367eb13765c9a519ee9ae9;0d3eeb7e-5033-456d-b3a8-c21ce5176ca9
+      cross-origin-opener-policy:
+      - same-origin
+    status:
+      code: 401
+      message: Unauthorized
+version: 1
