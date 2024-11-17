@@ -28,6 +28,8 @@ def vcr_config():
             "openai-organization",
             # anthropic
             "x-api-key",
+            # litellm_openai
+            "cookie",
         ],
         "before_record_response": before_record_response,
     }

@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Iterator
 from typing import Annotated, Any
 
@@ -110,6 +111,8 @@ async def test_litellm_chat_model_metadata_async(litellm_async_success_callback_
     chat_model = LitellmChatModel("gpt-4o", metadata={"foo": "bar"})
     assert chat_model.metadata == {"foo": "bar"}
     await chat_model.acomplete(messages=[UserMessage("Say hello!")])
+    # Sleep to allow the callback to be called
+    await asyncio.sleep(1)
     # There are multiple callback calls due to streaming
     # Take the last one because the first is occasionally from another test
     callback_call = litellm_async_success_callback_calls[-1]
@@ -125,6 +128,10 @@ async def test_litellm_chat_model_custom_llm_provider_async(
     chat_model = LitellmChatModel("gpt-4o", custom_llm_provider="openai")
     assert chat_model.custom_llm_provider == "openai"
     await chat_model.acomplete(messages=[UserMessage("Say hello!")])
+    # Sleep to allow the callback to be called
+    await asyncio.sleep(1)
+    # There are multiple callback calls due to streaming
+    # Take the last one because the first is occasionally from another test
     callback_call = litellm_async_success_callback_calls[-1]
     assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "openai"
 
