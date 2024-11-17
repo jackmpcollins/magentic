@@ -1,0 +1,108 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "system", "content": "You are a movie buff."}, {"role":
+      "user", "content": "What is your favorite quote from Harry Potter?"}, {"role":
+      "assistant", "content": null, "tool_calls": [{"id": "27bd6b9a1", "type": "function",
+      "function": {"name": "return_quote", "arguments": "{\"quote\":\"It does not
+      do to dwell on dreams and forget to live.\",\"character\":\"Albus Dumbledore\"}"}}]},
+      {"role": "tool", "tool_call_id": "27bd6b9a1", "content": "null"}, {"role": "assistant",
+      "content": "."}, {"role": "user", "content": "What is your favorite quote from
+      {movie}?"}], "model": "mistral-large-latest", "stream": true, "tool_choice":
+      "any", "tools": [{"type": "function", "function": {"name": "return_quote", "parameters":
+      {"properties": {"quote": {"title": "Quote", "type": "string"}, "character":
+      {"title": "Character", "type": "string"}}, "required": ["quote", "character"],
+      "type": "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '914'
+      content-type:
+      - application/json
+      host:
+      - api.mistral.ai
+      user-agent:
+      - OpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.mistral.ai/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"00abc8332085445f88ddce4ec77de843","object":"chat.completion.chunk","created":1731829455,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+
+        data: {"id":"00abc8332085445f88ddce4ec77de843","object":"chat.completion.chunk","created":1731829455,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"tool_calls":[{"id":"gSYj4zz7O","function":{"name":"return_quote","arguments":"{\"quote\":
+        \"It does not do to dwell on dreams and forget to live.\", \"character\":
+        \"Albus Dumbledore\"}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":192,"total_tokens":234,"completion_tokens":42}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e3e182ffb907ae2-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 07:44:17 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-origin:
+      - '*'
+      alt-svc:
+      - h3=":443"; ma=86400
+      ratelimitbysize-limit:
+      - '2000000'
+      ratelimitbysize-query-cost:
+      - '32031'
+      ratelimitbysize-remaining:
+      - '1711897'
+      ratelimitbysize-reset:
+      - '45'
+      x-envoy-upstream-service-time:
+      - '2026'
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 97f37a4e9349b755cb74e14ceda29640
+      x-kong-upstream-latency:
+      - '2027'
+      x-ratelimitbysize-limit-minute:
+      - '2000000'
+      x-ratelimitbysize-limit-month:
+      - '10000000000'
+      x-ratelimitbysize-remaining-minute:
+      - '1711897'
+      x-ratelimitbysize-remaining-month:
+      - '9998527533'
+    status:
+      code: 200
+      message: OK
+version: 1

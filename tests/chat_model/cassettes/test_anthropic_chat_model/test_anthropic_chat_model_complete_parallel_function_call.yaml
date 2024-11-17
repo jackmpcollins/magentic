@@ -1,0 +1,163 @@
+interactions:
+- request:
+    body: '{"max_tokens": 1024, "messages": [{"role": "user", "content": [{"type":
+      "text", "text": "Use the plus tool to sum 1 and 2. Use the minus tool to subtract
+      1 from 2. Use both tools at the same time."}]}], "model": "claude-3-opus-20240229",
+      "tools": [{"name": "plus", "description": "", "input_schema": {"properties":
+      {"a": {"title": "A", "type": "integer"}, "b": {"title": "B", "type": "integer"}},
+      "required": ["a", "b"], "type": "object"}}, {"name": "minus", "description":
+      "", "input_schema": {"properties": {"a": {"title": "A", "type": "integer"},
+      "b": {"title": "B", "type": "integer"}}, "required": ["a", "b"], "type": "object"}}],
+      "tool_choice": {"type": "any"}, "stream": true}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      anthropic-version:
+      - '2023-06-01'
+      connection:
+      - keep-alive
+      content-length:
+      - '683'
+      content-type:
+      - application/json
+      host:
+      - api.anthropic.com
+      user-agent:
+      - Anthropic/Python 0.39.0
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 0.39.0
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+      x-stainless-stream-helper:
+      - messages
+    method: POST
+    uri: https://api.anthropic.com/v1/messages
+  response:
+    body:
+      string: 'event: message_start
+
+        data: {"type":"message_start","message":{"id":"msg_012f3EyS95ZaC3e3BnCqTDa7","type":"message","role":"assistant","model":"claude-3-opus-20240229","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":469,"output_tokens":8}}              }
+
+
+        event: content_block_start
+
+        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_01GsvW1rYits8MPJif9rkZ4G","name":"plus","input":{}}              }
+
+
+        event: ping
+
+        data: {"type": "ping"}
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}   }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"a\":
+        1"}        }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":",
+        \"b\""}   }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":":
+        "}            }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"2}"}       }
+
+
+        event: content_block_stop
+
+        data: {"type":"content_block_stop","index":0  }
+
+
+        event: content_block_start
+
+        data: {"type":"content_block_start","index":1,"content_block":{"type":"tool_use","id":"toolu_01M2EwdtY31e6afyqWGhPCpc","name":"minus","input":{}}        }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":""}   }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"{\"a\":
+        2"}  }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":",
+        \"b\": 1}"}              }
+
+
+        event: content_block_stop
+
+        data: {"type":"content_block_stop","index":1      }
+
+
+        event: message_delta
+
+        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":104}         }
+
+
+        event: message_stop
+
+        data: {"type":"message_stop" }
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e3691acab48fa8e-SJC
+      Cache-Control:
+      - no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sat, 16 Nov 2024 09:49:08 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Robots-Tag:
+      - none
+      request-id:
+      - req_01NTz6P9SwW8GXBoocicUsGe
+      via:
+      - 1.1 google
+    status:
+      code: 200
+      message: OK
+version: 1

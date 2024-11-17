@@ -22,6 +22,9 @@ build-backend = "hatchling.build"
 
 [dependency-groups]
 dev = [
+    "anthropic",
+    "inline-snapshot>=0.14.0",
+    "litellm",
     "logfire>=0.46.1,<0.50.0",
     "mypy",
     "pytest>=7.0.0",
@@ -30,9 +33,7 @@ dev = [
     "pytest-cov>=4.0.0",
     "python-dotenv>=1.0.1",
     "ruff>=0.3",
-    # optional-dependencies
-    "anthropic",
-    "litellm",
+    "pytest-recording>=0.13.2",
 ]
 docs = [
     "blacken-docs>=1.16.0",
@@ -64,7 +65,9 @@ venvPath = "."
 venv = ".venv"
 
 [tool.pytest.ini_options]
-addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not litellm_anthropic and not litellm_openai and not mistral and not litellm_ollama and not openai'"
+addopts = "--cov=magentic --cov-report=term-missing --block-network"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"
 markers = [
     "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
     "litellm_anthropic: Tests that query the Anthropic API via litellm. Requires the ANTHROPIC_API_KEY environment variable to be set.",

@@ -1,3 +1,4 @@
+import asyncio
 from collections.abc import Iterator
 from typing import Annotated, Any
 
@@ -27,7 +28,7 @@ from magentic.function_call import (
 )
 @pytest.mark.litellm_openai
 def test_litellm_chat_model_complete_openai(prompt, output_types, expected_output_type):
-    chat_model = LitellmChatModel("gpt-3.5-turbo")
+    chat_model = LitellmChatModel("gpt-4o")
     message = chat_model.complete(
         messages=[UserMessage(prompt)], output_types=output_types
     )
@@ -51,7 +52,7 @@ def litellm_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
 @pytest.mark.litellm_openai
 def test_litellm_chat_model_metadata(litellm_success_callback_calls):
     """Test that provided metadata is passed to the litellm success callback."""
-    chat_model = LitellmChatModel("gpt-3.5-turbo", metadata={"foo": "bar"})
+    chat_model = LitellmChatModel("gpt-4o", metadata={"foo": "bar"})
     assert chat_model.metadata == {"foo": "bar"}
     chat_model.complete(messages=[UserMessage("Say hello!")])
     # There are multiple callback calls due to streaming
@@ -63,7 +64,7 @@ def test_litellm_chat_model_metadata(litellm_success_callback_calls):
 @pytest.mark.litellm_openai
 def test_litellm_chat_model_custom_llm_provider(litellm_success_callback_calls):
     """Test that provided custom_llm_provider is passed to the litellm success callback."""
-    chat_model = LitellmChatModel("gpt-3.5-turbo", custom_llm_provider="openai")
+    chat_model = LitellmChatModel("gpt-4o", custom_llm_provider="openai")
     assert chat_model.custom_llm_provider == "openai"
     chat_model.complete(messages=[UserMessage("Say hello!")])
     callback_call = litellm_success_callback_calls[-1]
@@ -78,7 +79,7 @@ def test_litellm_chat_model_complete_raises_tool_schema_parse_error():
     class Test(BaseModel):
         value: Annotated[int, AfterValidator(raise_error)]
 
-    chat_model = LitellmChatModel("gpt-3.5-turbo")
+    chat_model = LitellmChatModel("gpt-4o")
     with pytest.raises(ToolSchemaParseError):
         chat_model.complete(
             messages=[UserMessage("Return a test value of 42.")],
@@ -103,33 +104,36 @@ def litellm_async_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
     litellm.callbacks = original_success_callback  # type: ignore[assignment]
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_openai
 async def test_litellm_chat_model_metadata_async(litellm_async_success_callback_calls):
     """Test that provided metadata is passed to the litellm success callback."""
-    chat_model = LitellmChatModel("gpt-3.5-turbo", metadata={"foo": "bar"})
+    chat_model = LitellmChatModel("gpt-4o", metadata={"foo": "bar"})
     assert chat_model.metadata == {"foo": "bar"}
     await chat_model.acomplete(messages=[UserMessage("Say hello!")])
+    # Sleep to allow the callback to be called
+    await asyncio.sleep(1)
     # There are multiple callback calls due to streaming
     # Take the last one because the first is occasionally from another test
     callback_call = litellm_async_success_callback_calls[-1]
     assert callback_call["kwargs"]["litellm_params"]["metadata"] == {"foo": "bar"}
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_openai
 async def test_litellm_chat_model_custom_llm_provider_async(
     litellm_async_success_callback_calls,
 ):
     """Test that provided custom_llm_provider is passed to the litellm success callback."""
-    chat_model = LitellmChatModel("gpt-3.5-turbo", custom_llm_provider="openai")
+    chat_model = LitellmChatModel("gpt-4o", custom_llm_provider="openai")
     assert chat_model.custom_llm_provider == "openai"
     await chat_model.acomplete(messages=[UserMessage("Say hello!")])
+    # Sleep to allow the callback to be called
+    await asyncio.sleep(1)
+    # There are multiple callback calls due to streaming
+    # Take the last one because the first is occasionally from another test
     callback_call = litellm_async_success_callback_calls[-1]
     assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "openai"
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_openai
 async def test_litellm_chat_model_acomplete_raises_tool_schema_parse_error():
     def raise_error(v):
@@ -138,7 +142,7 @@ async def test_litellm_chat_model_acomplete_raises_tool_schema_parse_error():
     class Test(BaseModel):
         value: Annotated[int, AfterValidator(raise_error)]
 
-    chat_model = LitellmChatModel("gpt-3.5-turbo")
+    chat_model = LitellmChatModel("gpt-4o")
     with pytest.raises(ToolSchemaParseError):
         await chat_model.acomplete(
             messages=[UserMessage("Return a test value of 42.")],
@@ -212,15 +216,36 @@ def test_litellm_chat_model_complete_anthropic_parallel_function_call():
     ("prompt", "output_types", "expected_output_type"),
     [
         ("Say hello!", [str], str),
-        ("Return True.", [bool], bool),
-        ("Return [1, 2, 3, 4, 5]", [list[int]], list),
-        ('Return ["apple", "banana"]', [list[str]], list),
+        pytest.param(
+            "Return True.",
+            [bool],
+            bool,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
+        pytest.param(
+            "Return [1, 2, 3, 4, 5]",
+            [list[int]],
+            list,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
+        pytest.param(
+            'Return ["apple", "banana"]',
+            [list[str]],
+            list,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
     ],
 )
 @pytest.mark.litellm_ollama
 def test_litellm_chat_model_complete_ollama(prompt, output_types, expected_output_type):
     chat_model = LitellmChatModel(
-        "ollama_chat/llama3", api_base="http://localhost:11434"
+        "ollama_chat/llama3.1", api_base="http://localhost:11434"
     )
     message = chat_model.complete(
         messages=[UserMessage(prompt)], output_types=output_types
@@ -237,12 +262,11 @@ def test_litellm_chat_model_complete_ollama(prompt, output_types, expected_outpu
         ("List three fruits", [list[str]], list),
     ],
 )
-@pytest.mark.asyncio
 @pytest.mark.litellm_openai
 async def test_litellm_chat_model_acomplete_openai(
     prompt, output_types, expected_output_type
 ):
-    chat_model = LitellmChatModel("gpt-3.5-turbo")
+    chat_model = LitellmChatModel("gpt-4o")
     message = await chat_model.acomplete(
         messages=[UserMessage(prompt)], output_types=output_types
     )
@@ -263,7 +287,6 @@ async def test_litellm_chat_model_acomplete_openai(
         ),
     ],
 )
-@pytest.mark.asyncio
 @pytest.mark.litellm_anthropic
 async def test_litellm_chat_model_acomplete_anthropic(
     prompt, output_types, expected_output_type
@@ -275,7 +298,6 @@ async def test_litellm_chat_model_acomplete_anthropic(
     assert isinstance(message.content, expected_output_type)
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_anthropic
 async def test_litellm_chat_model_acomplete_anthropic_function_call():
     def plus(a: int, b: int) -> int:
@@ -291,7 +313,6 @@ async def test_litellm_chat_model_acomplete_anthropic_function_call():
     assert isinstance(message.content, FunctionCall)
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_anthropic
 async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_call():
     def plus(a: int, b: int) -> int:
@@ -318,18 +339,38 @@ async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_ca
     ("prompt", "output_types", "expected_output_type"),
     [
         ("Say hello!", [str], str),
-        ("Return True.", [bool], bool),
-        ("Return [1, 2, 3, 4, 5]", [list[int]], list),
-        ('Return ["apple", "banana"]', [list[str]], list),
+        pytest.param(
+            "Return True.",
+            [bool],
+            bool,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
+        pytest.param(
+            "Return [1, 2, 3, 4, 5]",
+            [list[int]],
+            list,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
+        pytest.param(
+            'Return ["apple", "banana"]',
+            [list[str]],
+            list,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
     ],
 )
-@pytest.mark.asyncio
 @pytest.mark.litellm_ollama
 async def test_litellm_chat_model_acomplete_ollama(
     prompt, output_types, expected_output_type
 ):
     chat_model = LitellmChatModel(
-        "ollama_chat/llama3", api_base="http://localhost:11434"
+        "ollama_chat/llama3.1", api_base="http://localhost:11434"
     )
     message = await chat_model.acomplete(
         messages=[UserMessage(prompt)], output_types=output_types
