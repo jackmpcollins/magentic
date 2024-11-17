@@ -1410,6 +1410,7 @@ litellm = [
 [package.dev-dependencies]
 dev = [
     { name = "anthropic" },
+    { name = "coverage" },
     { name = "inline-snapshot" },
     { name = "litellm" },
     { name = "logfire" },
@@ -1449,6 +1450,7 @@ requires-dist = [
 [package.metadata.requires-dev]
 dev = [
     { name = "anthropic" },
+    { name = "coverage", specifier = ">=7.6.4" },
     { name = "inline-snapshot", specifier = ">=0.14.0" },
     { name = "litellm" },
     { name = "logfire", specifier = ">=0.46.1,<0.50.0" },

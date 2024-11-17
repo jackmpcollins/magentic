@@ -34,6 +34,7 @@ dev = [
     "python-dotenv>=1.0.1",
     "ruff>=0.3",
     "pytest-recording>=0.13.2",
+    "coverage>=7.6.4",
 ]
 docs = [
     "blacken-docs>=1.16.0",
@@ -43,6 +44,10 @@ docs = [
     "mkdocs-material>=9.5.11",
 ]
 examples = ["ghapi>=1.0.5", "jupyter", "pandas>=2.2.1"]
+
+[tool.coverage.report]
+skip_covered = "true"
+show_missing = "true"
 
 [tool.mypy]
 check_untyped_defs = true
@@ -65,7 +70,7 @@ venvPath = "."
 venv = ".venv"
 
 [tool.pytest.ini_options]
-addopts = "--cov=magentic --cov-report=term-missing --block-network"
+addopts = "--block-network --cov-report=html --cov-report=term --cov=magentic"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
 markers = [
