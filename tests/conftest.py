@@ -14,7 +14,7 @@ def _load_dotenv():
 
 @pytest.fixture(autouse=True, scope="session")
 def vcr_config():
-    def before_record_response(response: dict[str, Any]):
+    def before_record_response(response: dict[str, Any]) -> dict[str, Any]:
         filter_response_headers = [
             "openai-organization",
             "Set-Cookie",
