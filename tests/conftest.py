@@ -44,6 +44,7 @@ def pytest_collection_modifyitems(
             "anthropic",
             "litellm_anthropic",
             "litellm_openai",
+            "mistral",
             "openai",
         ]
         if any(marker in item.keywords for marker in llm_markers):

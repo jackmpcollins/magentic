@@ -65,7 +65,7 @@ venvPath = "."
 venv = ".venv"
 
 [tool.pytest.ini_options]
-addopts = "--cov=magentic --cov-report=term-missing --block-network -m 'not mistral and not litellm_ollama'"
+addopts = "--cov=magentic --cov-report=term-missing --block-network -m 'not litellm_ollama'"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
     "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",

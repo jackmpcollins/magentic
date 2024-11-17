@@ -1,0 +1,105 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Use the plus tool to sum 1 and
+      2. Use the minus tool to subtract 1 from 2. Make sure to use both tools at once."}],
+      "model": "mistral-large-latest", "stream": true, "tool_choice": "any", "tools":
+      [{"type": "function", "function": {"name": "plus", "parameters": {"properties":
+      {"a": {"title": "A", "type": "integer"}, "b": {"title": "B", "type": "integer"}},
+      "required": ["a", "b"], "type": "object"}}}, {"type": "function", "function":
+      {"name": "minus", "parameters": {"properties": {"a": {"title": "A", "type":
+      "integer"}, "b": {"title": "B", "type": "integer"}}, "required": ["a", "b"],
+      "type": "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '653'
+      content-type:
+      - application/json
+      host:
+      - api.mistral.ai
+      user-agent:
+      - OpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.mistral.ai/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"7b9ca0036a7148d9b31648d5292abe34","object":"chat.completion.chunk","created":1731829453,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+
+        data: {"id":"7b9ca0036a7148d9b31648d5292abe34","object":"chat.completion.chunk","created":1731829453,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"tool_calls":[{"id":"nqjf8Hqe1","function":{"name":"plus","arguments":"{\"a\":
+        1, \"b\": 2}"}},{"id":"ATcpCKul3","function":{"name":"minus","arguments":"{\"a\":
+        2, \"b\": 1}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":187,"total_tokens":232,"completion_tokens":45}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e3e18240afb67d7-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 07:44:15 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-origin:
+      - '*'
+      alt-svc:
+      - h3=":443"; ma=86400
+      ratelimitbysize-limit:
+      - '2000000'
+      ratelimitbysize-query-cost:
+      - '32036'
+      ratelimitbysize-remaining:
+      - '1775939'
+      ratelimitbysize-reset:
+      - '47'
+      x-envoy-upstream-service-time:
+      - '1279'
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 5c6496197086e47ccc15915624f5825f
+      x-kong-upstream-latency:
+      - '1280'
+      x-ratelimitbysize-limit-minute:
+      - '2000000'
+      x-ratelimitbysize-limit-month:
+      - '10000000000'
+      x-ratelimitbysize-remaining-minute:
+      - '1775939'
+      x-ratelimitbysize-remaining-month:
+      - '9998591575'
+    status:
+      code: 200
+      message: OK
+version: 1

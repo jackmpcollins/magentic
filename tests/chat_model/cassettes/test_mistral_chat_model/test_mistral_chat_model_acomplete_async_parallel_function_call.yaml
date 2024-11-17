@@ -1,0 +1,105 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Use the plus tool to sum 1 and
+      2. Use the minus tool to subtract 1 from 2. Make sure to use both tools at once."}],
+      "model": "mistral-large-latest", "stream": true, "tool_choice": "any", "tools":
+      [{"type": "function", "function": {"name": "plus", "parameters": {"properties":
+      {"a": {"title": "A", "type": "integer"}, "b": {"title": "B", "type": "integer"}},
+      "required": ["a", "b"], "type": "object"}}}, {"type": "function", "function":
+      {"name": "minus", "parameters": {"properties": {"a": {"title": "A", "type":
+      "integer"}, "b": {"title": "B", "type": "integer"}}, "required": ["a", "b"],
+      "type": "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '653'
+      content-type:
+      - application/json
+      host:
+      - api.mistral.ai
+      user-agent:
+      - AsyncOpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.mistral.ai/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"1403bf4a3e5f4f4a860a3b3be51f6ee6","object":"chat.completion.chunk","created":1731829466,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+
+        data: {"id":"1403bf4a3e5f4f4a860a3b3be51f6ee6","object":"chat.completion.chunk","created":1731829466,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"tool_calls":[{"id":"QAw0JBXkB","function":{"name":"plus","arguments":"{\"a\":
+        1, \"b\": 2}"}},{"id":"HlyhI5zAI","function":{"name":"minus","arguments":"{\"a\":
+        1, \"b\": 2}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":187,"total_tokens":232,"completion_tokens":45}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e3e18736af31592-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 07:44:28 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-origin:
+      - '*'
+      alt-svc:
+      - h3=":443"; ma=86400
+      ratelimitbysize-limit:
+      - '2000000'
+      ratelimitbysize-query-cost:
+      - '32036'
+      ratelimitbysize-remaining:
+      - '1487836'
+      ratelimitbysize-reset:
+      - '34'
+      x-envoy-upstream-service-time:
+      - '2595'
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 0f236c442c1cd56a972c003ee4f80c5c
+      x-kong-upstream-latency:
+      - '2596'
+      x-ratelimitbysize-limit-minute:
+      - '2000000'
+      x-ratelimitbysize-limit-month:
+      - '10000000000'
+      x-ratelimitbysize-remaining-minute:
+      - '1487836'
+      x-ratelimitbysize-remaining-month:
+      - '9998303472'
+    status:
+      code: 200
+      message: OK
+version: 1
