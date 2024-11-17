@@ -38,6 +38,10 @@ def pytest_collection_modifyitems(
 ) -> None:
     for item in items:
         # Apply vcr marker to all LLM tests
-        llm_markers = ["anthropic", "openai"]
+        llm_markers = [
+            "anthropic",
+            "litellm_openai",
+            "openai",
+        ]
         if any(marker in item.keywords for marker in llm_markers):
             item.add_marker(pytest.mark.vcr)
