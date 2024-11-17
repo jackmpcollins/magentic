@@ -42,6 +42,7 @@ def pytest_collection_modifyitems(
         # Apply vcr marker to all LLM tests
         llm_markers = [
             "anthropic",
+            "litellm_anthropic",
             "litellm_openai",
             "openai",
         ]

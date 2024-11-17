@@ -1,0 +1,170 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - identity
+      Connection:
+      - keep-alive
+      X-Amzn-Trace-Id:
+      - 9f598468-b36e-4c8b-bc42-0cc2a08c771f
+      user-agent:
+      - unknown/None; hf_hub/0.26.2; python/3.10.15
+    method: HEAD
+    uri: https://huggingface.co/claude-3-haiku-20240307/resolve/main/tokenizer.json
+  response:
+    body:
+      string: ''
+    headers:
+      Access-Control-Allow-Origin:
+      - https://huggingface.co
+      Access-Control-Expose-Headers:
+      - X-Repo-Commit,X-Request-Id,X-Error-Code,X-Error-Message,X-Total-Count,ETag,Link,Accept-Ranges,Content-Range
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '29'
+      Content-Type:
+      - text/plain; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 07:29:56 GMT
+      ETag:
+      - W/"1d-DMkJvg8tpLoaQbsiq9Mz7l2CJyI"
+      Referrer-Policy:
+      - strict-origin-when-cross-origin
+      Vary:
+      - Origin
+      Via:
+      - 1.1 7189b8cad57dc2d1ab0dd5f90144f2a2.cloudfront.net (CloudFront)
+      WWW-Authenticate:
+      - Bearer realm="Authentication required", charset="UTF-8"
+      X-Amz-Cf-Id:
+      - YubdV2kfkCBL1Ca0TubsnUE1rOPrKfugsWauazsAW77Qxt9n4DGfnQ==
+      X-Amz-Cf-Pop:
+      - SFO5-P1
+      X-Cache:
+      - Error from cloudfront
+      X-Error-Message:
+      - Invalid username or password.
+      X-Powered-By:
+      - huggingface-moon
+      X-Request-Id:
+      - Root=1-67399b74-3e5edc941dcbac1c0ff52324;9f598468-b36e-4c8b-bc42-0cc2a08c771f
+      cross-origin-opener-policy:
+      - same-origin
+    status:
+      code: 401
+      message: Unauthorized
+- request:
+    body: '{"messages": [{"role": "user", "content": [{"type": "text", "text": "Return
+      True"}]}], "tools": [{"name": "return_bool", "input_schema": {"properties":
+      {"value": {"title": "Value", "type": "boolean"}}, "required": ["value"], "type":
+      "object"}}], "tool_choice": {"type": "tool", "name": "return_bool"}, "max_tokens":
+      4096, "model": "claude-3-haiku-20240307", "stream": true}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      anthropic-version:
+      - '2023-06-01'
+      connection:
+      - keep-alive
+      content-length:
+      - '373'
+      content-type:
+      - application/json
+      host:
+      - api.anthropic.com
+      user-agent:
+      - litellm/1.52.6
+    method: POST
+    uri: https://api.anthropic.com/v1/messages
+  response:
+    body:
+      string: 'event: message_start
+
+        data: {"type":"message_start","message":{"id":"msg_01X5Hu9ydDxNrE5yvJUfVfye","type":"message","role":"assistant","model":"claude-3-haiku-20240307","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":418,"output_tokens":20}}   }
+
+
+        event: content_block_start
+
+        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_01QFtyC73Kpf7dLKmcXVHmmf","name":"return_bool","input":{}}           }
+
+
+        event: ping
+
+        data: {"type": "ping"}
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}             }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\""}        }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"value"}        }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"\":
+        \"T"}             }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"rue\"}"}              }
+
+
+        event: content_block_stop
+
+        data: {"type":"content_block_stop","index":0    }
+
+
+        event: message_delta
+
+        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":33}      }
+
+
+        event: message_stop
+
+        data: {"type":"message_stop"        }
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e3e033409e9fb50-SJC
+      Cache-Control:
+      - no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 07:29:56 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Robots-Tag:
+      - none
+      request-id:
+      - req_01CDAj1FP2pKEF8W6EpnjTWZ
+      via:
+      - 1.1 google
+    status:
+      code: 200
+      message: OK
+version: 1
