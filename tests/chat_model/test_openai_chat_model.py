@@ -238,7 +238,6 @@ def test_openai_chat_model_complete_raises_tool_schema_parse_error():
         )
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_openai_chat_model_acomplete_usage():
     chat_model = OpenaiChatModel("gpt-4o")
@@ -251,7 +250,6 @@ async def test_openai_chat_model_acomplete_usage():
     assert message.usage.output_tokens > 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_openai_chat_model_acomplete_usage_structured_output():
     chat_model = OpenaiChatModel("gpt-4o")
@@ -263,7 +261,6 @@ async def test_openai_chat_model_acomplete_usage_structured_output():
     assert message.usage.output_tokens > 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_openai_chat_model_acomplete_raises_tool_schema_parse_error():
     def raise_error(v):

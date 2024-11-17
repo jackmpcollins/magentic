@@ -104,7 +104,6 @@ def litellm_async_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
     litellm.callbacks = original_success_callback  # type: ignore[assignment]
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_openai
 async def test_litellm_chat_model_metadata_async(litellm_async_success_callback_calls):
     """Test that provided metadata is passed to the litellm success callback."""
@@ -119,7 +118,6 @@ async def test_litellm_chat_model_metadata_async(litellm_async_success_callback_
     assert callback_call["kwargs"]["litellm_params"]["metadata"] == {"foo": "bar"}
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_openai
 async def test_litellm_chat_model_custom_llm_provider_async(
     litellm_async_success_callback_calls,
@@ -136,7 +134,6 @@ async def test_litellm_chat_model_custom_llm_provider_async(
     assert callback_call["kwargs"]["litellm_params"]["custom_llm_provider"] == "openai"
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_openai
 async def test_litellm_chat_model_acomplete_raises_tool_schema_parse_error():
     def raise_error(v):
@@ -265,7 +262,6 @@ def test_litellm_chat_model_complete_ollama(prompt, output_types, expected_outpu
         ("List three fruits", [list[str]], list),
     ],
 )
-@pytest.mark.asyncio
 @pytest.mark.litellm_openai
 async def test_litellm_chat_model_acomplete_openai(
     prompt, output_types, expected_output_type
@@ -291,7 +287,6 @@ async def test_litellm_chat_model_acomplete_openai(
         ),
     ],
 )
-@pytest.mark.asyncio
 @pytest.mark.litellm_anthropic
 async def test_litellm_chat_model_acomplete_anthropic(
     prompt, output_types, expected_output_type
@@ -303,7 +298,6 @@ async def test_litellm_chat_model_acomplete_anthropic(
     assert isinstance(message.content, expected_output_type)
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_anthropic
 async def test_litellm_chat_model_acomplete_anthropic_function_call():
     def plus(a: int, b: int) -> int:
@@ -319,7 +313,6 @@ async def test_litellm_chat_model_acomplete_anthropic_function_call():
     assert isinstance(message.content, FunctionCall)
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_anthropic
 async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_call():
     def plus(a: int, b: int) -> int:
@@ -372,7 +365,6 @@ async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_ca
         ),
     ],
 )
-@pytest.mark.asyncio
 @pytest.mark.litellm_ollama
 async def test_litellm_chat_model_acomplete_ollama(
     prompt, output_types, expected_output_type

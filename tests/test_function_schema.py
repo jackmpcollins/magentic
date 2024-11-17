@@ -161,7 +161,6 @@ def test_any_function_schema_parse_args(type_, args_str, expected_args):
 @pytest.mark.parametrize(
     ("type_", "args_str", "expected_args"), any_function_schema_args_test_cases
 )
-@pytest.mark.asyncio
 async def test_any_function_schema_aparse_args(type_, args_str, expected_args):
     parsed_args = await AnyFunctionSchema(type_).aparse_args(async_iter(args_str))
     assert parsed_args == expected_args
@@ -348,7 +347,6 @@ async_iterable_function_schema_args_test_cases = [
     ("type_", "args_str", "expected_args"),
     async_iterable_function_schema_args_test_cases,
 )
-@pytest.mark.asyncio
 async def test_async_iterable_function_schema_aparse_args(
     type_, args_str, expected_args
 ):
@@ -363,7 +361,6 @@ async def test_async_iterable_function_schema_aparse_args(
     ("type_", "expected_args_str", "args"),
     async_iterable_function_schema_args_test_cases,
 )
-@pytest.mark.asyncio
 async def test_async_iterable_function_schema_aserialize_args(
     type_, expected_args_str, args
 ):

@@ -50,7 +50,6 @@ def test_prompt_chain_max_calls():
     assert mock_function.call_count == 1
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_async_prompt_chain():
     async def get_current_weather(location, unit="fahrenheit"):
@@ -72,7 +71,6 @@ async def test_async_prompt_chain():
     assert isinstance(output, str)
 
 
-@pytest.mark.asyncio
 async def test_async_prompt_chain_max_calls():
     mock_function = Mock()
     mock_function.__name__ = "mock_function_name"
