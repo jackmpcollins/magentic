@@ -43,6 +43,7 @@ def pytest_collection_modifyitems(
     llm_markers = [
         "anthropic",
         "litellm_anthropic",
+        "litellm_ollama",
         "litellm_openai",
         "mistral",
         "openai",

@@ -219,15 +219,36 @@ def test_litellm_chat_model_complete_anthropic_parallel_function_call():
     ("prompt", "output_types", "expected_output_type"),
     [
         ("Say hello!", [str], str),
-        ("Return True.", [bool], bool),
-        ("Return [1, 2, 3, 4, 5]", [list[int]], list),
-        ('Return ["apple", "banana"]', [list[str]], list),
+        pytest.param(
+            "Return True.",
+            [bool],
+            bool,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
+        pytest.param(
+            "Return [1, 2, 3, 4, 5]",
+            [list[int]],
+            list,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
+        pytest.param(
+            'Return ["apple", "banana"]',
+            [list[str]],
+            list,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
     ],
 )
 @pytest.mark.litellm_ollama
 def test_litellm_chat_model_complete_ollama(prompt, output_types, expected_output_type):
     chat_model = LitellmChatModel(
-        "ollama_chat/llama3", api_base="http://localhost:11434"
+        "ollama_chat/llama3.1", api_base="http://localhost:11434"
     )
     message = chat_model.complete(
         messages=[UserMessage(prompt)], output_types=output_types
@@ -325,9 +346,30 @@ async def test_litellm_chat_model_acomplete_anthropic_async_parallel_function_ca
     ("prompt", "output_types", "expected_output_type"),
     [
         ("Say hello!", [str], str),
-        ("Return True.", [bool], bool),
-        ("Return [1, 2, 3, 4, 5]", [list[int]], list),
-        ('Return ["apple", "banana"]', [list[str]], list),
+        pytest.param(
+            "Return True.",
+            [bool],
+            bool,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
+        pytest.param(
+            "Return [1, 2, 3, 4, 5]",
+            [list[int]],
+            list,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
+        pytest.param(
+            'Return ["apple", "banana"]',
+            [list[str]],
+            list,
+            marks=pytest.mark.skip(
+                reason="Skip until Ollama supports streamed tool calls"
+            ),
+        ),
     ],
 )
 @pytest.mark.asyncio
@@ -336,7 +378,7 @@ async def test_litellm_chat_model_acomplete_ollama(
     prompt, output_types, expected_output_type
 ):
     chat_model = LitellmChatModel(
-        "ollama_chat/llama3", api_base="http://localhost:11434"
+        "ollama_chat/llama3.1", api_base="http://localhost:11434"
     )
     message = await chat_model.acomplete(
         messages=[UserMessage(prompt)], output_types=output_types
