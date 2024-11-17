@@ -34,6 +34,7 @@ dev = [
     "python-dotenv>=1.0.1",
     "ruff>=0.3",
     "pytest-recording>=0.13.2",
+    "coverage>=7.6.4",
 ]
 docs = [
     "blacken-docs>=1.16.0",
