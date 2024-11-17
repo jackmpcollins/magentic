@@ -7,6 +7,7 @@ on:
       - main
   workflow_dispatch:
     inputs:
+      # Options to test specific APIs ignoring the VCR cassettes
       anthropic:
         description: "Test using Anthropic API"
         type: boolean
@@ -48,22 +49,22 @@ jobs:
       - if: inputs.anthropic
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: uv run pytest -vv tests/ -m 'anthropic'
+        run: uv run pytest -vv tests/ -m 'anthropic' --record-mode=rewrite
       - if: inputs.litellm_anthropic
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: uv run pytest -vv tests/ -m 'litellm_anthropic'
+        run: uv run pytest -vv tests/ -m 'litellm_anthropic' --record-mode=rewrite
       - if: inputs.litellm_openai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
-        run: uv run pytest -vv tests/ -m 'litellm_openai'
+        run: uv run pytest -vv tests/ -m 'litellm_openai' --record-mode=rewrite
       - if: inputs.mistral
         env:
           MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
-        run: uv run pytest -vv tests/ -m 'mistral'
+        run: uv run pytest -vv tests/ -m 'mistral' --record-mode=rewrite
       - if: inputs.openai
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           OPENAI_ORG_ID: ${{ secrets.OPENAI_ORG_ID }}
-        run: uv run pytest -vv tests/ -m 'openai'
+        run: uv run pytest -vv tests/ -m 'openai' --record-mode=rewrite
