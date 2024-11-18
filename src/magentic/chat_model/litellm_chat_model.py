@@ -1,6 +1,7 @@
 from collections.abc import Callable, Iterable, Sequence
+from functools import wraps
 from itertools import chain
-from typing import Any, TypeVar, cast, overload
+from typing import Any, ParamSpec, TypeVar, cast, overload
 
 from openai.types.chat import ChatCompletionToolChoiceOptionParam
 
@@ -25,7 +26,6 @@ from magentic.chat_model.openai_chat_model import (
     FunctionToolSchema,
     _aparse_streamed_tool_calls,
     _parse_streamed_tool_calls,
-    discard_none_arguments,
     message_to_openai_message,
 )
 from magentic.function_call import (
@@ -48,7 +48,21 @@ except ImportError as error:
     raise ImportError(msg) from error
 
 
+P = ParamSpec("P")
 R = TypeVar("R")
+
+
+def discard_none_arguments(func: Callable[P, R]) -> Callable[P, R]:
+    """Decorator to discard function arguments with value `None`"""
+
+    @wraps(func)
+    def wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
+        non_none_kwargs = {
+            key: value for key, value in kwargs.items() if value is not None
+        }
+        return func(*args, **non_none_kwargs)  # type: ignore[arg-type]
+
+    return wrapped
 
 
 class LitellmChatModel(ChatModel):
