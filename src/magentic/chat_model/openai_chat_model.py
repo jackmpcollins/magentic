@@ -1,28 +1,31 @@
 import base64
 from collections.abc import (
-    AsyncIterable,
     AsyncIterator,
+    Awaitable,
     Callable,
     Iterable,
     Iterator,
     Sequence,
 )
 from enum import Enum
-from functools import singledispatch, wraps
-from itertools import chain, groupby
-from typing import Any, Generic, Literal, ParamSpec, TypeVar, cast, overload
+from functools import singledispatch
+from itertools import chain
+from typing import Any, Generic, Literal, TypeVar, cast, overload
 
 import filetype
 import openai
+from openai.lib.streaming.chat import (
+    AsyncChatCompletionStream,
+    AsyncChatCompletionStreamManager,
+    ChatCompletionStream,
+)
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionMessageParam,
-    ChatCompletionMessageToolCallParam,
     ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
 )
-from openai.types.chat.chat_completion_chunk import ChoiceDeltaToolCall
 from pydantic import ValidationError
 
 from magentic.chat_model.base import (
@@ -57,13 +60,8 @@ from magentic.function_call import (
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
-    aapply,
     achain,
-    agroupby,
-    apeek,
-    apply,
     async_iter,
-    peek,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 from magentic.vision import UserImageMessage
@@ -238,233 +236,160 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
     def to_dict(self) -> ChatCompletionToolParam:
         return {"type": "function", "function": self._function_schema.dict()}
 
-    def matches(self, tool_call: ChoiceDeltaToolCall) -> bool:
-        return bool(
-            # TODO: Add back tool_call.type == "function" when LiteLLM Mistral fixed
-            # https://github.com/BerriAI/litellm/issues/2645
-            tool_call.function and self._function_schema.name == tool_call.function.name
-        )
 
+class OpenaiStream:
+    """Converts a stream of openai events into a stream of magentic objects."""
 
-# TODO: Generalize this to BaseToolSchema when that is created
-BeseToolSchemaT = TypeVar("BeseToolSchemaT", bound=BaseFunctionToolSchema[Any])
-
-
-def select_tool_schema(
-    tool_call: ChoiceDeltaToolCall, tools_schemas: list[BeseToolSchemaT]
-) -> BeseToolSchemaT:
-    """Select the tool schema based on the response chunk."""
-    for tool_schema in tools_schemas:
-        if tool_schema.matches(tool_call):
-            return tool_schema
-
-    msg = f"Unknown tool call: {tool_call.model_dump_json()}"
-    raise ValueError(msg)  # TODO: Create `UnknownToolCallError` for this
-
-
-class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
-    def parse_tool_call(self, chunks: Iterable[ChoiceDeltaToolCall]) -> T:
-        return self._function_schema.parse_args(
-            chunk.function.arguments
-            for chunk in chunks
-            if chunk.function and chunk.function.arguments is not None
-        )
-
-
-class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
-    async def aparse_tool_call(self, chunks: AsyncIterable[ChoiceDeltaToolCall]) -> T:
-        return await self._function_schema.aparse_args(
-            chunk.function.arguments
-            async for chunk in chunks
-            if chunk.function and chunk.function.arguments is not None
-        )
-
-
-def _get_tool_call_id_for_chunk(tool_call: ChoiceDeltaToolCall) -> Any:
-    """Returns an id that is consistent for chunks from the same tool_call."""
-    # openai keeps index consistent for chunks from the same tool_call, but id is null
-    # mistral has null index, but keeps id consistent
-    return tool_call.index if tool_call.index is not None else tool_call.id
-
-
-def _iter_streamed_tool_calls(
-    response: Iterable[ChatCompletionChunk],
-) -> Iterator[Iterator[ChoiceDeltaToolCall]]:
-    """Group tool_call chunks into separate iterators."""
-    all_tool_call_chunks = (
-        tool_call
-        for chunk in response
-        if chunk.choices and chunk.choices[0].delta.tool_calls
-        for tool_call in chunk.choices[0].delta.tool_calls
-    )
-    for _, tool_call_chunks in groupby(
-        all_tool_call_chunks, _get_tool_call_id_for_chunk
+    def __init__(
+        self, stream: ChatCompletionStream, function_schemas: list[FunctionSchema[Any]]
     ):
-        yield tool_call_chunks
+        self._stream = stream
+        self._function_schemas = function_schemas
+        self._iterator = self.__stream__()
+        self.usage: Usage | None = None
+
+    def __next__(self) -> StreamedStr | FunctionCall:
+        return self._iterator.__next__()
+
+    def __iter__(self) -> Iterator[StreamedStr | FunctionCall]:
+        yield from self._iterator
+
+    def __stream__(self) -> Iterator[StreamedStr | FunctionCall]:
+        transition = [next(self._stream)]
+
+        def _streamed_str(stream: Iterator) -> StreamedStr:
+            def _group(stream: Iterator) -> Iterator:
+                for event in stream:
+                    if event.type == "content.delta":
+                        yield event.delta
+                    elif event.type == "content.done":
+                        transition.append(event)
+                        return
+
+            return StreamedStr(_group(stream))
+
+        def _function_call(transition_item, stream: Iterator) -> FunctionCall:
+            def _group(stream: Iterator) -> Iterator:
+                for event in stream:
+                    if event.type == "tool_calls.function.arguments.delta":
+                        yield event.arguments_delta
+                    elif event.type == "tool_calls.function.arguments.done":
+                        transition.append(event)
+                        return
+
+            # TODO: Tidy matching function schema. Include Mistral fix
+            for function_schema in self._function_schemas:
+                if function_schema.name == transition_item.name:
+                    break
+            # TODO: Catch/raise unknown tool call error here
+            try:  # TODO: Tidy catching of error here to DRY with async
+                return function_schema.parse_args(_group(stream))
+            except ValidationError as e:
+                raw_message = self._stream.current_completion_snapshot.choices[
+                    0
+                ].message.model_dump()
+                raise ToolSchemaParseError(
+                    output_message=_RawMessage(raw_message),
+                    tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index,unused-ignore]
+                    validation_error=e,
+                ) from e
+
+        while transition:
+            transition_item = transition.pop()
+            if transition_item.type == "content.delta":
+                yield _streamed_str(self._stream)
+            elif transition_item.type == "tool_calls.function.arguments.delta":
+                yield _function_call(transition_item, self._stream)
+            elif transition_item.type == "chunk" and transition_item.chunk.usage:
+                self.usage = Usage(
+                    input_tokens=transition_item.chunk.usage.prompt_tokens,
+                    output_tokens=transition_item.chunk.usage.completion_tokens,
+                )
+            elif new_transition_item := next(self._stream, None):
+                transition.append(new_transition_item)
+
+    def close(self):
+        self._stream.close()
 
 
-async def _aiter_streamed_tool_calls(
-    response: AsyncIterable[ChatCompletionChunk],
-) -> AsyncIterator[AsyncIterator[ChoiceDeltaToolCall]]:
-    """Async version of `_iter_streamed_tool_calls`."""
-    all_tool_call_chunks = (
-        tool_call
-        async for chunk in response
-        if chunk.choices and chunk.choices[0].delta.tool_calls
-        for tool_call in chunk.choices[0].delta.tool_calls
-    )
-    async for _, tool_call_chunks in agroupby(
-        all_tool_call_chunks, _get_tool_call_id_for_chunk
+class OpenaiAsyncStream:
+    """Converts an async stream of openai events into an async stream of magentic objects."""
+
+    def __init__(
+        self,
+        stream: AsyncChatCompletionStream,
+        function_schemas: list[AsyncFunctionSchema[Any]],
     ):
-        yield tool_call_chunks
+        self._stream = stream
+        self._function_schemas = function_schemas
+        self._aiterator = self.__stream__()
+        self.usage: Usage | None = None
 
+    async def __anext__(self) -> AsyncStreamedStr | FunctionCall:
+        return await self._aiterator.__anext__()
 
-def _parse_streamed_tool_calls(
-    response: Iterable[ChatCompletionChunk],
-    tool_schemas: list[FunctionToolSchema[T]],
-) -> Iterator[T]:
-    cached_response: list[ChatCompletionChunk] = []
-    response = apply(cached_response.append, response)
-    try:
-        for tool_call_chunks in _iter_streamed_tool_calls(response):
-            first_chunk, tool_call_chunks = peek(tool_call_chunks)
-            tool_schema = select_tool_schema(first_chunk, tool_schemas)
-            tool_call = tool_schema.parse_tool_call(tool_call_chunks)
-            yield tool_call
-    # TODO: Catch/raise unknown tool call error here
-    except ValidationError as e:
-        raw_message = _join_streamed_tool_calls_to_message(cached_response)
-        raise ToolSchemaParseError(
-            output_message=raw_message,
-            tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index,unused-ignore]
-            validation_error=e,
-        ) from e
+    async def __aiter__(self) -> AsyncIterator[AsyncStreamedStr | FunctionCall]:
+        async for item in self._aiterator:
+            yield item
 
+    async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | FunctionCall]:
+        transition = [await anext(self._stream)]
 
-async def _aparse_streamed_tool_calls(
-    response: AsyncIterable[ChatCompletionChunk],
-    tool_schemas: list[AsyncFunctionToolSchema[T]],
-) -> AsyncIterator[T]:
-    cached_response: list[ChatCompletionChunk] = []
-    response = aapply(cached_response.append, response)
-    try:
-        async for tool_call_chunks in _aiter_streamed_tool_calls(response):
-            first_chunk, tool_call_chunks = await apeek(tool_call_chunks)
-            tool_schema = select_tool_schema(first_chunk, tool_schemas)
-            tool_call = await tool_schema.aparse_tool_call(tool_call_chunks)
-            yield tool_call
-    # TODO: Catch/raise unknown tool call error here
-    except ValidationError as e:
-        raw_message = _join_streamed_tool_calls_to_message(cached_response)
-        raise ToolSchemaParseError(
-            output_message=raw_message,
-            tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index,unused-ignore]
-            validation_error=e,
-        ) from e
+        def _streamed_str(stream: AsyncIterator) -> AsyncStreamedStr:
+            async def _group(stream: AsyncIterator) -> AsyncIterator:
+                async for event in stream:
+                    if event.type == "content.delta":
+                        yield event.delta
+                    elif event.type == "content.done":
+                        transition.append(event)
+                        return
 
+            return AsyncStreamedStr(_group(stream))
 
-def _join_streamed_tool_call(
-    tool_call_deltas: Iterable[ChoiceDeltaToolCall],
-) -> ChatCompletionMessageToolCallParam:
-    """Join chunks from a single streamed tool call into an OpenAI tool call dict."""
-    tool_id: str | None = None
-    tool_type: Literal["function"] = "function"
-    function_name: list[str] = []
-    function_arguments: list[str] = []
-    for tool_call_delta in tool_call_deltas:
-        if tool_call_delta.id:
-            tool_id = tool_call_delta.id
-        if tool_call_delta.type:
-            tool_type = tool_call_delta.type
-        if tool_call_delta.function:
-            if tool_call_delta.function.name:
-                function_name.append(tool_call_delta.function.name)
-            if tool_call_delta.function.arguments:
-                function_arguments.append(tool_call_delta.function.arguments)
-    return {
-        "id": tool_id or _create_unique_id(),
-        "type": tool_type,
-        "function": {
-            "name": "".join(function_name),
-            "arguments": "".join(function_arguments),
-        },
-    }
+        async def _function_call(
+            transition_item, stream: AsyncIterator
+        ) -> FunctionCall:
+            async def _group(stream: AsyncIterator) -> AsyncIterator:
+                async for event in stream:
+                    if event.type == "tool_calls.function.arguments.delta":
+                        yield event.arguments_delta
+                    elif event.type == "tool_calls.function.arguments.done":
+                        transition.append(event)
+                        return
 
+            # TODO: Tidy matching function schema. Include Mistral fix
+            for function_schema in self._function_schemas:
+                if function_schema.name == transition_item.name:
+                    break
+            # TODO: Catch/raise unknown tool call error here
+            try:  # TODO: Tidy catching of error here to DRY with async
+                return await function_schema.aparse_args(_group(stream))
+            except ValidationError as e:
+                raw_message = self._stream.current_completion_snapshot.choices[
+                    0
+                ].message.model_dump()
+                raise ToolSchemaParseError(
+                    output_message=_RawMessage(raw_message),
+                    tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index,unused-ignore]
+                    validation_error=e,
+                ) from e
 
-def _join_streamed_tool_calls_to_message(
-    response: Iterable[ChatCompletionChunk],
-    # TODO: Type as ChatCompletionAssistantMessageParam. Issue: https://github.com/pydantic/pydantic/issues/10105
-) -> _RawMessage[Any]:
-    """Join streamed tool calls into an OpenAI chat completion message."""
-    return _RawMessage(
-        {
-            "role": OpenaiMessageRole.ASSISTANT.value,
-            "content": None,
-            "tool_calls": [
-                _join_streamed_tool_call(tool_call_chunks)
-                for tool_call_chunks in _iter_streamed_tool_calls(response)
-            ],
-        }
-    )
-
-
-def _create_usage_ref(
-    response: Iterable[ChatCompletionChunk],
-) -> tuple[list[Usage], Iterator[ChatCompletionChunk]]:
-    """Returns a pointer to a Usage object that is created at the end of the response."""
-    usage_ref: list[Usage] = []
-
-    def generator(
-        response: Iterable[ChatCompletionChunk],
-    ) -> Iterator[ChatCompletionChunk]:
-        for chunk in response:
-            if chunk.usage:
-                usage = Usage(
-                    input_tokens=chunk.usage.prompt_tokens,
-                    output_tokens=chunk.usage.completion_tokens,
+        while transition:
+            transition_item = transition.pop()
+            if transition_item.type == "content.delta":
+                yield _streamed_str(self._stream)
+            elif transition_item.type == "tool_calls.function.arguments.delta":
+                yield await _function_call(transition_item, self._stream)
+            elif transition_item.type == "chunk" and transition_item.chunk.usage:
+                self.usage = Usage(
+                    input_tokens=transition_item.chunk.usage.prompt_tokens,
+                    output_tokens=transition_item.chunk.usage.completion_tokens,
                 )
-                usage_ref.append(usage)
-            yield chunk
+            elif new_transition_item := await anext(self._stream, None):
+                transition.append(new_transition_item)
 
-    return usage_ref, generator(response)
-
-
-def _create_usage_ref_async(
-    response: AsyncIterable[ChatCompletionChunk],
-) -> tuple[list[Usage], AsyncIterator[ChatCompletionChunk]]:
-    """Async version of `_create_usage_ref`."""
-    usage_ref: list[Usage] = []
-
-    async def agenerator(
-        response: AsyncIterable[ChatCompletionChunk],
-    ) -> AsyncIterator[ChatCompletionChunk]:
-        async for chunk in response:
-            if chunk.usage:
-                usage = Usage(
-                    input_tokens=chunk.usage.prompt_tokens,
-                    output_tokens=chunk.usage.completion_tokens,
-                )
-                usage_ref.append(usage)
-            yield chunk
-
-    return usage_ref, agenerator(response)
-
-
-P = ParamSpec("P")
-R = TypeVar("R")
-
-
-def discard_none_arguments(func: Callable[P, R]) -> Callable[P, R]:
-    """Decorator to discard function arguments with value `None`"""
-
-    @wraps(func)
-    def wrapped(*args: P.args, **kwargs: P.kwargs) -> R:
-        non_none_kwargs = {
-            key: value for key, value in kwargs.items() if value is not None
-        }
-        return func(*args, **non_none_kwargs)  # type: ignore[arg-type]
-
-    return wrapped
+    async def close(self):
+        await self._stream.close()
 
 
 STR_OR_FUNCTIONCALL_TYPE = (
@@ -475,6 +400,8 @@ STR_OR_FUNCTIONCALL_TYPE = (
     ParallelFunctionCall,
     AsyncParallelFunctionCall,
 )
+
+R = TypeVar("R")
 
 
 class OpenaiChatModel(ChatModel):
@@ -612,15 +539,13 @@ class OpenaiChatModel(ChatModel):
             for type_ in output_types
             if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
-        tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
+        tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = is_any_origin_subclass(output_types, str)
         streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
-        response: Iterator[ChatCompletionChunk] = discard_none_arguments(
-            self._client.chat.completions.create
-        )(
+        _stream = self._client.beta.chat.completions.stream(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
                 [message_to_openai_message(m) for m in messages]
@@ -628,7 +553,6 @@ class OpenaiChatModel(ChatModel):
             max_tokens=self.max_tokens,
             seed=self.seed,
             stop=stop,
-            stream=True,
             stream_options=self._get_stream_options(),
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
@@ -638,45 +562,27 @@ class OpenaiChatModel(ChatModel):
             parallel_tool_calls=self._get_parallel_tool_calls(
                 tools_specified=bool(tool_schemas), output_types=output_types
             ),
-        )
-        usage_ref, response = _create_usage_ref(response)
+        ).__enter__()  # Get stream directly, without context manager
+        stream = OpenaiStream(_stream, function_schemas=function_schemas)
 
-        first_chunk = next(response)
-        # Azure OpenAI sends a chunk with empty choices first
-        if len(first_chunk.choices) == 0:
-            first_chunk = next(response)
-        if (
-            # Mistral tool call first chunk has content ""
-            not first_chunk.choices[0].delta.content
-            and not first_chunk.choices[0].delta.tool_calls
-        ):
-            first_chunk = next(response)
-        response = chain([first_chunk], response)
-
-        if first_chunk.choices[0].delta.content:
-            streamed_str = StreamedStr(
-                chunk.choices[0].delta.content
-                for chunk in response
-                if chunk.choices and chunk.choices[0].delta.content is not None
-            )
+        # TODO: Function to validate LLM output against prompt-function return type
+        first_response_obj = next(stream)
+        if isinstance(first_response_obj, StreamedStr):
             str_content = validate_str_content(
-                streamed_str,
+                first_response_obj,
                 allow_string_output=allow_string_output,
                 streamed=streamed_str_in_output_types,
             )
-            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
+            return AssistantMessage(str_content)  # type: ignore[return-value]
 
-        if first_chunk.choices[0].delta.tool_calls:
-            tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
+        if isinstance(first_response_obj, FunctionCall):
             if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                content = ParallelFunctionCall(tool_calls)
-                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
+                content = ParallelFunctionCall(chain([first_response_obj], stream))
+                return AssistantMessage(content)  # type: ignore[return-value]
             # Take only the first tool_call, silently ignore extra chunks
-            content = next(tool_calls)
-            return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
+            return AssistantMessage(first_response_obj)  # type: ignore[return-value]
 
-        msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
-        raise ValueError(msg)
+        return AssistantMessage(first_response_obj)
 
     @overload
     async def acomplete(
@@ -715,7 +621,7 @@ class OpenaiChatModel(ChatModel):
             for type_ in output_types
             if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
-        tool_schemas = [AsyncFunctionToolSchema(schema) for schema in function_schemas]
+        tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = is_any_origin_subclass(output_types, str)
         async_streamed_str_in_output_types = is_any_origin_subclass(
@@ -723,62 +629,52 @@ class OpenaiChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        response: AsyncIterator[ChatCompletionChunk] = await discard_none_arguments(
-            self._async_client.chat.completions.create
-        )(
-            model=self.model,
-            messages=_add_missing_tool_calls_responses(
-                [message_to_openai_message(m) for m in messages]
-            ),
-            max_tokens=self.max_tokens,
-            seed=self.seed,
-            stop=stop,
-            stream=True,
-            stream_options=self._get_stream_options(),
-            temperature=self.temperature,
-            tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
-            tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, allow_string_output=allow_string_output
-            ),
-            parallel_tool_calls=self._get_parallel_tool_calls(
-                tools_specified=bool(tool_schemas), output_types=output_types
-            ),
-        )
-        usage_ref, response = _create_usage_ref_async(response)
-
-        first_chunk = await anext(response)
-        # Azure OpenAI sends a chunk with empty choices first
-        if len(first_chunk.choices) == 0:
-            first_chunk = await anext(response)
-        if (
-            # Mistral tool call first chunk has content ""
-            not first_chunk.choices[0].delta.content
-            and not first_chunk.choices[0].delta.tool_calls
-        ):
-            first_chunk = await anext(response)
-        response = achain(async_iter([first_chunk]), response)
-
-        if first_chunk.choices[0].delta.content:
-            async_streamed_str = AsyncStreamedStr(
-                chunk.choices[0].delta.content
-                async for chunk in response
-                if chunk.choices and chunk.choices[0].delta.content is not None
+        response: Awaitable[AsyncIterator[ChatCompletionChunk]] = (
+            self._async_client.chat.completions.create(
+                model=self.model,
+                messages=_add_missing_tool_calls_responses(
+                    [message_to_openai_message(m) for m in messages]
+                ),
+                max_tokens=self.max_tokens,
+                seed=self.seed,
+                stop=stop,
+                stream=True,
+                stream_options=self._get_stream_options(),
+                temperature=self.temperature,
+                tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
+                tool_choice=self._get_tool_choice(
+                    tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                ),
+                parallel_tool_calls=self._get_parallel_tool_calls(
+                    tools_specified=bool(tool_schemas), output_types=output_types
+                ),
             )
+        )
+        _stream = await AsyncChatCompletionStreamManager(
+            response,
+            response_format=openai.NOT_GIVEN,
+            input_tools=[schema.to_dict() for schema in tool_schemas]
+            or openai.NOT_GIVEN,
+        ).__aenter__()  # Get stream directly, without context manager
+        stream = OpenaiAsyncStream(_stream, function_schemas=function_schemas)
+
+        # TODO: Function to validate LLM output against prompt-function return type
+        first_response_obj = await anext(stream)
+        if isinstance(first_response_obj, AsyncStreamedStr):
             str_content = await avalidate_str_content(
-                async_streamed_str,
+                first_response_obj,
                 allow_string_output=allow_string_output,
                 streamed=async_streamed_str_in_output_types,
             )
-            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
+            return AssistantMessage(str_content)  # type: ignore[return-value]
 
-        if first_chunk.choices[0].delta.tool_calls:
-            tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
+        if isinstance(first_response_obj, FunctionCall):
             if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                content = AsyncParallelFunctionCall(tool_calls)
-                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
+                content = AsyncParallelFunctionCall(
+                    achain(async_iter([first_response_obj]), stream)
+                )
+                return AssistantMessage(content)  # type: ignore[return-value]
             # Take only the first tool_call, silently ignore extra chunks
-            content = await anext(tool_calls)
-            return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
+            return AssistantMessage(first_response_obj)  # type: ignore[return-value]
 
-        msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
-        raise ValueError(msg)
+        return AssistantMessage(first_response_obj)
