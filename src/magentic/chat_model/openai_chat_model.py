@@ -1,4 +1,5 @@
 import base64
+from abc import ABC, abstractmethod
 from collections.abc import (
     AsyncIterator,
     Awaitable,
@@ -10,7 +11,7 @@ from collections.abc import (
 from enum import Enum
 from functools import singledispatch
 from itertools import chain
-from typing import Any, Generic, Literal, TypeVar, cast, overload
+from typing import Any, Generic, Literal, TypeGuard, TypeVar, cast, overload
 
 import filetype
 import openai
@@ -18,6 +19,12 @@ from openai.lib.streaming.chat import (
     AsyncChatCompletionStream,
     AsyncChatCompletionStreamManager,
     ChatCompletionStream,
+    ChatCompletionStreamEvent,
+    ChunkEvent,
+    ContentDeltaEvent,
+    ContentDoneEvent,
+    FunctionToolCallArgumentsDeltaEvent,
+    FunctionToolCallArgumentsDoneEvent,
 )
 from openai.types.chat import (
     ChatCompletionChunk,
@@ -26,11 +33,9 @@ from openai.types.chat import (
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
 )
-from pydantic import ValidationError
 
 from magentic.chat_model.base import (
     ChatModel,
-    ToolSchemaParseError,
     avalidate_str_content,
     validate_str_content,
 )
@@ -237,6 +242,97 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
         return {"type": "function", "function": self._function_schema.dict()}
 
 
+ItemT = TypeVar("ItemT")
+OutputT = TypeVar("OutputT")
+
+
+class StreamParser(ABC, Generic[ItemT, OutputT]):
+    """Filters and transforms items from an iterator until the end condition is met."""
+
+    def is_member(self, item: ItemT) -> bool:
+        return True
+
+    @abstractmethod
+    def is_end(self, item: ItemT) -> bool: ...
+
+    @abstractmethod
+    def transform(self, item: ItemT) -> OutputT: ...
+
+    def iter(
+        self, iterator: Iterator[ItemT], transition: list[ItemT]
+    ) -> Iterator[OutputT]:
+        for item in iterator:
+            if self.is_member(item):
+                yield self.transform(item)
+            if self.is_end(item):
+                assert not transition  # noqa: S101
+                transition.append(item)
+                return
+
+    async def aiter(
+        self, aiterator: AsyncIterator[ItemT], transition: list[ItemT]
+    ) -> AsyncIterator[OutputT]:
+        async for item in aiterator:
+            if self.is_member(item):
+                yield self.transform(item)
+            if self.is_end(item):
+                assert not transition  # noqa: S101
+                transition.append(item)
+                return
+
+
+class OpenaiContentStreamParser(StreamParser[ChatCompletionStreamEvent, str]):
+    """Filters and transforms OpenAI content events from a stream."""
+
+    def is_member(
+        self, item: ChatCompletionStreamEvent
+    ) -> TypeGuard[ContentDeltaEvent]:
+        return item.type == "content.delta"
+
+    def is_end(self, item: ChatCompletionStreamEvent) -> TypeGuard[ContentDoneEvent]:
+        return item.type == "content.done"
+
+    def transform(self, item: ChatCompletionStreamEvent) -> str:
+        assert self.is_member(item)  # noqa: S101
+        return item.delta
+
+
+class OpenaiToolStreamParser(StreamParser[ChatCompletionStreamEvent, str]):
+    """Filters and transforms OpenAI tool events from a stream."""
+
+    def is_member(
+        self, item: ChatCompletionStreamEvent
+    ) -> TypeGuard[FunctionToolCallArgumentsDeltaEvent]:
+        return item.type == "tool_calls.function.arguments.delta"
+
+    def is_end(
+        self, item: ChatCompletionStreamEvent
+    ) -> TypeGuard[FunctionToolCallArgumentsDoneEvent]:
+        return item.type == "tool_calls.function.arguments.done"
+
+    def transform(self, item: ChatCompletionStreamEvent) -> str:
+        assert self.is_member(item)  # noqa: S101
+        return item.arguments_delta
+
+
+class OpenaiUsageStreamParser(StreamParser[ChatCompletionStreamEvent, Usage]):
+    """Filters and transforms OpenAI usage events from a stream."""
+
+    def is_member(self, item: ChatCompletionStreamEvent) -> TypeGuard[ChunkEvent]:
+        return item.type == "chunk" and bool(item.chunk.usage)
+
+    def is_end(self, item: ChatCompletionStreamEvent) -> Literal[True]:
+        return True  # Single event so immediately end
+
+    def transform(self, item: ChatCompletionStreamEvent) -> Usage:
+        assert self.is_member(item)  # noqa: S101
+        assert item.chunk.usage  # noqa: S101
+        return Usage(
+            input_tokens=item.chunk.usage.prompt_tokens,
+            output_tokens=item.chunk.usage.completion_tokens,
+        )
+
+
 class OpenaiStream:
     """Converts a stream of openai events into a stream of magentic objects."""
 
@@ -256,55 +352,33 @@ class OpenaiStream:
 
     def __stream__(self) -> Iterator[StreamedStr | FunctionCall]:
         transition = [next(self._stream)]
-
-        def _streamed_str(stream: Iterator) -> StreamedStr:
-            def _group(stream: Iterator) -> Iterator:
-                for event in stream:
-                    if event.type == "content.delta":
-                        yield event.delta
-                    elif event.type == "content.done":
-                        transition.append(event)
-                        return
-
-            return StreamedStr(_group(stream))
-
-        def _function_call(transition_item, stream: Iterator) -> FunctionCall:
-            def _group(stream: Iterator) -> Iterator:
-                for event in stream:
-                    if event.type == "tool_calls.function.arguments.delta":
-                        yield event.arguments_delta
-                    elif event.type == "tool_calls.function.arguments.done":
-                        transition.append(event)
-                        return
-
-            # TODO: Tidy matching function schema. Include Mistral fix
-            for function_schema in self._function_schemas:
-                if function_schema.name == transition_item.name:
-                    break
-            # TODO: Catch/raise unknown tool call error here
-            try:  # TODO: Tidy catching of error here to DRY with async
-                return function_schema.parse_args(_group(stream))
-            except ValidationError as e:
-                raw_message = self._stream.current_completion_snapshot.choices[
-                    0
-                ].message.model_dump()
-                raise ToolSchemaParseError(
-                    output_message=_RawMessage(raw_message),
-                    tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index,unused-ignore]
-                    validation_error=e,
-                ) from e
+        content_parser = OpenaiContentStreamParser()
+        tool_parser = OpenaiToolStreamParser()
+        usage_parser = OpenaiUsageStreamParser()
 
         while transition:
             transition_item = transition.pop()
-            if transition_item.type == "content.delta":
-                yield _streamed_str(self._stream)
-            elif transition_item.type == "tool_calls.function.arguments.delta":
-                yield _function_call(transition_item, self._stream)
-            elif transition_item.type == "chunk" and transition_item.chunk.usage:
-                self.usage = Usage(
-                    input_tokens=transition_item.chunk.usage.prompt_tokens,
-                    output_tokens=transition_item.chunk.usage.completion_tokens,
+            if content_parser.is_member(transition_item):
+                yield StreamedStr(content_parser.iter(self._stream, transition))
+            elif tool_parser.is_member(transition_item):
+                # TODO: Tidy matching function schema. Include Mistral fix
+                # tool_parser.select_function_schema() ?
+                function_schema = next(
+                    (
+                        function_schema
+                        for function_schema in self._function_schemas
+                        if function_schema.name == transition_item.name
+                    ),
+                    None,
                 )
+                # TODO: Catch/raise unknown tool call error here
+                assert function_schema is not None  # noqa: S101
+                # TODO: Catch/raise ToolSchemaParseError here for retry logic
+                yield function_schema.parse_args(
+                    tool_parser.iter(self._stream, transition)
+                )
+            elif usage_parser.is_member(transition_item):
+                self.usage = usage_parser.transform(transition_item)
             elif new_transition_item := next(self._stream, None):
                 transition.append(new_transition_item)
 
@@ -334,58 +408,33 @@ class OpenaiAsyncStream:
 
     async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | FunctionCall]:
         transition = [await anext(self._stream)]
-
-        def _streamed_str(stream: AsyncIterator) -> AsyncStreamedStr:
-            async def _group(stream: AsyncIterator) -> AsyncIterator:
-                async for event in stream:
-                    if event.type == "content.delta":
-                        yield event.delta
-                    elif event.type == "content.done":
-                        transition.append(event)
-                        return
-
-            return AsyncStreamedStr(_group(stream))
-
-        async def _function_call(
-            transition_item, stream: AsyncIterator
-        ) -> FunctionCall:
-            async def _group(stream: AsyncIterator) -> AsyncIterator:
-                async for event in stream:
-                    if event.type == "tool_calls.function.arguments.delta":
-                        yield event.arguments_delta
-                    elif event.type == "tool_calls.function.arguments.done":
-                        transition.append(event)
-                        return
-
-            # TODO: Tidy matching function schema. Include Mistral fix
-            for function_schema in self._function_schemas:
-                if function_schema.name == transition_item.name:
-                    break
-            # TODO: Catch/raise unknown tool call error here
-            # TODO: Test that retry logic still works
-            try:  # TODO: Tidy catching of error here to DRY with async
-                return await function_schema.aparse_args(_group(stream))
-            except ValidationError as e:
-                raw_message = self._stream.current_completion_snapshot.choices[
-                    0
-                ].message.model_dump()
-                raise ToolSchemaParseError(
-                    output_message=_RawMessage(raw_message),
-                    tool_call_id=raw_message.content["tool_calls"][0]["id"],  # type: ignore[index,unused-ignore]
-                    validation_error=e,
-                ) from e
+        content_parser = OpenaiContentStreamParser()
+        tool_parser = OpenaiToolStreamParser()
+        usage_parser = OpenaiUsageStreamParser()
 
         while transition:
             transition_item = transition.pop()
-            if transition_item.type == "content.delta":
-                yield _streamed_str(self._stream)
-            elif transition_item.type == "tool_calls.function.arguments.delta":
-                yield await _function_call(transition_item, self._stream)
-            elif transition_item.type == "chunk" and transition_item.chunk.usage:
-                self.usage = Usage(
-                    input_tokens=transition_item.chunk.usage.prompt_tokens,
-                    output_tokens=transition_item.chunk.usage.completion_tokens,
+            if content_parser.is_member(transition_item):
+                yield AsyncStreamedStr(content_parser.aiter(self._stream, transition))
+            elif tool_parser.is_member(transition_item):
+                # TODO: Tidy matching function schema. Include Mistral fix
+                # tool_parser.select_function_schema() ?
+                function_schema = next(
+                    (
+                        function_schema
+                        for function_schema in self._function_schemas
+                        if function_schema.name == transition_item.name
+                    ),
+                    None,
                 )
+                # TODO: Catch/raise unknown tool call error here
+                assert function_schema is not None  # noqa: S101
+                # TODO: Catch/raise ToolSchemaParseError here for retry logic
+                yield await function_schema.aparse_args(
+                    tool_parser.aiter(self._stream, transition)
+                )
+            elif usage_parser.is_member(transition_item):
+                self.usage = usage_parser.transform(transition_item)
             elif new_transition_item := await anext(self._stream, None):
                 transition.append(new_transition_item)
 
