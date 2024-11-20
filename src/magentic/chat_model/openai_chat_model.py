@@ -362,6 +362,7 @@ class OpenaiAsyncStream:
                 if function_schema.name == transition_item.name:
                     break
             # TODO: Catch/raise unknown tool call error here
+            # TODO: Test that retry logic still works
             try:  # TODO: Tidy catching of error here to DRY with async
                 return await function_schema.aparse_args(_group(stream))
             except ValidationError as e:
