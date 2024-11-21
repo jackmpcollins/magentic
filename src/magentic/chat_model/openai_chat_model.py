@@ -442,6 +442,10 @@ class OpenaiAsyncStream:
         await self._stream.close()
 
 
+def _if_given(value: T | None) -> T | openai.NotGiven:
+    return value if value is not None else openai.NOT_GIVEN
+
+
 STR_OR_FUNCTIONCALL_TYPE = (
     str,
     StreamedStr,
@@ -600,11 +604,11 @@ class OpenaiChatModel(ChatModel):
             messages=_add_missing_tool_calls_responses(
                 [message_to_openai_message(m) for m in messages]
             ),
-            max_tokens=self.max_tokens,
-            seed=self.seed,
-            stop=stop,
+            max_tokens=_if_given(self.max_tokens),
+            seed=_if_given(self.seed),
+            stop=_if_given(stop),
             stream_options=self._get_stream_options(),
-            temperature=self.temperature,
+            temperature=_if_given(self.temperature),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
@@ -685,12 +689,12 @@ class OpenaiChatModel(ChatModel):
                 messages=_add_missing_tool_calls_responses(
                     [message_to_openai_message(m) for m in messages]
                 ),
-                max_tokens=self.max_tokens,
-                seed=self.seed,
-                stop=stop,
+                max_tokens=_if_given(self.max_tokens),
+                seed=_if_given(self.seed),
+                stop=_if_given(stop),
                 stream=True,
                 stream_options=self._get_stream_options(),
-                temperature=self.temperature,
+                temperature=_if_given(self.temperature),
                 tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
                 tool_choice=self._get_tool_choice(
                     tool_schemas=tool_schemas, allow_string_output=allow_string_output
