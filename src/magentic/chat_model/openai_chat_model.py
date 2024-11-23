@@ -1,11 +1,9 @@
 import base64
-from abc import ABC, abstractmethod
 from collections.abc import (
     AsyncIterator,
     Awaitable,
     Callable,
     Iterable,
-    Iterator,
     Sequence,
 )
 from enum import Enum
@@ -15,9 +13,7 @@ from typing import Any, Generic, Literal, TypeGuard, TypeVar, cast, overload
 import filetype
 import openai
 from openai.lib.streaming.chat import (
-    AsyncChatCompletionStream,
     AsyncChatCompletionStreamManager,
-    ChatCompletionStream,
     ChatCompletionStreamEvent,
     ChunkEvent,
     ContentDeltaEvent,
@@ -39,13 +35,11 @@ from magentic.chat_model.base import (
     parse_stream,
 )
 from magentic.chat_model.function_schema import (
-    AsyncFunctionSchema,
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
     FunctionSchema,
     async_function_schema_for_type,
     function_schema_for_type,
-    select_function_schema,
 )
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -56,6 +50,7 @@ from magentic.chat_model.message import (
     UserMessage,
     _RawMessage,
 )
+from magentic.chat_model.stream import AsyncOutputStream, OutputStream, StreamParser
 from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
@@ -240,45 +235,6 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
         return {"type": "function", "function": self._function_schema.dict()}
 
 
-ItemT = TypeVar("ItemT")
-OutputT = TypeVar("OutputT")
-
-
-class StreamParser(ABC, Generic[ItemT, OutputT]):
-    """Filters and transforms items from an iterator until the end condition is met."""
-
-    def is_member(self, item: ItemT) -> bool:
-        return True
-
-    @abstractmethod
-    def is_end(self, item: ItemT) -> bool: ...
-
-    @abstractmethod
-    def transform(self, item: ItemT) -> OutputT: ...
-
-    def iter(
-        self, iterator: Iterator[ItemT], transition: list[ItemT]
-    ) -> Iterator[OutputT]:
-        for item in iterator:
-            if self.is_member(item):
-                yield self.transform(item)
-            if self.is_end(item):
-                assert not transition  # noqa: S101
-                transition.append(item)
-                return
-
-    async def aiter(
-        self, aiterator: AsyncIterator[ItemT], transition: list[ItemT]
-    ) -> AsyncIterator[OutputT]:
-        async for item in aiterator:
-            if self.is_member(item):
-                yield self.transform(item)
-            if self.is_end(item):
-                assert not transition  # noqa: S101
-                transition.append(item)
-                return
-
-
 class OpenaiContentStreamParser(StreamParser[ChatCompletionStreamEvent, str]):
     """Filters and transforms OpenAI content events from a stream."""
 
@@ -313,7 +269,7 @@ class OpenaiToolStreamParser(StreamParser[ChatCompletionStreamEvent, str]):
         return item.arguments_delta
 
     def get_tool_name(self, item: ChatCompletionStreamEvent) -> str:
-        assert self.is_member(item)
+        assert self.is_member(item)  # noqa: S101
         return item.name
 
 
@@ -333,98 +289,6 @@ class OpenaiUsageStreamParser(StreamParser[ChatCompletionStreamEvent, Usage]):
             input_tokens=item.chunk.usage.prompt_tokens,
             output_tokens=item.chunk.usage.completion_tokens,
         )
-
-
-class OpenaiStream(Generic[T]):
-    """Converts a stream of openai events into a stream of magentic objects."""
-
-    def __init__(
-        self, stream: ChatCompletionStream, function_schemas: list[FunctionSchema[T]]
-    ):
-        self._stream = stream
-        self._function_schemas = function_schemas
-        self._iterator = self.__stream__()
-        self.usage: Usage | None = None
-
-    def __next__(self) -> StreamedStr | T:
-        return self._iterator.__next__()
-
-    def __iter__(self) -> Iterator[StreamedStr | T]:
-        yield from self._iterator
-
-    def __stream__(self) -> Iterator[StreamedStr | T]:
-        transition = [next(self._stream)]
-        content_parser = OpenaiContentStreamParser()
-        tool_parser = OpenaiToolStreamParser()
-        usage_parser = OpenaiUsageStreamParser()
-
-        while transition:
-            transition_item = transition.pop()
-            if content_parser.is_member(transition_item):
-                yield StreamedStr(content_parser.iter(self._stream, transition))
-            elif tool_parser.is_member(transition_item):
-                tool_name = tool_parser.get_tool_name(transition_item)
-                function_schema = select_function_schema(
-                    self._function_schemas, tool_name
-                )
-                # TODO: Catch/raise ToolSchemaParseError here for retry logic
-                yield function_schema.parse_args(
-                    tool_parser.iter(self._stream, transition)
-                )
-            elif usage_parser.is_member(transition_item):
-                self.usage = usage_parser.transform(transition_item)
-            elif new_transition_item := next(self._stream, None):
-                transition.append(new_transition_item)
-
-    def close(self):
-        self._stream.close()
-
-
-class OpenaiAsyncStream(Generic[T]):
-    """Converts an async stream of openai events into an async stream of magentic objects."""
-
-    def __init__(
-        self,
-        stream: AsyncChatCompletionStream,
-        function_schemas: list[AsyncFunctionSchema[T]],
-    ):
-        self._stream = stream
-        self._function_schemas = function_schemas
-        self._aiterator = self.__stream__()
-        self.usage: Usage | None = None
-
-    async def __anext__(self) -> AsyncStreamedStr | T:
-        return await self._aiterator.__anext__()
-
-    async def __aiter__(self) -> AsyncIterator[AsyncStreamedStr | T]:
-        async for item in self._aiterator:
-            yield item
-
-    async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | T]:
-        transition = [await anext(self._stream)]
-        content_parser = OpenaiContentStreamParser()
-        tool_parser = OpenaiToolStreamParser()
-        usage_parser = OpenaiUsageStreamParser()
-
-        while transition:
-            transition_item = transition.pop()
-            if content_parser.is_member(transition_item):
-                yield AsyncStreamedStr(content_parser.aiter(self._stream, transition))
-            elif tool_parser.is_member(transition_item):
-                tool_name = tool_parser.get_tool_name(transition_item)
-                function_schema = select_function_schema(
-                    self._function_schemas, tool_name
-                )
-                yield await function_schema.aparse_args(
-                    tool_parser.aiter(self._stream, transition)
-                )
-            elif usage_parser.is_member(transition_item):
-                self.usage = usage_parser.transform(transition_item)
-            elif new_transition_item := await anext(self._stream, None):
-                transition.append(new_transition_item)
-
-    async def close(self):
-        await self._stream.close()
 
 
 def _if_given(value: T | None) -> T | openai.NotGiven:
@@ -602,8 +466,14 @@ class OpenaiChatModel(ChatModel):
                 tools_specified=bool(tool_schemas), output_types=output_types
             ),
         ).__enter__()  # Get stream directly, without context manager
-        stream = OpenaiStream(_stream, function_schemas=function_schemas)
-        return AssistantMessage(parse_stream(stream, output_types))  # type: ignore
+        stream = OutputStream(
+            _stream,
+            function_schemas=function_schemas,
+            content_parser=OpenaiContentStreamParser(),
+            tool_parser=OpenaiToolStreamParser(),
+            usage_parser=OpenaiUsageStreamParser(),
+        )
+        return AssistantMessage(parse_stream(stream, output_types))  # type: ignore[return-type]
 
     @overload
     async def acomplete(
@@ -677,5 +547,11 @@ class OpenaiChatModel(ChatModel):
             input_tools=[schema.to_dict() for schema in tool_schemas]
             or openai.NOT_GIVEN,
         ).__aenter__()  # Get stream directly, without context manager
-        stream = OpenaiAsyncStream(_stream, function_schemas=function_schemas)
-        return AssistantMessage(aparse_stream(stream, output_types))  # type: ignore
+        stream = AsyncOutputStream(
+            _stream,
+            function_schemas=function_schemas,
+            content_parser=OpenaiContentStreamParser(),
+            tool_parser=OpenaiToolStreamParser(),
+            usage_parser=OpenaiUsageStreamParser(),
+        )
+        return AssistantMessage(await aparse_stream(stream, output_types))  # type: ignore[return-type]
