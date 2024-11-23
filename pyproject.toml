@@ -35,6 +35,7 @@ dev = [
     "ruff>=0.3",
     "pytest-recording>=0.13.2",
     "coverage>=7.6.4",
+    "pytest-mock>=3.14.0",
 ]
 docs = [
     "blacken-docs>=1.16.0",
