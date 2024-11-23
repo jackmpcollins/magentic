@@ -43,6 +43,7 @@ def is_origin_subclass(
 def is_instance_origin(
     obj: Any, cls_or_tuple: type[T] | tuple[type[T], ...]
 ) -> TypeGuard[T]:
+    """Check if the object is an instance of the origin(s) of the given type(s)."""
     cls_or_tuple_origin = (
         tuple(get_origin(cls) or cls for cls in cls_or_tuple)
         if isinstance(cls_or_tuple, tuple)
