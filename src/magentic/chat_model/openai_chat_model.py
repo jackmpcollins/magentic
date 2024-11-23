@@ -45,6 +45,7 @@ from magentic.chat_model.function_schema import (
     FunctionSchema,
     async_function_schema_for_type,
     function_schema_for_type,
+    select_function_schema,
 )
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -311,6 +312,10 @@ class OpenaiToolStreamParser(StreamParser[ChatCompletionStreamEvent, str]):
         assert self.is_member(item)  # noqa: S101
         return item.arguments_delta
 
+    def get_tool_name(self, item: ChatCompletionStreamEvent) -> str:
+        assert self.is_member(item)
+        return item.name
+
 
 class OpenaiUsageStreamParser(StreamParser[ChatCompletionStreamEvent, Usage]):
     """Filters and transforms OpenAI usage events from a stream."""
@@ -358,18 +363,10 @@ class OpenaiStream(Generic[T]):
             if content_parser.is_member(transition_item):
                 yield StreamedStr(content_parser.iter(self._stream, transition))
             elif tool_parser.is_member(transition_item):
-                # TODO: Tidy matching function schema. Include Mistral fix
-                # tool_parser.select_function_schema() ?
-                function_schema = next(
-                    (
-                        function_schema
-                        for function_schema in self._function_schemas
-                        if function_schema.name == transition_item.name
-                    ),
-                    None,
+                tool_name = tool_parser.get_tool_name(transition_item)
+                function_schema = select_function_schema(
+                    self._function_schemas, tool_name
                 )
-                # TODO: Catch/raise unknown tool call error here
-                assert function_schema is not None  # noqa: S101
                 # TODO: Catch/raise ToolSchemaParseError here for retry logic
                 yield function_schema.parse_args(
                     tool_parser.iter(self._stream, transition)
@@ -414,19 +411,10 @@ class OpenaiAsyncStream(Generic[T]):
             if content_parser.is_member(transition_item):
                 yield AsyncStreamedStr(content_parser.aiter(self._stream, transition))
             elif tool_parser.is_member(transition_item):
-                # TODO: Tidy matching function schema. Include Mistral fix
-                # tool_parser.select_function_schema() ?
-                function_schema = next(
-                    (
-                        function_schema
-                        for function_schema in self._function_schemas
-                        if function_schema.name == transition_item.name
-                    ),
-                    None,
+                tool_name = tool_parser.get_tool_name(transition_item)
+                function_schema = select_function_schema(
+                    self._function_schemas, tool_name
                 )
-                # TODO: Catch/raise unknown tool call error here
-                assert function_schema is not None  # noqa: S101
-                # TODO: Catch/raise ToolSchemaParseError here for retry logic
                 yield await function_schema.aparse_args(
                     tool_parser.aiter(self._stream, transition)
                 )
