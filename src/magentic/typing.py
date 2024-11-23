@@ -17,6 +17,7 @@ def is_union_type(type_: type) -> bool:
     return type_ is Union or type_ is types.UnionType
 
 
+T = TypeVar("T")
 TypeT = TypeVar("TypeT", bound=type)
 
 
@@ -39,6 +40,18 @@ def is_origin_subclass(
     return issubclass(get_origin(type_) or type_, cls_or_tuple)
 
 
+def is_instance_origin(
+    obj: Any, cls_or_tuple: type[T] | tuple[type[T], ...]
+) -> TypeGuard[T]:
+    cls_or_tuple_origin = (
+        tuple(get_origin(cls) or cls for cls in cls_or_tuple)
+        if isinstance(cls_or_tuple, tuple)
+        else get_origin(cls_or_tuple) or cls_or_tuple
+    )
+    return isinstance(obj, cls_or_tuple_origin)
+
+
+# TODO: Remove once unused
 def is_any_origin_subclass(
     types: Iterable[type], cls_or_tuple: TypeT | tuple[TypeT, ...]
 ) -> bool:

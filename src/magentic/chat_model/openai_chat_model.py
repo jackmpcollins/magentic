@@ -10,7 +10,6 @@ from collections.abc import (
 )
 from enum import Enum
 from functools import singledispatch
-from itertools import chain
 from typing import Any, Generic, Literal, TypeGuard, TypeVar, cast, overload
 
 import filetype
@@ -36,8 +35,8 @@ from openai.types.chat import (
 
 from magentic.chat_model.base import (
     ChatModel,
-    avalidate_str_content,
-    validate_str_content,
+    aparse_stream,
+    parse_stream,
 )
 from magentic.chat_model.function_schema import (
     AsyncFunctionSchema,
@@ -65,8 +64,6 @@ from magentic.function_call import (
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
-    achain,
-    async_iter,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 from magentic.vision import UserImageMessage
@@ -618,25 +615,7 @@ class OpenaiChatModel(ChatModel):
             ),
         ).__enter__()  # Get stream directly, without context manager
         stream = OpenaiStream(_stream, function_schemas=function_schemas)
-
-        # TODO: Function to validate LLM output against prompt-function return type
-        first_response_obj = next(stream)
-        if isinstance(first_response_obj, StreamedStr):
-            str_content = validate_str_content(
-                first_response_obj,
-                allow_string_output=allow_string_output,
-                streamed=streamed_str_in_output_types,
-            )
-            return AssistantMessage(str_content)  # type: ignore[return-value]
-
-        if isinstance(first_response_obj, FunctionCall):
-            if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                content = ParallelFunctionCall(chain([first_response_obj], stream))
-                return AssistantMessage(content)  # type: ignore[return-value]
-            # Take only the first tool_call, silently ignore extra chunks
-            return AssistantMessage(first_response_obj)  # type: ignore[return-value]
-
-        return AssistantMessage(first_response_obj)
+        return AssistantMessage(parse_stream(stream, output_types))  # type: ignore
 
     @overload
     async def acomplete(
@@ -711,24 +690,4 @@ class OpenaiChatModel(ChatModel):
             or openai.NOT_GIVEN,
         ).__aenter__()  # Get stream directly, without context manager
         stream = OpenaiAsyncStream(_stream, function_schemas=function_schemas)
-
-        # TODO: Function to validate LLM output against prompt-function return type
-        first_response_obj = await anext(stream)
-        if isinstance(first_response_obj, AsyncStreamedStr):
-            str_content = await avalidate_str_content(
-                first_response_obj,
-                allow_string_output=allow_string_output,
-                streamed=async_streamed_str_in_output_types,
-            )
-            return AssistantMessage(str_content)  # type: ignore[return-value]
-
-        if isinstance(first_response_obj, FunctionCall):
-            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                content = AsyncParallelFunctionCall(
-                    achain(async_iter([first_response_obj]), stream)
-                )
-                return AssistantMessage(content)  # type: ignore[return-value]
-            # Take only the first tool_call, silently ignore extra chunks
-            return AssistantMessage(first_response_obj)  # type: ignore[return-value]
-
-        return AssistantMessage(first_response_obj)
+        return AssistantMessage(aparse_stream(stream, output_types))  # type: ignore
