@@ -333,24 +333,24 @@ class OpenaiUsageStreamParser(StreamParser[ChatCompletionStreamEvent, Usage]):
         )
 
 
-class OpenaiStream:
+class OpenaiStream(Generic[T]):
     """Converts a stream of openai events into a stream of magentic objects."""
 
     def __init__(
-        self, stream: ChatCompletionStream, function_schemas: list[FunctionSchema[Any]]
+        self, stream: ChatCompletionStream, function_schemas: list[FunctionSchema[T]]
     ):
         self._stream = stream
         self._function_schemas = function_schemas
         self._iterator = self.__stream__()
         self.usage: Usage | None = None
 
-    def __next__(self) -> StreamedStr | FunctionCall:
+    def __next__(self) -> StreamedStr | T:
         return self._iterator.__next__()
 
-    def __iter__(self) -> Iterator[StreamedStr | FunctionCall]:
+    def __iter__(self) -> Iterator[StreamedStr | T]:
         yield from self._iterator
 
-    def __stream__(self) -> Iterator[StreamedStr | FunctionCall]:
+    def __stream__(self) -> Iterator[StreamedStr | T]:
         transition = [next(self._stream)]
         content_parser = OpenaiContentStreamParser()
         tool_parser = OpenaiToolStreamParser()
@@ -386,27 +386,27 @@ class OpenaiStream:
         self._stream.close()
 
 
-class OpenaiAsyncStream:
+class OpenaiAsyncStream(Generic[T]):
     """Converts an async stream of openai events into an async stream of magentic objects."""
 
     def __init__(
         self,
         stream: AsyncChatCompletionStream,
-        function_schemas: list[AsyncFunctionSchema[Any]],
+        function_schemas: list[AsyncFunctionSchema[T]],
     ):
         self._stream = stream
         self._function_schemas = function_schemas
         self._aiterator = self.__stream__()
         self.usage: Usage | None = None
 
-    async def __anext__(self) -> AsyncStreamedStr | FunctionCall:
+    async def __anext__(self) -> AsyncStreamedStr | T:
         return await self._aiterator.__anext__()
 
-    async def __aiter__(self) -> AsyncIterator[AsyncStreamedStr | FunctionCall]:
+    async def __aiter__(self) -> AsyncIterator[AsyncStreamedStr | T]:
         async for item in self._aiterator:
             yield item
 
-    async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | FunctionCall]:
+    async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | T]:
         transition = [await anext(self._stream)]
         content_parser = OpenaiContentStreamParser()
         tool_parser = OpenaiToolStreamParser()
