@@ -434,7 +434,7 @@ class OpenaiChatModel(ChatModel):
     ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[R]], [str])
+            output_types = cast(Iterable[type[R]], [] if functions else [str])
 
         # TODO: Check that Function calls types match functions
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [

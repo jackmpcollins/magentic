@@ -184,7 +184,7 @@ class LitellmChatModel(ChatModel):
     ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[R]], [str])
+            output_types = cast(Iterable[type[R]], [] if functions else [str])
 
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             function_schema_for_type(type_)
@@ -220,7 +220,7 @@ class LitellmChatModel(ChatModel):
             tool_parser=LitellmToolStreamParser(),
             usage_parser=LitellmUsageStreamParser(),
         )
-        return AssistantMessage(parse_stream(stream, output_types))  # type: ignore[return-value]
+        return AssistantMessage(parse_stream(stream, output_types))
 
     @overload
     async def acomplete(
@@ -252,7 +252,7 @@ class LitellmChatModel(ChatModel):
     ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[R]], [str])
+            output_types = cast(Iterable[type[R]], [] if functions else [str])
 
         function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
             async_function_schema_for_type(type_)
@@ -290,4 +290,4 @@ class LitellmChatModel(ChatModel):
             tool_parser=LitellmToolStreamParser(),
             usage_parser=LitellmUsageStreamParser(),
         )
-        return AssistantMessage(aparse_stream(stream, output_types))  # type: ignore[return-value]
+        return AssistantMessage(await aparse_stream(stream, output_types))

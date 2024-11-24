@@ -83,7 +83,7 @@ async def avalidate_str_content(
 
 
 # TODO: Make this a stream class with a close method and context management
-def parse_stream(stream: Iterator[Any], output_types: list[type[R]]) -> R:
+def parse_stream(stream: Iterator[Any], output_types: Iterable[type[R]]) -> R:
     """Parse and validate the LLM output stream against the allowed output types."""
     output_type_origins = [get_origin(type_) or type_ for type_ in output_types]
     # TODO: option to error/warn/ignore extra objects
@@ -109,7 +109,9 @@ def parse_stream(stream: Iterator[Any], output_types: list[type[R]]) -> R:
     raise ValueError(f"Unexpected output type: {type(obj)}")
 
 
-async def aparse_stream(stream: AsyncIterator[Any], output_types: list[type[R]]) -> R:
+async def aparse_stream(
+    stream: AsyncIterator[Any], output_types: Iterable[type[R]]
+) -> R:
     """Async version of `parse_stream`."""
     output_type_origins = [get_origin(type_) or type_ for type_ in output_types]
     obj = await anext(stream)
@@ -161,6 +163,7 @@ class ChatModel(ABC):
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
+        # TODO: Set default of R to str in Python 3.13
         output_types: Iterable[type[R | str]] | None = None,
         *,
         stop: list[str] | None = None,
