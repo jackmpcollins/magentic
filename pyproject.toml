@@ -63,7 +63,7 @@ module = [
     "litellm",
     "litellm.utils",
     "litellm.integrations.custom_logger",
-    "logfire_api",
+    "vcr.*",
 ]
 ignore_missing_imports = true
 

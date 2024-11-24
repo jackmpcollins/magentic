@@ -19,13 +19,13 @@ def _load_dotenv():
     load_dotenv()
 
 
-def pytest_recording_configure(config, vcr: VCR):
+def pytest_recording_configure(config: pytest.Config, vcr: VCR) -> None:
     """Register VCR matcher for JSON request bodies"""
 
     def is_json_body_equal(r1: Request, r2: Request) -> None:
         try:
             msg = "JSON body does not match"
-            assert json.loads(r1.body) == json.loads(r2.body), msg  # type: ignore[arg-type]
+            assert json.loads(r1.body) == json.loads(r2.body), msg  # type: ignore[arg-type, unused-ignore]
         except (TypeError, json.JSONDecodeError):
             return
 
