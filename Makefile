@@ -38,6 +38,10 @@ testcov: test
 	@echo "building coverage html"
 	uv run coverage html --show-contexts
 
+.PHONY: test-fix-vcr  # Run the last failed tests and rewrite the VCR cassettes
+test-fix-vcr:
+	uv run pytest -vv --last-failed --last-failed-no-failures=none --record-mode=rewrite
+
 .PHONY: docs  # Build the documentation
 docs:
 	uv run mkdocs build
