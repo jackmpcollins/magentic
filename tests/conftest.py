@@ -1,6 +1,7 @@
 import json
 from itertools import count
 from typing import Any
+from uuid import UUID
 
 import pytest
 from dotenv import load_dotenv
@@ -77,9 +78,8 @@ def pytest_collection_modifyitems(
 
 @pytest.fixture(autouse=True)
 def _mock_create_unique_id(mocker: MockerFixture) -> None:
-    """Mock `_create_uniwue_id` to return deterministic values"""
+    """Mock `uuid4` to make `_create_unique_id` return deterministic values"""
     _count = count()
     mocker.patch(  # noqa: PT008
-        "magentic.function_call._create_unique_id",
-        new=lambda: str(next(_count)),
+        "magentic.function_call.uuid4", new=lambda: UUID(int=next(_count))
     )
