@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 from contextvars import ContextVar
 from itertools import chain
-from typing import Any, AsyncIterator, Iterator, TypeVar, cast, overload
+from typing import Any, AsyncIterator, Iterator, TypeVar, cast, get_origin, overload
 
 from pydantic import ValidationError
 
@@ -14,7 +14,6 @@ from magentic.function_call import (
     ParallelFunctionCall,
 )
 from magentic.streaming import AsyncStreamedStr, StreamedStr, achain, async_iter
-from magentic.typing import is_instance_origin
 
 R = TypeVar("R")
 
@@ -86,46 +85,48 @@ async def avalidate_str_content(
 # TODO: Make this a stream class with a close method and context management
 def parse_stream(stream: Iterator[Any], output_types: list[type[R]]) -> R:
     """Parse and validate the LLM output stream against the allowed output types."""
+    output_type_origins = [get_origin(type_) or type_ for type_ in output_types]
     # TODO: option to error/warn/ignore extra objects
     # TODO: warn for degenerate output types ?
     obj = next(stream)
     # TODO: Add type for mixed StreamedStr and FunctionCalls
     if isinstance(obj, StreamedStr):
-        if StreamedStr in output_types:
+        if StreamedStr in output_type_origins:
             return cast(R, obj)
-        if str in output_types:
+        if str in output_type_origins:
             return cast(R, str(obj))
         model_output = obj.truncate(100)
         raise StringNotAllowedError(AssistantMessage(model_output))
     if isinstance(obj, FunctionCall):
-        if ParallelFunctionCall in output_types:
+        if ParallelFunctionCall in output_type_origins:
             return cast(R, ParallelFunctionCall(chain([obj], stream)))
-        if FunctionCall in output_types:
+        if FunctionCall in output_type_origins:
             # TODO: Check that FunctionCall type matches ?
             return cast(R, obj)
         raise ValueError("FunctionCall not allowed")
-    if is_instance_origin(obj, tuple(output_types)):
+    if isinstance(obj, tuple(output_type_origins)):
         return obj
     raise ValueError(f"Unexpected output type: {type(obj)}")
 
 
 async def aparse_stream(stream: AsyncIterator[Any], output_types: list[type[R]]) -> R:
     """Async version of `parse_stream`."""
+    output_type_origins = [get_origin(type_) or type_ for type_ in output_types]
     obj = await anext(stream)
     if isinstance(obj, AsyncStreamedStr):
-        if AsyncStreamedStr in output_types:
+        if AsyncStreamedStr in output_type_origins:
             return cast(R, obj)
-        if str in output_types:
+        if str in output_type_origins:
             return cast(R, await obj.to_string())
         model_output = await obj.truncate(100)
         raise StringNotAllowedError(AssistantMessage(model_output))
     if isinstance(obj, FunctionCall):
-        if AsyncParallelFunctionCall in output_types:
+        if AsyncParallelFunctionCall in output_type_origins:
             return cast(R, AsyncParallelFunctionCall(achain(async_iter([obj]), stream)))
-        if FunctionCall in output_types:
+        if FunctionCall in output_type_origins:
             return cast(R, obj)
         raise ValueError("FunctionCall not allowed")
-    if is_instance_origin(obj, tuple(output_types)):
+    if isinstance(obj, tuple(output_type_origins)):
         return obj
     raise ValueError(f"Unexpected output type: {type(obj)}")
 
