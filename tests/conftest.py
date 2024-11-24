@@ -1,4 +1,5 @@
 import json
+from collections.abc import Iterator
 from itertools import count
 from typing import Any
 from uuid import UUID
@@ -79,7 +80,17 @@ def pytest_collection_modifyitems(
 @pytest.fixture(autouse=True)
 def _mock_create_unique_id(mocker: MockerFixture) -> None:
     """Mock `uuid4` to make `_create_unique_id` return deterministic values"""
-    _count = count()
-    mocker.patch(  # noqa: PT008
-        "magentic.function_call.uuid4", new=lambda: UUID(int=next(_count))
-    )
+
+    def _mock_uuid4() -> Iterator[UUID]:
+        for i in count():
+            yield UUID(int=i)
+
+    mocker.patch("magentic.function_call.uuid4", side_effect=_mock_uuid4())
+
+
+def test_mock_create_unique_id():
+    """Test that `_mock_create_unique_id` makes `_create_unique_id` deterministic"""
+    from magentic.function_call import _create_unique_id
+
+    assert _create_unique_id() == "000000000"
+    assert _create_unique_id() == "000000001"
