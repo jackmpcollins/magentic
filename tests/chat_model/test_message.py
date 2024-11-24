@@ -114,9 +114,11 @@ def test_function_result_message_eq():
     function_result_message = FunctionResultMessage(3, func_call)
     assert function_result_message == function_result_message
     assert function_result_message == FunctionResultMessage(3, func_call)
-    # Different unique ids internally => not equal, despite equal FunctionCalls
-    assert function_result_message != FunctionResultMessage(3, FunctionCall(plus, 1, 2))
     assert function_result_message != FunctionResultMessage(7, FunctionCall(plus, 3, 4))
+    # Different unique ids internally => not equal, despite equal FunctionCalls
+    func_call_copy = FunctionCall(plus, 1, 2)
+    func_call_copy._unique_id = "999999999"
+    assert function_result_message != FunctionResultMessage(3, func_call_copy)
 
 
 def test_function_result_message_format():
