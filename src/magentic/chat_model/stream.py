@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator, Iterator
+from collections.abc import AsyncIterator, Iterable, Iterator
 from itertools import chain
 from typing import TYPE_CHECKING, Generic, TypeVar
 
@@ -56,7 +56,7 @@ class OutputStream(Generic[T]):
     def __init__(
         self,
         stream: Iterator,  # TODO: Fix typing
-        function_schemas: list[FunctionSchema[T]],
+        function_schemas: Iterable[FunctionSchema[T]],
         content_parser: StreamParser,
         tool_parser: StreamParser,
         usage_parser: StreamParser,
@@ -111,7 +111,7 @@ class AsyncOutputStream(Generic[T]):
     def __init__(
         self,
         stream: AsyncIterator,  # TODO: Fix typing
-        function_schemas: list[FunctionSchema[T]],
+        function_schemas: Iterable[FunctionSchema[T]],
         content_parser: StreamParser,
         tool_parser: StreamParser,
         usage_parser: StreamParser,
