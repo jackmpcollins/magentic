@@ -1423,6 +1423,7 @@ dev = [
     { name = "pytest-recording" },
     { name = "python-dotenv" },
     { name = "ruff" },
+    { name = "vcrpy" },
 ]
 docs = [
     { name = "blacken-docs" },
@@ -1464,6 +1465,7 @@ dev = [
     { name = "pytest-recording", specifier = ">=0.13.2" },
     { name = "python-dotenv", specifier = ">=1.0.1" },
     { name = "ruff", specifier = ">=0.3" },
+    { name = "vcrpy", specifier = ">=6.0.2" },
 ]
 docs = [
     { name = "blacken-docs", specifier = ">=1.16.0" },
