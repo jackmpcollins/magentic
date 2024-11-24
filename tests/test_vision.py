@@ -91,7 +91,7 @@ def test_chatprompt_with_user_image_message(image_bytes_jpg):
     @chatprompt(
         UserMessage("Describe this image in one word."),
         UserImageMessage(image_bytes_jpg),
-        model=OpenaiChatModel("gpt-4-vision-preview"),
+        model=OpenaiChatModel("gpt-4o"),
     )
     def describe_image() -> str: ...
 

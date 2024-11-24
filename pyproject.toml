@@ -35,6 +35,8 @@ dev = [
     "ruff>=0.3",
     "pytest-recording>=0.13.2",
     "coverage>=7.6.4",
+    "pytest-mock>=3.14.0",
+    "vcrpy>=6.0.2",
 ]
 docs = [
     "blacken-docs>=1.16.0",
@@ -61,7 +63,7 @@ module = [
     "litellm",
     "litellm.utils",
     "litellm.integrations.custom_logger",
-    "logfire_api",
+    "vcr.*",
 ]
 ignore_missing_imports = true
 

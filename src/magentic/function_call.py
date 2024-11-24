@@ -25,8 +25,10 @@ P = ParamSpec("P")
 
 
 def _create_unique_id() -> str:
-    # Mistral has max length of 9 chars for tool call IDs, and OpenAI 29 chars
-    return uuid4().hex[:9]
+    # Mistral requires length of 9 chars for tool call IDs
+    # OpenAI allows max length of 29 chars
+    # Take last 9 chars so testing can use incremental IDs
+    return uuid4().hex[-9:]
 
 
 class FunctionCall(Generic[T]):
