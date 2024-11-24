@@ -8,3 +8,5 @@
 6. Run `make format` to format code
 7. Run `make lint` to lint code
 8. run `make docs` to build docs and `make docs-serve` to serve docs locally
+
+Run `make help` to see all available commands.
