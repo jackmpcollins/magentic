@@ -21,6 +21,7 @@ from openai.lib.streaming.chat import (
     FunctionToolCallArgumentsDeltaEvent,
     FunctionToolCallArgumentsDoneEvent,
 )
+from openai.lib.streaming.chat._completions import ChatCompletionStreamState
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionMessageParam,
@@ -50,7 +51,12 @@ from magentic.chat_model.message import (
     UserMessage,
     _RawMessage,
 )
-from magentic.chat_model.stream import AsyncOutputStream, OutputStream, StreamParser
+from magentic.chat_model.stream import (
+    AsyncOutputStream,
+    OutputStream,
+    StreamParser,
+    StreamState,
+)
 from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
@@ -273,6 +279,7 @@ class OpenaiToolStreamParser(StreamParser[ChatCompletionStreamEvent, str]):
         return item.name
 
 
+# TODO: Move usage tracking into OpenaiStreamState
 class OpenaiUsageStreamParser(StreamParser[ChatCompletionStreamEvent, Usage]):
     """Filters and transforms OpenAI usage events from a stream."""
 
@@ -289,6 +296,45 @@ class OpenaiUsageStreamParser(StreamParser[ChatCompletionStreamEvent, Usage]):
             input_tokens=item.chunk.usage.prompt_tokens,
             output_tokens=item.chunk.usage.completion_tokens,
         )
+
+
+class OpenaiStreamState(StreamState):
+    def __init__(self, function_schemas):
+        self._function_schemas = function_schemas
+
+        self._chat_completion_stream_state = ChatCompletionStreamState(
+            input_tools=openai.NOT_GIVEN,
+            response_format=openai.NOT_GIVEN,
+        )
+        self._current_tool_call_id: str | None = None
+
+    def update(self, item: ChatCompletionStreamEvent) -> None:
+        if item.type == "chunk":
+            self._chat_completion_stream_state.handle_chunk(item.chunk)
+        if (
+            item.type == "chunk"
+            and item.chunk.choices
+            and item.chunk.choices[0].delta.tool_calls
+            and item.chunk.choices[0].delta.tool_calls[0].id
+        ):
+            # TODO: Mistral fix here ?
+            # openai keeps index consistent for chunks from the same tool_call, but id is null
+            # mistral has null index, but keeps id consistent
+            self._current_tool_call_id = item.chunk.choices[0].delta.tool_calls[0].id
+
+    @property
+    def current_tool_call_id(self) -> str | None:
+        return self._current_tool_call_id
+
+    @property
+    def current_message_snapshot(self) -> Message:
+        message = (
+            self._chat_completion_stream_state.current_completion_snapshot.choices[
+                0
+            ].message
+        )
+        # TODO: Possible to return AssistantMessage here?
+        return _RawMessage(message.model_dump())
 
 
 def _if_given(value: T | None) -> T | openai.NotGiven:
@@ -469,9 +515,11 @@ class OpenaiChatModel(ChatModel):
         stream = OutputStream(
             _stream,
             function_schemas=function_schemas,
+            # TODO: Consoldate these into a single parser / state object?
             content_parser=OpenaiContentStreamParser(),
             tool_parser=OpenaiToolStreamParser(),
             usage_parser=OpenaiUsageStreamParser(),
+            state=OpenaiStreamState(function_schemas=function_schemas),
         )
         return AssistantMessage(parse_stream(stream, output_types))  # type: ignore[return-type]
 
@@ -553,5 +601,6 @@ class OpenaiChatModel(ChatModel):
             content_parser=OpenaiContentStreamParser(),
             tool_parser=OpenaiToolStreamParser(),
             usage_parser=OpenaiUsageStreamParser(),
+            state=OpenaiStreamState(function_schemas=function_schemas),
         )
         return AssistantMessage(await aparse_stream(stream, output_types))  # type: ignore[return-type]

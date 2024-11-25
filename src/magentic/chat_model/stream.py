@@ -3,14 +3,25 @@ from collections.abc import AsyncIterator, Iterable, Iterator
 from itertools import chain
 from typing import TYPE_CHECKING, Generic, TypeVar
 
+from litellm.llms.files_apis.azure import Any
+from pydantic import ValidationError
+
+from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.function_schema import FunctionSchema, select_function_schema
-from magentic.streaming import AsyncStreamedStr, StreamedStr, achain, async_iter
+from magentic.chat_model.message import Message
+from magentic.streaming import (
+    AsyncStreamedStr,
+    StreamedStr,
+    aapply,
+    achain,
+    apply,
+    async_iter,
+)
 
 if TYPE_CHECKING:
     from magentic.chat_model.message import Usage
 
 
-T = TypeVar("T")
 ItemT = TypeVar("ItemT")
 OutputT = TypeVar("OutputT")
 
@@ -50,16 +61,30 @@ class StreamParser(ABC, Generic[ItemT, OutputT]):
                 return
 
 
-class OutputStream(Generic[T]):
+class StreamState(ABC, Generic[ItemT]):
+    @abstractmethod
+    def update(self, item: ItemT) -> None: ...
+
+    @property
+    @abstractmethod
+    def current_tool_call_id(self) -> str | None: ...
+
+    @property
+    @abstractmethod
+    def current_message_snapshot(self) -> Message[Any]: ...
+
+
+class OutputStream(Generic[ItemT, OutputT]):
     """Converts streamed LLM output into a stream of magentic objects."""
 
     def __init__(
         self,
-        stream: Iterator,  # TODO: Fix typing
-        function_schemas: Iterable[FunctionSchema[T]],
+        stream: Iterator[ItemT],
+        function_schemas: Iterable[FunctionSchema[OutputT]],
         content_parser: StreamParser,
         tool_parser: StreamParser,
         usage_parser: StreamParser,
+        state: StreamState[ItemT],
     ):
         self._stream = stream
         self._function_schemas = function_schemas
@@ -68,20 +93,23 @@ class OutputStream(Generic[T]):
         self._content_parser = content_parser
         self._tool_parser = tool_parser
         self._usage_parser = usage_parser
+        self._state = state
+
+        self._wrapped_stream = apply(self._state.update, stream)
 
         self.usage: Usage | None = None
 
-    def __next__(self) -> StreamedStr | T:
+    def __next__(self) -> StreamedStr | OutputT:
         return self._iterator.__next__()
 
-    def __iter__(self) -> Iterator[StreamedStr | T]:
+    def __iter__(self) -> Iterator[StreamedStr | OutputT]:
         yield from self._iterator
 
-    def __stream__(self) -> Iterator[StreamedStr | T]:
-        transition = [next(self._stream)]
+    def __stream__(self) -> Iterator[StreamedStr | OutputT]:
+        transition = [next(self._wrapped_stream)]
         while transition:
             transition_item = transition.pop()
-            stream_with_transition = chain([transition_item], self._stream)
+            stream_with_transition = chain([transition_item], self._wrapped_stream)
             if self._content_parser.is_member(transition_item):
                 yield StreamedStr(
                     self._content_parser.iter(stream_with_transition, transition)
@@ -92,29 +120,39 @@ class OutputStream(Generic[T]):
                 function_schema = select_function_schema(
                     self._function_schemas, tool_name
                 )
-                # TODO: Catch/raise ToolSchemaParseError here for retry logic
-                yield function_schema.parse_args(
-                    self._tool_parser.iter(stream_with_transition, transition)
-                )
+                try:
+                    yield function_schema.parse_args(
+                        self._tool_parser.iter(stream_with_transition, transition)
+                    )
+                # TODO: Catch/raise unknown tool call error here
+                except ValidationError as e:
+                    assert self._state.current_tool_call_id is not None  # noqa: S101
+                    raise ToolSchemaParseError(
+                        output_message=self._state.current_message_snapshot,
+                        tool_call_id=self._state.current_tool_call_id,
+                        validation_error=e,
+                    ) from e
+            # TODO: Move usage tracking into StreamState
             elif self._usage_parser.is_member(transition_item):
                 self.usage = self._usage_parser.transform(transition_item)
-            elif new_transition_item := next(self._stream, None):
+            elif new_transition_item := next(self._wrapped_stream, None):
                 transition.append(new_transition_item)
 
     def close(self):
         self._stream.close()
 
 
-class AsyncOutputStream(Generic[T]):
+class AsyncOutputStream(Generic[ItemT, OutputT]):
     """Async version of `OutputStream`."""
 
     def __init__(
         self,
-        stream: AsyncIterator,  # TODO: Fix typing
-        function_schemas: Iterable[FunctionSchema[T]],
+        stream: AsyncIterator[ItemT],
+        function_schemas: Iterable[FunctionSchema[OutputT]],
         content_parser: StreamParser,
         tool_parser: StreamParser,
         usage_parser: StreamParser,
+        state: StreamState[ItemT],
     ):
         self._stream = stream
         self._function_schemas = function_schemas
@@ -123,21 +161,26 @@ class AsyncOutputStream(Generic[T]):
         self._content_parser = content_parser
         self._tool_parser = tool_parser
         self._usage_parser = usage_parser
+        self._state = state
+
+        self._wrapped_stream = aapply(self._state.update, stream)
 
         self.usage: Usage | None = None
 
-    async def __anext__(self) -> AsyncStreamedStr | T:
+    async def __anext__(self) -> AsyncStreamedStr | OutputT:
         return await self._iterator.__anext__()
 
-    async def __aiter__(self) -> AsyncIterator[AsyncStreamedStr | T]:
+    async def __aiter__(self) -> AsyncIterator[AsyncStreamedStr | OutputT]:
         async for item in self._iterator:
             yield item
 
-    async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | T]:
-        transition = [await anext(self._stream)]
+    async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | OutputT]:
+        transition = [await anext(self._wrapped_stream)]
         while transition:
             transition_item = transition.pop()
-            stream_with_transition = achain(async_iter([transition_item]), self._stream)
+            stream_with_transition = achain(
+                async_iter([transition_item]), self._wrapped_stream
+            )
             if self._content_parser.is_member(transition_item):
                 yield AsyncStreamedStr(
                     self._content_parser.aiter(stream_with_transition, transition)
@@ -148,13 +191,21 @@ class AsyncOutputStream(Generic[T]):
                 function_schema = select_function_schema(
                     self._function_schemas, tool_name
                 )
-                # TODO: Catch/raise ToolSchemaParseError here for retry logic
-                yield await function_schema.aparse_args(
-                    self._tool_parser.aiter(stream_with_transition, transition)
-                )
+                try:
+                    yield await function_schema.aparse_args(
+                        self._tool_parser.aiter(stream_with_transition, transition)
+                    )
+                # TODO: Catch/raise unknown tool call error here
+                except ValidationError as e:
+                    assert self._state.current_tool_call_id is not None  # noqa: S101
+                    raise ToolSchemaParseError(
+                        output_message=self._state.current_message_snapshot,
+                        tool_call_id=self._state.current_tool_call_id,
+                        validation_error=e,
+                    ) from e
             elif self._usage_parser.is_member(transition_item):
                 self.usage = self._usage_parser.transform(transition_item)
-            elif new_transition_item := await anext(self._stream, None):
+            elif new_transition_item := await anext(self._wrapped_stream, None):
                 transition.append(new_transition_item)
 
     async def close(self):
