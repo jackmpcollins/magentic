@@ -58,6 +58,7 @@ class ToolSchemaParseError(Exception):
         self.validation_error = validation_error
 
 
+# TODO: Delete this function
 def validate_str_content(
     streamed_str: StreamedStr, *, allow_string_output: bool, streamed: bool
 ) -> StreamedStr | str:
@@ -70,6 +71,7 @@ def validate_str_content(
     return str(streamed_str)
 
 
+# TODO: Delete this function
 async def avalidate_str_content(
     async_streamed_str: AsyncStreamedStr, *, allow_string_output: bool, streamed: bool
 ) -> AsyncStreamedStr | str:

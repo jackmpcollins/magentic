@@ -477,6 +477,7 @@ class OpenaiChatModel(ChatModel):
         output_types: Iterable[type[R]] | None = None,
         *,
         stop: list[str] | None = None,
+        # TODO: Add type hint for function call ?
     ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Request an LLM message."""
         if output_types is None:
@@ -490,10 +491,12 @@ class OpenaiChatModel(ChatModel):
         ]
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
+        # TODO: pass output_types to _get_tool_choice directly and remove these
         str_in_output_types = is_any_origin_subclass(output_types, str)
         streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
+        # TODO: Switch to the create method to avoid possible validation addition
         _stream = self._client.beta.chat.completions.stream(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
