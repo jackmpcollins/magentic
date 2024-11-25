@@ -1,14 +1,14 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Iterable, Iterator
 from itertools import chain
-from typing import TYPE_CHECKING, Generic, TypeVar
+from typing import Generic, TypeVar
 
 from litellm.llms.files_apis.azure import Any
 from pydantic import ValidationError
 
 from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.function_schema import FunctionSchema, select_function_schema
-from magentic.chat_model.message import Message
+from magentic.chat_model.message import Message, Usage
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
@@ -17,10 +17,6 @@ from magentic.streaming import (
     apply,
     async_iter,
 )
-
-if TYPE_CHECKING:
-    from magentic.chat_model.message import Usage
-
 
 ItemT = TypeVar("ItemT")
 OutputT = TypeVar("OutputT")
@@ -62,6 +58,8 @@ class StreamParser(ABC, Generic[ItemT, OutputT]):
 
 
 class StreamState(ABC, Generic[ItemT]):
+    usage_ref: list[Usage]
+
     @abstractmethod
     def update(self, item: ItemT) -> None: ...
 
@@ -83,7 +81,6 @@ class OutputStream(Generic[ItemT, OutputT]):
         function_schemas: Iterable[FunctionSchema[OutputT]],
         content_parser: StreamParser,
         tool_parser: StreamParser,
-        usage_parser: StreamParser,
         state: StreamState[ItemT],
     ):
         self._stream = stream
@@ -92,12 +89,9 @@ class OutputStream(Generic[ItemT, OutputT]):
 
         self._content_parser = content_parser
         self._tool_parser = tool_parser
-        self._usage_parser = usage_parser
         self._state = state
 
         self._wrapped_stream = apply(self._state.update, stream)
-
-        self.usage: Usage | None = None
 
     def __next__(self) -> StreamedStr | OutputT:
         return self._iterator.__next__()
@@ -132,11 +126,12 @@ class OutputStream(Generic[ItemT, OutputT]):
                         tool_call_id=self._state.current_tool_call_id,
                         validation_error=e,
                     ) from e
-            # TODO: Move usage tracking into StreamState
-            elif self._usage_parser.is_member(transition_item):
-                self.usage = self._usage_parser.transform(transition_item)
             elif new_transition_item := next(self._wrapped_stream, None):
                 transition.append(new_transition_item)
+
+    @property
+    def usage_ref(self) -> list[Usage]:
+        return self._state.usage_ref
 
     def close(self):
         self._stream.close()
@@ -151,7 +146,6 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
         function_schemas: Iterable[FunctionSchema[OutputT]],
         content_parser: StreamParser,
         tool_parser: StreamParser,
-        usage_parser: StreamParser,
         state: StreamState[ItemT],
     ):
         self._stream = stream
@@ -160,12 +154,9 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
 
         self._content_parser = content_parser
         self._tool_parser = tool_parser
-        self._usage_parser = usage_parser
         self._state = state
 
         self._wrapped_stream = aapply(self._state.update, stream)
-
-        self.usage: Usage | None = None
 
     async def __anext__(self) -> AsyncStreamedStr | OutputT:
         return await self._iterator.__anext__()
@@ -203,10 +194,12 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                         tool_call_id=self._state.current_tool_call_id,
                         validation_error=e,
                     ) from e
-            elif self._usage_parser.is_member(transition_item):
-                self.usage = self._usage_parser.transform(transition_item)
             elif new_transition_item := await anext(self._wrapped_stream, None):
                 transition.append(new_transition_item)
+
+    @property
+    def usage_ref(self) -> list[Usage]:
+        return self._state.usage_ref
 
     async def close(self):
         await self._stream.close()

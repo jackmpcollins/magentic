@@ -15,7 +15,6 @@ import openai
 from openai.lib.streaming.chat import (
     AsyncChatCompletionStreamManager,
     ChatCompletionStreamEvent,
-    ChunkEvent,
     ContentDeltaEvent,
     ContentDoneEvent,
     FunctionToolCallArgumentsDeltaEvent,
@@ -279,25 +278,6 @@ class OpenaiToolStreamParser(StreamParser[ChatCompletionStreamEvent, str]):
         return item.name
 
 
-# TODO: Move usage tracking into OpenaiStreamState
-class OpenaiUsageStreamParser(StreamParser[ChatCompletionStreamEvent, Usage]):
-    """Filters and transforms OpenAI usage events from a stream."""
-
-    def is_member(self, item: ChatCompletionStreamEvent) -> TypeGuard[ChunkEvent]:
-        return item.type == "chunk" and bool(item.chunk.usage)
-
-    def is_end(self, item: ChatCompletionStreamEvent) -> Literal[True]:
-        return True  # Single event so immediately end
-
-    def transform(self, item: ChatCompletionStreamEvent) -> Usage:
-        assert self.is_member(item)  # noqa: S101
-        assert item.chunk.usage  # noqa: S101
-        return Usage(
-            input_tokens=item.chunk.usage.prompt_tokens,
-            output_tokens=item.chunk.usage.completion_tokens,
-        )
-
-
 class OpenaiStreamState(StreamState):
     def __init__(self, function_schemas):
         self._function_schemas = function_schemas
@@ -307,10 +287,12 @@ class OpenaiStreamState(StreamState):
             response_format=openai.NOT_GIVEN,
         )
         self._current_tool_call_id: str | None = None
+        self.usage_ref: list[Usage] = []
 
     def update(self, item: ChatCompletionStreamEvent) -> None:
         if item.type == "chunk":
             self._chat_completion_stream_state.handle_chunk(item.chunk)
+        # TODO: Should loop through tool calls
         if (
             item.type == "chunk"
             and item.chunk.choices
@@ -321,6 +303,14 @@ class OpenaiStreamState(StreamState):
             # openai keeps index consistent for chunks from the same tool_call, but id is null
             # mistral has null index, but keeps id consistent
             self._current_tool_call_id = item.chunk.choices[0].delta.tool_calls[0].id
+        if item.type == "chunk" and bool(item.chunk.usage):
+            assert not self.usage_ref  # noqa: S101
+            self.usage_ref.append(
+                Usage(
+                    input_tokens=item.chunk.usage.prompt_tokens,
+                    output_tokens=item.chunk.usage.completion_tokens,
+                )
+            )
 
     @property
     def current_tool_call_id(self) -> str | None:
@@ -521,10 +511,11 @@ class OpenaiChatModel(ChatModel):
             # TODO: Consoldate these into a single parser / state object?
             content_parser=OpenaiContentStreamParser(),
             tool_parser=OpenaiToolStreamParser(),
-            usage_parser=OpenaiUsageStreamParser(),
             state=OpenaiStreamState(function_schemas=function_schemas),
         )
-        return AssistantMessage(parse_stream(stream, output_types))  # type: ignore[return-type]
+        return AssistantMessage._with_usage(
+            parse_stream(stream, output_types), usage_ref=stream.usage_ref
+        )
 
     @overload
     async def acomplete(
@@ -603,7 +594,8 @@ class OpenaiChatModel(ChatModel):
             function_schemas=function_schemas,
             content_parser=OpenaiContentStreamParser(),
             tool_parser=OpenaiToolStreamParser(),
-            usage_parser=OpenaiUsageStreamParser(),
             state=OpenaiStreamState(function_schemas=function_schemas),
         )
-        return AssistantMessage(await aparse_stream(stream, output_types))  # type: ignore[return-type]
+        return AssistantMessage._with_usage(
+            await aparse_stream(stream, output_types), usage_ref=stream.usage_ref
+        )
