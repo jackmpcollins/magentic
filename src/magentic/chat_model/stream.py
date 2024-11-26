@@ -22,50 +22,44 @@ ItemT = TypeVar("ItemT")
 OutputT = TypeVar("OutputT")
 
 
-class StreamParser(ABC, Generic[ItemT, OutputT]):
-    """Filters and transforms items from an iterator until the end condition is met."""
-
-    def is_member(self, item: ItemT) -> bool:
-        return True
+class StreamParser(ABC, Generic[ItemT]):
+    @abstractmethod
+    def is_content(self, item: ItemT) -> bool: ...
 
     @abstractmethod
-    def is_end(self, item: ItemT) -> bool: ...
+    def is_content_ended(self, item: ItemT) -> bool: ...
 
     @abstractmethod
-    def transform(self, item: ItemT) -> OutputT: ...
+    def get_content(self, item: ItemT) -> str: ...
 
-    def iter(
-        self, iterator: Iterator[ItemT], transition: list[ItemT]
-    ) -> Iterator[OutputT]:
-        for item in iterator:
-            if self.is_member(item):
-                yield self.transform(item)
-            if self.is_end(item):
-                assert not transition  # noqa: S101
-                transition.append(item)
-                return
+    @abstractmethod
+    def is_tool_call(self, item: ItemT) -> bool: ...
 
-    async def aiter(
-        self, aiterator: AsyncIterator[ItemT], transition: list[ItemT]
-    ) -> AsyncIterator[OutputT]:
-        async for item in aiterator:
-            if self.is_member(item):
-                yield self.transform(item)
-            if self.is_end(item):
-                assert not transition  # noqa: S101
-                transition.append(item)
-                return
+    @abstractmethod
+    def get_tool_call_index(self, item: ItemT) -> int | None: ...
+
+    @abstractmethod
+    def get_tool_call_id(self, item: ItemT) -> str | None: ...
+
+    @abstractmethod
+    def get_tool_name(self, item: ItemT) -> str | None: ...
+
+    @abstractmethod
+    def get_tool_call_args(self, item: ItemT) -> str: ...
 
 
 class StreamState(ABC, Generic[ItemT]):
+    """Tracks the state of the LLM output stream.
+
+    - message snapshot
+    - usage
+    - stop reason
+    """
+
     usage_ref: list[Usage]
 
     @abstractmethod
     def update(self, item: ItemT) -> None: ...
-
-    @property
-    @abstractmethod
-    def current_tool_call_id(self) -> str | None: ...
 
     @property
     @abstractmethod
@@ -79,19 +73,15 @@ class OutputStream(Generic[ItemT, OutputT]):
         self,
         stream: Iterator[ItemT],
         function_schemas: Iterable[FunctionSchema[OutputT]],
-        content_parser: StreamParser,
-        tool_parser: StreamParser,
+        parser: StreamParser[ItemT],
         state: StreamState[ItemT],
     ):
         self._stream = stream
         self._function_schemas = function_schemas
-        self._iterator = self.__stream__()
-
-        self._content_parser = content_parser
-        self._tool_parser = tool_parser
+        self._parser = parser
         self._state = state
 
-        self._wrapped_stream = apply(self._state.update, stream)
+        self._iterator = self.__stream__()
 
     def __next__(self) -> StreamedStr | OutputT:
         return self._iterator.__next__()
@@ -99,35 +89,66 @@ class OutputStream(Generic[ItemT, OutputT]):
     def __iter__(self) -> Iterator[StreamedStr | OutputT]:
         yield from self._iterator
 
+    def _streamed_str(
+        self, stream: Iterator[ItemT], current_item_ref: list[ItemT]
+    ) -> Iterator[str]:
+        for item in stream:
+            if self._parser.is_content_ended(item):
+                # TODO: Check if output types allow for early return
+                assert not current_item_ref  # noqa: S101
+                current_item_ref.append(item)
+                return
+            yield self._parser.get_content(item)
+
+    def _tool_call(
+        self,
+        stream: Iterator[ItemT],
+        current_item_ref: list[ItemT],
+        tool_call_index: int,
+    ) -> Iterator[str]:
+        for item in stream:
+            item_tool_call_index = self._parser.get_tool_call_index(item)
+            if item_tool_call_index and item_tool_call_index != tool_call_index:
+                # TODO: Check if output types allow for early return
+                assert not current_item_ref  # noqa: S101
+                current_item_ref.append(item)
+                return
+            yield self._parser.get_tool_call_args(item)
+
     def __stream__(self) -> Iterator[StreamedStr | OutputT]:
-        transition = [next(self._wrapped_stream)]
-        while transition:
-            transition_item = transition.pop()
-            stream_with_transition = chain([transition_item], self._wrapped_stream)
-            if self._content_parser.is_member(transition_item):
-                yield StreamedStr(
-                    self._content_parser.iter(stream_with_transition, transition)
-                )
-            elif self._tool_parser.is_member(transition_item):
-                # TODO: Add new base class for tool parser
-                tool_name = self._tool_parser.get_tool_name(transition_item)
+        stream = apply(self._state.update, self._stream)
+        current_item_ref = [next(stream)]
+        while current_item_ref:
+            current_item = current_item_ref.pop()
+            if self._parser.is_content(current_item):
+                stream = chain([current_item], stream)
+                yield StreamedStr(self._streamed_str(stream, current_item_ref))
+            # TODO: Make is_tool_calls to handle multiple tools
+            elif self._parser.is_tool_call(current_item):
+                # TODO: Iterate until ID is found ?
+                current_tool_call_id = self._parser.get_tool_call_id(current_item)
+                current_tool_name = self._parser.get_tool_name(current_item)
                 function_schema = select_function_schema(
-                    self._function_schemas, tool_name
+                    self._function_schemas, current_tool_name
                 )
+                current_tool_call_index = self._parser.get_tool_call_index(current_item)
+                stream = chain([current_item], stream)
                 try:
                     yield function_schema.parse_args(
-                        self._tool_parser.iter(stream_with_transition, transition)
+                        self._tool_call(
+                            stream, current_item_ref, current_tool_call_index
+                        )
                     )
                 # TODO: Catch/raise unknown tool call error here
                 except ValidationError as e:
-                    assert self._state.current_tool_call_id is not None  # noqa: S101
+                    assert current_tool_call_id is not None  # noqa: S101
                     raise ToolSchemaParseError(
                         output_message=self._state.current_message_snapshot,
-                        tool_call_id=self._state.current_tool_call_id,
+                        tool_call_id=current_tool_call_id,
                         validation_error=e,
                     ) from e
-            elif new_transition_item := next(self._wrapped_stream, None):
-                transition.append(new_transition_item)
+            elif new_current_item := next(stream, None):
+                current_item_ref.append(new_current_item)
 
     @property
     def usage_ref(self) -> list[Usage]:
@@ -144,19 +165,15 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
         self,
         stream: AsyncIterator[ItemT],
         function_schemas: Iterable[FunctionSchema[OutputT]],
-        content_parser: StreamParser,
-        tool_parser: StreamParser,
+        parser: StreamParser[ItemT],
         state: StreamState[ItemT],
     ):
         self._stream = stream
         self._function_schemas = function_schemas
-        self._iterator = self.__stream__()
-
-        self._content_parser = content_parser
-        self._tool_parser = tool_parser
+        self._parser = parser
         self._state = state
 
-        self._wrapped_stream = aapply(self._state.update, stream)
+        self._iterator = self.__stream__()
 
     async def __anext__(self) -> AsyncStreamedStr | OutputT:
         return await self._iterator.__anext__()
@@ -165,37 +182,67 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
         async for item in self._iterator:
             yield item
 
+    async def _streamed_str(
+        self, stream: AsyncIterator[ItemT], current_item_ref: list[ItemT]
+    ) -> AsyncIterator[str]:
+        async for item in stream:
+            if self._parser.is_content_ended(item):
+                # TODO: Check if output types allow for early return
+                assert not current_item_ref  # noqa: S101
+                current_item_ref.append(item)
+                return
+            yield self._parser.get_content(item)
+
+    async def _tool_call(
+        self,
+        stream: AsyncIterator[ItemT],
+        current_item_ref: list[ItemT],
+        tool_call_index: int,
+    ) -> AsyncIterator[str]:
+        async for item in stream:
+            item_tool_call_index = self._parser.get_tool_call_index(item)
+            if item_tool_call_index and item_tool_call_index != tool_call_index:
+                # TODO: Check if output types allow for early return
+                assert not current_item_ref  # noqa: S101
+                current_item_ref.append(item)
+                return
+            yield self._parser.get_tool_call_args(item)
+
     async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | OutputT]:
-        transition = [await anext(self._wrapped_stream)]
-        while transition:
-            transition_item = transition.pop()
-            stream_with_transition = achain(
-                async_iter([transition_item]), self._wrapped_stream
-            )
-            if self._content_parser.is_member(transition_item):
-                yield AsyncStreamedStr(
-                    self._content_parser.aiter(stream_with_transition, transition)
-                )
-            elif self._tool_parser.is_member(transition_item):
-                # TODO: Add new base class for tool parser
-                tool_name = self._tool_parser.get_tool_name(transition_item)
+        stream = aapply(self._state.update, self._stream)
+        current_item_ref = [await anext(stream)]
+        while current_item_ref:
+            current_item = current_item_ref.pop()
+            if self._parser.is_content(current_item):
+                stream = achain(async_iter([current_item]), stream)
+                yield AsyncStreamedStr(self._streamed_str(stream, current_item_ref))
+            # TODO: Make is_tool_calls to handle multiple tools
+            elif self._parser.is_tool_call(current_item):
+                # TODO: Iterate until ID is found ?
+                current_tool_call_id = self._parser.get_tool_call_id(current_item)
+                current_tool_name = self._parser.get_tool_name(current_item)
                 function_schema = select_function_schema(
-                    self._function_schemas, tool_name
+                    self._function_schemas, current_tool_name
                 )
+                current_tool_call_index = self._parser.get_tool_call_index(current_item)
+                stream = achain(async_iter([current_item]), stream)
                 try:
                     yield await function_schema.aparse_args(
-                        self._tool_parser.aiter(stream_with_transition, transition)
+                        self._tool_call(
+                            stream, current_item_ref, current_tool_call_index
+                        )
                     )
                 # TODO: Catch/raise unknown tool call error here
                 except ValidationError as e:
-                    assert self._state.current_tool_call_id is not None  # noqa: S101
+                    assert current_tool_call_id is not None  # noqa: S101
                     raise ToolSchemaParseError(
                         output_message=self._state.current_message_snapshot,
-                        tool_call_id=self._state.current_tool_call_id,
+                        # TODO: Take last tool call id from the message snapshot instead?
+                        tool_call_id=current_tool_call_id,
                         validation_error=e,
                     ) from e
-            elif new_transition_item := await anext(self._wrapped_stream, None):
-                transition.append(new_transition_item)
+            elif new_current_item := await anext(stream, None):
+                current_item_ref.append(new_current_item)
 
     @property
     def usage_ref(self) -> list[Usage]:

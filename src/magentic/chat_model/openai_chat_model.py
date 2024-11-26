@@ -1,25 +1,17 @@
 import base64
 from collections.abc import (
     AsyncIterator,
-    Awaitable,
     Callable,
     Iterable,
+    Iterator,
     Sequence,
 )
 from enum import Enum
 from functools import singledispatch
-from typing import Any, Generic, Literal, TypeGuard, TypeVar, cast, overload
+from typing import Any, Generic, Literal, TypeVar, cast, overload
 
 import filetype
 import openai
-from openai.lib.streaming.chat import (
-    AsyncChatCompletionStreamManager,
-    ChatCompletionStreamEvent,
-    ContentDeltaEvent,
-    ContentDoneEvent,
-    FunctionToolCallArgumentsDeltaEvent,
-    FunctionToolCallArgumentsDoneEvent,
-)
 from openai.lib.streaming.chat._completions import ChatCompletionStreamState
 from openai.types.chat import (
     ChatCompletionChunk,
@@ -240,45 +232,68 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
         return {"type": "function", "function": self._function_schema.dict()}
 
 
-class OpenaiContentStreamParser(StreamParser[ChatCompletionStreamEvent, str]):
-    """Filters and transforms OpenAI content events from a stream."""
+class OpenaiStreamParser(StreamParser[ChatCompletionChunk]):
+    def is_content(self, item: ChatCompletionChunk) -> bool:
+        return bool(item.choices and item.choices[0].delta.content)
 
-    def is_member(
-        self, item: ChatCompletionStreamEvent
-    ) -> TypeGuard[ContentDeltaEvent]:
-        return item.type == "content.delta"
+    def is_content_ended(self, item: ChatCompletionChunk) -> bool:
+        return self.is_tool_call(item)
 
-    def is_end(self, item: ChatCompletionStreamEvent) -> TypeGuard[ContentDoneEvent]:
-        return item.type == "content.done"
+    def get_content(self, item: ChatCompletionChunk) -> str:
+        if item.choices and item.choices[0].delta.content:
+            return item.choices[0].delta.content
+        return ""
 
-    def transform(self, item: ChatCompletionStreamEvent) -> str:
-        assert self.is_member(item)  # noqa: S101
-        return item.delta
+    def is_tool_call(self, item: ChatCompletionChunk) -> bool:
+        return bool(item.choices and item.choices[0].delta.tool_calls)
+
+    def get_tool_call_index(self, item: ChatCompletionChunk) -> int | None:
+        if (
+            item.choices
+            and item.choices[0].delta.tool_calls
+            and item.choices[0].delta.tool_calls[0].index is not None
+        ):
+            return item.choices[0].delta.tool_calls[0].index
+        return None
+
+    def get_tool_call_id(self, item: ChatCompletionChunk) -> str | None:
+        if (
+            item.choices
+            and item.choices[0].delta.tool_calls
+            and item.choices[0].delta.tool_calls[0].id
+        ):
+            return item.choices[0].delta.tool_calls[0].id
+        return None
+
+    def get_tool_name(self, item: ChatCompletionChunk) -> str | None:
+        if (
+            item.choices
+            and item.choices[0].delta.tool_calls
+            and item.choices[0].delta.tool_calls[0].function
+            and item.choices[0].delta.tool_calls[0].function.name
+        ):
+            return item.choices[0].delta.tool_calls[0].function.name
+        return None
+
+    def get_tool_call_args(self, item: ChatCompletionChunk) -> str:
+        if (
+            item.choices
+            and item.choices[0].delta.tool_calls
+            and item.choices[0].delta.tool_calls[0].function
+            and item.choices[0].delta.tool_calls[0].function.arguments
+        ):
+            return item.choices[0].delta.tool_calls[0].function.arguments
+        return ""
 
 
-class OpenaiToolStreamParser(StreamParser[ChatCompletionStreamEvent, str]):
-    """Filters and transforms OpenAI tool events from a stream."""
+class OpenaiStreamState(StreamState[ChatCompletionChunk]):
+    """Tracks the state of the OpenAI model output stream.
 
-    def is_member(
-        self, item: ChatCompletionStreamEvent
-    ) -> TypeGuard[FunctionToolCallArgumentsDeltaEvent]:
-        return item.type == "tool_calls.function.arguments.delta"
+    - message snapshot
+    - usage
+    - stop reason
+    """
 
-    def is_end(
-        self, item: ChatCompletionStreamEvent
-    ) -> TypeGuard[FunctionToolCallArgumentsDoneEvent]:
-        return item.type == "tool_calls.function.arguments.done"
-
-    def transform(self, item: ChatCompletionStreamEvent) -> str:
-        assert self.is_member(item)  # noqa: S101
-        return item.arguments_delta
-
-    def get_tool_name(self, item: ChatCompletionStreamEvent) -> str:
-        assert self.is_member(item)  # noqa: S101
-        return item.name
-
-
-class OpenaiStreamState(StreamState):
     def __init__(self, function_schemas):
         self._function_schemas = function_schemas
 
@@ -286,35 +301,18 @@ class OpenaiStreamState(StreamState):
             input_tools=openai.NOT_GIVEN,
             response_format=openai.NOT_GIVEN,
         )
-        self._current_tool_call_id: str | None = None
         self.usage_ref: list[Usage] = []
 
-    def update(self, item: ChatCompletionStreamEvent) -> None:
-        if item.type == "chunk":
-            self._chat_completion_stream_state.handle_chunk(item.chunk)
-        # TODO: Should loop through tool calls
-        if (
-            item.type == "chunk"
-            and item.chunk.choices
-            and item.chunk.choices[0].delta.tool_calls
-            and item.chunk.choices[0].delta.tool_calls[0].id
-        ):
-            # TODO: Mistral fix here ?
-            # openai keeps index consistent for chunks from the same tool_call, but id is null
-            # mistral has null index, but keeps id consistent
-            self._current_tool_call_id = item.chunk.choices[0].delta.tool_calls[0].id
-        if item.type == "chunk" and bool(item.chunk.usage):
+    def update(self, item: ChatCompletionChunk) -> None:
+        self._chat_completion_stream_state.handle_chunk(item)
+        if item.usage:
             assert not self.usage_ref  # noqa: S101
             self.usage_ref.append(
                 Usage(
-                    input_tokens=item.chunk.usage.prompt_tokens,
-                    output_tokens=item.chunk.usage.completion_tokens,
+                    input_tokens=item.usage.prompt_tokens,
+                    output_tokens=item.usage.completion_tokens,
                 )
             )
-
-    @property
-    def current_tool_call_id(self) -> str | None:
-        return self._current_tool_call_id
 
     @property
     def current_message_snapshot(self) -> Message:
@@ -486,8 +484,7 @@ class OpenaiChatModel(ChatModel):
         streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
         allow_string_output = str_in_output_types or streamed_str_in_output_types
 
-        # TODO: Switch to the create method to avoid possible validation addition
-        _stream = self._client.beta.chat.completions.stream(
+        response: Iterator[ChatCompletionChunk] = self._client.chat.completions.create(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
                 [message_to_openai_message(m) for m in messages]
@@ -495,6 +492,7 @@ class OpenaiChatModel(ChatModel):
             max_tokens=_if_given(self.max_tokens),
             seed=_if_given(self.seed),
             stop=_if_given(stop),
+            stream=True,
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
@@ -504,13 +502,11 @@ class OpenaiChatModel(ChatModel):
             parallel_tool_calls=self._get_parallel_tool_calls(
                 tools_specified=bool(tool_schemas), output_types=output_types
             ),
-        ).__enter__()  # Get stream directly, without context manager
+        )
         stream = OutputStream(
-            _stream,
+            response,
             function_schemas=function_schemas,
-            # TODO: Consoldate these into a single parser / state object?
-            content_parser=OpenaiContentStreamParser(),
-            tool_parser=OpenaiToolStreamParser(),
+            parser=OpenaiStreamParser(),
             state=OpenaiStreamState(function_schemas=function_schemas),
         )
         return AssistantMessage._with_usage(
@@ -562,38 +558,31 @@ class OpenaiChatModel(ChatModel):
         )
         allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        response: Awaitable[AsyncIterator[ChatCompletionChunk]] = (
-            self._async_client.chat.completions.create(
-                model=self.model,
-                messages=_add_missing_tool_calls_responses(
-                    [message_to_openai_message(m) for m in messages]
-                ),
-                max_tokens=_if_given(self.max_tokens),
-                seed=_if_given(self.seed),
-                stop=_if_given(stop),
-                stream=True,
-                stream_options=self._get_stream_options(),
-                temperature=_if_given(self.temperature),
-                tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
-                tool_choice=self._get_tool_choice(
-                    tool_schemas=tool_schemas, allow_string_output=allow_string_output
-                ),
-                parallel_tool_calls=self._get_parallel_tool_calls(
-                    tools_specified=bool(tool_schemas), output_types=output_types
-                ),
-            )
+        response: AsyncIterator[
+            ChatCompletionChunk
+        ] = await self._async_client.chat.completions.create(
+            model=self.model,
+            messages=_add_missing_tool_calls_responses(
+                [message_to_openai_message(m) for m in messages]
+            ),
+            max_tokens=_if_given(self.max_tokens),
+            seed=_if_given(self.seed),
+            stop=_if_given(stop),
+            stream=True,
+            stream_options=self._get_stream_options(),
+            temperature=_if_given(self.temperature),
+            tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+            ),
+            parallel_tool_calls=self._get_parallel_tool_calls(
+                tools_specified=bool(tool_schemas), output_types=output_types
+            ),
         )
-        _stream = await AsyncChatCompletionStreamManager(
-            response,
-            response_format=openai.NOT_GIVEN,
-            input_tools=[schema.to_dict() for schema in tool_schemas]
-            or openai.NOT_GIVEN,
-        ).__aenter__()  # Get stream directly, without context manager
         stream = AsyncOutputStream(
-            _stream,
+            response,
             function_schemas=function_schemas,
-            content_parser=OpenaiContentStreamParser(),
-            tool_parser=OpenaiToolStreamParser(),
+            parser=OpenaiStreamParser(),
             state=OpenaiStreamState(function_schemas=function_schemas),
         )
         return AssistantMessage._with_usage(
