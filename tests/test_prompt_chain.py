@@ -7,7 +7,6 @@ from magentic.function_call import FunctionCall
 from magentic.prompt_chain import MaxFunctionCallsError, prompt_chain
 
 
-@pytest.mark.skip("TODO: Add FunctionCall to output_types internal to prompt_chain")
 @pytest.mark.openai
 def test_prompt_chain():
     def get_current_weather(location, unit="fahrenheit"):
@@ -51,7 +50,6 @@ def test_prompt_chain_max_calls():
     assert mock_function.call_count == 1
 
 
-@pytest.mark.skip("TODO: Add FunctionCall to output_types internal to prompt_chain")
 @pytest.mark.openai
 async def test_async_prompt_chain():
     async def get_current_weather(location, unit="fahrenheit"):

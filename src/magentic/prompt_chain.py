@@ -37,7 +37,8 @@ def prompt_chain(
             async_prompt_function = AsyncPromptFunction[P, Any](
                 name=func.__name__,
                 parameters=list(func_signature.parameters.values()),
-                return_type=func_signature.return_annotation,
+                # TODO: Also allow ParallelFunctionCall. Support this more neatly
+                return_type=func_signature.return_annotation | FunctionCall,  # type: ignore[arg-type]
                 template=template,
                 functions=functions,
                 model=model,
@@ -70,7 +71,8 @@ def prompt_chain(
         prompt_function = PromptFunction[P, R](
             name=func.__name__,
             parameters=list(func_signature.parameters.values()),
-            return_type=func_signature.return_annotation,
+            # TODO: Also allow ParallelFunctionCall. Support this more neatly
+            return_type=func_signature.return_annotation | FunctionCall,  # type: ignore[arg-type]
             template=template,
             functions=functions,
             model=model,
