@@ -36,7 +36,7 @@ class StreamParser(ABC, Generic[ItemT]):
     def is_content_ended(self, item: ItemT) -> bool: ...
 
     @abstractmethod
-    def get_content(self, item: ItemT) -> str: ...
+    def get_content(self, item: ItemT) -> str | None: ...
 
     @abstractmethod
     def is_tool_call(self, item: ItemT) -> bool: ...
@@ -89,15 +89,14 @@ class OutputStream(Generic[ItemT, OutputT]):
     def _streamed_str(
         self, stream: Iterator[ItemT], current_item_ref: list[ItemT]
     ) -> Iterator[str]:
-        # TODO: Yield item then check if next ends?
-        # To ensure no ended immediately if both content and tool calls are present
         for item in stream:
+            if content := self._parser.get_content(item):
+                yield content
             if self._parser.is_content_ended(item):
                 # TODO: Check if output types allow for early return and raise if not
                 assert not current_item_ref  # noqa: S101
                 current_item_ref.append(item)
                 return
-            yield self._parser.get_content(item)
 
     def _tool_call(
         self,
@@ -194,12 +193,13 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
         self, stream: AsyncIterator[ItemT], current_item_ref: list[ItemT]
     ) -> AsyncIterator[str]:
         async for item in stream:
+            if content := self._parser.get_content(item):
+                yield content
             if self._parser.is_content_ended(item):
                 # TODO: Check if output types allow for early return
                 assert not current_item_ref  # noqa: S101
                 current_item_ref.append(item)
                 return
-            yield self._parser.get_content(item)
 
     async def _tool_call(
         self,
