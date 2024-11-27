@@ -24,17 +24,45 @@ _chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
 
 # TODO: Parent class with `output_message` attribute ?
 class StringNotAllowedError(Exception):
-    """Raised when a string is returned by the LLM but not expected."""
+    """Raised when a string is returned by the LLM but not allowed."""
 
     _MESSAGE = (
-        "A string was returned by the LLM but was not an allowed output type."
-        ' Consider updating the prompt to encourage the LLM to "use the tool".'
+        "A string was returned by the LLM but is not an allowed output type."
+        " Consider updating the allowed output types or modifying the prompt."
         " Model output: {model_output!r}"
     )
 
-    def __init__(self, output_message: Message[Any]):
-        super().__init__(self._MESSAGE.format(model_output=output_message.content))
-        self.output_message = output_message
+    def __init__(self, model_output: str):
+        super().__init__(self._MESSAGE.format(model_output=model_output))
+        self.output_message = AssistantMessage(model_output)
+
+
+class FunctionCallNotAllowedError(Exception):
+    """Raised when a FunctionCall is returned by the LLM but not allowed."""
+
+    _MESSAGE = (
+        "A function call was returned by the LLM but is not an allowed output type."
+        " Consider updating the allowed output types or modifying the prompt."
+        " FunctionCall: {function_call!r}"
+    )
+
+    def __init__(self, function_call: FunctionCall[Any]):
+        super().__init__(self._MESSAGE.format(function_call=function_call))
+        self.output_message = AssistantMessage(function_call)
+
+
+class ObjectNotAllowedError(Exception):
+    """Raised when a Python object is returned by the LLM but not allowed."""
+
+    _MESSAGE = (
+        "An object was returned by the LLM but is not an allowed output type."
+        " Consider updating the allowed output types or modifying the prompt."
+        " Object: {obj!r}"
+    )
+
+    def __init__(self, obj: Any):
+        super().__init__(self._MESSAGE.format(obj=obj))
+        self.output_message = AssistantMessage(obj)
 
 
 class ToolSchemaParseError(Exception):
@@ -71,18 +99,17 @@ def parse_stream(stream: Iterator[Any], output_types: Iterable[type[R]]) -> R:
             return cast(R, obj)
         if str in output_type_origins:
             return cast(R, str(obj))
-        model_output = obj.truncate(100)
-        raise StringNotAllowedError(AssistantMessage(model_output))
+        raise StringNotAllowedError(obj.truncate(100))
     if isinstance(obj, FunctionCall):
         if ParallelFunctionCall in output_type_origins:
             return cast(R, ParallelFunctionCall(chain([obj], stream)))
         if FunctionCall in output_type_origins:
             # TODO: Check that FunctionCall type matches ?
             return cast(R, obj)
-        raise ValueError("FunctionCall not allowed")
+        raise FunctionCallNotAllowedError(obj)
     if isinstance(obj, tuple(output_type_origins)):
         return obj
-    raise ValueError(f"Unexpected output type: {type(obj)}")
+    raise ObjectNotAllowedError(obj)
 
 
 async def aparse_stream(
@@ -96,17 +123,16 @@ async def aparse_stream(
             return cast(R, obj)
         if str in output_type_origins:
             return cast(R, await obj.to_string())
-        model_output = await obj.truncate(100)
-        raise StringNotAllowedError(AssistantMessage(model_output))
+        raise StringNotAllowedError(await obj.truncate(100))
     if isinstance(obj, FunctionCall):
         if AsyncParallelFunctionCall in output_type_origins:
             return cast(R, AsyncParallelFunctionCall(achain(async_iter([obj]), stream)))
         if FunctionCall in output_type_origins:
             return cast(R, obj)
-        raise ValueError("FunctionCall not allowed")
+        raise FunctionCallNotAllowedError(obj)
     if isinstance(obj, tuple(output_type_origins)):
         return obj
-    raise ValueError(f"Unexpected output type: {type(obj)}")
+    raise ObjectNotAllowedError(obj)
 
 
 class ChatModel(ABC):
