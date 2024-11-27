@@ -101,10 +101,12 @@ class LitellmStreamState(StreamState[ModelResponse]):
         self.usage_ref: list[Usage] = []
 
     def update(self, item: ModelResponse) -> None:
-        # usage attribute is required inside ChatCompletionStreamState.handle_chunk
-        # and litellm requires that this is not None for its total usage calculation
+        # Patch attributes required inside ChatCompletionStreamState.handle_chunk
         if not hasattr(item, "usage"):
+            # litellm requires usage is not None for its total usage calculation
             item.usage = litellm.Usage()  # type: ignore[attr-defined]
+        if not hasattr(item, "refusal"):
+            item.choices[0].delta.refusal = None  # type: ignore[attr-defined]
         self._chat_completion_stream_state.handle_chunk(item)  # type: ignore[arg-type]
         usage = cast(litellm.Usage, item.usage)  # type: ignore[attr-defined]
         # Ignore usages with 0 tokens
