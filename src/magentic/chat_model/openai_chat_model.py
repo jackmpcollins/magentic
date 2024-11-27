@@ -78,7 +78,9 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
 
 @message_to_openai_message.register(_RawMessage)
 def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
-    # TODO: Validate the message content
+    assert isinstance(message.content, dict)  # noqa: S101
+    assert "role" in message.content  # noqa: S101
+    assert "content" in message.content  # noqa: S101
     return message.content  # type: ignore[no-any-return]
 
 
@@ -294,9 +296,7 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
     - stop reason
     """
 
-    def __init__(self, function_schemas):
-        self._function_schemas = function_schemas
-
+    def __init__(self):
         self._chat_completion_stream_state = ChatCompletionStreamState(
             input_tools=openai.NOT_GIVEN,
             response_format=openai.NOT_GIVEN,
@@ -316,11 +316,8 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
 
     @property
     def current_message_snapshot(self) -> Message:
-        message = (
-            self._chat_completion_stream_state.current_completion_snapshot.choices[
-                0
-            ].message
-        )
+        snapshot = self._chat_completion_stream_state.current_completion_snapshot
+        message = snapshot.choices[0].message
         # TODO: Possible to return AssistantMessage here?
         return _RawMessage(message.model_dump())
 
@@ -507,7 +504,7 @@ class OpenaiChatModel(ChatModel):
             response,
             function_schemas=function_schemas,
             parser=OpenaiStreamParser(),
-            state=OpenaiStreamState(function_schemas=function_schemas),
+            state=OpenaiStreamState(),
         )
         return AssistantMessage._with_usage(
             parse_stream(stream, output_types), usage_ref=stream.usage_ref
@@ -583,7 +580,7 @@ class OpenaiChatModel(ChatModel):
             response,
             function_schemas=function_schemas,
             parser=OpenaiStreamParser(),
-            state=OpenaiStreamState(function_schemas=function_schemas),
+            state=OpenaiStreamState(),
         )
         return AssistantMessage._with_usage(
             await aparse_stream(stream, output_types), usage_ref=stream.usage_ref

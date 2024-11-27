@@ -94,7 +94,7 @@ class OutputStream(Generic[ItemT, OutputT]):
     ) -> Iterator[str]:
         for item in stream:
             if self._parser.is_content_ended(item):
-                # TODO: Check if output types allow for early return
+                # TODO: Check if output types allow for early return and raise if not
                 assert not current_item_ref  # noqa: S101
                 current_item_ref.append(item)
                 return
@@ -109,7 +109,7 @@ class OutputStream(Generic[ItemT, OutputT]):
         for item in stream:
             item_tool_call_index = self._parser.get_tool_call_index(item)
             if item_tool_call_index and item_tool_call_index != tool_call_index:
-                # TODO: Check if output types allow for early return
+                # TODO: Check if output types allow for early return and raise if not
                 assert not current_item_ref  # noqa: S101
                 current_item_ref.append(item)
                 return

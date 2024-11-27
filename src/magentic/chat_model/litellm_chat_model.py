@@ -1,7 +1,10 @@
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, Literal, TypeVar, cast, overload
 
+import litellm
+import openai
 from litellm.litellm_core_utils.streaming_handler import StreamingChoices
+from openai.lib.streaming.chat._completions import ChatCompletionStreamState
 
 from magentic.chat_model.base import (
     ChatModel,
@@ -17,13 +20,19 @@ from magentic.chat_model.message import (
     AssistantMessage,
     Message,
     Usage,
+    _RawMessage,
 )
 from magentic.chat_model.openai_chat_model import (
     STR_OR_FUNCTIONCALL_TYPE,
     BaseFunctionToolSchema,
     message_to_openai_message,
 )
-from magentic.chat_model.stream import AsyncOutputStream, OutputStream, StreamParser
+from magentic.chat_model.stream import (
+    AsyncOutputStream,
+    OutputStream,
+    StreamParser,
+    StreamState,
+)
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
@@ -38,60 +47,84 @@ except ImportError as error:
     raise ImportError(msg) from error
 
 
-class LitellmContentStreamParser(StreamParser[ModelResponse, str]):
-    """Filters and transforms LiteLLM content chunks from a stream."""
-
-    def is_member(self, item: ModelResponse) -> bool:
+class LitellmStreamParser(StreamParser[ModelResponse]):
+    def is_content(self, item: ModelResponse) -> bool:
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
         return bool(item.choices[0].delta.content)
 
-    def is_end(self, item: ModelResponse) -> bool:
-        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
-        return bool(item.choices[0].delta.content is None)
+    def is_content_ended(self, item: ModelResponse) -> bool:
+        return self.is_tool_call(item)
 
-    def transform(self, item: ModelResponse) -> str:
-        assert self.is_member(item)  # noqa: S101
+    def get_content(self, item: ModelResponse) -> str:
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
         return item.choices[0].delta.content or ""
 
-
-class LitellmToolStreamParser(StreamParser[ModelResponse, str]):
-    """Filters and transforms LiteLLM tool chunks from a stream."""
-
-    def is_member(self, item: ModelResponse) -> bool:
+    def is_tool_call(self, item: ModelResponse) -> bool:
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
-        return bool(item.choices[0].delta.tool_calls is not None)
+        return bool(item.choices[0].delta.tool_calls)
 
-    def is_end(self, item: ModelResponse) -> bool:
+    def get_tool_call_index(self, item: ModelResponse) -> int | None:
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
-        return item.choices[0].delta.tool_calls is None
+        if item.choices and item.choices[0].delta.tool_calls:
+            return item.choices[0].delta.tool_calls[0].index
+        return None
 
-    def transform(self, item: ModelResponse) -> str:
-        assert self.is_member(item)  # noqa: S101
+    def get_tool_call_id(self, item: ModelResponse) -> str | None:
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
-        assert item.choices[0].delta.tool_calls is not None  # noqa: S101
-        return item.choices[0].delta.tool_calls[0].function.arguments
+        if item.choices and item.choices[0].delta.tool_calls:
+            return item.choices[0].delta.tool_calls[0].id
+        return None
 
-    def get_tool_name(self, item: ModelResponse) -> str:
-        assert self.is_member(item)  # noqa: S101
+    def get_tool_name(self, item: ModelResponse) -> str | None:
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
-        assert item.choices[0].delta.tool_calls is not None  # noqa: S101
-        assert item.choices[0].delta.tool_calls[0].function.name  # noqa: S101
-        return item.choices[0].delta.tool_calls[0].function.name
+        if (
+            item.choices
+            and item.choices[0].delta.tool_calls
+            and item.choices[0].delta.tool_calls[0].function.name
+        ):
+            return item.choices[0].delta.tool_calls[0].function.name
+        return None
+
+    def get_tool_call_args(self, item: ModelResponse) -> str:
+        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+        if item.choices and item.choices[0].delta.tool_calls:
+            return item.choices[0].delta.tool_calls[0].function.arguments
+        return ""
 
 
-# TODO: Implement LitellmToolStreamParser
-class LitellmUsageStreamParser(StreamParser[ModelResponse, Usage]):
-    """Filters and transforms LiteLLM tool chunks from a stream."""
+class LitellmStreamState(StreamState[ModelResponse]):
+    def __init__(self):
+        self._chat_completion_stream_state = ChatCompletionStreamState(
+            input_tools=openai.NOT_GIVEN,
+            response_format=openai.NOT_GIVEN,
+        )
+        self.usage_ref: list[Usage] = []
 
-    def is_member(self, item: ModelResponse) -> bool:
-        return False
+    def update(self, item: ModelResponse) -> None:
+        # usage attribute is required inside ChatCompletionStreamState.handle_chunk
+        # and litellm requires that this is not None for its total usage calculation
+        if not hasattr(item, "usage"):
+            item.usage = litellm.Usage()  # type: ignore[attr-defined]
+        self._chat_completion_stream_state.handle_chunk(item)  # type: ignore[arg-type]
+        usage = cast(litellm.Usage, item.usage)  # type: ignore[attr-defined]
+        # Ignore usages with 0 tokens
+        if usage and usage.prompt_tokens and usage.completion_tokens:
+            # assert not self.usage_ref
+            self.usage_ref.append(
+                Usage(
+                    input_tokens=usage.prompt_tokens,
+                    output_tokens=usage.completion_tokens,
+                )
+            )
 
-    def is_end(self, item: ModelResponse) -> bool:
-        return True
-
-    def transform(self, item: ModelResponse) -> Usage:
-        return Usage(input_tokens=0, output_tokens=0)
+    @property
+    def current_message_snapshot(self) -> Message:
+        snapshot = self._chat_completion_stream_state.current_completion_snapshot
+        message = snapshot.choices[0].message
+        # Fix incorrectly concatenated role
+        message.role = "assistant"
+        # TODO: Possible to return AssistantMessage here?
+        return _RawMessage(message.model_dump())
 
 
 R = TypeVar("R")
@@ -206,6 +239,7 @@ class LitellmChatModel(ChatModel):
             metadata=self.metadata,
             stop=stop,
             stream=True,
+            # TODO: Add usage for LitellmChatModel
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=self._get_tool_choice(
@@ -216,9 +250,8 @@ class LitellmChatModel(ChatModel):
         stream = OutputStream(
             stream=response,
             function_schemas=function_schemas,
-            content_parser=LitellmContentStreamParser(),
-            tool_parser=LitellmToolStreamParser(),
-            usage_parser=LitellmUsageStreamParser(),
+            parser=LitellmStreamParser(),
+            state=LitellmStreamState(),
         )
         return AssistantMessage(parse_stream(stream, output_types))
 
@@ -276,6 +309,7 @@ class LitellmChatModel(ChatModel):
             metadata=self.metadata,
             stop=stop,
             stream=True,
+            # TODO: Add usage for LitellmChatModel
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=self._get_tool_choice(
@@ -286,8 +320,7 @@ class LitellmChatModel(ChatModel):
         stream = AsyncOutputStream(
             stream=response,
             function_schemas=function_schemas,
-            content_parser=LitellmContentStreamParser(),
-            tool_parser=LitellmToolStreamParser(),
-            usage_parser=LitellmUsageStreamParser(),
+            parser=LitellmStreamParser(),
+            state=LitellmStreamState(),
         )
         return AssistantMessage(await aparse_stream(stream, output_types))
