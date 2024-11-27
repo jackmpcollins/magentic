@@ -548,30 +548,27 @@ class AnthropicChatModel(ChatModel):
 
         system, messages = _extract_system_message(messages)
 
-        def _response_generator() -> Iterator[MessageStreamEvent]:
-            with self._client.messages.stream(
-                model=self.model,
-                messages=_combine_messages(
-                    [message_to_anthropic_message(m) for m in messages]
-                ),
-                max_tokens=self.max_tokens,
-                stop_sequences=stop or anthropic.NOT_GIVEN,
-                system=system,
-                temperature=(
-                    self.temperature
-                    if self.temperature is not None
-                    else anthropic.NOT_GIVEN
-                ),
-                tools=(
-                    [schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN
-                ),
-                tool_choice=self._get_tool_choice(
-                    tool_schemas=tool_schemas, allow_string_output=allow_string_output
-                ),
-            ) as stream:
-                yield from stream
+        response: Iterator[MessageStreamEvent] = self._client.messages.stream(
+            model=self.model,
+            messages=_combine_messages(
+                [message_to_anthropic_message(m) for m in messages]
+            ),
+            max_tokens=self.max_tokens,
+            stop_sequences=stop or anthropic.NOT_GIVEN,
+            system=system,
+            temperature=(
+                self.temperature
+                if self.temperature is not None
+                else anthropic.NOT_GIVEN
+            ),
+            tools=(
+                [schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN
+            ),
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+            ),
+        ).__enter__()
 
-        response = _response_generator()
         usage_ref, response = _create_usage_ref(response)
 
         message_start_chunk = next(response)
@@ -660,31 +657,28 @@ class AnthropicChatModel(ChatModel):
 
         system, messages = _extract_system_message(messages)
 
-        async def _response_generator() -> AsyncIterator[MessageStreamEvent]:
-            async with self._async_client.messages.stream(
-                model=self.model,
-                messages=_combine_messages(
-                    [message_to_anthropic_message(m) for m in messages]
-                ),
-                max_tokens=self.max_tokens,
-                stop_sequences=stop or anthropic.NOT_GIVEN,
-                system=system,
-                temperature=(
-                    self.temperature
-                    if self.temperature is not None
-                    else anthropic.NOT_GIVEN
-                ),
-                tools=(
-                    [schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN
-                ),
-                tool_choice=self._get_tool_choice(
-                    tool_schemas=tool_schemas, allow_string_output=allow_string_output
-                ),
-            ) as stream:
-                async for chunk in stream:
-                    yield chunk
-
-        response = _response_generator()
+        response: AsyncIterator[
+            MessageStreamEvent
+        ] = await self._async_client.messages.stream(
+            model=self.model,
+            messages=_combine_messages(
+                [message_to_anthropic_message(m) for m in messages]
+            ),
+            max_tokens=self.max_tokens,
+            stop_sequences=stop or anthropic.NOT_GIVEN,
+            system=system,
+            temperature=(
+                self.temperature
+                if self.temperature is not None
+                else anthropic.NOT_GIVEN
+            ),
+            tools=(
+                [schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN
+            ),
+            tool_choice=self._get_tool_choice(
+                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+            ),
+        ).__aenter__()
         usage_ref, response = _create_usage_ref_async(response)
 
         message_start_chunk = await anext(response)
