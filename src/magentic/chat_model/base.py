@@ -58,32 +58,6 @@ class ToolSchemaParseError(Exception):
         self.validation_error = validation_error
 
 
-# TODO: Delete this function
-def validate_str_content(
-    streamed_str: StreamedStr, *, allow_string_output: bool, streamed: bool
-) -> StreamedStr | str:
-    """Raise error if string output not expected. Otherwise return correct string type."""
-    if not allow_string_output:
-        model_output = streamed_str.truncate(100)
-        raise StringNotAllowedError(AssistantMessage(model_output))
-    if streamed:
-        return streamed_str
-    return str(streamed_str)
-
-
-# TODO: Delete this function
-async def avalidate_str_content(
-    async_streamed_str: AsyncStreamedStr, *, allow_string_output: bool, streamed: bool
-) -> AsyncStreamedStr | str:
-    """Async version of `validate_str_content`."""
-    if not allow_string_output:
-        model_output = await async_streamed_str.truncate(100)
-        raise StringNotAllowedError(AssistantMessage(model_output))
-    if streamed:
-        return async_streamed_str
-    return await async_streamed_str.to_string()
-
-
 # TODO: Make this a stream class with a close method and context management
 def parse_stream(stream: Iterator[Any], output_types: Iterable[type[R]]) -> R:
     """Parse and validate the LLM output stream against the allowed output types."""
