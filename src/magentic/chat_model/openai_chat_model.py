@@ -44,6 +44,7 @@ from magentic.chat_model.message import (
 )
 from magentic.chat_model.stream import (
     AsyncOutputStream,
+    FunctionCallChunk,
     OutputStream,
     StreamParser,
     StreamState,
@@ -249,43 +250,15 @@ class OpenaiStreamParser(StreamParser[ChatCompletionChunk]):
     def is_tool_call(self, item: ChatCompletionChunk) -> bool:
         return bool(item.choices and item.choices[0].delta.tool_calls)
 
-    def get_tool_call_index(self, item: ChatCompletionChunk) -> int | None:
-        if (
-            item.choices
-            and item.choices[0].delta.tool_calls
-            and item.choices[0].delta.tool_calls[0].index is not None
-        ):
-            return item.choices[0].delta.tool_calls[0].index
-        return None
-
-    def get_tool_call_id(self, item: ChatCompletionChunk) -> str | None:
-        if (
-            item.choices
-            and item.choices[0].delta.tool_calls
-            and item.choices[0].delta.tool_calls[0].id
-        ):
-            return item.choices[0].delta.tool_calls[0].id
-        return None
-
-    def get_tool_name(self, item: ChatCompletionChunk) -> str | None:
-        if (
-            item.choices
-            and item.choices[0].delta.tool_calls
-            and item.choices[0].delta.tool_calls[0].function
-            and item.choices[0].delta.tool_calls[0].function.name
-        ):
-            return item.choices[0].delta.tool_calls[0].function.name
-        return None
-
-    def get_tool_call_args(self, item: ChatCompletionChunk) -> str:
-        if (
-            item.choices
-            and item.choices[0].delta.tool_calls
-            and item.choices[0].delta.tool_calls[0].function
-            and item.choices[0].delta.tool_calls[0].function.arguments
-        ):
-            return item.choices[0].delta.tool_calls[0].function.arguments
-        return ""
+    def iter_tool_calls(self, item: ChatCompletionChunk) -> Iterator[FunctionCallChunk]:
+        if item.choices and item.choices[0].delta.tool_calls:
+            for tool_call in item.choices[0].delta.tool_calls:
+                if tool_call.function:
+                    yield FunctionCallChunk(
+                        id=tool_call.id,
+                        name=tool_call.function.name,
+                        args=tool_call.function.arguments,
+                    )
 
 
 class OpenaiStreamState(StreamState[ChatCompletionChunk]):
@@ -303,7 +276,22 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
         )
         self.usage_ref: list[Usage] = []
 
+        # Keep track of tool call index to add this to Mistral tool calls
+        self._current_tool_call_index: int = -1
+        self._seen_tool_call_ids: set[str] = set()
+
     def update(self, item: ChatCompletionChunk) -> None:
+        # Add tool call index for Mistral tool calls to make compatible with OpenAI
+        # TODO: Remove this fix when MistralChatModel switched to mistral python package
+        if item.choices:
+            for tool_call_chunk in item.choices[0].delta.tool_calls or []:
+                if (
+                    tool_call_chunk.id is not None
+                    and tool_call_chunk.id not in self._seen_tool_call_ids
+                ):
+                    self._current_tool_call_index += 1
+                    self._seen_tool_call_ids.add(tool_call_chunk.id)
+                tool_call_chunk.index = self._current_tool_call_index
         self._chat_completion_stream_state.handle_chunk(item)
         if item.usage:
             assert not self.usage_ref  # noqa: S101

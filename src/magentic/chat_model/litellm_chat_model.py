@@ -29,6 +29,7 @@ from magentic.chat_model.openai_chat_model import (
 )
 from magentic.chat_model.stream import (
     AsyncOutputStream,
+    FunctionCallChunk,
     OutputStream,
     StreamParser,
     StreamState,
@@ -63,33 +64,16 @@ class LitellmStreamParser(StreamParser[ModelResponse]):
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
         return bool(item.choices[0].delta.tool_calls)
 
-    def get_tool_call_index(self, item: ModelResponse) -> int | None:
+    def iter_tool_calls(self, item: ModelResponse) -> Iterable[FunctionCallChunk]:
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
         if item.choices and item.choices[0].delta.tool_calls:
-            return item.choices[0].delta.tool_calls[0].index
-        return None
-
-    def get_tool_call_id(self, item: ModelResponse) -> str | None:
-        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
-        if item.choices and item.choices[0].delta.tool_calls:
-            return item.choices[0].delta.tool_calls[0].id
-        return None
-
-    def get_tool_name(self, item: ModelResponse) -> str | None:
-        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
-        if (
-            item.choices
-            and item.choices[0].delta.tool_calls
-            and item.choices[0].delta.tool_calls[0].function.name
-        ):
-            return item.choices[0].delta.tool_calls[0].function.name
-        return None
-
-    def get_tool_call_args(self, item: ModelResponse) -> str:
-        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
-        if item.choices and item.choices[0].delta.tool_calls:
-            return item.choices[0].delta.tool_calls[0].function.arguments
-        return ""
+            for tool_call in item.choices[0].delta.tool_calls:
+                if tool_call.function:
+                    yield FunctionCallChunk(
+                        id=tool_call.id,
+                        name=tool_call.function.name,
+                        args=tool_call.function.arguments,
+                    )
 
 
 class LitellmStreamState(StreamState[ModelResponse]):

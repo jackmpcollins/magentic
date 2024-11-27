@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Iterable, Iterator
 from itertools import chain
-from typing import Generic, TypeVar
+from typing import Generic, NamedTuple, TypeVar
 
 from litellm.llms.files_apis.azure import Any
 from pydantic import ValidationError
@@ -22,6 +22,12 @@ ItemT = TypeVar("ItemT")
 OutputT = TypeVar("OutputT")
 
 
+class FunctionCallChunk(NamedTuple):
+    id: str | None
+    name: str | None
+    args: str | None
+
+
 class StreamParser(ABC, Generic[ItemT]):
     @abstractmethod
     def is_content(self, item: ItemT) -> bool: ...
@@ -36,16 +42,7 @@ class StreamParser(ABC, Generic[ItemT]):
     def is_tool_call(self, item: ItemT) -> bool: ...
 
     @abstractmethod
-    def get_tool_call_index(self, item: ItemT) -> int | None: ...
-
-    @abstractmethod
-    def get_tool_call_id(self, item: ItemT) -> str | None: ...
-
-    @abstractmethod
-    def get_tool_name(self, item: ItemT) -> str | None: ...
-
-    @abstractmethod
-    def get_tool_call_args(self, item: ItemT) -> str: ...
+    def iter_tool_calls(self, item: ItemT) -> Iterable[FunctionCallChunk]: ...
 
 
 class StreamState(ABC, Generic[ItemT]):
@@ -92,6 +89,8 @@ class OutputStream(Generic[ItemT, OutputT]):
     def _streamed_str(
         self, stream: Iterator[ItemT], current_item_ref: list[ItemT]
     ) -> Iterator[str]:
+        # TODO: Yield item then check if next ends?
+        # To ensure no ended immediately if both content and tool calls are present
         for item in stream:
             if self._parser.is_content_ended(item):
                 # TODO: Check if output types allow for early return and raise if not
@@ -102,18 +101,19 @@ class OutputStream(Generic[ItemT, OutputT]):
 
     def _tool_call(
         self,
-        stream: Iterator[ItemT],
-        current_item_ref: list[ItemT],
-        tool_call_index: int,
+        stream: Iterator[FunctionCallChunk],
+        current_tool_call_ref: list[FunctionCallChunk],
+        current_tool_call_id: str,
     ) -> Iterator[str]:
         for item in stream:
-            item_tool_call_index = self._parser.get_tool_call_index(item)
-            if item_tool_call_index and item_tool_call_index != tool_call_index:
+            # Only end the stream if we encounter a new tool call
+            # so that the whole stream is consumed including stop_reason/usage chunks
+            if item.id and item.id != current_tool_call_id:
                 # TODO: Check if output types allow for early return and raise if not
-                assert not current_item_ref  # noqa: S101
-                current_item_ref.append(item)
+                assert not current_tool_call_ref  # noqa: S101
+                current_tool_call_ref.append(item)
                 return
-            yield self._parser.get_tool_call_args(item)
+            yield item.args or ""
 
     def __stream__(self) -> Iterator[StreamedStr | OutputT]:
         stream = apply(self._state.update, self._stream)
@@ -125,28 +125,36 @@ class OutputStream(Generic[ItemT, OutputT]):
                 yield StreamedStr(self._streamed_str(stream, current_item_ref))
             # TODO: Make is_tool_calls to handle multiple tools
             elif self._parser.is_tool_call(current_item):
-                # TODO: Iterate until ID is found ?
-                current_tool_call_id = self._parser.get_tool_call_id(current_item)
-                current_tool_name = self._parser.get_tool_name(current_item)
-                function_schema = select_function_schema(
-                    self._function_schemas, current_tool_name
+                tool_calls_stream = (
+                    tool_call_chunk
+                    for item in chain([current_item], stream)
+                    for tool_call_chunk in self._parser.iter_tool_calls(item)
                 )
-                current_tool_call_index = self._parser.get_tool_call_index(current_item)
-                stream = chain([current_item], stream)
-                try:
-                    yield function_schema.parse_args(
-                        self._tool_call(
-                            stream, current_item_ref, current_tool_call_index
-                        )
-                    )
-                # TODO: Catch/raise unknown tool call error here
-                except ValidationError as e:
+                tool_call_ref = [next(tool_calls_stream)]
+                while tool_call_ref:
+                    current_tool_call_chunk = tool_call_ref.pop()
+                    current_tool_call_id = current_tool_call_chunk.id
                     assert current_tool_call_id is not None  # noqa: S101
-                    raise ToolSchemaParseError(
-                        output_message=self._state.current_message_snapshot,
-                        tool_call_id=current_tool_call_id,
-                        validation_error=e,
-                    ) from e
+                    assert current_tool_call_chunk.name is not None  # noqa: S101
+                    function_schema = select_function_schema(
+                        self._function_schemas, current_tool_call_chunk.name
+                    )
+                    try:
+                        yield function_schema.parse_args(
+                            self._tool_call(
+                                chain([current_tool_call_chunk], tool_calls_stream),
+                                tool_call_ref,
+                                current_tool_call_id,
+                            )
+                        )
+                    # TODO: Catch/raise unknown tool call error here
+                    except ValidationError as e:
+                        assert current_tool_call_id is not None  # noqa: S101
+                        raise ToolSchemaParseError(
+                            output_message=self._state.current_message_snapshot,
+                            tool_call_id=current_tool_call_id,
+                            validation_error=e,
+                        ) from e
             elif new_current_item := next(stream, None):
                 current_item_ref.append(new_current_item)
 
@@ -195,18 +203,17 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
 
     async def _tool_call(
         self,
-        stream: AsyncIterator[ItemT],
-        current_item_ref: list[ItemT],
-        tool_call_index: int,
+        stream: AsyncIterator[FunctionCallChunk],
+        current_tool_call_ref: list[FunctionCallChunk],
+        current_tool_call_id: str,
     ) -> AsyncIterator[str]:
         async for item in stream:
-            item_tool_call_index = self._parser.get_tool_call_index(item)
-            if item_tool_call_index and item_tool_call_index != tool_call_index:
+            if item.id and item.id != current_tool_call_id:
                 # TODO: Check if output types allow for early return
-                assert not current_item_ref  # noqa: S101
-                current_item_ref.append(item)
+                assert not current_tool_call_ref  # noqa: S101
+                current_tool_call_ref.append(item)
                 return
-            yield self._parser.get_tool_call_args(item)
+            yield item.args or ""
 
     async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | OutputT]:
         stream = aapply(self._state.update, self._stream)
@@ -218,29 +225,39 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                 yield AsyncStreamedStr(self._streamed_str(stream, current_item_ref))
             # TODO: Make is_tool_calls to handle multiple tools
             elif self._parser.is_tool_call(current_item):
-                # TODO: Iterate until ID is found ?
-                current_tool_call_id = self._parser.get_tool_call_id(current_item)
-                current_tool_name = self._parser.get_tool_name(current_item)
-                function_schema = select_function_schema(
-                    self._function_schemas, current_tool_name
+                tool_calls_stream = (
+                    tool_call_chunk
+                    async for item in achain(async_iter([current_item]), stream)
+                    for tool_call_chunk in self._parser.iter_tool_calls(item)
                 )
-                current_tool_call_index = self._parser.get_tool_call_index(current_item)
-                stream = achain(async_iter([current_item]), stream)
-                try:
-                    yield await function_schema.aparse_args(
-                        self._tool_call(
-                            stream, current_item_ref, current_tool_call_index
-                        )
-                    )
-                # TODO: Catch/raise unknown tool call error here
-                except ValidationError as e:
+                tool_call_ref = [await anext(tool_calls_stream)]
+                while tool_call_ref:
+                    current_tool_call_chunk = tool_call_ref.pop()
+                    current_tool_call_id = current_tool_call_chunk.id
                     assert current_tool_call_id is not None  # noqa: S101
-                    raise ToolSchemaParseError(
-                        output_message=self._state.current_message_snapshot,
-                        # TODO: Take last tool call id from the message snapshot instead?
-                        tool_call_id=current_tool_call_id,
-                        validation_error=e,
-                    ) from e
+                    assert current_tool_call_chunk.name is not None  # noqa: S101
+                    function_schema = select_function_schema(
+                        self._function_schemas, current_tool_call_chunk.name
+                    )
+                    try:
+                        yield await function_schema.aparse_args(
+                            self._tool_call(
+                                achain(
+                                    async_iter([current_tool_call_chunk]),
+                                    tool_calls_stream,
+                                ),
+                                tool_call_ref,
+                                current_tool_call_id,
+                            )
+                        )
+                    # TODO: Catch/raise unknown tool call error here
+                    except ValidationError as e:
+                        assert current_tool_call_id is not None  # noqa: S101
+                        raise ToolSchemaParseError(
+                            output_message=self._state.current_message_snapshot,
+                            tool_call_id=current_tool_call_id,
+                            validation_error=e,
+                        ) from e
             elif new_current_item := await anext(stream, None):
                 current_item_ref.append(new_current_item)
 
