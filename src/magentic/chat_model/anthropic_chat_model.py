@@ -1,7 +1,6 @@
 import base64
 import json
 from collections.abc import (
-    AsyncIterable,
     AsyncIterator,
     Callable,
     Iterable,
@@ -10,20 +9,17 @@ from collections.abc import (
 )
 from enum import Enum
 from functools import singledispatch
-from itertools import chain, groupby
+from itertools import groupby
 from typing import Any, Generic, TypeVar, cast, overload
 
 import filetype
-from pydantic import ValidationError
 
 from magentic.chat_model.base import (
     ChatModel,
-    ToolSchemaParseError,
-    avalidate_str_content,
-    validate_str_content,
+    aparse_stream,
+    parse_stream,
 )
 from magentic.chat_model.function_schema import (
-    AsyncFunctionSchema,
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
     FunctionSchema,
@@ -39,6 +35,13 @@ from magentic.chat_model.message import (
     UserMessage,
     _RawMessage,
 )
+from magentic.chat_model.stream import (
+    AsyncOutputStream,
+    FunctionCallChunk,
+    OutputStream,
+    StreamParser,
+    StreamState,
+)
 from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
@@ -48,13 +51,6 @@ from magentic.function_call import (
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
-    aapply,
-    achain,
-    agroupby,
-    apeek,
-    apply,
-    async_iter,
-    peek,
 )
 from magentic.typing import is_any_origin_subclass, is_origin_subclass
 from magentic.vision import UserImageMessage
@@ -63,13 +59,7 @@ try:
     import anthropic
     from anthropic.lib.streaming import MessageStreamEvent
     from anthropic.lib.streaming._messages import accumulate_event
-    from anthropic.types import (
-        ContentBlockDeltaEvent,
-        ContentBlockStartEvent,
-        MessageParam,
-        ToolParam,
-        ToolUseBlock,
-    )
+    from anthropic.types import MessageParam, ToolParam
     from anthropic.types.message_create_params import ToolChoice
 except ImportError as error:
     msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install 'magentic[anthropic]'`."
@@ -241,127 +231,62 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
         return {"type": "tool", "name": self._function_schema.name}
 
 
-# TODO: Generalize this to BaseToolSchema when that is created
-BeseToolSchemaT = TypeVar("BeseToolSchemaT", bound=BaseFunctionToolSchema[Any])
+class AnthropicStreamParser(StreamParser[MessageStreamEvent]):
+    def is_content(self, item: MessageStreamEvent) -> bool:
+        return item.type == "content_block_delta"
 
+    def is_content_ended(self, item: MessageStreamEvent) -> bool:
+        return self.is_tool_call(item)
 
-def select_tool_schema(
-    tool_call: ToolUseBlock,
-    tool_schemas: Iterable[BeseToolSchemaT],
-) -> BeseToolSchemaT:
-    """Select the tool schema based on the response chunk."""
-    for tool_schema in tool_schemas:
-        if tool_schema._function_schema.name == tool_call.name:
-            return tool_schema
+    def get_content(self, item: MessageStreamEvent) -> str | None:
+        if item.type == "text":
+            return item.text
+        return None
 
-    msg = f"Unknown tool call: {tool_call.model_dump_json()}"
-    raise ValueError(msg)
-
-
-class FunctionToolSchema(BaseFunctionToolSchema[FunctionSchema[T]]):
-    def parse_tool_call(self, chunks: Iterable[MessageStreamEvent]) -> T:
-        return self._function_schema.parse_args(
-            chunk.delta.partial_json
-            for chunk in chunks
-            if chunk.type == "content_block_delta"
-            if chunk.delta.type == "input_json_delta"
+    def is_tool_call(self, item: MessageStreamEvent) -> bool:
+        return (
+            item.type == "content_block_start" and item.content_block.type == "tool_use"
         )
 
+    def iter_tool_calls(self, item: MessageStreamEvent) -> Iterable[FunctionCallChunk]:
+        if item.type == "content_block_start" and item.content_block.type == "tool_use":
+            return [
+                FunctionCallChunk(
+                    id=item.content_block.id, name=item.content_block.name, args=None
+                )
+            ]
+        if item.type == "input_json":
+            return [FunctionCallChunk(id=None, name=None, args=item.partial_json)]
+        return []
 
-class AsyncFunctionToolSchema(BaseFunctionToolSchema[AsyncFunctionSchema[T]]):
-    async def aparse_tool_call(self, chunks: AsyncIterable[MessageStreamEvent]) -> T:
-        return await self._function_schema.aparse_args(
-            chunk.delta.partial_json
-            async for chunk in chunks
-            if chunk.type == "content_block_delta"
-            if chunk.delta.type == "input_json_delta"
+
+class AnthropicStreamState(StreamState[MessageStreamEvent]):
+    def __init__(self):
+        self._current_message_snapshot: anthropic.types.Message | None = (
+            None  # TODO: type
         )
+        self.usage_ref: list[Usage] = []
 
-
-def _iter_streamed_tool_calls(
-    response: Iterable[MessageStreamEvent],
-) -> Iterator[Iterator[ContentBlockStartEvent | ContentBlockDeltaEvent]]:
-    all_tool_call_chunks = (
-        cast(ContentBlockStartEvent | ContentBlockDeltaEvent, chunk)
-        for chunk in response
-        if chunk.type in ("content_block_start", "content_block_delta")
-    )
-    for _, tool_call_chunks in groupby(all_tool_call_chunks, lambda x: x.index):
-        yield tool_call_chunks
-
-
-async def _aiter_streamed_tool_calls(
-    response: AsyncIterable[MessageStreamEvent],
-) -> AsyncIterator[AsyncIterator[ContentBlockStartEvent | ContentBlockDeltaEvent]]:
-    all_tool_call_chunks = (
-        cast(ContentBlockStartEvent | ContentBlockDeltaEvent, chunk)
-        async for chunk in response
-        if chunk.type in ("content_block_start", "content_block_delta")
-    )
-    async for _, tool_call_chunks in agroupby(all_tool_call_chunks, lambda x: x.index):
-        yield tool_call_chunks
-
-
-def _join_streamed_response_to_message(
-    response: list[MessageStreamEvent],
-) -> _RawMessage[MessageParam]:
-    snapshot = None
-    for event in response:
-        snapshot = accumulate_event(
-            event=event,  # type: ignore[arg-type]
-            current_snapshot=snapshot,
+    def update(self, item: MessageStreamEvent) -> None:
+        self._current_message_snapshot = accumulate_event(
+            # Unrecognized event types are ignored
+            event=item,  # type: ignore[arg-type]
+            current_snapshot=self._current_message_snapshot,
         )
-    assert snapshot is not None  # noqa: S101
-    snapshot_content = snapshot.model_dump()["content"]
-    return _RawMessage({"role": snapshot.role, "content": snapshot_content})
+        if item.type == "message_stop":
+            assert not self.usage_ref  # noqa: S101
+            self.usage_ref.append(
+                Usage(
+                    input_tokens=item.message.usage.input_tokens,
+                    output_tokens=item.message.usage.output_tokens,
+                )
+            )
 
-
-def _parse_streamed_tool_calls(
-    response: Iterable[MessageStreamEvent],
-    tool_schemas: Iterable[FunctionToolSchema[T]],
-) -> Iterator[T]:
-    cached_response: list[MessageStreamEvent] = []
-    response = apply(cached_response.append, response)
-    try:
-        for tool_call_chunks in _iter_streamed_tool_calls(response):
-            first_chunk, tool_call_chunks = peek(tool_call_chunks)
-            assert first_chunk.type == "content_block_start"  # noqa: S101
-            assert first_chunk.content_block.type == "tool_use"  # noqa: S101
-            tool_schema = select_tool_schema(first_chunk.content_block, tool_schemas)
-            tool_call = tool_schema.parse_tool_call(tool_call_chunks)
-            yield tool_call
-    # TODO: Catch/raise unknown tool call error here
-    except ValidationError as e:
-        raw_message = _join_streamed_response_to_message(cached_response)
-        raise ToolSchemaParseError(
-            output_message=raw_message,
-            tool_call_id=raw_message.content["content"][0]["id"],  # type: ignore[index,unused-ignore]
-            validation_error=e,
-        ) from e
-
-
-async def _aparse_streamed_tool_calls(
-    response: AsyncIterable[MessageStreamEvent],
-    tool_schemas: Iterable[AsyncFunctionToolSchema[T]],
-) -> AsyncIterator[T]:
-    cached_response: list[MessageStreamEvent] = []
-    response = aapply(cached_response.append, response)
-    try:
-        async for tool_call_chunks in _aiter_streamed_tool_calls(response):
-            first_chunk, tool_call_chunks = await apeek(tool_call_chunks)
-            assert first_chunk.type == "content_block_start"  # noqa: S101
-            assert first_chunk.content_block.type == "tool_use"  # noqa: S101
-            tool_schema = select_tool_schema(first_chunk.content_block, tool_schemas)
-            tool_call = await tool_schema.aparse_tool_call(tool_call_chunks)
-            yield tool_call
-    # TODO: Catch/raise unknown tool call error here
-    except ValidationError as e:
-        raw_message = _join_streamed_response_to_message(cached_response)
-        raise ToolSchemaParseError(
-            output_message=raw_message,
-            tool_call_id=raw_message.content["content"][0]["id"],  # type: ignore[index,unused-ignore]
-            validation_error=e,
-        ) from e
+    @property
+    def current_message_snapshot(self) -> Message:
+        assert self._current_message_snapshot is not None  # noqa: S101
+        # TODO: Possible to return AssistantMessage here?
+        return _RawMessage(self._current_message_snapshot.model_dump())
 
 
 def _extract_system_message(
@@ -375,62 +300,6 @@ def _extract_system_message(
         system_messages[0].content if system_messages else anthropic.NOT_GIVEN,
         [m for m in messages if not isinstance(m, SystemMessage)],
     )
-
-
-def _create_usage_ref(
-    response: Iterable[MessageStreamEvent],
-) -> tuple[list[Usage], Iterator[MessageStreamEvent]]:
-    """Returns a pointer to a Usage object that is created at the end of the response."""
-    usage_ref: list[Usage] = []
-
-    def generator(
-        response: Iterable[MessageStreamEvent],
-    ) -> Iterator[MessageStreamEvent]:
-        message_start_usage = None
-        output_tokens = None
-        for chunk in response:
-            if chunk.type == "message_start":
-                message_start_usage = chunk.message.usage
-            if chunk.type == "message_delta":
-                output_tokens = chunk.usage.output_tokens
-            yield chunk
-        if message_start_usage and output_tokens:
-            usage_ref.append(
-                Usage(
-                    input_tokens=message_start_usage.input_tokens,
-                    output_tokens=message_start_usage.output_tokens + output_tokens,
-                )
-            )
-
-    return usage_ref, generator(response)
-
-
-def _create_usage_ref_async(
-    response: AsyncIterable[MessageStreamEvent],
-) -> tuple[list[Usage], AsyncIterator[MessageStreamEvent]]:
-    """Async version of `_create_usage_ref`."""
-    usage_ref: list[Usage] = []
-
-    async def agenerator(
-        response: AsyncIterable[MessageStreamEvent],
-    ) -> AsyncIterator[MessageStreamEvent]:
-        message_start_usage = None
-        output_tokens = None
-        async for chunk in response:
-            if chunk.type == "message_start":
-                message_start_usage = chunk.message.usage
-            if chunk.type == "message_delta":
-                output_tokens = chunk.usage.output_tokens
-            yield chunk
-        if message_start_usage and output_tokens:
-            usage_ref.append(
-                Usage(
-                    input_tokens=message_start_usage.input_tokens,
-                    output_tokens=message_start_usage.output_tokens + output_tokens,
-                )
-            )
-
-    return usage_ref, agenerator(response)
 
 
 def _if_given(value: T | None) -> T | anthropic.NotGiven:
@@ -544,7 +413,7 @@ class AnthropicChatModel(ChatModel):
             for type_ in output_types
             if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
-        tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
+        tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = is_any_origin_subclass(output_types, str)
         streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
@@ -566,47 +435,15 @@ class AnthropicChatModel(ChatModel):
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         ).__enter__()
-
-        usage_ref, response = _create_usage_ref(response)
-
-        message_start_chunk = next(response)
-        assert message_start_chunk.type == "message_start"  # noqa: S101
-        first_chunk = next(response)
-        assert first_chunk.type == "content_block_start"  # noqa: S101
-        response = chain([message_start_chunk, first_chunk], response)
-
-        if (
-            first_chunk.type == "content_block_start"
-            and first_chunk.content_block.type == "text"
-        ):
-            streamed_str = StreamedStr(
-                chunk.delta.text
-                for chunk in response
-                if chunk.type == "content_block_delta"
-                and chunk.delta.type == "text_delta"
-            )
-            str_content = validate_str_content(
-                streamed_str,
-                allow_string_output=allow_string_output,
-                streamed=streamed_str_in_output_types,
-            )
-            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
-
-        if (
-            first_chunk.type == "content_block_start"
-            and first_chunk.content_block.type == "tool_use"
-        ):
-            tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
-            if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                content = ParallelFunctionCall(tool_calls)
-                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-            # Take only the first tool_call, silently ignore extra chunks
-            # TODO: Create generator here that raises error or warns if multiple tool_calls
-            content = next(tool_calls)
-            return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-
-        msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
-        raise ValueError(msg)
+        stream = OutputStream(
+            response,
+            function_schemas=function_schemas,
+            parser=AnthropicStreamParser(),
+            state=AnthropicStreamState(),
+        )
+        return AssistantMessage._with_usage(
+            parse_stream(stream, output_types), usage_ref=stream.usage_ref
+        )
 
     @overload
     async def acomplete(
@@ -645,7 +482,7 @@ class AnthropicChatModel(ChatModel):
             for type_ in output_types
             if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
         ]
-        tool_schemas = [AsyncFunctionToolSchema(schema) for schema in function_schemas]
+        tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = is_any_origin_subclass(output_types, str)
         async_streamed_str_in_output_types = is_any_origin_subclass(
@@ -671,43 +508,12 @@ class AnthropicChatModel(ChatModel):
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
         ).__aenter__()
-        usage_ref, response = _create_usage_ref_async(response)
-
-        message_start_chunk = await anext(response)
-        assert message_start_chunk.type == "message_start"  # noqa: S101
-        first_chunk = await anext(response)
-        assert first_chunk.type == "content_block_start"  # noqa: S101
-        response = achain(async_iter([message_start_chunk, first_chunk]), response)
-
-        if (
-            first_chunk.type == "content_block_start"
-            and first_chunk.content_block.type == "text"
-        ):
-            async_streamed_str = AsyncStreamedStr(
-                chunk.delta.text
-                async for chunk in response
-                if chunk.type == "content_block_delta"
-                and chunk.delta.type == "text_delta"
-            )
-            str_content = await avalidate_str_content(
-                async_streamed_str,
-                allow_string_output=allow_string_output,
-                streamed=async_streamed_str_in_output_types,
-            )
-            return AssistantMessage._with_usage(str_content, usage_ref)  # type: ignore[return-value]
-
-        if (
-            first_chunk.type == "content_block_start"
-            and first_chunk.content_block.type == "tool_use"
-        ):
-            tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
-            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                content = AsyncParallelFunctionCall(tool_calls)
-                return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-            # Take only the first tool_call, silently ignore extra chunks
-            # TODO: Create generator here that raises error or warns if multiple tool_calls
-            content = await anext(tool_calls)
-            return AssistantMessage._with_usage(content, usage_ref)  # type: ignore[return-value]
-
-        msg = "Could not determine response type"
-        raise ValueError(msg)
+        stream = AsyncOutputStream(
+            response,
+            function_schemas=function_schemas,
+            parser=AnthropicStreamParser(),
+            state=AnthropicStreamState(),
+        )
+        return AssistantMessage._with_usage(
+            await aparse_stream(stream, output_types), usage_ref=stream.usage_ref
+        )
