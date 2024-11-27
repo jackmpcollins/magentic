@@ -122,7 +122,6 @@ class OutputStream(Generic[ItemT, OutputT]):
             if self._parser.is_content(current_item):
                 stream = chain([current_item], stream)
                 yield StreamedStr(self._streamed_str(stream, current_item_ref))
-            # TODO: Make is_tool_calls to handle multiple tools
             elif self._parser.is_tool_call(current_item):
                 tool_calls_stream = (
                     tool_call_chunk
@@ -223,7 +222,6 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
             if self._parser.is_content(current_item):
                 stream = achain(async_iter([current_item]), stream)
                 yield AsyncStreamedStr(self._streamed_str(stream, current_item_ref))
-            # TODO: Make is_tool_calls to handle multiple tools
             elif self._parser.is_tool_call(current_item):
                 tool_calls_stream = (
                     tool_call_chunk

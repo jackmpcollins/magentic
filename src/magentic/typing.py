@@ -52,7 +52,6 @@ def is_instance_origin(
     return isinstance(obj, cls_or_tuple_origin)
 
 
-# TODO: Remove once unused
 def is_any_origin_subclass(
     types: Iterable[type], cls_or_tuple: TypeT | tuple[TypeT, ...]
 ) -> bool:
