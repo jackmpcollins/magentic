@@ -112,7 +112,8 @@ class OutputStream(Generic[ItemT, OutputT]):
                 assert not current_tool_call_ref  # noqa: S101
                 current_tool_call_ref.append(item)
                 return
-            yield item.args or ""
+            if item.args:
+                yield item.args
 
     def __stream__(self) -> Iterator[StreamedStr | OutputT]:
         stream = apply(self._state.update, self._stream)
@@ -212,7 +213,8 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                 assert not current_tool_call_ref  # noqa: S101
                 current_tool_call_ref.append(item)
                 return
-            yield item.args or ""
+            if item.args:
+                yield item.args
 
     async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | OutputT]:
         stream = aapply(self._state.update, self._stream)

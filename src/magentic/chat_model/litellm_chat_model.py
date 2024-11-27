@@ -95,7 +95,7 @@ class LitellmStreamState(StreamState[ModelResponse]):
         usage = cast(litellm.Usage, item.usage)  # type: ignore[attr-defined]
         # Ignore usages with 0 tokens
         if usage and usage.prompt_tokens and usage.completion_tokens:
-            # assert not self.usage_ref
+            assert not self.usage_ref  # noqa: S101
             self.usage_ref.append(
                 Usage(
                     input_tokens=usage.prompt_tokens,
