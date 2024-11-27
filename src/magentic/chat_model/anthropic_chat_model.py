@@ -433,6 +433,10 @@ def _create_usage_ref_async(
     return usage_ref, agenerator(response)
 
 
+def _if_given(value: T | None) -> T | anthropic.NotGiven:
+    return value if value is not None else anthropic.NOT_GIVEN
+
+
 R = TypeVar("R")
 
 
@@ -554,16 +558,10 @@ class AnthropicChatModel(ChatModel):
                 [message_to_anthropic_message(m) for m in messages]
             ),
             max_tokens=self.max_tokens,
-            stop_sequences=stop or anthropic.NOT_GIVEN,
+            stop_sequences=_if_given(stop),
             system=system,
-            temperature=(
-                self.temperature
-                if self.temperature is not None
-                else anthropic.NOT_GIVEN
-            ),
-            tools=(
-                [schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN
-            ),
+            temperature=_if_given(self.temperature),
+            tools=[schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
@@ -665,16 +663,10 @@ class AnthropicChatModel(ChatModel):
                 [message_to_anthropic_message(m) for m in messages]
             ),
             max_tokens=self.max_tokens,
-            stop_sequences=stop or anthropic.NOT_GIVEN,
+            stop_sequences=_if_given(stop),
             system=system,
-            temperature=(
-                self.temperature
-                if self.temperature is not None
-                else anthropic.NOT_GIVEN
-            ),
-            tools=(
-                [schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN
-            ),
+            temperature=_if_given(self.temperature),
+            tools=[schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
             ),
