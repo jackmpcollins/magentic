@@ -70,6 +70,7 @@ def pytest_collection_modifyitems(
         "litellm_openai",
         "mistral",
         "openai",
+        "openai_gemini",
         "openai_ollama",
     ]
     for item in items:
