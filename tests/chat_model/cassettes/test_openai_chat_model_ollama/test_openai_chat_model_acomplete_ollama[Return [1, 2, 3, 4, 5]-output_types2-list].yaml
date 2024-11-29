@@ -42,11 +42,11 @@ interactions:
     uri: http://localhost:11434/v1/chat/completions
   response:
     body:
-      string: 'data: {"id":"chatcmpl-877","object":"chat.completion.chunk","created":1732915691,"model":"llama3.1","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_kichi5ua","type":"function","function":{"name":"return_list_of_int","arguments":"{\"value\":\"[1,
+      string: 'data: {"id":"chatcmpl-622","object":"chat.completion.chunk","created":1732916932,"model":"llama3.1","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":"","tool_calls":[{"id":"call_d45b8f5x","type":"function","function":{"name":"return_list_of_int","arguments":"{\"value\":\"[1,
         2, 3, 4, 5]\"}"}}]},"finish_reason":null}]}
 
 
-        data: {"id":"chatcmpl-877","object":"chat.completion.chunk","created":1732915691,"model":"llama3.1","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"stop"}]}
+        data: {"id":"chatcmpl-622","object":"chat.completion.chunk","created":1732916932,"model":"llama3.1","system_fingerprint":"fp_ollama","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"stop"}]}
 
 
         data: [DONE]
@@ -57,7 +57,7 @@ interactions:
       Content-Type:
       - text/event-stream
       Date:
-      - Fri, 29 Nov 2024 21:28:11 GMT
+      - Fri, 29 Nov 2024 21:48:52 GMT
       Transfer-Encoding:
       - chunked
     status:
