@@ -6,7 +6,11 @@ from typing import Any, Generic, NamedTuple, TypeVar
 from pydantic import ValidationError
 
 from magentic.chat_model.base import ToolSchemaParseError, UnknownToolError
-from magentic.chat_model.function_schema import FunctionSchema, select_function_schema
+from magentic.chat_model.function_schema import (
+    AsyncFunctionSchema,
+    FunctionSchema,
+    select_function_schema,
+)
 from magentic.chat_model.message import Message, Usage
 from magentic.streaming import (
     AsyncStreamedStr,
@@ -163,9 +167,6 @@ class OutputStream(Generic[ItemT, OutputT]):
     def usage_ref(self) -> list[Usage]:
         return self._state.usage_ref
 
-    def close(self):
-        self._stream.close()
-
 
 class AsyncOutputStream(Generic[ItemT, OutputT]):
     """Async version of `OutputStream`."""
@@ -173,7 +174,7 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
     def __init__(
         self,
         stream: AsyncIterator[ItemT],
-        function_schemas: Iterable[FunctionSchema[OutputT]],
+        function_schemas: Iterable[AsyncFunctionSchema[OutputT]],
         parser: StreamParser[ItemT],
         state: StreamState[ItemT],
     ):
@@ -272,6 +273,3 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
     @property
     def usage_ref(self) -> list[Usage]:
         return self._state.usage_ref
-
-    async def close(self):
-        await self._stream.close()

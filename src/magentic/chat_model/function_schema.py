@@ -9,12 +9,18 @@ from openai.types.shared_params import FunctionDefinition
 from pydantic import BaseModel, TypeAdapter, create_model
 
 from magentic._pydantic import ConfigDict, get_pydantic_config, json_schema
-from magentic.function_call import FunctionCall
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 from magentic.streaming import (
+    AsyncStreamedStr,
+    StreamedStr,
     aiter_streamed_json_array,
     iter_streamed_json_array,
 )
-from magentic.typing import is_origin_abstract, name_type
+from magentic.typing import is_origin_abstract, is_origin_subclass, name_type
 
 T = TypeVar("T")
 
@@ -444,3 +450,43 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
         return self._model.model_construct(**value.arguments).model_dump_json(
             exclude_unset=True
         )
+
+
+R = TypeVar("R")
+
+_NON_FUNCTION_CALL_TYPES = (
+    str,
+    StreamedStr,
+    AsyncStreamedStr,
+    FunctionCall,
+    ParallelFunctionCall,
+    AsyncParallelFunctionCall,
+)
+
+
+def get_function_schemas(
+    functions: Iterable[Callable[..., R]] | None,
+    output_types: Iterable[type[T]],
+) -> Iterable[FunctionSchema[FunctionCall[R] | T]]:
+    return [
+        *(FunctionCallFunctionSchema(f) for f in functions or []),  # type: ignore[list-item]
+        *(
+            function_schema_for_type(type_)
+            for type_ in output_types
+            if not is_origin_subclass(type_, _NON_FUNCTION_CALL_TYPES)  # type: ignore[list-item]
+        ),
+    ]
+
+
+def get_async_function_schemas(
+    functions: Iterable[Callable[..., R]] | None,
+    output_types: Iterable[type[T]],
+) -> Iterable[FunctionSchema[FunctionCall[R] | T]]:
+    return [
+        *(FunctionCallFunctionSchema(f) for f in functions or []),  # type: ignore[list-item]
+        *(
+            async_function_schema_for_type(type_)
+            for type_ in output_types
+            if not is_origin_subclass(type_, _NON_FUNCTION_CALL_TYPES)  # type: ignore[list-item]
+        ),
+    ]

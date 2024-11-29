@@ -23,8 +23,9 @@ from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
     FunctionSchema,
-    async_function_schema_for_type,
     function_schema_for_type,
+    get_async_function_schemas,
+    get_function_schemas,
 )
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -43,7 +44,6 @@ from magentic.chat_model.stream import (
     StreamState,
 )
 from magentic.function_call import (
-    AsyncParallelFunctionCall,
     FunctionCall,
     ParallelFunctionCall,
     _create_unique_id,
@@ -52,7 +52,7 @@ from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
 )
-from magentic.typing import is_any_origin_subclass, is_origin_subclass
+from magentic.typing import is_any_origin_subclass
 from magentic.vision import UserImageMessage
 
 try:
@@ -280,7 +280,7 @@ class AnthropicStreamState(StreamState[MessageStreamEvent]):
             )
 
     @property
-    def current_message_snapshot(self) -> Message:
+    def current_message_snapshot(self) -> Message[Any]:
         assert self._current_message_snapshot is not None  # noqa: S101
         # TODO: Possible to return AssistantMessage here?
         return _RawMessage(self._current_message_snapshot.model_dump())
@@ -304,16 +304,6 @@ def _if_given(value: T | None) -> T | anthropic.NotGiven:
 
 
 R = TypeVar("R")
-
-
-STR_OR_FUNCTIONCALL_TYPE = (
-    str,
-    StreamedStr,
-    AsyncStreamedStr,
-    FunctionCall,
-    ParallelFunctionCall,
-    AsyncParallelFunctionCall,
-)
 
 
 class AnthropicChatModel(ChatModel):
@@ -404,12 +394,7 @@ class AnthropicChatModel(ChatModel):
         if output_types is None:
             output_types = [] if functions else cast(list[type[R]], [str])
 
-        # TODO: Check that Function calls types match functions
-        function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
-            function_schema_for_type(type_)
-            for type_ in output_types
-            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
-        ]
+        function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = is_any_origin_subclass(output_types, str)
@@ -474,11 +459,7 @@ class AnthropicChatModel(ChatModel):
         if output_types is None:
             output_types = [] if functions else cast(list[type[R]], [str])
 
-        function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
-            async_function_schema_for_type(type_)
-            for type_ in output_types
-            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
-        ]
+        function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = is_any_origin_subclass(output_types, str)

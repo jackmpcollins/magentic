@@ -73,7 +73,7 @@ class UnknownToolError(Exception):
         " Tool name: {tool_name!r}"
     )
 
-    def __init__(self, output_message: Message, tool_call_id: str, tool_name: str):
+    def __init__(self, output_message: Message[Any], tool_call_id: str, tool_name: str):
         super().__init__(self._MESSAGE.format(tool_name=tool_name))
         self.output_message = output_message
         self.tool_call_id = tool_call_id
@@ -122,7 +122,7 @@ def parse_stream(stream: Iterator[Any], output_types: Iterable[type[R]]) -> R:
             return cast(R, obj)
         raise FunctionCallNotAllowedError(obj)
     if isinstance(obj, tuple(output_type_origins)):
-        return obj
+        return cast(R, obj)
     raise ObjectNotAllowedError(obj)
 
 
@@ -145,7 +145,7 @@ async def aparse_stream(
             return cast(R, obj)
         raise FunctionCallNotAllowedError(obj)
     if isinstance(obj, tuple(output_type_origins)):
-        return obj
+        return cast(R, obj)
     raise ObjectNotAllowedError(obj)
 
 

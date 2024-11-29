@@ -30,8 +30,9 @@ from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
     FunctionSchema,
-    async_function_schema_for_type,
     function_schema_for_type,
+    get_async_function_schemas,
+    get_function_schemas,
 )
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -59,7 +60,7 @@ from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
 )
-from magentic.typing import is_any_origin_subclass, is_origin_subclass
+from magentic.typing import is_any_origin_subclass
 from magentic.vision import UserImageMessage
 
 
@@ -82,7 +83,7 @@ def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
     assert isinstance(message.content, dict)  # noqa: S101
     assert "role" in message.content  # noqa: S101
     assert "content" in message.content  # noqa: S101
-    return message.content  # type: ignore[no-any-return]
+    return cast(ChatCompletionMessageParam, message.content)
 
 
 @message_to_openai_message.register
@@ -300,7 +301,7 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
             )
 
     @property
-    def current_message_snapshot(self) -> Message:
+    def current_message_snapshot(self) -> Message[Any]:
         snapshot = self._chat_completion_stream_state.current_completion_snapshot
         message = snapshot.choices[0].message
         # TODO: Possible to return AssistantMessage here?
@@ -310,15 +311,6 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
 def _if_given(value: T | None) -> T | openai.NotGiven:
     return value if value is not None else openai.NOT_GIVEN
 
-
-STR_OR_FUNCTIONCALL_TYPE = (
-    str,
-    StreamedStr,
-    AsyncStreamedStr,
-    FunctionCall,
-    ParallelFunctionCall,
-    AsyncParallelFunctionCall,
-)
 
 R = TypeVar("R")
 
@@ -453,12 +445,7 @@ class OpenaiChatModel(ChatModel):
         if output_types is None:
             output_types = cast(Iterable[type[R]], [] if functions else [str])
 
-        # TODO: Check that Function calls types match functions
-        function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
-            function_schema_for_type(type_)
-            for type_ in output_types
-            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
-        ]
+        function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
         # TODO: pass output_types to _get_tool_choice directly and remove these
@@ -527,11 +514,7 @@ class OpenaiChatModel(ChatModel):
         if output_types is None:
             output_types = [] if functions else cast(list[type[R]], [str])
 
-        function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
-            async_function_schema_for_type(type_)
-            for type_ in output_types
-            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
-        ]
+        function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = is_any_origin_subclass(output_types, str)

@@ -12,9 +12,8 @@ from magentic.chat_model.base import (
     parse_stream,
 )
 from magentic.chat_model.function_schema import (
-    FunctionCallFunctionSchema,
-    async_function_schema_for_type,
-    function_schema_for_type,
+    get_async_function_schemas,
+    get_function_schemas,
 )
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -23,7 +22,6 @@ from magentic.chat_model.message import (
     _RawMessage,
 )
 from magentic.chat_model.openai_chat_model import (
-    STR_OR_FUNCTIONCALL_TYPE,
     BaseFunctionToolSchema,
     message_to_openai_message,
 )
@@ -38,7 +36,7 @@ from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
 )
-from magentic.typing import is_any_origin_subclass, is_origin_subclass
+from magentic.typing import is_any_origin_subclass
 
 try:
     import litellm
@@ -101,7 +99,7 @@ class LitellmStreamState(StreamState[ModelResponse]):
             )
 
     @property
-    def current_message_snapshot(self) -> Message:
+    def current_message_snapshot(self) -> Message[Any]:
         snapshot = self._chat_completion_stream_state.current_completion_snapshot
         message = snapshot.choices[0].message
         # Fix incorrectly concatenated role
@@ -202,11 +200,7 @@ class LitellmChatModel(ChatModel):
         if output_types is None:
             output_types = cast(Iterable[type[R]], [] if functions else [str])
 
-        function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
-            function_schema_for_type(type_)
-            for type_ in output_types
-            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
-        ]
+        function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = is_any_origin_subclass(output_types, str)
@@ -270,11 +264,7 @@ class LitellmChatModel(ChatModel):
         if output_types is None:
             output_types = cast(Iterable[type[R]], [] if functions else [str])
 
-        function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
-            async_function_schema_for_type(type_)
-            for type_ in output_types
-            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
-        ]
+        function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
         str_in_output_types = is_any_origin_subclass(output_types, str)
