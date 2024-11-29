@@ -1,5 +1,6 @@
 import inspect
-from typing import Any, Callable, Iterable, ParamSpec, TypeVar
+from collections.abc import Callable, Iterable
+from typing import Any, ParamSpec, TypeVar
 
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
@@ -121,7 +122,7 @@ class Chat:
             parallel_function_call = self.last_message.content
             chat = self
             for result, function_call in zip(
-                parallel_function_call(), parallel_function_call
+                parallel_function_call(), parallel_function_call, strict=True
             ):
                 chat = chat.add_message(
                     FunctionResultMessage(content=result, function_call=function_call)

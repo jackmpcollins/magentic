@@ -1,10 +1,14 @@
 import os
+from typing import Annotated, Any
 from unittest.mock import ANY
 
 import openai
 import pytest
 from openai.types.chat import ChatCompletionMessageParam
+from pydantic import AfterValidator, BaseModel
 
+from magentic._pydantic import ConfigDict, with_config
+from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
@@ -12,6 +16,7 @@ from magentic.chat_model.message import (
     SystemMessage,
     Usage,
     UserMessage,
+    _RawMessage,
 )
 from magentic.chat_model.openai_chat_model import (
     OpenaiChatModel,
@@ -28,6 +33,10 @@ def plus(a: int, b: int) -> int:
 @pytest.mark.parametrize(
     ("message", "expected_openai_message"),
     [
+        (
+            _RawMessage({"role": "user", "content": "Hello"}),
+            {"role": "user", "content": "Hello"},
+        ),
         (SystemMessage("Hello"), {"role": "system", "content": "Hello"}),
         (UserMessage("Hello"), {"role": "user", "content": "Hello"}),
         (AssistantMessage("Hello"), {"role": "assistant", "content": "Hello"}),
@@ -98,6 +107,9 @@ def test_message_to_openai_message(message, expected_openai_message):
 
 def test_message_to_openai_message_raises():
     class CustomMessage(Message[str]):
+        def __init__(self, content: str, **data: Any):
+            super().__init__(content, **data)
+
         def format(self, **kwargs):
             del kwargs
             return CustomMessage(self.content)
@@ -121,31 +133,62 @@ def test_openai_chat_model_api_key(monkeypatch):
     monkeypatch.delenv("OPENAI_API_KEY")
 
     with pytest.raises(openai.OpenAIError):
-        chat_model = OpenaiChatModel("gpt-3.5-turbo")
+        chat_model = OpenaiChatModel("gpt-4o")
 
-    chat_model = OpenaiChatModel("gpt-3.5-turbo", api_key=openai_api_key)
+    chat_model = OpenaiChatModel("gpt-4o", api_key=openai_api_key)
     message = chat_model.complete(messages=[UserMessage("Say hello!")])
     assert isinstance(message.content, str)
 
 
 @pytest.mark.openai
 def test_openai_chat_model_complete_base_url():
-    chat_model = OpenaiChatModel("gpt-3.5-turbo", base_url="https://api.openai.com/v1")
+    chat_model = OpenaiChatModel("gpt-4o", base_url="https://api.openai.com/v1")
     message = chat_model.complete(messages=[UserMessage("Say hello!")])
     assert isinstance(message.content, str)
 
 
 @pytest.mark.openai
 def test_openai_chat_model_complete_seed():
-    chat_model = OpenaiChatModel("gpt-3.5-turbo", seed=42)
+    chat_model = OpenaiChatModel("gpt-4o", seed=42)
     message1 = chat_model.complete(messages=[UserMessage("Say hello!")])
     message2 = chat_model.complete(messages=[UserMessage("Say hello!")])
     assert message1.content == message2.content
 
 
 @pytest.mark.openai
+def test_openai_chat_model_complete_pydantic_model_openai_strict():
+    class CapitalCity(BaseModel):
+        model_config = ConfigDict(openai_strict=True)
+        capital: str
+        country: str
+
+    chat_model = OpenaiChatModel("gpt-4o")
+    message = chat_model.complete(
+        messages=[UserMessage("What is the capital of Ireland?")],
+        output_types=[CapitalCity],
+    )
+    assert isinstance(message.content, CapitalCity)
+
+
+@pytest.mark.openai
+def test_openai_chat_model_complete_function_call_openai_strict():
+    @with_config(ConfigDict(openai_strict=True))
+    def plus(a: int, b: int) -> int:
+        """Sum two numbers."""
+        return a + b
+
+    chat_model = OpenaiChatModel("gpt-4o")
+    message = chat_model.complete(
+        messages=[UserMessage("Use the tool to sum 1 and 2")],
+        functions=[plus],
+        output_types=[FunctionCall[int]],
+    )
+    assert isinstance(message.content, FunctionCall)
+
+
+@pytest.mark.openai
 def test_openai_chat_model_complete_usage():
-    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    chat_model = OpenaiChatModel("gpt-4o")
     message = chat_model.complete(
         messages=[UserMessage("Say hello!")], output_types=[StreamedStr]
     )
@@ -157,7 +200,7 @@ def test_openai_chat_model_complete_usage():
 
 @pytest.mark.openai
 def test_openai_chat_model_complete_usage_structured_output():
-    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    chat_model = OpenaiChatModel("gpt-4o")
     message = chat_model.complete(
         messages=[UserMessage("Count to 5")], output_types=[list[int]]
     )
@@ -168,7 +211,7 @@ def test_openai_chat_model_complete_usage_structured_output():
 
 @pytest.mark.openai
 def test_openai_chat_model_complete_no_structured_output_error():
-    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    chat_model = OpenaiChatModel("gpt-4o")
     # Should not raise StructuredOutputError because forced to make tool call
     message: Message[int | bool] = chat_model.complete(
         messages=[
@@ -179,10 +222,25 @@ def test_openai_chat_model_complete_no_structured_output_error():
     assert isinstance(message.content, int | bool)
 
 
-@pytest.mark.asyncio
+@pytest.mark.openai
+def test_openai_chat_model_complete_raises_tool_schema_parse_error():
+    def raise_error(v):
+        raise ValueError(v)
+
+    class Test(BaseModel):
+        value: Annotated[int, AfterValidator(raise_error)]
+
+    chat_model = OpenaiChatModel("gpt-4o")
+    with pytest.raises(ToolSchemaParseError):
+        chat_model.complete(
+            messages=[UserMessage("Return a test value of 42.")],
+            output_types=[Test],
+        )
+
+
 @pytest.mark.openai
 async def test_openai_chat_model_acomplete_usage():
-    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    chat_model = OpenaiChatModel("gpt-4o")
     message = await chat_model.acomplete(
         messages=[UserMessage("Say hello!")], output_types=[AsyncStreamedStr]
     )
@@ -192,10 +250,9 @@ async def test_openai_chat_model_acomplete_usage():
     assert message.usage.output_tokens > 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_openai_chat_model_acomplete_usage_structured_output():
-    chat_model = OpenaiChatModel("gpt-3.5-turbo")
+    chat_model = OpenaiChatModel("gpt-4o")
     message = await chat_model.acomplete(
         messages=[UserMessage("Count to 5")], output_types=[list[int]]
     )
@@ -204,9 +261,25 @@ async def test_openai_chat_model_acomplete_usage_structured_output():
     assert message.usage.output_tokens > 0
 
 
+@pytest.mark.openai
+async def test_openai_chat_model_acomplete_raises_tool_schema_parse_error():
+    def raise_error(v):
+        raise ValueError(v)
+
+    class Test(BaseModel):
+        value: Annotated[int, AfterValidator(raise_error)]
+
+    chat_model = OpenaiChatModel("gpt-4o")
+    with pytest.raises(ToolSchemaParseError):
+        await chat_model.acomplete(
+            messages=[UserMessage("Return a test value of 42.")],
+            output_types=[Test],
+        )
+
+
 def test_openai_chat_model_azure_omits_stream_options(monkeypatch):
     monkeypatch.setenv("AZURE_OPENAI_API_KEY", "test")
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "test")
     monkeypatch.setenv("OPENAI_API_VERSION", "test")
-    chat_model = OpenaiChatModel("gpt-3.5-turbo", api_type="azure")
+    chat_model = OpenaiChatModel("gpt-4o", api_type="azure")
     assert chat_model._get_stream_options() == openai.NOT_GIVEN

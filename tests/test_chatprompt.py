@@ -11,6 +11,7 @@ from magentic.chat_model.message import (
     FunctionResultMessage,
     Placeholder,
     SystemMessage,
+    ToolResultMessage,
     UserMessage,
 )
 from magentic.chatprompt import (
@@ -29,6 +30,9 @@ from magentic.function_call import FunctionCall
 def test_escape_braces(text):
     """Test that `escape_braces` makes `str.format` recover the original string."""
     assert escape_braces(text).format() == text
+
+
+str_func_call = FunctionCall(lambda: "some string")
 
 
 @pytest.mark.parametrize(
@@ -50,16 +54,20 @@ def test_escape_braces(text):
             [AssistantMessage("Assistant message with {param}.")],
             [AssistantMessage("Assistant message with arg.")],
         ),
+        (
+            [ToolResultMessage("Tool result message with {param}.", "unique_id")],
+            [ToolResultMessage("Tool result message with {param}.", "unique_id")],
+        ),
         # Do not format FunctionResultMessage
         (
             [
                 FunctionResultMessage(
-                    "Function result message with {param}", function_call=Mock()
+                    "Function result message with {param}", function_call=str_func_call
                 )
             ],
             [
                 FunctionResultMessage(
-                    "Function result message with {param}", function_call=Mock()
+                    "Function result message with {param}", function_call=str_func_call
                 )
             ],
         ),
@@ -114,7 +122,6 @@ def test_chatprompt_decorator_docstring():
     assert getdoc(func) == "This is the docstring."
 
 
-@pytest.mark.asyncio
 async def test_asyncchatpromptfunction_call():
     mock_model = AsyncMock()
     mock_model.acomplete.return_value = AssistantMessage(content="Hello!")
@@ -135,7 +142,6 @@ async def test_asyncchatpromptfunction_call():
     assert mock_model.acomplete.call_args.kwargs["stop"] == ["stop"]
 
 
-@pytest.mark.asyncio
 async def test_async_chatprompt_decorator_docstring():
     @chatprompt(UserMessage("This is a user message."))
     async def func(one: int) -> str:

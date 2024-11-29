@@ -1,0 +1,100 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Use the tool to sum 1 and 2"}],
+      "model": "mistral-large-latest", "stream": true, "tool_choice": "any", "tools":
+      [{"type": "function", "function": {"name": "plus", "parameters": {"properties":
+      {"a": {"title": "A", "type": "integer"}, "b": {"title": "B", "type": "integer"}},
+      "required": ["a", "b"], "type": "object"}, "description": "Sum two numbers."}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '397'
+      content-type:
+      - application/json
+      host:
+      - api.mistral.ai
+      user-agent:
+      - OpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.mistral.ai/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"67000ff5fb1a4bbd85ae87223d1593b1","object":"chat.completion.chunk","created":1731829452,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+
+        data: {"id":"67000ff5fb1a4bbd85ae87223d1593b1","object":"chat.completion.chunk","created":1731829452,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"tool_calls":[{"id":"x2LypFllt","function":{"name":"plus","arguments":"{\"a\":
+        1, \"b\": 2}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":93,"total_tokens":117,"completion_tokens":24}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e3e181d9d32ebed-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 07:44:13 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-origin:
+      - '*'
+      alt-svc:
+      - h3=":443"; ma=86400
+      ratelimitbysize-limit:
+      - '2000000'
+      ratelimitbysize-query-cost:
+      - '32011'
+      ratelimitbysize-remaining:
+      - '1775964'
+      ratelimitbysize-reset:
+      - '48'
+      x-envoy-upstream-service-time:
+      - '708'
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - 4b47b56e909d824b934b490f77467b76
+      x-kong-upstream-latency:
+      - '710'
+      x-ratelimitbysize-limit-minute:
+      - '2000000'
+      x-ratelimitbysize-limit-month:
+      - '10000000000'
+      x-ratelimitbysize-remaining-minute:
+      - '1775964'
+      x-ratelimitbysize-remaining-month:
+      - '9998591600'
+    status:
+      code: 200
+      message: OK
+version: 1

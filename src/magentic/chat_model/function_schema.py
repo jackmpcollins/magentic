@@ -8,12 +8,19 @@ from typing import Any, Generic, TypeVar, cast, get_args, get_origin
 from openai.types.shared_params import FunctionDefinition
 from pydantic import BaseModel, TypeAdapter, create_model
 
-from magentic.function_call import FunctionCall
+from magentic._pydantic import ConfigDict, get_pydantic_config, json_schema
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 from magentic.streaming import (
+    AsyncStreamedStr,
+    StreamedStr,
     aiter_streamed_json_array,
     iter_streamed_json_array,
 )
-from magentic.typing import is_origin_abstract, name_type
+from magentic.typing import is_origin_abstract, is_origin_subclass, name_type
 
 T = TypeVar("T")
 
@@ -44,11 +51,31 @@ class BaseFunctionSchema(ABC, Generic[T]):
         """The parameters the functions accepts as a JSON Schema object."""
         ...
 
+    @property
+    def strict(self) -> bool | None:
+        """Whether to enable strict schema adherence when generating the function call."""
+        return None
+
     def dict(self) -> FunctionDefinition:
         schema: FunctionDefinition = {"name": self.name, "parameters": self.parameters}
         if self.description:
             schema["description"] = self.description
+        if self.strict is not None:
+            schema["strict"] = self.strict
         return schema
+
+
+BaseFunctionSchemaT = TypeVar("BaseFunctionSchemaT", bound=BaseFunctionSchema[Any])
+
+
+def select_function_schema(
+    function_schemas: Iterable[BaseFunctionSchemaT], name: str
+) -> BaseFunctionSchemaT | None:
+    """Select the function schema with the given name."""
+    for schema in function_schemas:
+        if schema.name == name:
+            return schema
+    return None
 
 
 class AsyncFunctionSchema(BaseFunctionSchema[T], Generic[T]):
@@ -135,18 +162,17 @@ def register_function_schema(
     return _register
 
 
-class Output(BaseModel, Generic[T]):
-    value: T
-
-
 @register_function_schema(object)
 class AnyFunctionSchema(FunctionSchema[T], Generic[T]):
     """The most generic FunctionSchema that should work for most types supported by pydantic."""
 
     def __init__(self, output_type: type[T]):
         self._output_type = output_type
-        # https://github.com/python/mypy/issues/14458
-        self._model = Output[output_type]  # type: ignore[valid-type]
+        self._model = create_model(
+            "Output",
+            __config__=get_pydantic_config(output_type),
+            value=(output_type, ...),
+        )
 
     @property
     def name(self) -> str:
@@ -154,14 +180,15 @@ class AnyFunctionSchema(FunctionSchema[T], Generic[T]):
 
     @property
     def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.model_json_schema().copy()
-        model_schema.pop("title", None)
-        model_schema.pop("description", None)
-        return model_schema
+        return json_schema(self._model)
+
+    @property
+    def strict(self) -> bool | None:
+        return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> T:
         args_json = "".join(chunks)
-        return self._model.model_validate_json(args_json).value
+        return cast(T, self._model.model_validate_json(args_json).value)  # type: ignore[attr-defined]
 
     def serialize_args(self, value: T) -> str:
         return self._model.model_construct(value=value).model_dump_json()
@@ -176,11 +203,14 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
 
     def __init__(self, output_type: type[IterableT]):
         self._output_type = output_type
-        self._item_type_adapter = TypeAdapter(
+        self._item_type_adapter: TypeAdapter[Any] = TypeAdapter(
             args[0] if (args := get_args(output_type)) else Any
         )
-        # https://github.com/python/mypy/issues/14458
-        self._model = Output[output_type]  # type: ignore[valid-type]
+        self._model = create_model(
+            "Output",
+            __config__=get_pydantic_config(output_type),
+            value=(output_type, ...),
+        )
 
     @property
     def name(self) -> str:
@@ -188,17 +218,18 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
 
     @property
     def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.model_json_schema().copy()
-        model_schema.pop("title", None)
-        model_schema.pop("description", None)
-        return model_schema
+        return json_schema(self._model)
+
+    @property
+    def strict(self) -> bool | None:
+        return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> IterableT:
         iter_items = (
             self._item_type_adapter.validate_json(item)
             for item in iter_streamed_json_array(chunks)
         )
-        return self._model.model_validate({"value": iter_items}).value
+        return cast(IterableT, self._model.model_validate({"value": iter_items}).value)  # type: ignore[attr-defined]
 
     def serialize_args(self, value: IterableT) -> str:
         return self._model.model_construct(value=value).model_dump_json()
@@ -215,11 +246,14 @@ class AsyncIterableFunctionSchema(
 
     def __init__(self, output_type: type[AsyncIterableT]):
         self._output_type = output_type
-        item_type = args[0] if (args := get_args(output_type)) else Any
+        item_type: type | Any = args[0] if (args := get_args(output_type)) else Any
         self._item_type_adapter = TypeAdapter(item_type)
-        # Convert to list so pydantic can handle for schema generation
-        # But keep the type hint using AsyncIterableT for type checking
-        self._model = Output[list[item_type]]  # type: ignore[valid-type]
+        self._model = create_model(
+            "Output",
+            __config__=get_pydantic_config(output_type),
+            # Convert to list so pydantic can handle for schema generation
+            value=(list[item_type], ...),  # type: ignore[valid-type]
+        )
 
     @property
     def name(self) -> str:
@@ -227,10 +261,11 @@ class AsyncIterableFunctionSchema(
 
     @property
     def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.model_json_schema().copy()
-        model_schema.pop("title", None)
-        model_schema.pop("description", None)
-        return model_schema
+        return json_schema(self._model)
+
+    @property
+    def strict(self) -> bool | None:
+        return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     async def aparse_args(self, chunks: AsyncIterable[str]) -> AsyncIterableT:
         aiter_items = (
@@ -257,7 +292,9 @@ class DictFunctionSchema(FunctionSchema[T], Generic[T]):
 
     def __init__(self, output_type: type[T]):
         self._output_type = output_type
-        self._type_adapter = TypeAdapter(output_type)
+        self._type_adapter = TypeAdapter(
+            output_type, config=get_pydantic_config(output_type)
+        )
 
     @property
     def name(self) -> str:
@@ -293,10 +330,11 @@ class BaseModelFunctionSchema(FunctionSchema[BaseModelT], Generic[BaseModelT]):
 
     @property
     def parameters(self) -> dict[str, Any]:
-        model_schema = self._model.model_json_schema().copy()
-        model_schema.pop("title", None)
-        model_schema.pop("description", None)
-        return model_schema
+        return json_schema(self._model)
+
+    @property
+    def strict(self) -> bool | None:
+        return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> BaseModelT:
         args_json = "".join(chunks)
@@ -337,7 +375,7 @@ def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
             (param.annotation if param.annotation != inspect._empty else Any),
             (param.default if param.default != inspect._empty else ...),
         )
-    return create_model("FuncModel", **fields)
+    return create_model("FuncModel", __config__=get_pydantic_config(func), **fields)
 
 
 class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
@@ -357,9 +395,11 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
 
     @property
     def parameters(self) -> dict[str, Any]:
-        schema: dict[str, Any] = self._model.model_json_schema().copy()
-        schema.pop("title", None)
-        return schema
+        return json_schema(self._model)
+
+    @property
+    def strict(self) -> bool | None:
+        return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> FunctionCall[T]:
         args_json = "".join(chunks)
@@ -410,3 +450,43 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
         return self._model.model_construct(**value.arguments).model_dump_json(
             exclude_unset=True
         )
+
+
+R = TypeVar("R")
+
+_NON_FUNCTION_CALL_TYPES = (
+    str,
+    StreamedStr,
+    AsyncStreamedStr,
+    FunctionCall,
+    ParallelFunctionCall,
+    AsyncParallelFunctionCall,
+)
+
+
+def get_function_schemas(
+    functions: Iterable[Callable[..., R]] | None,
+    output_types: Iterable[type[T]],
+) -> Iterable[FunctionSchema[FunctionCall[R] | T]]:
+    return [
+        *(FunctionCallFunctionSchema(f) for f in functions or []),  # type: ignore[list-item]
+        *(
+            function_schema_for_type(type_)
+            for type_ in output_types
+            if not is_origin_subclass(type_, _NON_FUNCTION_CALL_TYPES)  # type: ignore[list-item]
+        ),
+    ]
+
+
+def get_async_function_schemas(
+    functions: Iterable[Callable[..., R]] | None,
+    output_types: Iterable[type[T]],
+) -> Iterable[FunctionSchema[FunctionCall[R] | T]]:
+    return [
+        *(FunctionCallFunctionSchema(f) for f in functions or []),  # type: ignore[list-item]
+        *(
+            async_function_schema_for_type(type_)
+            for type_ in output_types
+            if not is_origin_subclass(type_, _NON_FUNCTION_CALL_TYPES)  # type: ignore[list-item]
+        ),
+    ]

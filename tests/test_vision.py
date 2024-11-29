@@ -3,6 +3,7 @@ from pathlib import Path
 import pytest
 from typing_extensions import assert_type
 
+from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
 from magentic.chat_model.message import Placeholder, UserMessage
 from magentic.chat_model.openai_chat_model import (
     OpenaiChatModel,
@@ -12,12 +13,12 @@ from magentic.chatprompt import chatprompt
 from magentic.vision import UserImageMessage
 
 
-@pytest.fixture()
+@pytest.fixture
 def image_bytes_jpg() -> bytes:
     return Path("tests/data/python-powered.jpg").read_bytes()
 
 
-@pytest.fixture()
+@pytest.fixture
 def image_bytes_png() -> bytes:
     return Path("tests/data/python-powered.png").read_bytes()
 
@@ -90,7 +91,20 @@ def test_chatprompt_with_user_image_message(image_bytes_jpg):
     @chatprompt(
         UserMessage("Describe this image in one word."),
         UserImageMessage(image_bytes_jpg),
-        model=OpenaiChatModel("gpt-4-vision-preview"),
+        model=OpenaiChatModel("gpt-4o"),
+    )
+    def describe_image() -> str: ...
+
+    output = describe_image()
+    assert isinstance(output, str)
+
+
+@pytest.mark.anthropic
+def test_chatprompt_with_user_image_message_anthropic(image_bytes_jpg):
+    @chatprompt(
+        UserMessage("Describe this image in one word."),
+        UserImageMessage(image_bytes_jpg),
+        model=AnthropicChatModel("claude-3-haiku-20240307"),
     )
     def describe_image() -> str: ...
 

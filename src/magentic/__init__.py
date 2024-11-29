@@ -1,34 +1,18 @@
-from magentic.chat_model.message import (
-    AssistantMessage,
-    FunctionResultMessage,
-    Placeholder,
-    SystemMessage,
-    UserMessage,
-)
-from magentic.chat_model.openai_chat_model import OpenaiChatModel
-from magentic.chatprompt import chatprompt
-from magentic.function_call import (
-    AsyncParallelFunctionCall,
-    FunctionCall,
-    ParallelFunctionCall,
-)
-from magentic.prompt_chain import prompt_chain
-from magentic.prompt_function import prompt
-from magentic.streaming import AsyncStreamedStr, StreamedStr
-
-__all__ = [
-    "AssistantMessage",
-    "FunctionResultMessage",
-    "Placeholder",
-    "SystemMessage",
-    "UserMessage",
-    "OpenaiChatModel",
-    "chatprompt",
-    "AsyncParallelFunctionCall",
-    "FunctionCall",
-    "ParallelFunctionCall",
-    "prompt_chain",
-    "prompt",
-    "AsyncStreamedStr",
-    "StreamedStr",
-]
+from ._pydantic import ConfigDict as ConfigDict
+from ._pydantic import with_config as with_config
+from .chat_model.message import AnyMessage as AnyMessage
+from .chat_model.message import AssistantMessage as AssistantMessage
+from .chat_model.message import FunctionResultMessage as FunctionResultMessage
+from .chat_model.message import Placeholder as Placeholder
+from .chat_model.message import SystemMessage as SystemMessage
+from .chat_model.message import ToolResultMessage as ToolResultMessage
+from .chat_model.message import UserMessage as UserMessage
+from .chat_model.openai_chat_model import OpenaiChatModel as OpenaiChatModel
+from .chatprompt import chatprompt as chatprompt
+from .function_call import AsyncParallelFunctionCall as AsyncParallelFunctionCall
+from .function_call import FunctionCall as FunctionCall
+from .function_call import ParallelFunctionCall as ParallelFunctionCall
+from .prompt_chain import prompt_chain as prompt_chain
+from .prompt_function import prompt as prompt
+from .streaming import AsyncStreamedStr as AsyncStreamedStr
+from .streaming import StreamedStr as StreamedStr

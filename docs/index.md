@@ -11,6 +11,7 @@ Easily integrate Large Language Models into your Python code. Simply use the `@p
 - [Asyncio]. Simply use `async def` when defining a magentic function.
 - [Streaming] structured outputs to use them as they are being generated.
 - [Vision] to easily get structured outputs from images.
+- [LLM-Assisted Retries] to improve LLM adherence to complex output schemas.
 - Multiple LLM providers including OpenAI and Anthropic. See [Configuration].
 - [Type Annotations] to work nicely with linters and IDEs.
 
@@ -20,10 +21,10 @@ Easily integrate Large Language Models into your Python code. Simply use the `@p
 pip install magentic
 ```
 
-or using poetry
+or using uv
 
 ```sh
-poetry add magentic
+uv add magentic
 ```
 
 Configure your OpenAI API key by setting the `OPENAI_API_KEY` environment variable. To configure a different LLM provider see [Configuration] for more.
@@ -187,5 +188,6 @@ LLM-powered functions created using `@prompt`, `@chatprompt` and `@prompt_chain`
 [Asyncio]: asyncio.md
 [Streaming]: streaming.md
 [Vision]: vision.md
+[LLM-assisted Retries]: retrying.md
 [Configuration]: configuration.md
 [Type Annotations]: type-checking.md

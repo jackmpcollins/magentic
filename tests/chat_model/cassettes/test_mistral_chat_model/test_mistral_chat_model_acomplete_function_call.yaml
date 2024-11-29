@@ -1,0 +1,100 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Use the tool to sum 1 and 2"}],
+      "model": "mistral-large-latest", "stream": true, "tool_choice": "any", "tools":
+      [{"type": "function", "function": {"name": "plus", "parameters": {"properties":
+      {"a": {"title": "A", "type": "integer"}, "b": {"title": "B", "type": "integer"}},
+      "required": ["a", "b"], "type": "object"}, "description": "Sum two numbers."}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '397'
+      content-type:
+      - application/json
+      host:
+      - api.mistral.ai
+      user-agent:
+      - AsyncOpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.mistral.ai/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"c914241267cc4fb89a1d3e32713fd596","object":"chat.completion.chunk","created":1731829465,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+
+        data: {"id":"c914241267cc4fb89a1d3e32713fd596","object":"chat.completion.chunk","created":1731829465,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"tool_calls":[{"id":"p5uZPui6X","function":{"name":"plus","arguments":"{\"a\":
+        1, \"b\": 2}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":93,"total_tokens":117,"completion_tokens":24}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e3e186cfbd067a3-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 07:44:26 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-origin:
+      - '*'
+      alt-svc:
+      - h3=":443"; ma=86400
+      ratelimitbysize-limit:
+      - '2000000'
+      ratelimitbysize-query-cost:
+      - '32011'
+      ratelimitbysize-remaining:
+      - '1487861'
+      ratelimitbysize-reset:
+      - '35'
+      x-envoy-upstream-service-time:
+      - '739'
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - c8782f039373f300f4a62b782ef4861a
+      x-kong-upstream-latency:
+      - '741'
+      x-ratelimitbysize-limit-minute:
+      - '2000000'
+      x-ratelimitbysize-limit-month:
+      - '10000000000'
+      x-ratelimitbysize-remaining-minute:
+      - '1487861'
+      x-ratelimitbysize-remaining-month:
+      - '9998303497'
+    status:
+      code: 200
+      message: OK
+version: 1

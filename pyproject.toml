@@ -1,6 +1,55 @@
+[project]
+name = "magentic"
+version = "0.33.0"
+description = "Seamlessly integrate LLMs as Python functions"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "filetype>=1.2.0",
+    "logfire-api>=0.1.0",
+    "openai>=1.40.0",
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.0.0",
+]
+
+[project.optional-dependencies]
+anthropic = ["anthropic>=0.27.0"]
+litellm = ["litellm>=1.41.12"]
+
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "anthropic",
+    "inline-snapshot>=0.14.0",
+    "litellm",
+    "logfire>=0.46.1,<0.50.0",
+    "mypy",
+    "pytest>=7.0.0",
+    "pytest-asyncio>=0.18.0",
+    "pytest-clarity>=0.1.0",
+    "pytest-cov>=4.0.0",
+    "python-dotenv>=1.0.1",
+    "ruff>=0.3",
+    "pytest-recording>=0.13.2",
+    "coverage>=7.6.4",
+    "pytest-mock>=3.14.0",
+    "vcrpy>=6.0.2",
+]
+docs = [
+    "blacken-docs>=1.16.0",
+    "mkdocs>=1.5.3",
+    "mkdocs-glightbox>=0.4.0",
+    "mkdocs-jupyter>=0.24.6",
+    "mkdocs-material>=9.5.11",
+]
+examples = ["ghapi>=1.0.5", "jupyter", "pandas>=2.2.1"]
+
+[tool.coverage.report]
+skip_covered = "true"
+show_missing = "true"
 
 [tool.mypy]
 check_untyped_defs = true
@@ -14,58 +63,18 @@ module = [
     "litellm",
     "litellm.utils",
     "litellm.integrations.custom_logger",
-    "logfire_api",
+    "vcr.*",
 ]
 ignore_missing_imports = true
 
-[tool.poetry]
-name = "magentic"
-version = "0.28.0"
-description = "Seamlessly integrate LLMs as Python functions"
-license = "MIT"
-authors = ["Jack Collins"]
-readme = "README.md"
-homepage = "https://magentic.dev/"
-repository = "https://github.com/jackmpcollins/magentic"
-
-[tool.poetry.dependencies]
-python = ">=3.10,<4.0"
-anthropic = {version = ">=0.27.0", optional = true}
-filetype = "*"
-litellm = {version = ">=1.41.12", optional = true}
-logfire-api = "*"
-openai = ">=1.26.0"
-pydantic = ">=2.0.0"
-pydantic-settings = ">=2.0.0"
-
-[tool.poetry.extras]
-anthropic = ["anthropic"]
-litellm = ["litellm"]
-
-[tool.poetry.group.dev.dependencies]
-blacken-docs = "^1.16.0"
-logfire = "^0.46.1"
-mypy = "*"
-pytest = "*"
-pytest-asyncio = "*"
-pytest-clarity = "*"
-pytest-cov = "*"
-python-dotenv = "^1.0.1"
-ruff = ">=0.3,<0.6"
-
-[tool.poetry.group.docs.dependencies]
-mkdocs = "^1.5.3"
-mkdocs-glightbox = "^0.4.0"
-mkdocs-jupyter = "^0.24.6"
-mkdocs-material = "^9.5.11"
-
-[tool.poetry.group.examples.dependencies]
-ghapi = "^1.0.5"
-jupyter = "*"
-pandas = "^2.2.1"
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
 
 [tool.pytest.ini_options]
-addopts = "--cov=magentic --cov-report=term-missing -m 'not anthropic and not litellm_anthropic and not litellm_openai and not mistral and not litellm_ollama and not openai'"
+addopts = "--block-network --cov-report=html --cov-report=term --cov=magentic"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_mode = "auto"
 markers = [
     "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
     "litellm_anthropic: Tests that query the Anthropic API via litellm. Requires the ANTHROPIC_API_KEY environment variable to be set.",
@@ -77,33 +86,38 @@ markers = [
 
 [tool.ruff]
 include = ["*.py", "*.pyi", "**/pyproject.toml", "*.ipynb"]
-# Use `ruff linter` to list available linters
-# https://beta.ruff.rs/docs/rules/
+
+[tool.ruff.format]
+docstring-code-format = true # TODO: replace blacken-docs
 
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-   "C90",  # mccabe
-     "D",  # pydocstyle
-   "ANN",  # flake8-annotations
-     "A",  # flake8-builtins
-   "COM",  # flake8-commas
-    "FA",  # flake8-future-annotations
-   "INP",  # flake8-no-pep420
-"PIE790",  # flake8-pie: Unnecessary `...` literal
-   "SLF",  # flake8-self
-   "ARG",  # flake8-unused-arguments
-    "TD",  # flake8-todos
-   "FIX",  # flake8-fixme
-    "PL",  # Pylint
-# Compatibility with ruff formatter
-  "E501",
-"ISC001",
-  "Q000",
-  "Q001",
-  "Q002",
-  "Q003",
-  "W191",
+    "C90",    # mccabe
+    "D",      # pydocstyle
+    "ANN",    # flake8-annotations
+    "A",      # flake8-builtins
+    "COM",    # flake8-commas
+    "FA",     # flake8-future-annotations
+    "INP",    # flake8-no-pep420
+    "PIE790", # flake8-pie: Unnecessary `...` literal
+    "SLF",    # flake8-self
+    "ARG",    # flake8-unused-arguments
+    "TD",     # flake8-todos
+    "FIX",    # flake8-fixme
+    "PL",     # Pylint
+    # Compatibility with ruff formatter
+    "E501",
+    "ISC001",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "W191",
+    "B905",   # TODO: Reenable this
+    "UP006",  # TODO: Reenable this
+    "UP007",  # TODO: Reenable this
+    "UP035",  # TODO: Reenable this
 ]
 
 [tool.ruff.lint.flake8-pytest-style]
@@ -114,11 +128,14 @@ known-first-party = ["magentic"]
 
 [tool.ruff.lint.per-file-ignores]
 "docs/examples/*" = [
-  "T20",  # flake8-print
+    "T20", # flake8-print
 ]
 "examples/*" = [
-  "T20",  # flake8-print
+    "T20", # flake8-print
 ]
 "tests/*" = [
-    "S",  # flake8-bandit
+    "S", # flake8-bandit
 ]
+
+[tool.uv]
+default-groups = ["dev", "docs"]

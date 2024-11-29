@@ -67,7 +67,7 @@ def test_mistral_chat_model_complete_function_call():
     message = chat_model.complete(
         messages=[UserMessage("Use the tool to sum 1 and 2")],
         functions=[plus],
-        output_types=[FunctionCall[int]],  # type: ignore[misc]
+        output_types=[FunctionCall[int]],
     )
     assert isinstance(message.content, FunctionCall)
 
@@ -132,7 +132,6 @@ def test_mistral_chat_model_few_shot_prompt():
         ("List three fruits", [list[str]], list),
     ],
 )
-@pytest.mark.asyncio
 @pytest.mark.mistral
 async def test_mistral_chat_model_acomplete(prompt, output_types, expected_output_type):
     chat_model = MistralChatModel("mistral-large-latest")
@@ -142,7 +141,6 @@ async def test_mistral_chat_model_acomplete(prompt, output_types, expected_outpu
     assert isinstance(message.content, expected_output_type)
 
 
-@pytest.mark.asyncio
 @pytest.mark.mistral
 async def test_mistral_chat_model_acomplete_usage():
     chat_model = MistralChatModel("mistral-large-latest")
@@ -155,7 +153,6 @@ async def test_mistral_chat_model_acomplete_usage():
     assert message.usage.output_tokens > 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.mistral
 async def test_mistral_chat_model_acomplete_usage_structured_output():
     chat_model = MistralChatModel("mistral-large-latest")
@@ -167,7 +164,6 @@ async def test_mistral_chat_model_acomplete_usage_structured_output():
     assert message.usage.output_tokens > 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.mistral
 async def test_mistral_chat_model_acomplete_function_call():
     def plus(a: int, b: int) -> int:
@@ -178,12 +174,11 @@ async def test_mistral_chat_model_acomplete_function_call():
     message = await chat_model.acomplete(
         messages=[UserMessage("Use the tool to sum 1 and 2")],
         functions=[plus],
-        output_types=[FunctionCall[int]],  # type: ignore[misc]
+        output_types=[FunctionCall[int]],
     )
     assert isinstance(message.content, FunctionCall)
 
 
-@pytest.mark.asyncio
 @pytest.mark.mistral
 async def test_mistral_chat_model_acomplete_async_parallel_function_call():
     def plus(a: int, b: int) -> int:

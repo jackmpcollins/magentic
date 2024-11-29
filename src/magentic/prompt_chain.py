@@ -1,18 +1,17 @@
 import inspect
+from collections.abc import Callable
 from functools import wraps
 from typing import (
     Any,
-    Callable,
     ParamSpec,
     TypeVar,
     cast,
 )
 
-import logfire_api as logfire
-
 from magentic.chat import Chat
 from magentic.chat_model.base import ChatModel
 from magentic.function_call import FunctionCall
+from magentic.logger import logfire
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction
 
 P = ParamSpec("P")
@@ -38,7 +37,8 @@ def prompt_chain(
             async_prompt_function = AsyncPromptFunction[P, Any](
                 name=func.__name__,
                 parameters=list(func_signature.parameters.values()),
-                return_type=func_signature.return_annotation,
+                # TODO: Also allow ParallelFunctionCall. Support this more neatly
+                return_type=func_signature.return_annotation | FunctionCall,  # type: ignore[arg-type,unused-ignore]
                 template=template,
                 functions=functions,
                 model=model,
@@ -71,7 +71,8 @@ def prompt_chain(
         prompt_function = PromptFunction[P, R](
             name=func.__name__,
             parameters=list(func_signature.parameters.values()),
-            return_type=func_signature.return_annotation,
+            # TODO: Also allow ParallelFunctionCall. Support this more neatly
+            return_type=func_signature.return_annotation | FunctionCall,  # type: ignore[arg-type,unused-ignore]
             template=template,
             functions=functions,
             model=model,
