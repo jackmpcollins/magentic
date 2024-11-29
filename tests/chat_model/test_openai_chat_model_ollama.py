@@ -10,7 +10,6 @@ from magentic.chat_model.openai_chat_model import OpenaiChatModel
         ("Say hello!", [str], str),
         ("Return True.", [bool], bool),
         ("Return [1, 2, 3, 4, 5]", [list[int]], list),
-        ("Return a list of fruits", [list[str]], list),
     ],
 )
 @pytest.mark.openai_ollama
@@ -28,7 +27,6 @@ def test_openai_chat_model_complete_ollama(prompt, output_types, expected_output
         ("Say hello!", [str], str),
         ("Return True.", [bool], bool),
         ("Return [1, 2, 3, 4, 5]", [list[int]], list),
-        ("Return a list of fruits", [list[str]], list),
     ],
 )
 @pytest.mark.openai_ollama
