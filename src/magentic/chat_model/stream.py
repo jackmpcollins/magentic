@@ -153,7 +153,6 @@ class OutputStream(Generic[ItemT, OutputT]):
                                 current_tool_call_id,
                             )
                         )
-                    # TODO: Catch/raise unknown tool call error here
                     except ValidationError as e:
                         assert current_tool_call_id is not None  # noqa: S101
                         raise ToolSchemaParseError(
@@ -264,7 +263,6 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                                 current_tool_call_id,
                             )
                         )
-                    # TODO: Catch/raise unknown tool call error here
                     except ValidationError as e:
                         assert current_tool_call_id is not None  # noqa: S101
                         raise ToolSchemaParseError(
