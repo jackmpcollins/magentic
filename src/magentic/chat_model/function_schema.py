@@ -64,13 +64,12 @@ BaseFunctionSchemaT = TypeVar("BaseFunctionSchemaT", bound=BaseFunctionSchema[An
 
 def select_function_schema(
     function_schemas: Iterable[BaseFunctionSchemaT], name: str
-) -> BaseFunctionSchemaT:
+) -> BaseFunctionSchemaT | None:
     """Select the function schema with the given name."""
     for schema in function_schemas:
         if schema.name == name:
             return schema
-    # TODO: Catch/raise unknown tool call error here
-    raise ValueError(f"No function schema found for name {name}")
+    return None
 
 
 class AsyncFunctionSchema(BaseFunctionSchema[T], Generic[T]):

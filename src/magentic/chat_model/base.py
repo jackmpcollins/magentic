@@ -65,6 +65,20 @@ class ObjectNotAllowedError(Exception):
         self.output_message = AssistantMessage(obj)
 
 
+class UnknownToolError(Exception):
+    """Raised when the LLM returns a tool call for an unknown tool."""
+
+    _MESSAGE = (
+        "The LLM returned a tool call for a tool name that is not recognized."
+        " Tool name: {tool_name!r}"
+    )
+
+    def __init__(self, output_message: Message, tool_call_id: str, tool_name: str):
+        super().__init__(self._MESSAGE.format(tool_name=tool_name))
+        self.output_message = output_message
+        self.tool_call_id = tool_call_id
+
+
 class ToolSchemaParseError(Exception):
     """Raised when the LLM output could not be parsed by the tool schema."""
 

@@ -6,7 +6,7 @@ from typing import Generic, NamedTuple, TypeVar
 from litellm.llms.files_apis.azure import Any
 from pydantic import ValidationError
 
-from magentic.chat_model.base import ToolSchemaParseError
+from magentic.chat_model.base import ToolSchemaParseError, UnknownToolError
 from magentic.chat_model.function_schema import FunctionSchema, select_function_schema
 from magentic.chat_model.message import Message, Usage
 from magentic.streaming import (
@@ -138,6 +138,13 @@ class OutputStream(Generic[ItemT, OutputT]):
                     function_schema = select_function_schema(
                         self._function_schemas, current_tool_call_chunk.name
                     )
+                    if function_schema is None:
+                        assert current_tool_call_id is not None  # noqa: S101
+                        raise UnknownToolError(
+                            output_message=self._state.current_message_snapshot,
+                            tool_call_id=current_tool_call_id,
+                            tool_name=current_tool_call_chunk.name,
+                        )
                     try:
                         yield function_schema.parse_args(
                             self._tool_call(
@@ -239,6 +246,13 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                     function_schema = select_function_schema(
                         self._function_schemas, current_tool_call_chunk.name
                     )
+                    if function_schema is None:
+                        assert current_tool_call_id is not None  # noqa: S101
+                        raise UnknownToolError(
+                            output_message=self._state.current_message_snapshot,
+                            tool_call_id=current_tool_call_id,
+                            tool_name=current_tool_call_chunk.name,
+                        )
                     try:
                         yield await function_schema.aparse_args(
                             self._tool_call(

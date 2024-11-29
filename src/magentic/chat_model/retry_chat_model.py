@@ -29,10 +29,14 @@ class RetryChatModel(ChatModel):
         self._max_retries = max_retries
 
     # TODO: Make this public to allow modifying error handling behavior
+    # User should be able to add handlers to instance using decorator
+    # e.g. `@my_retry_chat_model.exception_handler(exc_type)`
+    # TODO: Add exception base class for those with output_message attribute
     @singledispatchmethod
     def _make_retry_messages(self, error: Exception) -> list[Message[Any]]:
         raise NotImplementedError
 
+    # TODO: Catch UnknownToolError here
     @_make_retry_messages.register
     def _(self, error: ToolSchemaParseError) -> list[Message[Any]]:
         return [
