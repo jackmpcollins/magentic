@@ -225,6 +225,8 @@ class CachedAsyncIterable(AsyncIterable[T]):
             yield item
 
 
+# TODO: Add close method to close the underlying stream if chunks is a stream
+# TODO: Make it a context manager to automatically close
 class StreamedStr(Iterable[str]):
     """A string that is generated in chunks."""
 

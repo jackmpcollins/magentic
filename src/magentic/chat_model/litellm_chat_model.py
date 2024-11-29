@@ -1,51 +1,106 @@
 from collections.abc import Callable, Iterable, Sequence
-from itertools import chain
-from typing import Any, TypeVar, cast, overload
+from typing import Any, Literal, TypeVar, cast, overload
 
-from openai.types.chat import ChatCompletionToolChoiceOptionParam
+import openai
+from openai.lib.streaming.chat._completions import ChatCompletionStreamState
+from openai.types.chat import ChatCompletionNamedToolChoiceParam
 
-from magentic.chat_model.base import (
-    ChatModel,
-    avalidate_str_content,
-    validate_str_content,
-)
+from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
-    FunctionCallFunctionSchema,
-    async_function_schema_for_type,
-    function_schema_for_type,
+    get_async_function_schemas,
+    get_function_schemas,
 )
-from magentic.chat_model.message import (
-    AssistantMessage,
-    Message,
-)
+from magentic.chat_model.message import AssistantMessage, Message, Usage, _RawMessage
 from magentic.chat_model.openai_chat_model import (
-    STR_OR_FUNCTIONCALL_TYPE,
-    AsyncFunctionToolSchema,
     BaseFunctionToolSchema,
-    FunctionToolSchema,
-    _aparse_streamed_tool_calls,
-    _parse_streamed_tool_calls,
-    discard_none_arguments,
     message_to_openai_message,
 )
-from magentic.function_call import (
-    AsyncParallelFunctionCall,
-    ParallelFunctionCall,
+from magentic.chat_model.stream import (
+    AsyncOutputStream,
+    FunctionCallChunk,
+    OutputStream,
+    StreamParser,
+    StreamState,
 )
 from magentic.streaming import (
     AsyncStreamedStr,
     StreamedStr,
-    achain,
-    async_iter,
 )
-from magentic.typing import is_any_origin_subclass, is_origin_subclass
+from magentic.typing import is_any_origin_subclass
 
 try:
     import litellm
+    from litellm.litellm_core_utils.streaming_handler import (  # type: ignore[attr-defined]
+        StreamingChoices,
+    )
     from litellm.types.utils import ModelResponse
 except ImportError as error:
     msg = "To use LitellmChatModel you must install the `litellm` package using `pip install 'magentic[litellm]'`."
     raise ImportError(msg) from error
+
+
+class LitellmStreamParser(StreamParser[ModelResponse]):
+    def is_content(self, item: ModelResponse) -> bool:
+        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+        return bool(item.choices[0].delta.content)
+
+    def get_content(self, item: ModelResponse) -> str | None:
+        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+        assert isinstance(item.choices[0].delta.content, str | None)  # noqa: S101
+        return item.choices[0].delta.content
+
+    def is_tool_call(self, item: ModelResponse) -> bool:
+        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+        return bool(item.choices[0].delta.tool_calls)
+
+    def iter_tool_calls(self, item: ModelResponse) -> Iterable[FunctionCallChunk]:
+        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+        if item.choices and item.choices[0].delta.tool_calls:
+            for tool_call in item.choices[0].delta.tool_calls:
+                if tool_call.function:
+                    yield FunctionCallChunk(
+                        id=tool_call.id,
+                        name=tool_call.function.name,
+                        args=tool_call.function.arguments,
+                    )
+
+
+class LitellmStreamState(StreamState[ModelResponse]):
+    def __init__(self) -> None:
+        self._chat_completion_stream_state = ChatCompletionStreamState(
+            input_tools=openai.NOT_GIVEN,
+            response_format=openai.NOT_GIVEN,
+        )
+        self.usage_ref: list[Usage] = []
+
+    def update(self, item: ModelResponse) -> None:
+        # Patch attributes required inside ChatCompletionStreamState.handle_chunk
+        if not hasattr(item, "usage"):
+            # litellm requires usage is not None for its total usage calculation
+            item.usage = litellm.Usage()  # type: ignore[attr-defined]
+        if not hasattr(item, "refusal"):
+            assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+            item.choices[0].delta.refusal = None  # type: ignore[attr-defined]
+        self._chat_completion_stream_state.handle_chunk(item)  # type: ignore[arg-type]
+        usage = cast(litellm.Usage, item.usage)  # type: ignore[attr-defined,name-defined]
+        # Ignore usages with 0 tokens
+        if usage and usage.prompt_tokens and usage.completion_tokens:
+            assert not self.usage_ref  # noqa: S101
+            self.usage_ref.append(
+                Usage(
+                    input_tokens=usage.prompt_tokens,
+                    output_tokens=usage.completion_tokens,
+                )
+            )
+
+    @property
+    def current_message_snapshot(self) -> Message[Any]:
+        snapshot = self._chat_completion_stream_state.current_completion_snapshot
+        message = snapshot.choices[0].message
+        # Fix incorrectly concatenated role
+        message.role = "assistant"
+        # TODO: Possible to return AssistantMessage here?
+        return _RawMessage(message.model_dump())
 
 
 R = TypeVar("R")
@@ -100,7 +155,7 @@ class LitellmChatModel(ChatModel):
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
         allow_string_output: bool,
-    ) -> ChatCompletionToolChoiceOptionParam | None:
+    ) -> ChatCompletionNamedToolChoiceParam | Literal["required"] | None:
         """Create the tool choice argument."""
         if allow_string_output:
             return None
@@ -138,20 +193,14 @@ class LitellmChatModel(ChatModel):
     ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[R]], [str])
+            output_types = cast(Iterable[type[R]], [] if functions else [str])
 
-        function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
-            function_schema_for_type(type_)
-            for type_ in output_types
-            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
-        ]
-        tool_schemas = [FunctionToolSchema(schema) for schema in function_schemas]
+        function_schemas = get_function_schemas(functions, output_types)
+        tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        str_in_output_types = is_any_origin_subclass(output_types, str)
-        streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
-        allow_string_output = str_in_output_types or streamed_str_in_output_types
+        allow_string_output = is_any_origin_subclass(output_types, (str, StreamedStr))
 
-        response = discard_none_arguments(litellm.completion)(
+        response = litellm.completion(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
             api_base=self.api_base,
@@ -160,51 +209,21 @@ class LitellmChatModel(ChatModel):
             metadata=self.metadata,
             stop=stop,
             stream=True,
+            # TODO: Add usage for LitellmChatModel
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
-            ),
+            ),  # type: ignore[arg-type,unused-ignore]
         )
         assert not isinstance(response, ModelResponse)  # noqa: S101
-
-        first_chunk = next(response)
-        # Azure OpenAI sends a chunk with empty choices first
-        if len(first_chunk.choices) == 0:
-            first_chunk = next(response)
-        if (
-            first_chunk.choices[0].delta.content is None
-            and first_chunk.choices[0].delta.tool_calls is None
-        ):
-            first_chunk = next(response)
-        response = chain([first_chunk], response)
-
-        # Check tool calls before content because both might be present
-        if first_chunk.choices[0].delta.tool_calls is not None:
-            tool_calls = _parse_streamed_tool_calls(response, tool_schemas)
-            if is_any_origin_subclass(output_types, ParallelFunctionCall):
-                content = ParallelFunctionCall(tool_calls)
-                return AssistantMessage(content)  # type: ignore[return-value]
-            # Take only the first tool_call, silently ignore extra chunks
-            # TODO: Create generator here that raises error or warns if multiple tool_calls
-            content = next(tool_calls)
-            return AssistantMessage(content)  # type: ignore[return-value]
-
-        if first_chunk.choices[0].delta.content is not None:
-            streamed_str = StreamedStr(
-                chunk.choices[0].delta.get("content", None)
-                for chunk in response
-                if chunk.choices[0].delta.get("content", None) is not None
-            )
-            str_content = validate_str_content(
-                streamed_str,
-                allow_string_output=allow_string_output,
-                streamed=streamed_str_in_output_types,
-            )
-            return AssistantMessage(str_content)  # type: ignore[return-value]
-
-        msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
-        raise ValueError(msg)
+        stream = OutputStream(
+            stream=response,
+            function_schemas=function_schemas,
+            parser=LitellmStreamParser(),
+            state=LitellmStreamState(),
+        )
+        return AssistantMessage(parse_stream(stream, output_types))
 
     @overload
     async def acomplete(
@@ -236,22 +255,16 @@ class LitellmChatModel(ChatModel):
     ) -> AssistantMessage[str] | AssistantMessage[R]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[R]], [str])
+            output_types = cast(Iterable[type[R]], [] if functions else [str])
 
-        function_schemas = [FunctionCallFunctionSchema(f) for f in functions or []] + [
-            async_function_schema_for_type(type_)
-            for type_ in output_types
-            if not is_origin_subclass(type_, STR_OR_FUNCTIONCALL_TYPE)
-        ]
-        tool_schemas = [AsyncFunctionToolSchema(schema) for schema in function_schemas]
+        function_schemas = get_async_function_schemas(functions, output_types)
+        tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        str_in_output_types = is_any_origin_subclass(output_types, str)
-        async_streamed_str_in_output_types = is_any_origin_subclass(
-            output_types, AsyncStreamedStr
+        allow_string_output = is_any_origin_subclass(
+            output_types, (str, AsyncStreamedStr)
         )
-        allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
-        response = await discard_none_arguments(litellm.acompletion)(
+        response = await litellm.acompletion(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
             api_base=self.api_base,
@@ -260,47 +273,18 @@ class LitellmChatModel(ChatModel):
             metadata=self.metadata,
             stop=stop,
             stream=True,
+            # TODO: Add usage for LitellmChatModel
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
-            ),
+            ),  # type: ignore[arg-type,unused-ignore]
         )
         assert not isinstance(response, ModelResponse)  # noqa: S101
-
-        first_chunk = await anext(response)
-        # Azure OpenAI sends a chunk with empty choices first
-        if len(first_chunk.choices) == 0:
-            first_chunk = await anext(response)
-        if (
-            first_chunk.choices[0].delta.content is None
-            and first_chunk.choices[0].delta.tool_calls is None
-        ):
-            first_chunk = await anext(response)
-        response = achain(async_iter([first_chunk]), response)
-
-        # Check tool calls before content because both might be present
-        if first_chunk.choices[0].delta.tool_calls is not None:
-            tool_calls = _aparse_streamed_tool_calls(response, tool_schemas)
-            if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
-                content = AsyncParallelFunctionCall(tool_calls)
-                return AssistantMessage(content)  # type: ignore[return-value]
-            # Take only the first tool_call, silently ignore extra chunks
-            content = await anext(tool_calls)
-            return AssistantMessage(content)  # type: ignore[return-value]
-
-        if first_chunk.choices[0].delta.content is not None:
-            async_streamed_str = AsyncStreamedStr(
-                chunk.choices[0].delta.get("content", None)
-                async for chunk in response
-                if chunk.choices[0].delta.get("content", None) is not None
-            )
-            str_content = await avalidate_str_content(
-                async_streamed_str,
-                allow_string_output=allow_string_output,
-                streamed=async_streamed_str_in_output_types,
-            )
-            return AssistantMessage(str_content)  # type: ignore[return-value]
-
-        msg = f"Could not determine response type for first chunk: {first_chunk.model_dump_json()}"
-        raise ValueError(msg)
+        stream = AsyncOutputStream(
+            stream=response,
+            function_schemas=function_schemas,
+            parser=LitellmStreamParser(),
+            state=LitellmStreamState(),
+        )
+        return AssistantMessage(await aparse_stream(stream, output_types))
