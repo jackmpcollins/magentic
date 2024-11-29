@@ -239,9 +239,6 @@ class OpenaiStreamParser(StreamParser[ChatCompletionChunk]):
     def is_content(self, item: ChatCompletionChunk) -> bool:
         return bool(item.choices and item.choices[0].delta.content)
 
-    def is_content_ended(self, item: ChatCompletionChunk) -> bool:
-        return self.is_tool_call(item)
-
     def get_content(self, item: ChatCompletionChunk) -> str | None:
         if item.choices and item.choices[0].delta.content:
             return item.choices[0].delta.content

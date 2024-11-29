@@ -1,9 +1,8 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Iterable, Iterator
 from itertools import chain
-from typing import Generic, NamedTuple, TypeVar
+from typing import Any, Generic, NamedTuple, TypeVar
 
-from litellm.llms.files_apis.azure import Any
 from pydantic import ValidationError
 
 from magentic.chat_model.base import ToolSchemaParseError, UnknownToolError
@@ -31,9 +30,6 @@ class FunctionCallChunk(NamedTuple):
 class StreamParser(ABC, Generic[ItemT]):
     @abstractmethod
     def is_content(self, item: ItemT) -> bool: ...
-
-    @abstractmethod
-    def is_content_ended(self, item: ItemT) -> bool: ...
 
     @abstractmethod
     def get_content(self, item: ItemT) -> str | None: ...
@@ -92,7 +88,7 @@ class OutputStream(Generic[ItemT, OutputT]):
         for item in stream:
             if content := self._parser.get_content(item):
                 yield content
-            if self._parser.is_content_ended(item):
+            if self._parser.is_tool_call(item):
                 # TODO: Check if output types allow for early return and raise if not
                 assert not current_item_ref  # noqa: S101
                 current_item_ref.append(item)
@@ -201,7 +197,7 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
         async for item in stream:
             if content := self._parser.get_content(item):
                 yield content
-            if self._parser.is_content_ended(item):
+            if self._parser.is_tool_call(item):
                 # TODO: Check if output types allow for early return
                 assert not current_item_ref  # noqa: S101
                 current_item_ref.append(item)

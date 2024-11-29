@@ -235,9 +235,6 @@ class AnthropicStreamParser(StreamParser[MessageStreamEvent]):
     def is_content(self, item: MessageStreamEvent) -> bool:
         return item.type == "content_block_delta"
 
-    def is_content_ended(self, item: MessageStreamEvent) -> bool:
-        return self.is_tool_call(item)
-
     def get_content(self, item: MessageStreamEvent) -> str | None:
         if item.type == "text":
             return item.text

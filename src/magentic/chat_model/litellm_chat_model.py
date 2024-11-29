@@ -53,9 +53,6 @@ class LitellmStreamParser(StreamParser[ModelResponse]):
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
         return bool(item.choices[0].delta.content)
 
-    def is_content_ended(self, item: ModelResponse) -> bool:
-        return self.is_tool_call(item)
-
     def get_content(self, item: ModelResponse) -> str | None:
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
         return item.choices[0].delta.content
