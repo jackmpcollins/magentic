@@ -56,4 +56,4 @@ docs-serve:  # Build and serve the documentation
 	uv run mkdocs serve
 
 .PHONY: all
-all: format lint test
+all: format lint typecheck test
