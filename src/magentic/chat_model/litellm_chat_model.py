@@ -203,9 +203,7 @@ class LitellmChatModel(ChatModel):
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        str_in_output_types = is_any_origin_subclass(output_types, str)
-        streamed_str_in_output_types = is_any_origin_subclass(output_types, StreamedStr)
-        allow_string_output = str_in_output_types or streamed_str_in_output_types
+        allow_string_output = is_any_origin_subclass(output_types, (str, StreamedStr))
 
         response = litellm.completion(
             model=self.model,
@@ -267,11 +265,9 @@ class LitellmChatModel(ChatModel):
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        str_in_output_types = is_any_origin_subclass(output_types, str)
-        async_streamed_str_in_output_types = is_any_origin_subclass(
-            output_types, AsyncStreamedStr
+        allow_string_output = is_any_origin_subclass(
+            output_types, (str, AsyncStreamedStr)
         )
-        allow_string_output = str_in_output_types or async_streamed_str_in_output_types
 
         response = await litellm.acompletion(
             model=self.model,
