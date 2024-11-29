@@ -17,7 +17,6 @@ def is_union_type(type_: type) -> bool:
     return type_ is Union or type_ is types.UnionType
 
 
-T = TypeVar("T")
 TypeT = TypeVar("TypeT", bound=type)
 
 
@@ -38,18 +37,6 @@ def is_origin_subclass(
     if type_ is Any:  # type: ignore[comparison-overlap]
         return False
     return issubclass(get_origin(type_) or type_, cls_or_tuple)
-
-
-def is_instance_origin(
-    obj: Any, cls_or_tuple: type[T] | tuple[type[T], ...]
-) -> TypeGuard[T]:
-    """Check if the object is an instance of the origin(s) of the given type(s)."""
-    cls_or_tuple_origin = (
-        tuple(get_origin(cls) or cls for cls in cls_or_tuple)
-        if isinstance(cls_or_tuple, tuple)
-        else get_origin(cls_or_tuple) or cls_or_tuple
-    )
-    return isinstance(obj, cls_or_tuple_origin)
 
 
 def is_any_origin_subclass(
