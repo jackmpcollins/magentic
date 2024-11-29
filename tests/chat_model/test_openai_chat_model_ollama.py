@@ -30,7 +30,7 @@ def test_openai_chat_model_complete_ollama(prompt, output_types, expected_output
     ],
 )
 @pytest.mark.openai_ollama
-async def test_openai_chat_model_complete_async(
+async def test_openai_chat_model_acomplete_ollama(
     prompt, output_types, expected_output_type
 ):
     chat_model = OpenaiChatModel("llama3.1", base_url="http://localhost:11434/v1/")
