@@ -44,6 +44,7 @@ from magentic.chat_model.stream import (
     StreamState,
 )
 from magentic.function_call import (
+    AsyncParallelFunctionCall,
     FunctionCall,
     ParallelFunctionCall,
     _create_unique_id,
@@ -59,8 +60,12 @@ try:
     import anthropic
     from anthropic.lib.streaming import MessageStreamEvent
     from anthropic.lib.streaming._messages import accumulate_event
-    from anthropic.types import MessageParam, ToolParam
-    from anthropic.types.message_create_params import ToolChoice
+    from anthropic.types import (
+        MessageParam,
+        ToolChoiceParam,
+        ToolChoiceToolParam,
+        ToolParam,
+    )
 except ImportError as error:
     msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install 'magentic[anthropic]'`."
     raise ImportError(msg) from error
@@ -227,7 +232,7 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
             "input_schema": self._function_schema.parameters,
         }
 
-    def as_tool_choice(self) -> ToolChoice:
+    def as_tool_choice(self, *, disable_parallel_tool_use: bool) -> ToolChoiceToolParam:
         return {"type": "tool", "name": self._function_schema.name}
 
 
@@ -353,14 +358,19 @@ class AnthropicChatModel(ChatModel):
     def _get_tool_choice(
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
-        allow_string_output: bool,
-    ) -> ToolChoice | anthropic.NotGiven:
+        output_types: Iterable[type],
+    ) -> ToolChoiceParam | anthropic.NotGiven:
         """Create the tool choice argument."""
-        if allow_string_output:
+        if is_any_origin_subclass(output_types, (str, StreamedStr, AsyncStreamedStr)):
             return anthropic.NOT_GIVEN
+        disable_parallel_tool_use = not is_any_origin_subclass(
+            output_types, (ParallelFunctionCall, AsyncParallelFunctionCall)
+        )
         if len(tool_schemas) == 1:
-            return tool_schemas[0].as_tool_choice()
-        return {"type": "any"}
+            return tool_schemas[0].as_tool_choice(
+                disable_parallel_tool_use=disable_parallel_tool_use
+            )
+        return {"type": "any", "disable_parallel_tool_use": disable_parallel_tool_use}
 
     @overload
     def complete(
@@ -397,8 +407,6 @@ class AnthropicChatModel(ChatModel):
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        allow_string_output = is_any_origin_subclass(output_types, (str, StreamedStr))
-
         system, messages = _extract_system_message(messages)
 
         response: Iterator[MessageStreamEvent] = self._client.messages.stream(
@@ -412,7 +420,7 @@ class AnthropicChatModel(ChatModel):
             temperature=_if_given(self.temperature),
             tools=[schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                tool_schemas=tool_schemas, output_types=output_types
             ),
         ).__enter__()
         stream = OutputStream(
@@ -460,10 +468,6 @@ class AnthropicChatModel(ChatModel):
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        allow_string_output = is_any_origin_subclass(
-            output_types, (str, AsyncStreamedStr)
-        )
-
         system, messages = _extract_system_message(messages)
 
         response: AsyncIterator[
@@ -479,7 +483,7 @@ class AnthropicChatModel(ChatModel):
             temperature=_if_given(self.temperature),
             tools=[schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                tool_schemas=tool_schemas, output_types=output_types
             ),
         ).__aenter__()
         stream = AsyncOutputStream(
