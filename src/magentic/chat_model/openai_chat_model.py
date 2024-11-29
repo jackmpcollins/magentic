@@ -293,7 +293,10 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
                 tool_call_chunk.index = self._current_tool_call_index
         self._chat_completion_stream_state.handle_chunk(item)
         if item.usage:
-            assert not self.usage_ref  # noqa: S101
+            # Only keep the last usage
+            # Gemini openai-compatible API includes usage in all streamed chunks
+            # but OpenAI only includes this in the last chunk
+            self.usage_ref.clear()
             self.usage_ref.append(
                 Usage(
                     input_tokens=item.usage.prompt_tokens,
