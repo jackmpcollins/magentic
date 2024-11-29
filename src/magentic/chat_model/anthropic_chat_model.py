@@ -258,7 +258,7 @@ class AnthropicStreamParser(StreamParser[MessageStreamEvent]):
 
 
 class AnthropicStreamState(StreamState[MessageStreamEvent]):
-    def __init__(self):
+    def __init__(self) -> None:
         self._current_message_snapshot: anthropic.types.Message | None = (
             None  # TODO: type
         )

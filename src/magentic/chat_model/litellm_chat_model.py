@@ -1,26 +1,16 @@
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, Literal, TypeVar, cast, overload
 
-import litellm
 import openai
-from litellm.litellm_core_utils.streaming_handler import StreamingChoices
 from openai.lib.streaming.chat._completions import ChatCompletionStreamState
+from openai.types.chat import ChatCompletionNamedToolChoiceParam
 
-from magentic.chat_model.base import (
-    ChatModel,
-    aparse_stream,
-    parse_stream,
-)
+from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     get_async_function_schemas,
     get_function_schemas,
 )
-from magentic.chat_model.message import (
-    AssistantMessage,
-    Message,
-    Usage,
-    _RawMessage,
-)
+from magentic.chat_model.message import AssistantMessage, Message, Usage, _RawMessage
 from magentic.chat_model.openai_chat_model import (
     BaseFunctionToolSchema,
     message_to_openai_message,
@@ -40,6 +30,9 @@ from magentic.typing import is_any_origin_subclass
 
 try:
     import litellm
+    from litellm.litellm_core_utils.streaming_handler import (  # type: ignore[attr-defined]
+        StreamingChoices,
+    )
     from litellm.types.utils import ModelResponse
 except ImportError as error:
     msg = "To use LitellmChatModel you must install the `litellm` package using `pip install 'magentic[litellm]'`."
@@ -53,6 +46,7 @@ class LitellmStreamParser(StreamParser[ModelResponse]):
 
     def get_content(self, item: ModelResponse) -> str | None:
         assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+        assert isinstance(item.choices[0].delta.content, str | None)  # noqa: S101
         return item.choices[0].delta.content
 
     def is_tool_call(self, item: ModelResponse) -> bool:
@@ -72,7 +66,7 @@ class LitellmStreamParser(StreamParser[ModelResponse]):
 
 
 class LitellmStreamState(StreamState[ModelResponse]):
-    def __init__(self):
+    def __init__(self) -> None:
         self._chat_completion_stream_state = ChatCompletionStreamState(
             input_tools=openai.NOT_GIVEN,
             response_format=openai.NOT_GIVEN,
@@ -85,9 +79,10 @@ class LitellmStreamState(StreamState[ModelResponse]):
             # litellm requires usage is not None for its total usage calculation
             item.usage = litellm.Usage()  # type: ignore[attr-defined]
         if not hasattr(item, "refusal"):
+            assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
             item.choices[0].delta.refusal = None  # type: ignore[attr-defined]
         self._chat_completion_stream_state.handle_chunk(item)  # type: ignore[arg-type]
-        usage = cast(litellm.Usage, item.usage)  # type: ignore[attr-defined]
+        usage = cast(litellm.Usage, item.usage)  # type: ignore[attr-defined,name-defined]
         # Ignore usages with 0 tokens
         if usage and usage.prompt_tokens and usage.completion_tokens:
             assert not self.usage_ref  # noqa: S101
@@ -160,12 +155,12 @@ class LitellmChatModel(ChatModel):
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
         allow_string_output: bool,
-    ) -> dict | Literal["none", "auto", "required"] | None:
+    ) -> ChatCompletionNamedToolChoiceParam | Literal["required"] | None:
         """Create the tool choice argument."""
         if allow_string_output:
             return None
         if len(tool_schemas) == 1:
-            return tool_schemas[0].as_tool_choice()  # type: ignore[return-value]
+            return tool_schemas[0].as_tool_choice()
         return "required"
 
     @overload
@@ -219,7 +214,7 @@ class LitellmChatModel(ChatModel):
             tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
-            ),
+            ),  # type: ignore[arg-type,unused-ignore]
         )
         assert not isinstance(response, ModelResponse)  # noqa: S101
         stream = OutputStream(
@@ -283,7 +278,7 @@ class LitellmChatModel(ChatModel):
             tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, allow_string_output=allow_string_output
-            ),  # type: ignore[arg-type]
+            ),  # type: ignore[arg-type,unused-ignore]
         )
         assert not isinstance(response, ModelResponse)  # noqa: S101
         stream = AsyncOutputStream(

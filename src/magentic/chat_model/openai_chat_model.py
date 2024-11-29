@@ -16,6 +16,7 @@ from openai.lib.streaming.chat._completions import ChatCompletionStreamState
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionMessageParam,
+    ChatCompletionNamedToolChoiceParam,
     ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
@@ -229,7 +230,7 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
     def __init__(self, function_schema: BaseFunctionSchemaT):
         self._function_schema = function_schema
 
-    def as_tool_choice(self) -> ChatCompletionToolChoiceOptionParam:
+    def as_tool_choice(self) -> ChatCompletionNamedToolChoiceParam:
         return {"type": "function", "function": {"name": self._function_schema.name}}
 
     def to_dict(self) -> ChatCompletionToolParam:
@@ -267,7 +268,7 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
     - stop reason
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._chat_completion_stream_state = ChatCompletionStreamState(
             input_tools=openai.NOT_GIVEN,
             response_format=openai.NOT_GIVEN,
