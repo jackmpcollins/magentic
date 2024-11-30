@@ -157,6 +157,8 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
             ],
         }
 
+    # TODO: Add support for StreamedResponse here
+
     function_schema = function_schema_for_type(type(message.content))
     return {
         "role": AnthropicMessageRole.ASSISTANT.value,
