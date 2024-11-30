@@ -452,6 +452,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#streamedresponse" class="md-nav__link">
+    <span class="md-ellipsis">
+      StreamedResponse
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -725,6 +734,15 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#streamedresponse" class="md-nav__link">
+    <span class="md-ellipsis">
+      StreamedResponse
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -818,6 +836,45 @@
 <span class="c1"># 2.23s : name=&#39;Pizza Man&#39; age=30 power=&#39;Can shoot pizza slices from his hands&#39; enemies=[&#39;The Hungry Horde&#39;, &#39;The Junk Food Gang&#39;]</span>
 <span class="c1"># 4.03s : name=&#39;Captain Carrot&#39; age=35 power=&#39;Super strength and agility from eating carrots&#39; enemies=[&#39;The Sugar Squad&#39;, &#39;The Greasy Gang&#39;]</span>
 <span class="c1"># 6.05s : name=&#39;Ice Cream Girl&#39; age=25 power=&#39;Can create ice cream out of thin air&#39; enemies=[&#39;The Hot Sauce Squad&#39;, &#39;The Healthy Eaters&#39;]</span>
+</code></pre></div>
+<h2 id="streamedresponse">StreamedResponse<a class="headerlink" href="#streamedresponse" title="Permanent link">&para;</a></h2>
+<p>Some LLMs have the ability to generate text output and make tool calls in the same response. This allows them to perform chain-of-thought reasoning or provide additional context to the user. In magentic, the <code>StreamedResponse</code> (or <code>AsyncStreamedResponse</code>) class can be used to request this type of output. This object is an iterable of <code>StreamedStr</code> (or <code>AsyncStreamedStr</code>) and <code>FunctionCall</code> instances.</p>
+<div class="admonition warning">
+<p class="admonition-title">Consuming StreamedStr</p>
+<p>The StreamedStr object must be iterated over before the next item in the <code>StreamedResponse</code> is processed, otherwise the string output will be lost. This is because the <code>StreamedResponse</code> and <code>StreamedStr</code> share the same underlying generator, so advancing the <code>StreamedResponse</code> iterator skips over the <code>StreamedStr</code> items. The <code>StreamedStr</code> object has internal caching so after iterating over it once the chunks will remain available.</p>
+</div>
+<p>In the example below, we request that the LLM generates a greeting and then calls a function to get the weather for two cities. The <code>StreamedResponse</code> object is then iterated over to print the output, and the <code>StreamedStr</code> and <code>FunctionCall</code> items are processed separately.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span><span class="p">,</span> <span class="n">FunctionCall</span><span class="p">,</span> <span class="n">StreamedResponse</span><span class="p">,</span> <span class="n">StreamedStr</span>
+
+
+<span class="k">def</span> <span class="nf">get_weather</span><span class="p">(</span><span class="n">city</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="sa">f</span><span class="s2">&quot;The weather in </span><span class="si">{</span><span class="n">city</span><span class="si">}</span><span class="s2"> is 20°C.&quot;</span>
+
+
+<span class="nd">@prompt</span><span class="p">(</span>
+    <span class="s2">&quot;Say hello, then get the weather for: </span><span class="si">{cities}</span><span class="s2">&quot;</span><span class="p">,</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">get_weather</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">describe_weather</span><span class="p">(</span><span class="n">cities</span><span class="p">:</span> <span class="nb">list</span><span class="p">[</span><span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">StreamedResponse</span><span class="p">:</span> <span class="o">...</span>
+
+
+<span class="n">response</span> <span class="o">=</span> <span class="n">describe_weather</span><span class="p">([</span><span class="s2">&quot;Cape Town&quot;</span><span class="p">,</span> <span class="s2">&quot;San Francisco&quot;</span><span class="p">])</span>
+<span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">response</span><span class="p">:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">StreamedStr</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">item</span><span class="p">:</span>
+            <span class="c1"># print the chunks as they are received</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">sep</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">FunctionCall</span><span class="p">):</span>
+        <span class="c1"># print the function call, then call it and print the result</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">item</span><span class="p">())</span>
+
+<span class="c1"># Hello! I&#39;ll get the weather for Cape Town and San Francisco for you.</span>
+<span class="c1"># FunctionCall(&lt;function get_weather at 0x1109825c0&gt;, &#39;Cape Town&#39;)</span>
+<span class="c1"># The weather in Cape Town is 20°C.</span>
+<span class="c1"># FunctionCall(&lt;function get_weather at 0x1109825c0&gt;, &#39;San Francisco&#39;)</span>
+<span class="c1"># The weather in San Francisco is 20°C.</span>
 </code></pre></div>
 
 

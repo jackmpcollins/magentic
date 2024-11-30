@@ -1007,6 +1007,10 @@
 <span class="c1"># &gt; True</span>
 </code></pre></div>
 <h2 id="chain-of-thought-prompting">Chain-of-Thought Prompting<a class="headerlink" href="#chain-of-thought-prompting" title="Permanent link">&para;</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">StreamedResponse</p>
+<p>It is now recommended to use <code>StreamedResponse</code> for chain-of-thought prompting, as this uses the LLM provider's native chain-of-thought capabilities. See <a href="../streaming/#StreamedResponse">StreamedResponse</a> for more information.</p>
+</div>
 <p>Using a simple Python type as the return annotation might result in poor results as the LLM has no time to arrange its thoughts before answering. To allow the LLM to work through this "chain of thought" you can instead return a pydantic model with initial fields for explaining the final response.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
 <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
