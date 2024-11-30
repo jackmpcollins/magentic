@@ -140,7 +140,9 @@ def test_anthropic_chat_model_complete_streamed_response():
     assert len(response_items) == 2
     streamed_str, function_call = response_items
     assert isinstance(streamed_str, StreamedStr)
+    assert len(streamed_str.to_string()) > 1  # Check StreamedStr was cached
     assert isinstance(function_call, FunctionCall)
+    assert function_call() is None  # Check FunctionCall is successfully called
 
 
 @pytest.mark.parametrize(
@@ -257,4 +259,6 @@ async def test_anthropic_chat_model_acomplete_async_streamed_response():
     assert len(response_items) == 2
     streamed_str, function_call = response_items
     assert isinstance(streamed_str, AsyncStreamedStr)
+    assert len(await streamed_str.to_string()) > 1  # Check AsyncStreamedStr was cached
     assert isinstance(function_call, FunctionCall)
+    assert function_call() is None  # Check FunctionCall is successfully called
