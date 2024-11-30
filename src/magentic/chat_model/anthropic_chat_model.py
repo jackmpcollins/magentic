@@ -14,7 +14,7 @@ from typing import Any, Generic, TypeVar, cast, overload
 
 import filetype
 
-from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
+from magentic._parsing import contains_parallel_function_call_type, contains_string_type
 from magentic.chat_model.base import (
     ChatModel,
     aparse_stream,
@@ -45,16 +45,10 @@ from magentic.chat_model.stream import (
     StreamState,
 )
 from magentic.function_call import (
-    AsyncParallelFunctionCall,
     FunctionCall,
     ParallelFunctionCall,
     _create_unique_id,
 )
-from magentic.streaming import (
-    AsyncStreamedStr,
-    StreamedStr,
-)
-from magentic.typing import is_any_origin_subclass
 from magentic.vision import UserImageMessage
 
 try:
@@ -362,25 +356,10 @@ class AnthropicChatModel(ChatModel):
         output_types: Iterable[type],
     ) -> ToolChoiceParam | anthropic.NotGiven:
         """Create the tool choice argument."""
-        if is_any_origin_subclass(
-            output_types,
-            (
-                str,
-                StreamedStr,
-                AsyncStreamedStr,
-                StreamedResponse,
-                AsyncStreamedResponse,
-            ),
-        ):
+        if contains_string_type(output_types):
             return anthropic.NOT_GIVEN
-        disable_parallel_tool_use = not is_any_origin_subclass(
-            output_types,
-            (
-                ParallelFunctionCall,
-                AsyncParallelFunctionCall,
-                StreamedResponse,
-                AsyncStreamedResponse,
-            ),
+        disable_parallel_tool_use = not contains_parallel_function_call_type(
+            output_types
         )
         if len(tool_schemas) == 1:
             return tool_schemas[0].as_tool_choice(
