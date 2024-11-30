@@ -174,7 +174,7 @@ def test_openai_chat_model_complete_seed():
 
 @pytest.mark.openai
 def test_openai_chat_model_complete_streamed_response():
-    def get_weather(location: str):
+    def get_weather(location: str) -> None:
         """Get the weather for a location."""
 
     chat_model = OpenaiChatModel("gpt-4o")
@@ -276,7 +276,7 @@ def test_openai_chat_model_complete_raises_tool_schema_parse_error():
 
 @pytest.mark.openai
 async def test_openai_chat_model_acomplete_async_streamed_response():
-    def get_weather(location: str):
+    def get_weather(location: str) -> None:
         """Get the weather for a location."""
 
     chat_model = OpenaiChatModel("gpt-4o")

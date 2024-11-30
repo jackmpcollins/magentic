@@ -157,7 +157,7 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
 
     if isinstance(message.content, StreamedResponse):
         content: list[str] = []
-        function_calls: list[FunctionCall] = []
+        function_calls: list[FunctionCall[Any]] = []
         for item in message.content:
             if isinstance(item, StreamedStr):
                 content.append(str(item))

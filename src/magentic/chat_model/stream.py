@@ -130,7 +130,7 @@ class OutputStream(Generic[ItemT, OutputT]):
                     # Finish the group to allow advancing to the next one
                     consume(self._streamed_str(stream, current_item_ref))
             elif self._parser.is_tool_call(current_item):
-                tool_calls_stream = (
+                tool_calls_stream: Iterator[FunctionCallChunk] = (
                     tool_call_chunk
                     for item in chain([current_item], stream)
                     for tool_call_chunk in self._parser.iter_tool_calls(item)
@@ -247,7 +247,7 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                 if not current_item_ref:
                     await aconsume(self._streamed_str(stream, current_item_ref))
             elif self._parser.is_tool_call(current_item):
-                tool_calls_stream = (
+                tool_calls_stream: AsyncIterator[FunctionCallChunk] = (
                     tool_call_chunk
                     async for item in achain(async_iter([current_item]), stream)
                     for tool_call_chunk in self._parser.iter_tool_calls(item)

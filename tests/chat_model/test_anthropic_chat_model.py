@@ -126,7 +126,7 @@ def test_anthropic_chat_model_complete_parallel_function_call():
 
 @pytest.mark.anthropic
 def test_anthropic_chat_model_complete_streamed_response():
-    def get_weather(location: str):
+    def get_weather(location: str) -> None:
         """Get the weather for a location."""
 
     chat_model = AnthropicChatModel("claude-3-opus-20240229")
@@ -243,7 +243,7 @@ async def test_anthropic_chat_model_acomplete_async_parallel_function_call():
 
 @pytest.mark.anthropic
 async def test_anthropic_chat_model_acomplete_async_streamed_response():
-    def get_weather(location: str):
+    def get_weather(location: str) -> None:
         """Get the weather for a location."""
 
     chat_model = AnthropicChatModel("claude-3-opus-20240229")
