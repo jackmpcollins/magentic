@@ -8,7 +8,8 @@ interactions:
       "required": ["a", "b"], "type": "object"}}, {"name": "minus", "description":
       "", "input_schema": {"properties": {"a": {"title": "A", "type": "integer"},
       "b": {"title": "B", "type": "integer"}}, "required": ["a", "b"], "type": "object"}}],
-      "tool_choice": {"type": "any"}, "stream": true}'
+      "tool_choice": {"type": "any", "disable_parallel_tool_use": false}, "stream":
+      true}'
     headers:
       accept:
       - application/json
@@ -19,7 +20,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '683'
+      - '719'
       content-type:
       - application/json
       host:
@@ -50,12 +51,12 @@ interactions:
     body:
       string: 'event: message_start
 
-        data: {"type":"message_start","message":{"id":"msg_012X15Kcz2Wu677j3nd9FqEh","type":"message","role":"assistant","model":"claude-3-opus-20240229","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":469,"output_tokens":8}}           }
+        data: {"type":"message_start","message":{"id":"msg_01VmimdL9rtzYarNBzEM3hTj","type":"message","role":"assistant","model":"claude-3-opus-20240229","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":469,"output_tokens":8}}  }
 
 
         event: content_block_start
 
-        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_01RJGtVku2YsNB6VPCM1vD7x","name":"plus","input":{}}   }
+        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_01Q54GZYYAzL3HVr4LQDbfXC","name":"plus","input":{}}         }
 
 
         event: ping
@@ -70,73 +71,88 @@ interactions:
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"a\":
-        1"} }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"a\":"}         }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"
+        1"}          }
 
 
         event: content_block_delta
 
         data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":",
-        "}             }
+        \""}    }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"\"b\""}           }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"b\""}           }
 
 
         event: content_block_delta
 
         data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":":
-        2}"}   }
+        2}"}       }
 
 
         event: content_block_stop
 
-        data: {"type":"content_block_stop","index":0          }
+        data: {"type":"content_block_stop","index":0   }
 
 
         event: content_block_start
 
-        data: {"type":"content_block_start","index":1,"content_block":{"type":"tool_use","id":"toolu_01GuGH37ceFTQc3k53ui7JvQ","name":"minus","input":{}}               }
+        data: {"type":"content_block_start","index":1,"content_block":{"type":"tool_use","id":"toolu_017NYD2BGVvRppZKAX98qedy","name":"minus","input":{}}}
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":""}       }
+        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":""}    }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"{\""}     }
+        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"{\"a\":"}      }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"a\":
-        2"}            }
+        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"
+        2"}     }
 
 
         event: content_block_delta
 
         data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":",
-        \"b\": 1}"}         }
+        \"b"}  }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"\":"}}
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":1,"delta":{"type":"input_json_delta","partial_json":"
+        1}"}   }
 
 
         event: content_block_stop
 
-        data: {"type":"content_block_stop","index":1              }
+        data: {"type":"content_block_stop","index":1           }
 
 
         event: message_delta
 
-        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":104}
-        }
+        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":104}            }
 
 
         event: message_stop
 
-        data: {"type":"message_stop"             }
+        data: {"type":"message_stop"     }
 
 
         '
@@ -144,7 +160,7 @@ interactions:
       CF-Cache-Status:
       - DYNAMIC
       CF-RAY:
-      - 8e3691fa6dc69667-SJC
+      - 8ea6a39c9b8d9e70-SJC
       Cache-Control:
       - no-cache
       Connection:
@@ -152,7 +168,7 @@ interactions:
       Content-Type:
       - text/event-stream; charset=utf-8
       Date:
-      - Sat, 16 Nov 2024 09:49:21 GMT
+      - Sat, 30 Nov 2024 00:14:46 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
@@ -160,7 +176,7 @@ interactions:
       X-Robots-Tag:
       - none
       request-id:
-      - req_01GXWHQw2cE2gB1c1CW9tXmz
+      - req_01F3seNxjq11ZuZCh1yt41L5
       via:
       - 1.1 google
     status:
