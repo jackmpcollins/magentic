@@ -14,6 +14,7 @@ from typing import Any, Generic, TypeVar, cast, overload
 
 import filetype
 
+from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.chat_model.base import (
     ChatModel,
     aparse_stream,
@@ -361,10 +362,25 @@ class AnthropicChatModel(ChatModel):
         output_types: Iterable[type],
     ) -> ToolChoiceParam | anthropic.NotGiven:
         """Create the tool choice argument."""
-        if is_any_origin_subclass(output_types, (str, StreamedStr, AsyncStreamedStr)):
+        if is_any_origin_subclass(
+            output_types,
+            (
+                str,
+                StreamedStr,
+                AsyncStreamedStr,
+                StreamedResponse,
+                AsyncStreamedResponse,
+            ),
+        ):
             return anthropic.NOT_GIVEN
         disable_parallel_tool_use = not is_any_origin_subclass(
-            output_types, (ParallelFunctionCall, AsyncParallelFunctionCall)
+            output_types,
+            (
+                ParallelFunctionCall,
+                AsyncParallelFunctionCall,
+                StreamedResponse,
+                AsyncStreamedResponse,
+            ),
         )
         if len(tool_schemas) == 1:
             return tool_schemas[0].as_tool_choice(
