@@ -27,8 +27,7 @@ class _MistralToolChoice(Enum):
 class _MistralOpenaiChatModel(OpenaiChatModel):
     """Modified OpenaiChatModel to be compatible with Mistral API."""
 
-    @staticmethod
-    def _get_stream_options() -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
         return openai.NOT_GIVEN
 
     @staticmethod
