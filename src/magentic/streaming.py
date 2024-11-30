@@ -1,4 +1,5 @@
 import asyncio
+import collections
 import textwrap
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from dataclasses import dataclass
@@ -84,6 +85,17 @@ async def atakewhile(
         yield item
 
 
+def consume(iterator: Iterator[T]) -> None:
+    """Consume an iterator."""
+    collections.deque(iterator, maxlen=0)
+
+
+async def aconsume(aiterable: AsyncIterable[T]) -> None:
+    """Async version of `consume`."""
+    async for _ in aiterable:
+        pass
+
+
 async def agroupby(
     aiterable: AsyncIterable[T], key: Callable[[T], object]
 ) -> AsyncIterator[tuple[object, AsyncIterator[T]]]:
@@ -103,10 +115,11 @@ async def agroupby(
     while transition:
         transition_item = transition.pop()
         group_key = key(transition_item)
-        yield (
-            group_key,
-            agroup(achain(async_iter([transition_item]), aiterator), group_key),
-        )
+        aiterator = achain(async_iter([transition_item]), aiterator)
+        yield (group_key, agroup(aiterator, group_key))
+        # Finish the group to allow advancing to the next one
+        if not transition:
+            await aconsume(agroup(aiterator, group_key))
 
 
 @dataclass

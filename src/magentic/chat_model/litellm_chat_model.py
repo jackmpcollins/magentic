@@ -5,6 +5,7 @@ import openai
 from openai.lib.streaming.chat._completions import ChatCompletionStreamState
 from openai.types.chat import ChatCompletionNamedToolChoiceParam
 
+from magentic._parsing import contains_string_type
 from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     get_async_function_schemas,
@@ -22,11 +23,6 @@ from magentic.chat_model.stream import (
     StreamParser,
     StreamState,
 )
-from magentic.streaming import (
-    AsyncStreamedStr,
-    StreamedStr,
-)
-from magentic.typing import is_any_origin_subclass
 
 try:
     import litellm
@@ -154,10 +150,10 @@ class LitellmChatModel(ChatModel):
     def _get_tool_choice(
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
-        allow_string_output: bool,
+        output_types: Iterable[type[R]],
     ) -> ChatCompletionNamedToolChoiceParam | Literal["required"] | None:
         """Create the tool choice argument."""
-        if allow_string_output:
+        if contains_string_type(output_types):
             return None
         if len(tool_schemas) == 1:
             return tool_schemas[0].as_tool_choice()
@@ -198,8 +194,6 @@ class LitellmChatModel(ChatModel):
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        allow_string_output = is_any_origin_subclass(output_types, (str, StreamedStr))
-
         response = litellm.completion(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
@@ -213,7 +207,7 @@ class LitellmChatModel(ChatModel):
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                tool_schemas=tool_schemas, output_types=output_types
             ),  # type: ignore[arg-type,unused-ignore]
         )
         assert not isinstance(response, ModelResponse)  # noqa: S101
@@ -260,10 +254,6 @@ class LitellmChatModel(ChatModel):
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        allow_string_output = is_any_origin_subclass(
-            output_types, (str, AsyncStreamedStr)
-        )
-
         response = await litellm.acompletion(
             model=self.model,
             messages=[message_to_openai_message(m) for m in messages],
@@ -277,7 +267,7 @@ class LitellmChatModel(ChatModel):
             temperature=self.temperature,
             tools=[schema.to_dict() for schema in tool_schemas] or None,
             tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                tool_schemas=tool_schemas, output_types=output_types
             ),  # type: ignore[arg-type,unused-ignore]
         )
         assert not isinstance(response, ModelResponse)  # noqa: S101

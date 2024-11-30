@@ -37,6 +37,7 @@ dev = [
     "coverage>=7.6.4",
     "pytest-mock>=3.14.0",
     "vcrpy>=6.0.2",
+    "pydeps>=2.0.1",
 ]
 docs = [
     "blacken-docs>=1.16.0",

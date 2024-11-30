@@ -7,6 +7,7 @@ from typing import Any, AsyncIterator, Iterator, TypeVar, cast, get_origin, over
 
 from pydantic import ValidationError
 
+from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.chat_model.message import AssistantMessage, Message
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -22,6 +23,7 @@ _chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
 )
 
 
+# TODO: Export all exceptions from `magentic.exceptions`
 # TODO: Parent class with `output_message` attribute ?
 class StringNotAllowedError(Exception):
     """Raised when a string is returned by the LLM but not allowed."""
@@ -79,6 +81,7 @@ class UnknownToolError(Exception):
         self.tool_call_id = tool_call_id
 
 
+# TODO: Move this to same file where it is raised
 class ToolSchemaParseError(Exception):
     """Raised when the LLM output could not be parsed by the tool schema."""
 
@@ -100,6 +103,7 @@ class ToolSchemaParseError(Exception):
         self.validation_error = validation_error
 
 
+# TODO: Move this into _parsing
 # TODO: Make this a stream class with a close method and context management
 def parse_stream(stream: Iterator[Any], output_types: Iterable[type[R]]) -> R:
     """Parse and validate the LLM output stream against the allowed output types."""
@@ -107,14 +111,17 @@ def parse_stream(stream: Iterator[Any], output_types: Iterable[type[R]]) -> R:
     # TODO: option to error/warn/ignore extra objects
     # TODO: warn for degenerate output types ?
     obj = next(stream)
-    # TODO: Add type for mixed StreamedStr and FunctionCalls
     if isinstance(obj, StreamedStr):
+        if StreamedResponse in output_type_origins:
+            return cast(R, StreamedResponse(chain([obj], stream)))
         if StreamedStr in output_type_origins:
             return cast(R, obj)
         if str in output_type_origins:
             return cast(R, str(obj))
         raise StringNotAllowedError(obj.truncate(100))
     if isinstance(obj, FunctionCall):
+        if StreamedResponse in output_type_origins:
+            return cast(R, StreamedResponse(chain([obj], stream)))
         if ParallelFunctionCall in output_type_origins:
             return cast(R, ParallelFunctionCall(chain([obj], stream)))
         if FunctionCall in output_type_origins:
@@ -133,12 +140,16 @@ async def aparse_stream(
     output_type_origins = [get_origin(type_) or type_ for type_ in output_types]
     obj = await anext(stream)
     if isinstance(obj, AsyncStreamedStr):
+        if AsyncStreamedResponse in output_type_origins:
+            return cast(R, AsyncStreamedResponse(achain(async_iter([obj]), stream)))
         if AsyncStreamedStr in output_type_origins:
             return cast(R, obj)
         if str in output_type_origins:
             return cast(R, await obj.to_string())
         raise StringNotAllowedError(await obj.truncate(100))
     if isinstance(obj, FunctionCall):
+        if AsyncStreamedResponse in output_type_origins:
+            return cast(R, AsyncStreamedResponse(achain(async_iter([obj]), stream)))
         if AsyncParallelFunctionCall in output_type_origins:
             return cast(R, AsyncParallelFunctionCall(achain(async_iter([obj]), stream)))
         if FunctionCall in output_type_origins:
