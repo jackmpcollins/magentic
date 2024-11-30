@@ -245,6 +245,7 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                 stream = achain(async_iter([current_item]), stream)
                 yield AsyncStreamedStr(self._streamed_str(stream, current_item_ref))
                 if not current_item_ref:
+                    # Finish the group to allow advancing to the next one
                     await aconsume(self._streamed_str(stream, current_item_ref))
             elif self._parser.is_tool_call(current_item):
                 tool_calls_stream: AsyncIterator[FunctionCallChunk] = (
