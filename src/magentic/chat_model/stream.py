@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from collections.abc import AsyncIterator, Iterable, Iterator
+from collections.abc import AsyncIterable, AsyncIterator, Iterable, Iterator
 from itertools import chain
 from typing import Any, Generic, NamedTuple, TypeVar
 
@@ -81,6 +81,7 @@ class OutputStream(Generic[ItemT, OutputT]):
         self._state = state
 
         self._iterator = self.__stream__()
+        self._exhausted: bool = False
 
     def __next__(self) -> StreamedStr | OutputT:
         return self._iterator.__next__()
@@ -99,6 +100,7 @@ class OutputStream(Generic[ItemT, OutputT]):
                 assert not current_item_ref  # noqa: S101
                 current_item_ref.append(item)
                 return
+        self._exhausted = True
 
     def _tool_call(
         self,
@@ -116,6 +118,7 @@ class OutputStream(Generic[ItemT, OutputT]):
                 return
             if item.args:
                 yield item.args
+        self._exhausted = True
 
     def __stream__(self) -> Iterator[StreamedStr | OutputT]:
         # This works similarly to `itertools.groupby`
@@ -125,10 +128,12 @@ class OutputStream(Generic[ItemT, OutputT]):
             current_item = current_item_ref.pop()
             if self._parser.is_content(current_item):
                 stream = chain([current_item], stream)
-                yield StreamedStr(self._streamed_str(stream, current_item_ref))
-                if not current_item_ref:
+                streamed_str = StreamedStr(self._streamed_str(stream, current_item_ref))
+                yield streamed_str
+                if not current_item_ref and not self._exhausted:
                     # Finish the group to allow advancing to the next one
-                    consume(self._streamed_str(stream, current_item_ref))
+                    # Consume stream via StreamedStr so it can cache
+                    consume(streamed_str)
             elif self._parser.is_tool_call(current_item):
                 tool_calls_stream: Iterator[FunctionCallChunk] = (
                     tool_call_chunk
@@ -155,20 +160,18 @@ class OutputStream(Generic[ItemT, OutputT]):
                         tool_calls_stream = chain(
                             [current_tool_call_chunk], tool_calls_stream
                         )
-                        yield function_schema.parse_args(
+                        output = function_schema.parse_args(
                             self._tool_call(
                                 tool_calls_stream, tool_call_ref, current_tool_call_id
                             )
                         )
-                        if not tool_call_ref:
+                        yield output
+                        if not tool_call_ref and not self._exhausted:
                             # Finish the group to allow advancing to the next one
-                            consume(
-                                self._tool_call(
-                                    tool_calls_stream,
-                                    tool_call_ref,
-                                    current_tool_call_id,
-                                )
-                            )
+                            # Output must be Iterable if parse_args above did not consume
+                            assert isinstance(output, Iterable), output  # noqa: S101
+                            # Consume stream via the output type so it can cache
+                            consume(output)
 
                     except ValidationError as e:
                         assert current_tool_call_id is not None  # noqa: S101
@@ -201,6 +204,7 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
         self._state = state
 
         self._iterator = self.__stream__()
+        self._exhausted: bool = False
 
     async def __anext__(self) -> AsyncStreamedStr | OutputT:
         return await self._iterator.__anext__()
@@ -220,6 +224,7 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                 assert not current_item_ref  # noqa: S101
                 current_item_ref.append(item)
                 return
+        self._exhausted = True
 
     async def _tool_call(
         self,
@@ -235,6 +240,7 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                 return
             if item.args:
                 yield item.args
+        self._exhausted = True
 
     async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | OutputT]:
         stream = aapply(self._state.update, self._stream)
@@ -243,10 +249,14 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
             current_item = current_item_ref.pop()
             if self._parser.is_content(current_item):
                 stream = achain(async_iter([current_item]), stream)
-                yield AsyncStreamedStr(self._streamed_str(stream, current_item_ref))
-                if not current_item_ref:
+                streamed_str = AsyncStreamedStr(
+                    self._streamed_str(stream, current_item_ref)
+                )
+                yield streamed_str
+                if not current_item_ref and not self._exhausted:
                     # Finish the group to allow advancing to the next one
-                    await aconsume(self._streamed_str(stream, current_item_ref))
+                    # Consume stream via AsyncStreamedStr so it can cache
+                    await aconsume(streamed_str)
             elif self._parser.is_tool_call(current_item):
                 tool_calls_stream: AsyncIterator[FunctionCallChunk] = (
                     tool_call_chunk
@@ -273,20 +283,18 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                         tool_calls_stream = achain(
                             async_iter([current_tool_call_chunk]), tool_calls_stream
                         )
-                        yield await function_schema.aparse_args(
+                        output = await function_schema.aparse_args(
                             self._tool_call(
                                 tool_calls_stream, tool_call_ref, current_tool_call_id
                             )
                         )
-                        if not tool_call_ref:
+                        yield output
+                        if not tool_call_ref and not self._exhausted:
                             # Finish the group to allow advancing to the next one
-                            await aconsume(
-                                self._tool_call(
-                                    tool_calls_stream,
-                                    tool_call_ref,
-                                    current_tool_call_id,
-                                )
-                            )
+                            # Output must be AsyncIterable if aparse_args above did not consume
+                            assert isinstance(output, AsyncIterable), output  # noqa: S101
+                            # Consume stream via the output type so it can cache
+                            await aconsume(output)
                     except ValidationError as e:
                         assert current_tool_call_id is not None  # noqa: S101
                         raise ToolSchemaParseError(
