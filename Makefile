@@ -55,5 +55,10 @@ docs:  # Build the documentation
 docs-serve:  # Build and serve the documentation
 	uv run mkdocs serve
 
+.PHONY: dep-diagram
+dep-diagram:  # Generate a dependency diagram
+	uv run pydeps src/magentic --no-show --only "magentic." --rmprefix "magentic." -x "magentic.logger" --exclude-exact "magentic.chat_model"
+	open -a Arc magentic.svg
+
 .PHONY: all
 all: format lint typecheck test
