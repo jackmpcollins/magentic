@@ -8,7 +8,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from pydantic import AfterValidator, BaseModel
 
 from magentic._pydantic import ConfigDict, with_config
-from magentic._streamed_response import StreamedResponse
+from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -173,6 +173,25 @@ def test_openai_chat_model_complete_seed():
 
 
 @pytest.mark.openai
+def test_openai_chat_model_complete_streamed_response():
+    def get_weather(location: str):
+        """Get the weather for a location."""
+
+    chat_model = OpenaiChatModel("gpt-4o")
+    message = chat_model.complete(
+        messages=[UserMessage("Tell me your favorite city. Then get its weather.")],
+        functions=[get_weather],
+        output_types=[StreamedResponse],
+    )
+    assert isinstance(message.content, StreamedResponse)
+    response_items = list(message.content)
+    assert len(response_items) == 2
+    streamed_str, function_call = response_items
+    assert isinstance(streamed_str, StreamedStr)
+    assert isinstance(function_call, FunctionCall)
+
+
+@pytest.mark.openai
 def test_openai_chat_model_complete_pydantic_model_openai_strict():
     class CapitalCity(BaseModel):
         model_config = ConfigDict(openai_strict=True)
@@ -253,6 +272,25 @@ def test_openai_chat_model_complete_raises_tool_schema_parse_error():
             messages=[UserMessage("Return a test value of 42.")],
             output_types=[Test],
         )
+
+
+@pytest.mark.openai
+async def test_openai_chat_model_acomplete_async_streamed_response():
+    def get_weather(location: str):
+        """Get the weather for a location."""
+
+    chat_model = OpenaiChatModel("gpt-4o")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Tell me your favorite city. Then get its weather.")],
+        functions=[get_weather],
+        output_types=[AsyncStreamedResponse],
+    )
+    assert isinstance(message.content, AsyncStreamedResponse)
+    response_items = [x async for x in message.content]
+    assert len(response_items) == 2
+    streamed_str, function_call = response_items
+    assert isinstance(streamed_str, AsyncStreamedStr)
+    assert isinstance(function_call, FunctionCall)
 
 
 @pytest.mark.openai

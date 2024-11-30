@@ -17,8 +17,10 @@ from magentic.streaming import (
     StreamedStr,
     aapply,
     achain,
+    aconsume,
     apply,
     async_iter,
+    consume,
 )
 
 ItemT = TypeVar("ItemT")
@@ -116,6 +118,7 @@ class OutputStream(Generic[ItemT, OutputT]):
                 yield item.args
 
     def __stream__(self) -> Iterator[StreamedStr | OutputT]:
+        # This works similarly to `itertools.groupby`
         stream = apply(self._state.update, self._stream)
         current_item_ref = [next(stream)]
         while current_item_ref:
@@ -123,6 +126,9 @@ class OutputStream(Generic[ItemT, OutputT]):
             if self._parser.is_content(current_item):
                 stream = chain([current_item], stream)
                 yield StreamedStr(self._streamed_str(stream, current_item_ref))
+                if not current_item_ref:
+                    # Finish the group to allow advancing to the next one
+                    consume(self._streamed_str(stream, current_item_ref))
             elif self._parser.is_tool_call(current_item):
                 tool_calls_stream = (
                     tool_call_chunk
@@ -146,13 +152,24 @@ class OutputStream(Generic[ItemT, OutputT]):
                             tool_name=current_tool_call_chunk.name,
                         )
                     try:
+                        tool_calls_stream = chain(
+                            [current_tool_call_chunk], tool_calls_stream
+                        )
                         yield function_schema.parse_args(
                             self._tool_call(
-                                chain([current_tool_call_chunk], tool_calls_stream),
-                                tool_call_ref,
-                                current_tool_call_id,
+                                tool_calls_stream, tool_call_ref, current_tool_call_id
                             )
                         )
+                        if not tool_call_ref:
+                            # Finish the group to allow advancing to the next one
+                            consume(
+                                self._tool_call(
+                                    tool_calls_stream,
+                                    tool_call_ref,
+                                    current_tool_call_id,
+                                )
+                            )
+
                     except ValidationError as e:
                         assert current_tool_call_id is not None  # noqa: S101
                         raise ToolSchemaParseError(
@@ -227,6 +244,8 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
             if self._parser.is_content(current_item):
                 stream = achain(async_iter([current_item]), stream)
                 yield AsyncStreamedStr(self._streamed_str(stream, current_item_ref))
+                if not current_item_ref:
+                    await aconsume(self._streamed_str(stream, current_item_ref))
             elif self._parser.is_tool_call(current_item):
                 tool_calls_stream = (
                     tool_call_chunk
@@ -250,16 +269,23 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                             tool_name=current_tool_call_chunk.name,
                         )
                     try:
+                        tool_calls_stream = achain(
+                            async_iter([current_tool_call_chunk]), tool_calls_stream
+                        )
                         yield await function_schema.aparse_args(
                             self._tool_call(
-                                achain(
-                                    async_iter([current_tool_call_chunk]),
-                                    tool_calls_stream,
-                                ),
-                                tool_call_ref,
-                                current_tool_call_id,
+                                tool_calls_stream, tool_call_ref, current_tool_call_id
                             )
                         )
+                        if not tool_call_ref:
+                            # Finish the group to allow advancing to the next one
+                            await aconsume(
+                                self._tool_call(
+                                    tool_calls_stream,
+                                    tool_call_ref,
+                                    current_tool_call_id,
+                                )
+                            )
                     except ValidationError as e:
                         assert current_tool_call_id is not None  # noqa: S101
                         raise ToolSchemaParseError(
