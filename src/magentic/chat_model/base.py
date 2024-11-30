@@ -23,6 +23,7 @@ _chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
 )
 
 
+# TODO: Export all exceptions from `magentic.exceptions`
 # TODO: Parent class with `output_message` attribute ?
 class StringNotAllowedError(Exception):
     """Raised when a string is returned by the LLM but not allowed."""
@@ -80,6 +81,7 @@ class UnknownToolError(Exception):
         self.tool_call_id = tool_call_id
 
 
+# TODO: Move this to same file where it is raised
 class ToolSchemaParseError(Exception):
     """Raised when the LLM output could not be parsed by the tool schema."""
 
@@ -101,6 +103,7 @@ class ToolSchemaParseError(Exception):
         self.validation_error = validation_error
 
 
+# TODO: Move this into _parsing
 # TODO: Make this a stream class with a close method and context management
 def parse_stream(stream: Iterator[Any], output_types: Iterable[type[R]]) -> R:
     """Parse and validate the LLM output stream against the allowed output types."""
