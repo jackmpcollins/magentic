@@ -23,6 +23,7 @@ from openai.types.chat import (
 )
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
+from magentic._streamed_response import StreamedResponse
 from magentic.chat_model.base import (
     ChatModel,
     aparse_stream,
@@ -57,6 +58,7 @@ from magentic.function_call import (
     ParallelFunctionCall,
     _create_unique_id,
 )
+from magentic.streaming import StreamedStr
 from magentic.vision import UserImageMessage
 
 
@@ -150,6 +152,32 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
                     },
                 }
                 for function_call in message.content
+            ],
+        }
+
+    if isinstance(message.content, StreamedResponse):
+        content: list[str] = []
+        function_calls: list[FunctionCall] = []
+        for item in message.content:
+            if isinstance(item, StreamedStr):
+                content.append(str(item))
+            elif isinstance(item, FunctionCall):
+                function_calls.append(item)
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": " ".join(content),
+            "tool_calls": [
+                {
+                    "id": function_call._unique_id,
+                    "type": "function",
+                    "function": {
+                        "name": FunctionCallFunctionSchema(function_call.function).name,
+                        "arguments": FunctionCallFunctionSchema(
+                            function_call.function
+                        ).serialize_args(function_call),
+                    },
+                }
+                for function_call in function_calls
             ],
         }
 

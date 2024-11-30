@@ -8,6 +8,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from pydantic import AfterValidator, BaseModel
 
 from magentic._pydantic import ConfigDict, with_config
+from magentic._streamed_response import StreamedResponse
 from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -87,6 +88,22 @@ def plus(a: int, b: int) -> int:
                         "id": ANY,
                         "type": "function",
                         "function": {"name": "plus", "arguments": '{"a":3,"b":4}'},
+                    },
+                ],
+            },
+        ),
+        (
+            AssistantMessage(
+                StreamedResponse([StreamedStr(["Hello"]), FunctionCall(plus, 1, 2)])
+            ),
+            {
+                "role": "assistant",
+                "content": "Hello",
+                "tool_calls": [
+                    {
+                        "id": ANY,
+                        "type": "function",
+                        "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
                     },
                 ],
             },
