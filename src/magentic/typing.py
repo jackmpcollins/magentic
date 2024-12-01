@@ -1,14 +1,7 @@
 import inspect
 import types
 from collections.abc import Iterable, Mapping, Sequence
-from typing import (
-    Any,
-    TypeGuard,
-    TypeVar,
-    Union,
-    get_args,
-    get_origin,
-)
+from typing import Any, TypeGuard, TypeVar, Union, get_args, get_origin
 
 
 def is_union_type(type_: type) -> bool:
