@@ -67,6 +67,11 @@ extra:
           data: 1
           note: >-
             Thanks for your feedback!
+  social:
+    - icon: fontawesome/brands/x-twitter
+      link: https://x.com/jackmpcollins
+    - icon: fontawesome/brands/github
+      link: https://github.com/jackmpcollins
 
 # https://www.mkdocs.org/user-guide/configuration/#validation
 validation:

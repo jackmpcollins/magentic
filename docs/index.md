@@ -1,19 +1,17 @@
 # Overview
 
-Easily integrate Large Language Models into your Python code. Simply use the `@prompt` and `@chatprompt` decorators to create functions that return structured output from the LLM. Mix LLM queries and function calling with regular Python code to create complex logic.
+Seamlessly integrate Large Language Models into Python code. Use the `@prompt` and `@chatprompt` decorators to create functions that return structured output from an LLM. Combine LLM queries and tool use with traditional Python code to build complex agentic systems.
 
 ## Features
 
 - [Structured Outputs] using pydantic models and built-in python types.
-- [Chat Prompting] to enable few-shot prompting with structured examples.
-- [Function Calling] and [Parallel Function Calling] via the `FunctionCall` and `ParallelFunctionCall` return types.
-- [Formatting] to naturally insert python objects into prompts.
-- [Asyncio]. Simply use `async def` when defining a magentic function.
-- [Streaming] structured outputs to use them as they are being generated.
-- [Vision] to easily get structured outputs from images.
+- [Streaming] of structured outputs and function calls, to use them while being generated.
 - [LLM-Assisted Retries] to improve LLM adherence to complex output schemas.
-- Multiple LLM providers including OpenAI and Anthropic. See [Configuration].
+- [Observability] using OpenTelemetry, with native [Pydantic Logfire integration].
 - [Type Annotations] to work nicely with linters and IDEs.
+- [Configuration] options for multiple LLM providers including OpenAI, Anthropic, and Ollama.
+- Many more features: [Chat Prompting], [Parallel Function Calling], [Vision], [Formatting], [Asyncio]...
+
 
 ## Installation
 
@@ -184,6 +182,8 @@ LLM-powered functions created using `@prompt`, `@chatprompt` and `@prompt_chain`
 [Chat Prompting]: chat-prompting.md
 [Function Calling]: function-calling.md
 [Parallel Function Calling]: function-calling.md#parallelfunctioncall
+[Observability]: logging-and-tracing.md
+[Pydantic Logfire integration]: https://logfire.pydantic.dev/docs/integrations/third-party/magentic/
 [Formatting]: formatting.md
 [Asyncio]: asyncio.md
 [Streaming]: streaming.md
