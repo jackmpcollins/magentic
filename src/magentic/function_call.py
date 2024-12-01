@@ -8,13 +8,7 @@ from collections.abc import (
     Iterable,
     Iterator,
 )
-from typing import (
-    Any,
-    Generic,
-    ParamSpec,
-    TypeVar,
-    cast,
-)
+from typing import Any, Generic, ParamSpec, TypeVar, cast
 from uuid import uuid4
 
 from magentic.logger import logfire

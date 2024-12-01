@@ -2,15 +2,8 @@ from collections.abc import Callable, Iterable
 from functools import singledispatchmethod
 from typing import Any, TypeVar, overload
 
-from magentic.chat_model.base import (
-    ChatModel,
-    ToolSchemaParseError,
-)
-from magentic.chat_model.message import (
-    AssistantMessage,
-    Message,
-    ToolResultMessage,
-)
+from magentic.chat_model.base import ChatModel, ToolSchemaParseError
+from magentic.chat_model.message import AssistantMessage, Message, ToolResultMessage
 from magentic.logger import logfire
 
 R = TypeVar("R")

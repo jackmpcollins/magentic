@@ -1,11 +1,5 @@
 import base64
-from collections.abc import (
-    AsyncIterator,
-    Callable,
-    Iterable,
-    Iterator,
-    Sequence,
-)
+from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequence
 from enum import Enum
 from functools import singledispatch
 from typing import Any, Generic, Literal, TypeVar, cast, overload
@@ -24,11 +18,7 @@ from openai.types.chat import (
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
 from magentic._streamed_response import StreamedResponse
-from magentic.chat_model.base import (
-    ChatModel,
-    aparse_stream,
-    parse_stream,
-)
+from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
@@ -53,11 +43,7 @@ from magentic.chat_model.stream import (
     StreamParser,
     StreamState,
 )
-from magentic.function_call import (
-    FunctionCall,
-    ParallelFunctionCall,
-    _create_unique_id,
-)
+from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
 from magentic.streaming import StreamedStr
 from magentic.vision import UserImageMessage
 
@@ -78,9 +64,9 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
 
 @message_to_openai_message.register(_RawMessage)
 def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
-    assert isinstance(message.content, dict)  # noqa: S101
-    assert "role" in message.content  # noqa: S101
-    assert "content" in message.content  # noqa: S101
+    assert isinstance(message.content, dict)
+    assert "role" in message.content
+    assert "content" in message.content
     return cast(ChatCompletionMessageParam, message.content)
 
 
@@ -316,7 +302,7 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
                 tool_call_chunk.index = self._current_tool_call_index
         self._chat_completion_stream_state.handle_chunk(item)
         if item.usage:
-            assert not self.usage_ref  # noqa: S101
+            assert not self.usage_ref
             self.usage_ref.append(
                 Usage(
                     input_tokens=item.usage.prompt_tokens,

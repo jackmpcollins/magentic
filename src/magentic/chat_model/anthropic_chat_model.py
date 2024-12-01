@@ -1,12 +1,6 @@
 import base64
 import json
-from collections.abc import (
-    AsyncIterator,
-    Callable,
-    Iterable,
-    Iterator,
-    Sequence,
-)
+from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequence
 from enum import Enum
 from functools import singledispatch
 from itertools import groupby
@@ -15,11 +9,7 @@ from typing import Any, Generic, TypeVar, cast, overload
 import filetype
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
-from magentic.chat_model.base import (
-    ChatModel,
-    aparse_stream,
-    parse_stream,
-)
+from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
@@ -44,11 +34,7 @@ from magentic.chat_model.stream import (
     StreamParser,
     StreamState,
 )
-from magentic.function_call import (
-    FunctionCall,
-    ParallelFunctionCall,
-    _create_unique_id,
-)
+from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
 from magentic.vision import UserImageMessage
 
 try:
@@ -273,7 +259,7 @@ class AnthropicStreamState(StreamState[MessageStreamEvent]):
             current_snapshot=self._current_message_snapshot,
         )
         if item.type == "message_stop":
-            assert not self.usage_ref  # noqa: S101
+            assert not self.usage_ref
             self.usage_ref.append(
                 Usage(
                     input_tokens=item.message.usage.input_tokens,
@@ -283,7 +269,7 @@ class AnthropicStreamState(StreamState[MessageStreamEvent]):
 
     @property
     def current_message_snapshot(self) -> Message[Any]:
-        assert self._current_message_snapshot is not None  # noqa: S101
+        assert self._current_message_snapshot is not None
         # TODO: Possible to return AssistantMessage here?
         return _RawMessage(self._current_message_snapshot.model_dump())
 

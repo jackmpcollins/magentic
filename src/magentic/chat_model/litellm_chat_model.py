@@ -37,20 +37,20 @@ except ImportError as error:
 
 class LitellmStreamParser(StreamParser[ModelResponse]):
     def is_content(self, item: ModelResponse) -> bool:
-        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+        assert isinstance(item.choices[0], StreamingChoices)
         return bool(item.choices[0].delta.content)
 
     def get_content(self, item: ModelResponse) -> str | None:
-        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
-        assert isinstance(item.choices[0].delta.content, str | None)  # noqa: S101
+        assert isinstance(item.choices[0], StreamingChoices)
+        assert isinstance(item.choices[0].delta.content, str | None)
         return item.choices[0].delta.content
 
     def is_tool_call(self, item: ModelResponse) -> bool:
-        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+        assert isinstance(item.choices[0], StreamingChoices)
         return bool(item.choices[0].delta.tool_calls)
 
     def iter_tool_calls(self, item: ModelResponse) -> Iterable[FunctionCallChunk]:
-        assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+        assert isinstance(item.choices[0], StreamingChoices)
         if item.choices and item.choices[0].delta.tool_calls:
             for tool_call in item.choices[0].delta.tool_calls:
                 if tool_call.function:
@@ -75,13 +75,13 @@ class LitellmStreamState(StreamState[ModelResponse]):
             # litellm requires usage is not None for its total usage calculation
             item.usage = litellm.Usage()  # type: ignore[attr-defined]
         if not hasattr(item, "refusal"):
-            assert isinstance(item.choices[0], StreamingChoices)  # noqa: S101
+            assert isinstance(item.choices[0], StreamingChoices)
             item.choices[0].delta.refusal = None  # type: ignore[attr-defined]
         self._chat_completion_stream_state.handle_chunk(item)  # type: ignore[arg-type]
         usage = cast(litellm.Usage, item.usage)  # type: ignore[attr-defined,name-defined]
         # Ignore usages with 0 tokens
         if usage and usage.prompt_tokens and usage.completion_tokens:
-            assert not self.usage_ref  # noqa: S101
+            assert not self.usage_ref
             self.usage_ref.append(
                 Usage(
                     input_tokens=usage.prompt_tokens,
@@ -210,7 +210,7 @@ class LitellmChatModel(ChatModel):
                 tool_schemas=tool_schemas, output_types=output_types
             ),  # type: ignore[arg-type,unused-ignore]
         )
-        assert not isinstance(response, ModelResponse)  # noqa: S101
+        assert not isinstance(response, ModelResponse)
         stream = OutputStream(
             stream=response,
             function_schemas=function_schemas,
@@ -270,7 +270,7 @@ class LitellmChatModel(ChatModel):
                 tool_schemas=tool_schemas, output_types=output_types
             ),  # type: ignore[arg-type,unused-ignore]
         )
-        assert not isinstance(response, ModelResponse)  # noqa: S101
+        assert not isinstance(response, ModelResponse)
         stream = AsyncOutputStream(
             stream=response,
             function_schemas=function_schemas,

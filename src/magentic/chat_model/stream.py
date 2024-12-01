@@ -97,7 +97,7 @@ class OutputStream(Generic[ItemT, OutputT]):
                 yield content
             if self._parser.is_tool_call(item):
                 # TODO: Check if output types allow for early return and raise if not
-                assert not current_item_ref  # noqa: S101
+                assert not current_item_ref
                 current_item_ref.append(item)
                 return
         self._exhausted = True
@@ -113,7 +113,7 @@ class OutputStream(Generic[ItemT, OutputT]):
             # so that the whole stream is consumed including stop_reason/usage chunks
             if item.id and item.id != current_tool_call_id:
                 # TODO: Check if output types allow for early return and raise if not
-                assert not current_tool_call_ref  # noqa: S101
+                assert not current_tool_call_ref
                 current_tool_call_ref.append(item)
                 return
             if item.args:
@@ -144,13 +144,13 @@ class OutputStream(Generic[ItemT, OutputT]):
                 while tool_call_ref:
                     current_tool_call_chunk = tool_call_ref.pop()
                     current_tool_call_id = current_tool_call_chunk.id
-                    assert current_tool_call_id is not None  # noqa: S101
-                    assert current_tool_call_chunk.name is not None  # noqa: S101
+                    assert current_tool_call_id is not None
+                    assert current_tool_call_chunk.name is not None
                     function_schema = select_function_schema(
                         self._function_schemas, current_tool_call_chunk.name
                     )
                     if function_schema is None:
-                        assert current_tool_call_id is not None  # noqa: S101
+                        assert current_tool_call_id is not None
                         raise UnknownToolError(
                             output_message=self._state.current_message_snapshot,
                             tool_call_id=current_tool_call_id,
@@ -169,12 +169,12 @@ class OutputStream(Generic[ItemT, OutputT]):
                         if not tool_call_ref and not self._exhausted:
                             # Finish the group to allow advancing to the next one
                             # Output must be Iterable if parse_args above did not consume
-                            assert isinstance(output, Iterable), output  # noqa: S101
+                            assert isinstance(output, Iterable), output
                             # Consume stream via the output type so it can cache
                             consume(output)
 
                     except ValidationError as e:
-                        assert current_tool_call_id is not None  # noqa: S101
+                        assert current_tool_call_id is not None
                         raise ToolSchemaParseError(
                             output_message=self._state.current_message_snapshot,
                             tool_call_id=current_tool_call_id,
@@ -221,7 +221,7 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                 yield content
             if self._parser.is_tool_call(item):
                 # TODO: Check if output types allow for early return
-                assert not current_item_ref  # noqa: S101
+                assert not current_item_ref
                 current_item_ref.append(item)
                 return
         self._exhausted = True
@@ -235,7 +235,7 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
         async for item in stream:
             if item.id and item.id != current_tool_call_id:
                 # TODO: Check if output types allow for early return
-                assert not current_tool_call_ref  # noqa: S101
+                assert not current_tool_call_ref
                 current_tool_call_ref.append(item)
                 return
             if item.args:
@@ -267,13 +267,13 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                 while tool_call_ref:
                     current_tool_call_chunk = tool_call_ref.pop()
                     current_tool_call_id = current_tool_call_chunk.id
-                    assert current_tool_call_id is not None  # noqa: S101
-                    assert current_tool_call_chunk.name is not None  # noqa: S101
+                    assert current_tool_call_id is not None
+                    assert current_tool_call_chunk.name is not None
                     function_schema = select_function_schema(
                         self._function_schemas, current_tool_call_chunk.name
                     )
                     if function_schema is None:
-                        assert current_tool_call_id is not None  # noqa: S101
+                        assert current_tool_call_id is not None
                         raise UnknownToolError(
                             output_message=self._state.current_message_snapshot,
                             tool_call_id=current_tool_call_id,
@@ -292,11 +292,11 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
                         if not tool_call_ref and not self._exhausted:
                             # Finish the group to allow advancing to the next one
                             # Output must be AsyncIterable if aparse_args above did not consume
-                            assert isinstance(output, AsyncIterable), output  # noqa: S101
+                            assert isinstance(output, AsyncIterable), output
                             # Consume stream via the output type so it can cache
                             await aconsume(output)
                     except ValidationError as e:
-                        assert current_tool_call_id is not None  # noqa: S101
+                        assert current_tool_call_id is not None
                         raise ToolSchemaParseError(
                             output_message=self._state.current_message_snapshot,
                             tool_call_id=current_tool_call_id,

@@ -5,9 +5,7 @@ from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
 from magentic.chat_model.litellm_chat_model import LitellmChatModel
 from magentic.chat_model.message import AssistantMessage, UserMessage
 from magentic.chat_model.mistral_chat_model import MistralChatModel
-from magentic.chat_model.openai_chat_model import (
-    OpenaiChatModel,
-)
+from magentic.chat_model.openai_chat_model import OpenaiChatModel
 
 
 def test_backend_anthropic_chat_model(monkeypatch):
