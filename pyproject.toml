@@ -127,6 +127,7 @@ mark-parentheses = false
 
 [tool.ruff.lint.isort]
 known-first-party = ["magentic"]
+split-on-trailing-comma = false
 
 [tool.ruff.lint.per-file-ignores]
 "docs/examples/*" = [
