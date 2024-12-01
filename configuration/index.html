@@ -485,6 +485,17 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    LLM Configuration
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
         
   
@@ -494,6 +505,111 @@
   
 
       </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="Page contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Page contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backends
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backends">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#openai" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenAI
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OpenAI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ollama-via-openai" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ollama via OpenAI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-openai-compatible-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other OpenAI-compatible APIs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#anthropic" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anthropic
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#litellm" class="md-nav__link">
+    <span class="md-ellipsis">
+      LiteLLM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mistral" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mistral
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configure-a-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure a Backend
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -669,6 +785,98 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Page contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#backends" class="md-nav__link">
+    <span class="md-ellipsis">
+      Backends
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Backends">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#openai" class="md-nav__link">
+    <span class="md-ellipsis">
+      OpenAI
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="OpenAI">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ollama-via-openai" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ollama via OpenAI
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#other-openai-compatible-apis" class="md-nav__link">
+    <span class="md-ellipsis">
+      Other OpenAI-compatible APIs
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#anthropic" class="md-nav__link">
+    <span class="md-ellipsis">
+      Anthropic
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#litellm" class="md-nav__link">
+    <span class="md-ellipsis">
+      LiteLLM
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mistral" class="md-nav__link">
+    <span class="md-ellipsis">
+      Mistral
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configure-a-backend" class="md-nav__link">
+    <span class="md-ellipsis">
+      Configure a Backend
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -691,33 +899,66 @@
 
 
 <h1 id="llm-configuration">LLM Configuration<a class="headerlink" href="#llm-configuration" title="Permanent link">&para;</a></h1>
-<p>Magentic supports multiple "backends" (LLM providers). These are</p>
-<ul>
-<li><code>openai</code> : the default backend that uses the <code>openai</code> Python package. Supports all features of magentic.
-  <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">OpenaiChatModel</span>
-</code></pre></div></li>
-<li><code>anthropic</code> : uses the <code>anthropic</code> Python package. Supports all features of magentic, however streaming responses are currently received all at once.
-  <div class="language-sh highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;magentic[anthropic]&quot;</span>
+<h2 id="backends">Backends<a class="headerlink" href="#backends" title="Permanent link">&para;</a></h2>
+<p>Magentic supports multiple LLM providers or "backends". This roughly refers to which Python package is used to interact with the LLM API. The following backends are supported.</p>
+<h3 id="openai">OpenAI<a class="headerlink" href="#openai" title="Permanent link">&para;</a></h3>
+<p>The default backend, using the <code>openai</code> Python package and supports all features of magentic.</p>
+<p>No additional installation is required. Just import the <code>OpenaiChatModel</code> class from <code>magentic</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">OpenaiChatModel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
 </code></pre></div>
-  <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic.chat_model.anthropic_chat_model</span> <span class="kn">import</span> <span class="n">AnthropicChatModel</span>
-</code></pre></div></li>
-<li><code>litellm</code> : uses the <code>litellm</code> Python package to enable querying LLMs from <a href="https://docs.litellm.ai/docs/providers">many different providers</a>. Note: some models may not support all features of <code>magentic</code> e.g. function calling/structured output and streaming.
-  <div class="language-sh highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;magentic[litellm]&quot;</span>
+<h4 id="ollama-via-openai">Ollama via OpenAI<a class="headerlink" href="#ollama-via-openai" title="Permanent link">&para;</a></h4>
+<p>Ollama supports an OpenAI-compatible API, which allows you to use Ollama models via the OpenAI backend.</p>
+<p>First, install ollama from <a href="https://ollama.com/">ollama.com</a>. Then, pull the model you want to use.</p>
+<div class="language-sh highlight"><pre><span></span><code>ollama<span class="w"> </span>pull<span class="w"> </span>llama3.2
 </code></pre></div>
-  <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic.chat_model.litellm_chat_model</span> <span class="kn">import</span> <span class="n">LitellmChatModel</span>
-</code></pre></div></li>
-<li><code>mistral</code> : uses the <code>openai</code> Python package with some small modifications to make the API queries compatible with the Mistral API. Supports all features of magentic, however tool calls (including structured outputs) are not streamed so are received all at once. Note: a future version of magentic might switch to using the <code>mistral</code> Python package.
-  <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic.chat_model.mistral_chat_model</span> <span class="kn">import</span> <span class="n">MistralChatModel</span>
-</code></pre></div></li>
-</ul>
-<p>The backend and LLM (<code>ChatModel</code>) used by <code>magentic</code> can be configured in several ways. When a magentic function is called, the <code>ChatModel</code> to use follows this order of preference</p>
+<p>Then, specify the model name and <code>base_url</code> when creating the <code>OpenaiChatModel</code> instance.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">OpenaiChatModel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;llama3.2&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="s2">&quot;http://localhost:11434/v1/&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h4 id="other-openai-compatible-apis">Other OpenAI-compatible APIs<a class="headerlink" href="#other-openai-compatible-apis" title="Permanent link">&para;</a></h4>
+<p>When using the <code>openai</code> backend, setting the <code>MAGENTIC_OPENAI_BASE_URL</code> environment variable or using <code>OpenaiChatModel(..., base_url="http://localhost:8080")</code> in code allows you to use <code>magentic</code> with any OpenAI-compatible API e.g. <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&amp;pivots=programming-language-python#create-a-new-python-application">Azure OpenAI Service</a>, <a href="https://docs.litellm.ai/docs/proxy_server">LiteLLM OpenAI Proxy Server</a>, <a href="https://localai.io/howtos/easy-request-openai/">LocalAI</a>. Note that if the API does not support tool calls then you will not be able to create prompt-functions that return Python objects, but other features of <code>magentic</code> will still work.</p>
+<p>To use Azure with the openai backend you will need to set the <code>MAGENTIC_OPENAI_API_TYPE</code> environment variable to "azure" or use <code>OpenaiChatModel(..., api_type="azure")</code>, and also set the environment variables needed by the openai package to access Azure. See https://github.com/openai/openai-python#microsoft-azure-openai</p>
+<h3 id="anthropic">Anthropic<a class="headerlink" href="#anthropic" title="Permanent link">&para;</a></h3>
+<p>This uses the <code>anthropic</code> Python package and supports all features of magentic.</p>
+<p>Install the <code>magentic</code> package with the <code>anthropic</code> extra, or install the <code>anthropic</code> package directly.</p>
+<div class="language-sh highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;magentic[anthropic]&quot;</span>
+</code></pre></div>
+<p>Then import the <code>AnthropicChatModel</code> class.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic.chat_model.anthropic_chat_model</span> <span class="kn">import</span> <span class="n">AnthropicChatModel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">AnthropicChatModel</span><span class="p">(</span><span class="s2">&quot;claude-3-5-sonnet-latest&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="litellm">LiteLLM<a class="headerlink" href="#litellm" title="Permanent link">&para;</a></h3>
+<p>This uses the <code>litellm</code> Python package to enable querying LLMs from <a href="https://docs.litellm.ai/docs/providers">many different providers</a>. Note: some models may not support all features of <code>magentic</code> e.g. function calling/structured output and streaming.</p>
+<p>Install the <code>magentic</code> package with the <code>litellm</code> extra, or install the <code>litellm</code> package directly.</p>
+<div class="language-sh highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;magentic[litellm]&quot;</span>
+</code></pre></div>
+<p>Then import the <code>LitellmChatModel</code> class.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic.chat_model.litellm_chat_model</span> <span class="kn">import</span> <span class="n">LitellmChatModel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">LitellmChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="mistral">Mistral<a class="headerlink" href="#mistral" title="Permanent link">&para;</a></h3>
+<p>This uses the <code>openai</code> Python package with some small modifications to make the API queries compatible with the Mistral API. It supports all features of magentic. However tool calls (including structured outputs) are not streamed so are received all at once.</p>
+<p>Note: a future version of magentic might switch to using the <code>mistral</code> Python package.</p>
+<p>No additional installation is required. Just import the <code>MistralChatModel</code> class.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic.chat_model.mistral_chat_model</span> <span class="kn">import</span> <span class="n">MistralChatModel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">MistralChatModel</span><span class="p">(</span><span class="s2">&quot;mistral-large-latest&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="configure-a-backend">Configure a Backend<a class="headerlink" href="#configure-a-backend" title="Permanent link">&para;</a></h2>
+<p>The default <code>ChatModel</code> used by <code>magentic</code> (in <code>@prompt</code>, <code>@chatprompt</code>, etc.) can be configured in several ways. When a prompt-function or chatprompt-function is called, the <code>ChatModel</code> to use follows this order of preference</p>
 <ol>
 <li>The <code>ChatModel</code> instance provided as the <code>model</code> argument to the magentic decorator</li>
 <li>The current chat model context, created using <code>with MyChatModel:</code></li>
-<li>The global <code>ChatModel</code> created from environment variables and the default settings in <a href="https://github.com/jackmpcollins/magentic/src/magentic/settings.py">src/magentic/settings.py</a></li>
+<li>The global <code>ChatModel</code> created from environment variables and the default settings in <a href="https://github.com/jackmpcollins/magentic/blob/main/src/magentic/settings.py">src/magentic/settings.py</a></li>
 </ol>
+<p>The following code snippet demonstrates this behavior:</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">prompt</span>
-<span class="kn">from</span> <span class="nn">magentic.chat_model.litellm_chat_model</span> <span class="kn">import</span> <span class="n">LitellmChatModel</span>
+<span class="kn">from</span> <span class="nn">magentic.chat_model.anthropic_chat_model</span> <span class="kn">import</span> <span class="n">AnthropicChatModel</span>
 
 
 <span class="nd">@prompt</span><span class="p">(</span><span class="s2">&quot;Say hello&quot;</span><span class="p">)</span>
@@ -726,16 +967,16 @@
 
 <span class="nd">@prompt</span><span class="p">(</span>
     <span class="s2">&quot;Say hello&quot;</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="n">LitellmChatModel</span><span class="p">(</span><span class="s2">&quot;ollama_chat/llama3&quot;</span><span class="p">),</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">AnthropicChatModel</span><span class="p">(</span><span class="s2">&quot;claude-3-5-sonnet-latest&quot;</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">say_hello_litellm</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+<span class="k">def</span> <span class="nf">say_hello_anthropic</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="n">say_hello</span><span class="p">()</span>  <span class="c1"># Uses env vars or default settings</span>
 
-<span class="k">with</span> <span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-3.5-turbo&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-    <span class="n">say_hello</span><span class="p">()</span>  <span class="c1"># Uses openai with gpt-3.5-turbo and temperature=1 due to context manager</span>
-    <span class="n">say_hello_litellm</span><span class="p">()</span>  <span class="c1"># Uses litellm with ollama_chat/llama3 because explicitly configured</span>
+<span class="k">with</span> <span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">,</span> <span class="n">temperature</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="n">say_hello</span><span class="p">()</span>  <span class="c1"># Uses openai with gpt-4o-mini and temperature=1 due to context manager</span>
+    <span class="n">say_hello_anthropic</span><span class="p">()</span>  <span class="c1"># Uses Anthropic claude-3-5-sonnet-latest because explicitly configured</span>
 </code></pre></div>
 <p>The following environment variables can be set.</p>
 <table>
@@ -864,8 +1105,6 @@
 </tr>
 </tbody>
 </table>
-<p>When using the <code>openai</code> backend, setting the <code>MAGENTIC_OPENAI_BASE_URL</code> environment variable or using <code>OpenaiChatModel(..., base_url="http://localhost:8080")</code> in code allows you to use <code>magentic</code> with any OpenAI-compatible API e.g. <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&amp;pivots=programming-language-python#create-a-new-python-application">Azure OpenAI Service</a>, <a href="https://docs.litellm.ai/docs/proxy_server">LiteLLM OpenAI Proxy Server</a>, <a href="https://localai.io/howtos/easy-request-openai/">LocalAI</a>. Note that if the API does not support tool calls then you will not be able to create prompt-functions that return Python objects, but other features of <code>magentic</code> will still work.</p>
-<p>To use Azure with the openai backend you will need to set the <code>MAGENTIC_OPENAI_API_TYPE</code> environment variable to "azure" or use <code>OpenaiChatModel(..., api_type="azure")</code>, and also set the environment variables needed by the openai package to access Azure. See https://github.com/openai/openai-python#microsoft-azure-openai</p>
 
 
 
@@ -940,6 +1179,32 @@
     Made with
     <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
       Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://x.com/jackmpcollins" target="_blank" rel="noopener" title="x.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M389.2 48h70.6L305.6 224.2 487 464H345L233.7 318.6 106.5 464H35.8l164.9-188.5L26.8 48h145.6l100.5 132.9zm-24.8 373.8h39.1L151.1 88h-42z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/jackmpcollins" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.6.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
     </a>
   
 </div>
