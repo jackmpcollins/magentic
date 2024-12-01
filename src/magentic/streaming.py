@@ -85,7 +85,7 @@ async def atakewhile(
         yield item
 
 
-def consume(iterator: Iterator[T]) -> None:
+def consume(iterator: Iterable[T]) -> None:
     """Consume an iterator."""
     collections.deque(iterator, maxlen=0)
 

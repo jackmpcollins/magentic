@@ -84,9 +84,9 @@ for hero in create_superhero_team("The Food Dudes"):
 
 Some LLMs have the ability to generate text output and make tool calls in the same response. This allows them to perform chain-of-thought reasoning or provide additional context to the user. In magentic, the `StreamedResponse` (or `AsyncStreamedResponse`) class can be used to request this type of output. This object is an iterable of `StreamedStr` (or `AsyncStreamedStr`) and `FunctionCall` instances.
 
-!!! warning "Consuming StreamedStr"
+!!! tip "Consuming StreamedStr"
 
-    The StreamedStr object must be iterated over before the next item in the `StreamedResponse` is processed, otherwise the string output will be lost. This is because the `StreamedResponse` and `StreamedStr` share the same underlying generator, so advancing the `StreamedResponse` iterator skips over the `StreamedStr` items. The `StreamedStr` object has internal caching so after iterating over it once the chunks will remain available.
+    The StreamedStr object caches its chunks internally, so it does not have to be consumed immediately. This means you can iterate over the chunks as they are received, and/or use the StreamedStr object as a whole after the LLM has finished generating the output.
 
 In the example below, we request that the LLM generates a greeting and then calls a function to get the weather for two cities. The `StreamedResponse` object is then iterated over to print the output, and the `StreamedStr` and `FunctionCall` items are processed separately.
 
