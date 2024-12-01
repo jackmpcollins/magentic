@@ -1,9 +1,9 @@
 import types
 from abc import ABC, abstractmethod
-from collections.abc import Callable, Iterable
+from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from contextvars import ContextVar
 from itertools import chain
-from typing import Any, AsyncIterator, Iterator, TypeVar, cast, get_origin, overload
+from typing import Any, TypeVar, cast, get_origin, overload
 
 from pydantic import ValidationError
 

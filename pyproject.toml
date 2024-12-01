@@ -117,10 +117,6 @@ ignore = [
     "Q002",
     "Q003",
     "W191",
-    "B905",   # TODO: Reenable this
-    "UP006",  # TODO: Reenable this
-    "UP007",  # TODO: Reenable this
-    "UP035",  # TODO: Reenable this
 ]
 
 [tool.ruff.lint.flake8-pytest-style]
