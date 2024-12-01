@@ -64,9 +64,9 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
 
 @message_to_openai_message.register(_RawMessage)
 def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
-    assert isinstance(message.content, dict)  # noqa: S101
-    assert "role" in message.content  # noqa: S101
-    assert "content" in message.content  # noqa: S101
+    assert isinstance(message.content, dict)
+    assert "role" in message.content
+    assert "content" in message.content
     return cast(ChatCompletionMessageParam, message.content)
 
 
@@ -302,7 +302,7 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
                 tool_call_chunk.index = self._current_tool_call_index
         self._chat_completion_stream_state.handle_chunk(item)
         if item.usage:
-            assert not self.usage_ref  # noqa: S101
+            assert not self.usage_ref
             self.usage_ref.append(
                 Usage(
                     input_tokens=item.usage.prompt_tokens,

@@ -259,7 +259,7 @@ class AnthropicStreamState(StreamState[MessageStreamEvent]):
             current_snapshot=self._current_message_snapshot,
         )
         if item.type == "message_stop":
-            assert not self.usage_ref  # noqa: S101
+            assert not self.usage_ref
             self.usage_ref.append(
                 Usage(
                     input_tokens=item.message.usage.input_tokens,
@@ -269,7 +269,7 @@ class AnthropicStreamState(StreamState[MessageStreamEvent]):
 
     @property
     def current_message_snapshot(self) -> Message[Any]:
-        assert self._current_message_snapshot is not None  # noqa: S101
+        assert self._current_message_snapshot is not None
         # TODO: Possible to return AssistantMessage here?
         return _RawMessage(self._current_message_snapshot.model_dump())
 

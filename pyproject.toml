@@ -108,6 +108,7 @@ ignore = [
     "TD",     # flake8-todos
     "FIX",    # flake8-fixme
     "PL",     # Pylint
+    "S101",   # assert
     # Compatibility with ruff formatter
     "E501",
     "ISC001",
