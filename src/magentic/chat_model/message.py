@@ -1,6 +1,6 @@
 import base64
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Iterable, Sequence
 from functools import cached_property
 from typing import (
     Annotated,
@@ -129,19 +129,23 @@ class ImageUrl(RootModel[str]):
         return self
 
 
-# TODO: TypeVar for content
-class UserMessage(Message[str | list[str | ImageBytes | ImageUrl]]):
+UserMessageContentT = TypeVar(
+    "UserMessageContentT", bound=str | Sequence[str | ImageBytes | ImageUrl]
+)
+
+
+class UserMessage(Message[UserMessageContentT]):
     """A message sent by a user to an LLM chat model."""
 
     role: Literal["user"] = "user"
 
-    def __init__(self, content: str | list[str | ImageBytes | ImageUrl], **data: Any):
+    def __init__(self, content: UserMessageContentT, **data: Any):
         super().__init__(content=content, **data)
 
     def format(self, **kwargs: Any) -> "UserMessage":
         if isinstance(self.content, str):
             return UserMessage(self.content.format(**kwargs))
-        if isinstance(self.content, list):
+        if isinstance(self.content, Iterable):
             return UserMessage([block.format(**kwargs) for block in self.content])
         return UserMessage(self.content.format(**kwargs))
 

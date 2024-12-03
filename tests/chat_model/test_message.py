@@ -69,7 +69,7 @@ def test_message_repr(message, message_repr):
     assert repr(message) == message_repr
 
 
-def test_image_bytes_jpg(image_bytes_jpg: bytes):
+def test_image_bytes_jpg(image_bytes_jpg: bytes) -> None:
     image_bytes = ImageBytes(image_bytes_jpg)
     assert image_bytes.mime_type == "image/jpeg"
     assert image_bytes.as_base64() == snapshot(
@@ -77,7 +77,7 @@ def test_image_bytes_jpg(image_bytes_jpg: bytes):
     )
 
 
-def test_image_bytes_png(image_bytes_png: bytes):
+def test_image_bytes_png(image_bytes_png: bytes) -> None:
     image_bytes = ImageBytes(image_bytes_png)
     assert image_bytes.mime_type == "image/png"
     assert image_bytes.as_base64() == snapshot(
