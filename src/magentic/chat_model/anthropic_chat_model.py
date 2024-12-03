@@ -1,12 +1,9 @@
-import base64
 import json
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequence
 from enum import Enum
 from functools import singledispatch
 from itertools import groupby
 from typing import Any, Generic, TypeVar, cast, overload
-
-import filetype
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
 from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
@@ -103,13 +100,11 @@ def _(message: UserMessage) -> MessageParam:
 
 @message_to_anthropic_message.register(UserImageMessage)
 def _(message: UserImageMessage[Any]) -> MessageParam:
-    if isinstance(message.content, bytes):
-        mime_type = filetype.guess_mime(message.content)
-        base64_image = base64.b64encode(message.content).decode("utf-8")
-    else:
+    if not isinstance(message.content, bytes):
         msg = f"Invalid content type: {type(message.content)}"
         raise TypeError(msg)
 
+    image_bytes = ImageBytes(message.content)
     return {
         "role": AnthropicMessageRole.USER.value,
         "content": [
@@ -117,8 +112,8 @@ def _(message: UserImageMessage[Any]) -> MessageParam:
                 "type": "image",
                 "source": {
                     "type": "base64",
-                    "media_type": mime_type,
-                    "data": base64_image,
+                    "media_type": image_bytes.mime_type,
+                    "data": image_bytes.as_base64(),
                 },
             }
         ],

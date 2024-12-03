@@ -1,10 +1,8 @@
-import base64
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequence
 from enum import Enum
 from functools import singledispatch
 from typing import Any, Generic, Literal, TypeVar, cast, overload
 
-import filetype
 import openai
 from openai.lib.streaming.chat._completions import ChatCompletionStreamState
 from openai.types.chat import (
@@ -107,11 +105,10 @@ def _(message: UserMessage) -> ChatCompletionUserMessageParam:
 
 
 @message_to_openai_message.register(UserImageMessage)
-def _(message: UserImageMessage[Any]) -> ChatCompletionMessageParam:
+def _(message: UserImageMessage[Any]) -> ChatCompletionUserMessageParam:
     if isinstance(message.content, bytes):
-        mime_type = filetype.guess_mime(message.content)
-        base64_image = base64.b64encode(message.content).decode("utf-8")
-        url = f"data:{mime_type};base64,{base64_image}"
+        image_bytes = ImageBytes(message.content)
+        url = f"data:{image_bytes.mime_type};base64,{image_bytes.as_base64()}"
     elif isinstance(message.content, str):
         url = message.content
     else:
