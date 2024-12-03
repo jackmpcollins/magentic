@@ -122,24 +122,6 @@ def _(message: UserImageMessage[Any]) -> ChatCompletionMessageParam:
     }
 
 
-@message_to_openai_message.register(UserImageMessage)
-def _(message: UserImageMessage[Any]) -> ChatCompletionMessageParam:
-    if isinstance(message.content, bytes):
-        mime_type = filetype.guess_mime(message.content)
-        base64_image = base64.b64encode(message.content).decode("utf-8")
-        url = f"data:{mime_type};base64,{base64_image}"
-    elif isinstance(message.content, str):
-        url = message.content
-    else:
-        msg = f"Invalid content type: {type(message.content)}"
-        raise TypeError(msg)
-
-    return {
-        "role": OpenaiMessageRole.USER.value,
-        "content": [{"type": "image_url", "image_url": {"url": url, "detail": "auto"}}],
-    }
-
-
 @message_to_openai_message.register(AssistantMessage)
 def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     if isinstance(message.content, str):
