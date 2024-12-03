@@ -43,7 +43,9 @@ try:
     from anthropic.lib.streaming import MessageStreamEvent
     from anthropic.lib.streaming._messages import accumulate_event
     from anthropic.types import (
+        ImageBlockParam,
         MessageParam,
+        TextBlockParam,
         ToolChoiceParam,
         ToolChoiceToolParam,
         ToolParam,
@@ -76,7 +78,7 @@ def _(message: UserMessage) -> MessageParam:
     if isinstance(message.content, str):
         return {"role": AnthropicMessageRole.USER.value, "content": message.content}
     if isinstance(message.content, list):
-        content = []
+        content: list[TextBlockParam | ImageBlockParam] = []
         for block in message.content:
             if isinstance(block, str):
                 content.append({"type": "text", "text": block})

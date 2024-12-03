@@ -9,11 +9,13 @@ import openai
 from openai.lib.streaming.chat._completions import ChatCompletionStreamState
 from openai.types.chat import (
     ChatCompletionChunk,
+    ChatCompletionContentPartParam,
     ChatCompletionMessageParam,
     ChatCompletionNamedToolChoiceParam,
     ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
+    ChatCompletionUserMessageParam,
 )
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
@@ -78,11 +80,11 @@ def _(message: SystemMessage) -> ChatCompletionMessageParam:
 
 
 @message_to_openai_message.register
-def _(message: UserMessage) -> ChatCompletionMessageParam:
+def _(message: UserMessage) -> ChatCompletionUserMessageParam:
     if isinstance(message.content, str):
         return {"role": OpenaiMessageRole.USER.value, "content": message.content}
     if isinstance(message.content, list):
-        content = []
+        content: list[ChatCompletionContentPartParam] = []
         for block in message.content:
             if isinstance(block, str):
                 content.append({"type": "text", "text": block})
