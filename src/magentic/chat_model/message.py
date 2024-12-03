@@ -1,6 +1,7 @@
 import base64
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable
+from functools import cached_property
 from typing import (
     Annotated,
     Any,
@@ -15,7 +16,7 @@ from typing import (
 )
 
 import filetype
-from pydantic import BaseModel, Field, PrivateAttr, RootModel
+from pydantic import BaseModel, Field, PrivateAttr, RootModel, model_validator
 from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
@@ -100,18 +101,25 @@ _IMAGE_MIME_TYPES: tuple[ImageMimeType, ...] = get_args(ImageMimeType)
 
 
 class ImageBytes(RootModel[bytes]):
-    @property
-    def mime_type(self) -> ImageMimeType | None:
+    @cached_property
+    def mime_type(self) -> ImageMimeType:
         mimetype: str | None = filetype.guess_mime(self.root)
-        if mimetype in _IMAGE_MIME_TYPES:
-            return cast(ImageMimeType, mimetype)
-        return None
+        assert mimetype in _IMAGE_MIME_TYPES
+        return cast(ImageMimeType, mimetype)
 
     def as_base64(self) -> str:
         return base64.b64encode(self.root).decode("utf-8")
 
     def format(self, **kwargs: Any) -> "ImageBytes":
         del kwargs
+        return self
+
+    @model_validator(mode="after")
+    def _is_image_bytes(self) -> Self:
+        mimetype: str | None = filetype.guess_mime(self.root)
+        if mimetype not in _IMAGE_MIME_TYPES:
+            msg = f"Unsupported image MIME type: {mimetype!r}"
+            raise ValueError(msg)
         return self
 
 
