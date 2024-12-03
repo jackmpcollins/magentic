@@ -1,14 +1,13 @@
 import base64
 from abc import ABC, abstractmethod
+from collections.abc import Awaitable
 from typing import (
     Annotated,
     Any,
-    Awaitable,
     Generic,
     Literal,
     NamedTuple,
     TypeVar,
-    Union,
     cast,
     get_origin,
     overload,
@@ -236,13 +235,8 @@ class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
 
 
 AnyMessage = Annotated[
-    Union[
-        SystemMessage,
-        UserMessage,
-        AssistantMessage[Any],
-        ToolResultMessage[Any],
-        # Do not include FunctionResultMessage which also uses "tool" role
-    ],
+    # Do not include FunctionResultMessage which also uses "tool" role
+    SystemMessage | UserMessage | AssistantMessage[Any] | ToolResultMessage[Any],
     Field(discriminator="role"),
 ]
 """Union of all message types."""

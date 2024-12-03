@@ -1,9 +1,10 @@
 import asyncio
+import collections
 import textwrap
-from collections.abc import AsyncIterable, Iterable
+from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from dataclasses import dataclass
 from itertools import chain, dropwhile
-from typing import Any, AsyncIterator, Callable, Iterator, TypeVar
+from typing import Any, TypeVar
 
 T = TypeVar("T")
 
@@ -84,6 +85,17 @@ async def atakewhile(
         yield item
 
 
+def consume(iterator: Iterable[T]) -> None:
+    """Consume an iterator."""
+    collections.deque(iterator, maxlen=0)
+
+
+async def aconsume(aiterable: AsyncIterable[T]) -> None:
+    """Async version of `consume`."""
+    async for _ in aiterable:
+        pass
+
+
 async def agroupby(
     aiterable: AsyncIterable[T], key: Callable[[T], object]
 ) -> AsyncIterator[tuple[object, AsyncIterator[T]]]:
@@ -103,10 +115,11 @@ async def agroupby(
     while transition:
         transition_item = transition.pop()
         group_key = key(transition_item)
-        yield (
-            group_key,
-            agroup(achain(async_iter([transition_item]), aiterator), group_key),
-        )
+        aiterator = achain(async_iter([transition_item]), aiterator)
+        yield (group_key, agroup(aiterator, group_key))
+        # Finish the group to allow advancing to the next one
+        if not transition:
+            await aconsume(agroup(aiterator, group_key))
 
 
 @dataclass
@@ -225,6 +238,8 @@ class CachedAsyncIterable(AsyncIterable[T]):
             yield item
 
 
+# TODO: Add close method to close the underlying stream if chunks is a stream
+# TODO: Make it a context manager to automatically close
 class StreamedStr(Iterable[str]):
     """A string that is generated in chunks."""
 

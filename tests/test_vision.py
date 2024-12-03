@@ -13,12 +13,12 @@ from magentic.chatprompt import chatprompt
 from magentic.vision import UserImageMessage
 
 
-@pytest.fixture()
+@pytest.fixture
 def image_bytes_jpg() -> bytes:
     return Path("tests/data/python-powered.jpg").read_bytes()
 
 
-@pytest.fixture()
+@pytest.fixture
 def image_bytes_png() -> bytes:
     return Path("tests/data/python-powered.png").read_bytes()
 
@@ -91,7 +91,7 @@ def test_chatprompt_with_user_image_message(image_bytes_jpg):
     @chatprompt(
         UserMessage("Describe this image in one word."),
         UserImageMessage(image_bytes_jpg),
-        model=OpenaiChatModel("gpt-4-vision-preview"),
+        model=OpenaiChatModel("gpt-4o"),
     )
     def describe_image() -> str: ...
 

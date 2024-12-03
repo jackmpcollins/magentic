@@ -1,0 +1,123 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "What is the capital of Ireland?"}],
+      "model": "gpt-4o", "stream": true, "stream_options": {"include_usage": true}}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '156'
+      content-type:
+      - application/json
+      host:
+      - api.openai.com
+      user-agent:
+      - OpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"chatcmpl-AU9UYHrU2QpCwERUUANaEXRiNRuGh","object":"chat.completion.chunk","created":1731749690,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_45cf54deae","choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UYHrU2QpCwERUUANaEXRiNRuGh","object":"chat.completion.chunk","created":1731749690,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_45cf54deae","choices":[{"index":0,"delta":{"content":"The"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UYHrU2QpCwERUUANaEXRiNRuGh","object":"chat.completion.chunk","created":1731749690,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_45cf54deae","choices":[{"index":0,"delta":{"content":"
+        capital"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UYHrU2QpCwERUUANaEXRiNRuGh","object":"chat.completion.chunk","created":1731749690,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_45cf54deae","choices":[{"index":0,"delta":{"content":"
+        of"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UYHrU2QpCwERUUANaEXRiNRuGh","object":"chat.completion.chunk","created":1731749690,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_45cf54deae","choices":[{"index":0,"delta":{"content":"
+        Ireland"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UYHrU2QpCwERUUANaEXRiNRuGh","object":"chat.completion.chunk","created":1731749690,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_45cf54deae","choices":[{"index":0,"delta":{"content":"
+        is"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UYHrU2QpCwERUUANaEXRiNRuGh","object":"chat.completion.chunk","created":1731749690,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_45cf54deae","choices":[{"index":0,"delta":{"content":"
+        Dublin"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UYHrU2QpCwERUUANaEXRiNRuGh","object":"chat.completion.chunk","created":1731749690,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_45cf54deae","choices":[{"index":0,"delta":{"content":"."},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UYHrU2QpCwERUUANaEXRiNRuGh","object":"chat.completion.chunk","created":1731749690,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_45cf54deae","choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}],"usage":null}
+
+
+        data: {"id":"chatcmpl-AU9UYHrU2QpCwERUUANaEXRiNRuGh","object":"chat.completion.chunk","created":1731749690,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_45cf54deae","choices":[],"usage":{"prompt_tokens":14,"completion_tokens":7,"total_tokens":21,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e367ccdea42689b-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sat, 16 Nov 2024 09:34:50 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-processing-ms:
+      - '232'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-ratelimit-limit-requests:
+      - '500'
+      x-ratelimit-limit-tokens:
+      - '30000'
+      x-ratelimit-remaining-requests:
+      - '499'
+      x-ratelimit-remaining-tokens:
+      - '29975'
+      x-ratelimit-reset-requests:
+      - 120ms
+      x-ratelimit-reset-tokens:
+      - 50ms
+      x-request-id:
+      - req_9e40beeb0e0f5d292528a67228119422
+    status:
+      code: 200
+      message: OK
+version: 1

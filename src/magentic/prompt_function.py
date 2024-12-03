@@ -1,18 +1,8 @@
 import copy
 import inspect
+from collections.abc import Awaitable, Callable, Sequence
 from functools import update_wrapper
-from typing import (
-    Any,
-    Awaitable,
-    Callable,
-    Generic,
-    ParamSpec,
-    Protocol,
-    Sequence,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import Any, Generic, ParamSpec, Protocol, TypeVar, cast, overload
 
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
@@ -151,7 +141,8 @@ def prompt(
     Examples
     --------
     >>> @prompt("Add more dudeness to: {phrase}")
-    >>> def dudeify(phrase: str) -> str: ...  # No function body as this is never executed
+    >>> def dudeify(phrase: str) -> str: ...
+    >>> # No function body as this is never executed
     >>>
     >>> dudeify("Hello, how are you?")
     "Hey, dude! What's up? How's it going, my man?"

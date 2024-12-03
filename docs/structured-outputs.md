@@ -46,7 +46,40 @@ class Superhero(BaseModel):
 def create_superhero(name: str) -> Superhero: ...
 ```
 
+### ConfigDict
+
+Pydantic also supports configuring the `BaseModel` by setting the `model_config` attribute. Magentic extends pydantic's `ConfigDict` class to add the following additional configuration options
+
+- `openai_strict: bool` Indicates whether to use [OpenAI's Structured Outputs feature](https://platform.openai.com/docs/guides/structured-outputs/introduction).
+
+See the [pydantic Configuration docs](https://docs.pydantic.dev/latest/api/config/) for the inherited configuration options.
+
+```python hl_lines="1 6"
+from magentic import prompt, ConfigDict
+from pydantic import BaseModel
+
+
+class Superhero(BaseModel):
+    model_config = ConfigDict(openai_strict=True)
+
+    name: str
+    age: int
+    power: str
+    enemies: list[str]
+
+
+@prompt("Create a Superhero named {name}.")
+def create_superhero(name: str) -> Superhero: ...
+
+
+create_superhero("Garden Man")
+```
+
 ### JSON Schema
+
+!!! note "OpenAI Structured Outputs"
+
+    Setting `openai_strict=True` results in a different JSON schema than that from `.model_json_schema()` being sent to the LLM. Use `openai.pydantic_function_tool(Superhero)` to generate the JSON schema in this case.
 
 You can generate the JSON schema for the pydantic model using the `.model_json_schema()` method. This is what is sent to the LLM.
 
@@ -114,6 +147,10 @@ print(hero_defeated)
 ```
 
 ## Chain-of-Thought Prompting
+
+!!! warning "StreamedResponse"
+
+    It is now recommended to use `StreamedResponse` for chain-of-thought prompting, as this uses the LLM provider's native chain-of-thought capabilities. See [StreamedResponse](streaming.md#streamedresponse) for more information.
 
 Using a simple Python type as the return annotation might result in poor results as the LLM has no time to arrange its thoughts before answering. To allow the LLM to work through this "chain of thought" you can instead return a pydantic model with initial fields for explaining the final response.
 

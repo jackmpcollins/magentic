@@ -30,7 +30,6 @@ def test_retry_chat_model_complete_openai():
     assert message.content.name == "Ireland"
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_retry_chat_model_acomplete_openai():
     def assert_is_ireland(v):
@@ -73,7 +72,6 @@ def test_retry_chat_model_complete_anthropic():
     assert message.content.name == "Ireland"
 
 
-@pytest.mark.asyncio
 @pytest.mark.anthropic
 async def test_retry_chat_model_acomplete_anthropic():
     def assert_is_ireland(v):
@@ -116,7 +114,6 @@ def test_retry_chat_model_complete_litellm_openai():
     assert message.content.name == "Ireland"
 
 
-@pytest.mark.asyncio
 @pytest.mark.litellm_openai
 async def test_retry_chat_model_acomplete_litellm_openai():
     def assert_is_ireland(v):

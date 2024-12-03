@@ -1,0 +1,100 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Return the numbers 1 to 5"}],
+      "model": "mistral-large-latest", "stream": true, "tool_choice": "any", "tools":
+      [{"type": "function", "function": {"name": "return_list_of_int", "parameters":
+      {"properties": {"value": {"items": {"type": "integer"}, "title": "Value", "type":
+      "array"}}, "required": ["value"], "type": "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '369'
+      content-type:
+      - application/json
+      host:
+      - api.mistral.ai
+      user-agent:
+      - AsyncOpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.mistral.ai/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"cd4105f0c81b4b449d44ef17d0f62719","object":"chat.completion.chunk","created":1731829460,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+
+        data: {"id":"cd4105f0c81b4b449d44ef17d0f62719","object":"chat.completion.chunk","created":1731829460,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"tool_calls":[{"id":"ZGHIxPEiQ","function":{"name":"return_list_of_int","arguments":"{\"value\":
+        [1, 2, 3, 4, 5]}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":84,"total_tokens":121,"completion_tokens":37}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e3e184e580b964a-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 07:44:21 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-origin:
+      - '*'
+      alt-svc:
+      - h3=":443"; ma=86400
+      ratelimitbysize-limit:
+      - '2000000'
+      ratelimitbysize-query-cost:
+      - '32008'
+      ratelimitbysize-remaining:
+      - '1615883'
+      ratelimitbysize-reset:
+      - '40'
+      x-envoy-upstream-service-time:
+      - '1297'
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - 2086cf53ed21ed5aab095628ec695b29
+      x-kong-upstream-latency:
+      - '1297'
+      x-ratelimitbysize-limit-minute:
+      - '2000000'
+      x-ratelimitbysize-limit-month:
+      - '10000000000'
+      x-ratelimitbysize-remaining-minute:
+      - '1615883'
+      x-ratelimitbysize-remaining-month:
+      - '9998431519'
+    status:
+      code: 200
+      message: OK
+version: 1

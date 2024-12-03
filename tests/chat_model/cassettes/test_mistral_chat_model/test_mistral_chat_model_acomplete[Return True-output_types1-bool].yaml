@@ -1,0 +1,99 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Return True"}], "model": "mistral-large-latest",
+      "stream": true, "tool_choice": "any", "tools": [{"type": "function", "function":
+      {"name": "return_bool", "parameters": {"properties": {"value": {"title": "Value",
+      "type": "boolean"}}, "required": ["value"], "type": "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '320'
+      content-type:
+      - application/json
+      host:
+      - api.mistral.ai
+      user-agent:
+      - AsyncOpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.mistral.ai/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"9a17fad690f542adb62bbfbe0bee2afb","object":"chat.completion.chunk","created":1731829459,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+
+        data: {"id":"9a17fad690f542adb62bbfbe0bee2afb","object":"chat.completion.chunk","created":1731829459,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"tool_calls":[{"id":"EPXkQWLC5","function":{"name":"return_bool","arguments":"{\"value\":
+        true}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":65,"total_tokens":84,"completion_tokens":19}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-RAY:
+      - 8e3e18459a4fcf0a-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 07:44:20 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-origin:
+      - '*'
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      ratelimitbysize-limit:
+      - '2000000'
+      ratelimitbysize-query-cost:
+      - '32003'
+      ratelimitbysize-remaining:
+      - '1679894'
+      ratelimitbysize-reset:
+      - '42'
+      x-envoy-upstream-service-time:
+      - '1031'
+      x-kong-proxy-latency:
+      - '0'
+      x-kong-request-id:
+      - b16bd0599fbdb21cbe7a5718c24f1d71
+      x-kong-upstream-latency:
+      - '1057'
+      x-ratelimitbysize-limit-minute:
+      - '2000000'
+      x-ratelimitbysize-limit-month:
+      - '10000000000'
+      x-ratelimitbysize-remaining-minute:
+      - '1679894'
+      x-ratelimitbysize-remaining-month:
+      - '9998495530'
+    status:
+      code: 200
+      message: OK
+version: 1

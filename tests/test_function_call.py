@@ -1,5 +1,5 @@
 import inspect
-from typing import Awaitable
+from typing import TYPE_CHECKING
 
 import pytest
 from typing_extensions import assert_type
@@ -10,6 +10,9 @@ from magentic.function_call import (
     ParallelFunctionCall,
 )
 from magentic.streaming import async_iter
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
 
 
 def plus(a: int, b: int) -> int:
@@ -66,7 +69,6 @@ def test_function_call_arguments(function_call, arguments):
     assert function_call.arguments == arguments
 
 
-@pytest.mark.asyncio
 async def test_function_call_async_function():
     async def async_plus(a: int, b: int) -> int:
         return a + b
@@ -97,7 +99,6 @@ def test_parallel_function_call_iter():
     assert list(parallel_function_call) == function_calls
 
 
-@pytest.mark.asyncio
 async def test_async_parallel_function_call_call():
     function_calls: list[FunctionCall[int | Awaitable[int]]] = [
         FunctionCall(plus, a=1, b=2),
@@ -110,7 +111,6 @@ async def test_async_parallel_function_call_call():
     assert result == (3, 7)
 
 
-@pytest.mark.asyncio
 async def test_async_parallel_function_call_aiter():
     function_calls: list[FunctionCall[int | Awaitable[int]]] = [
         FunctionCall(plus, a=1, b=2),

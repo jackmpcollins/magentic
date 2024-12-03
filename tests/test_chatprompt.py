@@ -122,7 +122,6 @@ def test_chatprompt_decorator_docstring():
     assert getdoc(func) == "This is the docstring."
 
 
-@pytest.mark.asyncio
 async def test_asyncchatpromptfunction_call():
     mock_model = AsyncMock()
     mock_model.acomplete.return_value = AssistantMessage(content="Hello!")
@@ -143,7 +142,6 @@ async def test_asyncchatpromptfunction_call():
     assert mock_model.acomplete.call_args.kwargs["stop"] == ["stop"]
 
 
-@pytest.mark.asyncio
 async def test_async_chatprompt_decorator_docstring():
     @chatprompt(UserMessage("This is a user message."))
     async def func(one: int) -> str:

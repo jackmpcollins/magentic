@@ -1,0 +1,99 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Return True"}], "model": "mistral-large-latest",
+      "stream": true, "tool_choice": "any", "tools": [{"type": "function", "function":
+      {"name": "return_bool", "parameters": {"properties": {"value": {"title": "Value",
+      "type": "boolean"}}, "required": ["value"], "type": "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '320'
+      content-type:
+      - application/json
+      host:
+      - api.mistral.ai
+      user-agent:
+      - OpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.mistral.ai/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"0d5c78d518524c869fc4800d51d8cb30","object":"chat.completion.chunk","created":1731829445,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+
+
+        data: {"id":"0d5c78d518524c869fc4800d51d8cb30","object":"chat.completion.chunk","created":1731829445,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"tool_calls":[{"id":"Hfc39Hu7S","function":{"name":"return_bool","arguments":"{\"value\":
+        true}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":65,"total_tokens":84,"completion_tokens":19}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8e3e17f198b8fa8e-SJC
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Sun, 17 Nov 2024 07:44:06 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-origin:
+      - '*'
+      alt-svc:
+      - h3=":443"; ma=86400
+      ratelimitbysize-limit:
+      - '2000000'
+      ratelimitbysize-query-cost:
+      - '32003'
+      ratelimitbysize-remaining:
+      - '1967997'
+      ratelimitbysize-reset:
+      - '55'
+      x-envoy-upstream-service-time:
+      - '734'
+      x-kong-proxy-latency:
+      - '1'
+      x-kong-request-id:
+      - da05c75e685ff125d304b0668c405936
+      x-kong-upstream-latency:
+      - '735'
+      x-ratelimitbysize-limit-minute:
+      - '2000000'
+      x-ratelimitbysize-limit-month:
+      - '10000000000'
+      x-ratelimitbysize-remaining-minute:
+      - '1967997'
+      x-ratelimitbysize-remaining-month:
+      - '9998783633'
+    status:
+      code: 200
+      message: OK
+version: 1

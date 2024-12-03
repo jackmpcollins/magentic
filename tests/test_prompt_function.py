@@ -1,7 +1,8 @@
 """Tests for PromptFunction."""
 
+from collections.abc import Awaitable
 from inspect import getdoc
-from typing import Annotated, Awaitable
+from typing import Annotated
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -202,7 +203,6 @@ def test_decorator_max_retries():
     assert country.name == "Ireland"
 
 
-@pytest.mark.asyncio
 async def test_async_promptfunction_call():
     mock_model = AsyncMock()
     mock_model.acomplete.return_value = AssistantMessage(content="Hello!")
@@ -223,7 +223,6 @@ async def test_async_promptfunction_call():
     assert mock_model.acomplete.call_args.kwargs["stop"] == ["stop"]
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_async_decorator_return_str():
     @prompt("What is the capital of {country}? Name only. No punctuation.")
@@ -234,7 +233,6 @@ async def test_async_decorator_return_str():
     assert isinstance(output, str)
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_async_decorator_return_async_streamed_str():
     @prompt("What is the capital of {country}?")
@@ -244,7 +242,6 @@ async def test_async_decorator_return_async_streamed_str():
     assert isinstance(output, AsyncStreamedStr)
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_async_decorator_max_retries():
     def assert_is_ireland(v):
@@ -263,7 +260,6 @@ async def test_async_decorator_max_retries():
     assert country.name == "Ireland"
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_async_decorator_return_function_call():
     def plus(a: int, b: int) -> int:
@@ -278,7 +274,6 @@ async def test_async_decorator_return_function_call():
     assert isinstance(func_result, int)
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_async_decorator_return_async_function_call():
     async def async_plus(a: int, b: int) -> int:
@@ -292,7 +287,6 @@ async def test_async_decorator_return_async_function_call():
     assert isinstance(await output(), int)
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_decorator_return_async_parallel_function_call():
     def plus(a: int, b: int) -> int:
@@ -324,6 +318,6 @@ def test_decorator_with_context_manager(monkeypatch):
 
     assert say_hello.model.model == get_settings().openai_model  # type: ignore[attr-defined]
 
-    with OpenaiChatModel("gpt-3.5-turbo"):
-        assert say_hello.model.model == "gpt-3.5-turbo"  # type: ignore[attr-defined]
+    with OpenaiChatModel("gpt-4o"):
+        assert say_hello.model.model == "gpt-4o"  # type: ignore[attr-defined]
         assert say_hello_gpt4.model.model == "gpt-4"  # type: ignore[attr-defined]

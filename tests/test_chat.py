@@ -1,4 +1,4 @@
-from typing import Awaitable
+from typing import TYPE_CHECKING
 
 import pytest
 
@@ -15,6 +15,9 @@ from magentic.function_call import (
 )
 from magentic.prompt_function import prompt
 from magentic.streaming import async_iter
+
+if TYPE_CHECKING:
+    from collections.abc import Awaitable
 
 
 def test_chat_from_prompt():
@@ -53,7 +56,6 @@ def test_chat_submit():
     assert isinstance(chat2.messages[1], AssistantMessage)
 
 
-@pytest.mark.asyncio
 @pytest.mark.openai
 async def test_chat_asubmit():
     chat1 = Chat(
@@ -113,7 +115,6 @@ def test_exec_function_call_raises():
         chat = chat.exec_function_call()
 
 
-@pytest.mark.asyncio
 async def test_aexec_function_call_async_function():
     async def aplus(a: int, b: int) -> int:
         return a + b
@@ -131,7 +132,6 @@ async def test_aexec_function_call_async_function():
     assert chat.messages[2] == FunctionResultMessage(3, aplus_1_2)
 
 
-@pytest.mark.asyncio
 async def test_aexec_function_call_not_async_function():
     def plus(a: int, b: int) -> int:
         return a + b
@@ -149,7 +149,6 @@ async def test_aexec_function_call_not_async_function():
     assert chat.messages[2] == FunctionResultMessage(3, plus_1_2)
 
 
-@pytest.mark.asyncio
 async def test_aexec_function_call_async_parallel_function_call():
     def plus(a: int, b: int) -> int:
         return a + b
@@ -173,7 +172,6 @@ async def test_aexec_function_call_async_parallel_function_call():
     assert chat.messages[3] == FunctionResultMessage(7, plus_3_4)
 
 
-@pytest.mark.asyncio
 async def test_aexec_function_call_raises():
     async def aplus(a: int, b: int) -> int:
         return a + b

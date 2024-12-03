@@ -3,6 +3,7 @@ from typing import Annotated
 import pytest
 from pydantic import AfterValidator, BaseModel
 
+from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
 from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.message import Message, Usage, UserMessage
@@ -123,6 +124,27 @@ def test_anthropic_chat_model_complete_parallel_function_call():
     assert len(list(message.content)) == 2
 
 
+@pytest.mark.anthropic
+def test_anthropic_chat_model_complete_streamed_response():
+    def get_weather(location: str) -> None:
+        """Get the weather for a location."""
+
+    chat_model = AnthropicChatModel("claude-3-opus-20240229")
+    message = chat_model.complete(
+        messages=[UserMessage("Pick a random city. Then get its weather.")],
+        functions=[get_weather],
+        output_types=[StreamedResponse],
+    )
+    assert isinstance(message.content, StreamedResponse)
+    response_items = list(message.content)
+    assert len(response_items) == 2
+    streamed_str, function_call = response_items
+    assert isinstance(streamed_str, StreamedStr)
+    assert len(streamed_str.to_string()) > 1  # Check StreamedStr was cached
+    assert isinstance(function_call, FunctionCall)
+    assert function_call() is None  # Check FunctionCall is successfully called
+
+
 @pytest.mark.parametrize(
     ("prompt", "output_types", "expected_output_type"),
     [
@@ -132,7 +154,6 @@ def test_anthropic_chat_model_complete_parallel_function_call():
         ("List three fruits", [list[str]], list),
     ],
 )
-@pytest.mark.asyncio
 @pytest.mark.anthropic
 async def test_anthropic_chat_model_acomplete(
     prompt, output_types, expected_output_type
@@ -144,7 +165,6 @@ async def test_anthropic_chat_model_acomplete(
     assert isinstance(message.content, expected_output_type)
 
 
-@pytest.mark.asyncio
 @pytest.mark.anthropic
 async def test_anthropic_chat_model_acomplete_usage():
     chat_model = AnthropicChatModel("claude-3-haiku-20240307")
@@ -157,7 +177,6 @@ async def test_anthropic_chat_model_acomplete_usage():
     assert message.usage.output_tokens > 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.anthropic
 async def test_anthropic_chat_model_acomplete_usage_structured_output():
     chat_model = AnthropicChatModel("claude-3-haiku-20240307")
@@ -169,7 +188,6 @@ async def test_anthropic_chat_model_acomplete_usage_structured_output():
     assert message.usage.output_tokens > 0
 
 
-@pytest.mark.asyncio
 @pytest.mark.anthropic
 async def test_anthropic_chat_model_acomplete_raises_tool_schema_parse_error():
     def raise_error(v):
@@ -186,7 +204,6 @@ async def test_anthropic_chat_model_acomplete_raises_tool_schema_parse_error():
         )
 
 
-@pytest.mark.asyncio
 @pytest.mark.anthropic
 async def test_anthropic_chat_model_acomplete_function_call():
     def plus(a: int, b: int) -> int:
@@ -202,7 +219,6 @@ async def test_anthropic_chat_model_acomplete_function_call():
     assert isinstance(message.content, FunctionCall)
 
 
-@pytest.mark.asyncio
 @pytest.mark.anthropic
 async def test_anthropic_chat_model_acomplete_async_parallel_function_call():
     def plus(a: int, b: int) -> int:
@@ -225,3 +241,24 @@ async def test_anthropic_chat_model_acomplete_async_parallel_function_call():
     )
     assert isinstance(message.content, AsyncParallelFunctionCall)
     assert len([x async for x in message.content]) == 2
+
+
+@pytest.mark.anthropic
+async def test_anthropic_chat_model_acomplete_async_streamed_response():
+    def get_weather(location: str) -> None:
+        """Get the weather for a location."""
+
+    chat_model = AnthropicChatModel("claude-3-opus-20240229")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Pick a random city. Then get its weather.")],
+        functions=[get_weather],
+        output_types=[AsyncStreamedResponse],
+    )
+    assert isinstance(message.content, AsyncStreamedResponse)
+    response_items = [x async for x in message.content]
+    assert len(response_items) == 2
+    streamed_str, function_call = response_items
+    assert isinstance(streamed_str, AsyncStreamedStr)
+    assert len(await streamed_str.to_string()) > 1  # Check AsyncStreamedStr was cached
+    assert isinstance(function_call, FunctionCall)
+    assert function_call() is None  # Check FunctionCall is successfully called

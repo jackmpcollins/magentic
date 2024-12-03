@@ -1,15 +1,7 @@
 import inspect
 import types
-from collections.abc import Mapping, Sequence
-from typing import (
-    Any,
-    Iterable,
-    TypeGuard,
-    TypeVar,
-    Union,
-    get_args,
-    get_origin,
-)
+from collections.abc import Iterable, Mapping, Sequence
+from typing import Any, TypeGuard, TypeVar, Union, get_args, get_origin
 
 
 def is_union_type(type_: type) -> bool:
@@ -73,7 +65,7 @@ def name_type(type_: type) -> str:
         return name_type(origin) + "_" + "_".join(name_type(arg) for arg in args)
 
     if name := getattr(type_, "__name__", None):
-        assert isinstance(name, str)  # noqa: S101
+        assert isinstance(name, str)
 
         if len(args) == 1:
             return f"{name.lower()}_of_{name_type(args[0])}"

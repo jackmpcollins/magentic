@@ -1,19 +1,14 @@
 import asyncio
 import inspect
-from typing import (
-    Any,
+from collections.abc import (
     AsyncIterable,
     AsyncIterator,
     Awaitable,
     Callable,
-    Generic,
     Iterable,
     Iterator,
-    ParamSpec,
-    Tuple,
-    TypeVar,
-    cast,
 )
+from typing import Any, Generic, ParamSpec, TypeVar, cast
 from uuid import uuid4
 
 from magentic.logger import logfire
@@ -24,8 +19,10 @@ P = ParamSpec("P")
 
 
 def _create_unique_id() -> str:
-    # Mistral has max length of 9 chars for tool call IDs, and OpenAI 29 chars
-    return uuid4().hex[:9]
+    # Mistral requires length of 9 chars for tool call IDs
+    # OpenAI allows max length of 29 chars
+    # Take last 9 chars so testing can use incremental IDs
+    return uuid4().hex[-9:]
 
 
 class FunctionCall(Generic[T]):
@@ -99,7 +96,7 @@ class AsyncParallelFunctionCall(Generic[T]):
     def __init__(self, function_calls: AsyncIterable[FunctionCall[Awaitable[T] | T]]):
         self._function_calls = CachedAsyncIterable(function_calls)
 
-    async def __call__(self) -> Tuple[T, ...]:
+    async def __call__(self) -> tuple[T, ...]:
         with logfire.span("Executing async parallel function call"):
             tasks_and_results: list[asyncio.Task[T] | T] = []
             async for function_call in self._function_calls:
