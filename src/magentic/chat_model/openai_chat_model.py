@@ -1,11 +1,5 @@
 import base64
-from collections.abc import (
-    AsyncIterator,
-    Callable,
-    Iterable,
-    Iterator,
-    Sequence,
-)
+from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequence
 from enum import Enum
 from functools import singledispatch
 from typing import Any, Generic, Literal, TypeVar, cast, overload
@@ -22,11 +16,9 @@ from openai.types.chat import (
     ChatCompletionToolParam,
 )
 
-from magentic.chat_model.base import (
-    ChatModel,
-    aparse_stream,
-    parse_stream,
-)
+from magentic._parsing import contains_parallel_function_call_type, contains_string_type
+from magentic._streamed_response import StreamedResponse
+from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
@@ -51,17 +43,8 @@ from magentic.chat_model.stream import (
     StreamParser,
     StreamState,
 )
-from magentic.function_call import (
-    AsyncParallelFunctionCall,
-    FunctionCall,
-    ParallelFunctionCall,
-    _create_unique_id,
-)
-from magentic.streaming import (
-    AsyncStreamedStr,
-    StreamedStr,
-)
-from magentic.typing import is_any_origin_subclass
+from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
+from magentic.streaming import StreamedStr
 from magentic.vision import UserImageMessage
 
 
@@ -81,9 +64,9 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
 
 @message_to_openai_message.register(_RawMessage)
 def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
-    assert isinstance(message.content, dict)  # noqa: S101
-    assert "role" in message.content  # noqa: S101
-    assert "content" in message.content  # noqa: S101
+    assert isinstance(message.content, dict)
+    assert "role" in message.content
+    assert "content" in message.content
     return cast(ChatCompletionMessageParam, message.content)
 
 
@@ -155,6 +138,32 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
                     },
                 }
                 for function_call in message.content
+            ],
+        }
+
+    if isinstance(message.content, StreamedResponse):
+        content: list[str] = []
+        function_calls: list[FunctionCall[Any]] = []
+        for item in message.content:
+            if isinstance(item, StreamedStr):
+                content.append(str(item))
+            elif isinstance(item, FunctionCall):
+                function_calls.append(item)
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": " ".join(content),
+            "tool_calls": [
+                {
+                    "id": function_call._unique_id,
+                    "type": "function",
+                    "function": {
+                        "name": FunctionCallFunctionSchema(function_call.function).name,
+                        "arguments": FunctionCallFunctionSchema(
+                            function_call.function
+                        ).serialize_args(function_call),
+                    },
+                }
+                for function_call in function_calls
             ],
         }
 
@@ -394,10 +403,10 @@ class OpenaiChatModel(ChatModel):
     def _get_tool_choice(
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
-        allow_string_output: bool,
+        output_types: Iterable[type],
     ) -> ChatCompletionToolChoiceOptionParam | openai.NotGiven:
         """Create the tool choice argument."""
-        if allow_string_output:
+        if contains_string_type(output_types):
             return openai.NOT_GIVEN
         if len(tool_schemas) == 1:
             return tool_schemas[0].as_tool_choice()
@@ -410,9 +419,7 @@ class OpenaiChatModel(ChatModel):
             return openai.NOT_GIVEN
         if self.api_type == "azure":
             return openai.NOT_GIVEN
-        if is_any_origin_subclass(output_types, ParallelFunctionCall):
-            return openai.NOT_GIVEN
-        if is_any_origin_subclass(output_types, AsyncParallelFunctionCall):
+        if contains_parallel_function_call_type(output_types):
             return openai.NOT_GIVEN
         return False
 
@@ -452,8 +459,6 @@ class OpenaiChatModel(ChatModel):
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        allow_string_output = is_any_origin_subclass(output_types, (str, StreamedStr))
-
         response: Iterator[ChatCompletionChunk] = self._client.chat.completions.create(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
@@ -467,7 +472,7 @@ class OpenaiChatModel(ChatModel):
             temperature=_if_given(self.temperature),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                tool_schemas=tool_schemas, output_types=output_types
             ),
             parallel_tool_calls=self._get_parallel_tool_calls(
                 tools_specified=bool(tool_schemas), output_types=output_types
@@ -518,10 +523,6 @@ class OpenaiChatModel(ChatModel):
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        allow_string_output = is_any_origin_subclass(
-            output_types, (str, AsyncStreamedStr)
-        )
-
         response: AsyncIterator[
             ChatCompletionChunk
         ] = await self._async_client.chat.completions.create(
@@ -537,7 +538,7 @@ class OpenaiChatModel(ChatModel):
             temperature=_if_given(self.temperature),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                tool_schemas=tool_schemas, output_types=output_types
             ),
             parallel_tool_calls=self._get_parallel_tool_calls(
                 tools_specified=bool(tool_schemas), output_types=output_types

@@ -2,15 +2,7 @@ import copy
 import inspect
 from collections.abc import Awaitable, Callable, Sequence
 from functools import update_wrapper
-from typing import (
-    Any,
-    Generic,
-    ParamSpec,
-    Protocol,
-    TypeVar,
-    cast,
-    overload,
-)
+from typing import Any, Generic, ParamSpec, Protocol, TypeVar, cast, overload
 
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel

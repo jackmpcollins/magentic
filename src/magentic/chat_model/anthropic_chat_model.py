@@ -1,12 +1,6 @@
 import base64
 import json
-from collections.abc import (
-    AsyncIterator,
-    Callable,
-    Iterable,
-    Iterator,
-    Sequence,
-)
+from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequence
 from enum import Enum
 from functools import singledispatch
 from itertools import groupby
@@ -14,11 +8,8 @@ from typing import Any, Generic, TypeVar, cast, overload
 
 import filetype
 
-from magentic.chat_model.base import (
-    ChatModel,
-    aparse_stream,
-    parse_stream,
-)
+from magentic._parsing import contains_parallel_function_call_type, contains_string_type
+from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
@@ -43,24 +34,19 @@ from magentic.chat_model.stream import (
     StreamParser,
     StreamState,
 )
-from magentic.function_call import (
-    FunctionCall,
-    ParallelFunctionCall,
-    _create_unique_id,
-)
-from magentic.streaming import (
-    AsyncStreamedStr,
-    StreamedStr,
-)
-from magentic.typing import is_any_origin_subclass
+from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
 from magentic.vision import UserImageMessage
 
 try:
     import anthropic
     from anthropic.lib.streaming import MessageStreamEvent
     from anthropic.lib.streaming._messages import accumulate_event
-    from anthropic.types import MessageParam, ToolParam
-    from anthropic.types.message_create_params import ToolChoice
+    from anthropic.types import (
+        MessageParam,
+        ToolChoiceParam,
+        ToolChoiceToolParam,
+        ToolParam,
+    )
 except ImportError as error:
     msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install 'magentic[anthropic]'`."
     raise ImportError(msg) from error
@@ -157,6 +143,8 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
             ],
         }
 
+    # TODO: Add support for StreamedResponse here
+
     function_schema = function_schema_for_type(type(message.content))
     return {
         "role": AnthropicMessageRole.ASSISTANT.value,
@@ -227,7 +215,7 @@ class BaseFunctionToolSchema(Generic[BaseFunctionSchemaT]):
             "input_schema": self._function_schema.parameters,
         }
 
-    def as_tool_choice(self) -> ToolChoice:
+    def as_tool_choice(self, *, disable_parallel_tool_use: bool) -> ToolChoiceToolParam:
         return {"type": "tool", "name": self._function_schema.name}
 
 
@@ -271,7 +259,7 @@ class AnthropicStreamState(StreamState[MessageStreamEvent]):
             current_snapshot=self._current_message_snapshot,
         )
         if item.type == "message_stop":
-            assert not self.usage_ref  # noqa: S101
+            assert not self.usage_ref
             self.usage_ref.append(
                 Usage(
                     input_tokens=item.message.usage.input_tokens,
@@ -281,7 +269,7 @@ class AnthropicStreamState(StreamState[MessageStreamEvent]):
 
     @property
     def current_message_snapshot(self) -> Message[Any]:
-        assert self._current_message_snapshot is not None  # noqa: S101
+        assert self._current_message_snapshot is not None
         # TODO: Possible to return AssistantMessage here?
         return _RawMessage(self._current_message_snapshot.model_dump())
 
@@ -353,14 +341,19 @@ class AnthropicChatModel(ChatModel):
     def _get_tool_choice(
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
-        allow_string_output: bool,
-    ) -> ToolChoice | anthropic.NotGiven:
+        output_types: Iterable[type],
+    ) -> ToolChoiceParam | anthropic.NotGiven:
         """Create the tool choice argument."""
-        if allow_string_output:
+        if contains_string_type(output_types):
             return anthropic.NOT_GIVEN
+        disable_parallel_tool_use = not contains_parallel_function_call_type(
+            output_types
+        )
         if len(tool_schemas) == 1:
-            return tool_schemas[0].as_tool_choice()
-        return {"type": "any"}
+            return tool_schemas[0].as_tool_choice(
+                disable_parallel_tool_use=disable_parallel_tool_use
+            )
+        return {"type": "any", "disable_parallel_tool_use": disable_parallel_tool_use}
 
     @overload
     def complete(
@@ -397,8 +390,6 @@ class AnthropicChatModel(ChatModel):
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        allow_string_output = is_any_origin_subclass(output_types, (str, StreamedStr))
-
         system, messages = _extract_system_message(messages)
 
         response: Iterator[MessageStreamEvent] = self._client.messages.stream(
@@ -412,7 +403,7 @@ class AnthropicChatModel(ChatModel):
             temperature=_if_given(self.temperature),
             tools=[schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                tool_schemas=tool_schemas, output_types=output_types
             ),
         ).__enter__()
         stream = OutputStream(
@@ -460,10 +451,6 @@ class AnthropicChatModel(ChatModel):
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        allow_string_output = is_any_origin_subclass(
-            output_types, (str, AsyncStreamedStr)
-        )
-
         system, messages = _extract_system_message(messages)
 
         response: AsyncIterator[
@@ -479,7 +466,7 @@ class AnthropicChatModel(ChatModel):
             temperature=_if_given(self.temperature),
             tools=[schema.to_dict() for schema in tool_schemas] or anthropic.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, allow_string_output=allow_string_output
+                tool_schemas=tool_schemas, output_types=output_types
             ),
         ).__aenter__()
         stream = AsyncOutputStream(

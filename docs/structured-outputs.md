@@ -148,6 +148,10 @@ print(hero_defeated)
 
 ## Chain-of-Thought Prompting
 
+!!! warning "StreamedResponse"
+
+    It is now recommended to use `StreamedResponse` for chain-of-thought prompting, as this uses the LLM provider's native chain-of-thought capabilities. See [StreamedResponse](streaming.md#streamedresponse) for more information.
+
 Using a simple Python type as the return annotation might result in poor results as the LLM has no time to arrange its thoughts before answering. To allow the LLM to work through this "chain of thought" you can instead return a pydantic model with initial fields for explaining the final response.
 
 ```python hl_lines="5-9 20"

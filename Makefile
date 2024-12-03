@@ -43,6 +43,10 @@ testcov: test  # Run tests and generate a coverage report
 	@echo "building coverage html"
 	uv run coverage html --show-contexts
 
+.PHONY: test-vcr-once
+test-vcr-once:  # Run the tests and record new VCR cassettes
+	uv run pytest -vv --record-mode=once
+
 .PHONY: test-fix-vcr
 test-fix-vcr:  # Run the last failed tests and rewrite the VCR cassettes
 	uv run pytest -vv --last-failed --last-failed-no-failures=none --record-mode=rewrite
@@ -54,6 +58,11 @@ docs:  # Build the documentation
 .PHONY: docs-serve
 docs-serve:  # Build and serve the documentation
 	uv run mkdocs serve
+
+.PHONY: dep-diagram
+dep-diagram:  # Generate a dependency diagram
+	uv run pydeps src/magentic --no-show --only "magentic." --rmprefix "magentic." -x "magentic.logger" --exclude-exact "magentic.chat_model"
+	open -a Arc magentic.svg
 
 .PHONY: all
 all: format lint typecheck test

@@ -9,6 +9,7 @@ from openai.types.shared_params import FunctionDefinition
 from pydantic import BaseModel, TypeAdapter, create_model
 
 from magentic._pydantic import ConfigDict, get_pydantic_config, json_schema
+from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.function_call import (
     AsyncParallelFunctionCall,
     FunctionCall,
@@ -461,6 +462,8 @@ _NON_FUNCTION_CALL_TYPES = (
     FunctionCall,
     ParallelFunctionCall,
     AsyncParallelFunctionCall,
+    StreamedResponse,
+    AsyncStreamedResponse,
 )
 
 

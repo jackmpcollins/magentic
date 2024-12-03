@@ -8,6 +8,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from pydantic import AfterValidator, BaseModel
 
 from magentic._pydantic import ConfigDict, with_config
+from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -92,6 +93,22 @@ def plus(a: int, b: int) -> int:
             },
         ),
         (
+            AssistantMessage(
+                StreamedResponse([StreamedStr(["Hello"]), FunctionCall(plus, 1, 2)])
+            ),
+            {
+                "role": "assistant",
+                "content": "Hello",
+                "tool_calls": [
+                    {
+                        "id": ANY,
+                        "type": "function",
+                        "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
+                    },
+                ],
+            },
+        ),
+        (
             FunctionResultMessage(3, FunctionCall(plus, 1, 2)),
             {
                 "role": "tool",
@@ -153,6 +170,27 @@ def test_openai_chat_model_complete_seed():
     message1 = chat_model.complete(messages=[UserMessage("Say hello!")])
     message2 = chat_model.complete(messages=[UserMessage("Say hello!")])
     assert message1.content == message2.content
+
+
+@pytest.mark.openai
+def test_openai_chat_model_complete_streamed_response():
+    def get_weather(location: str) -> None:
+        """Get the weather for a location."""
+
+    chat_model = OpenaiChatModel("gpt-4o")
+    message = chat_model.complete(
+        messages=[UserMessage("Tell me your favorite city. Then get its weather.")],
+        functions=[get_weather],
+        output_types=[StreamedResponse],
+    )
+    assert isinstance(message.content, StreamedResponse)
+    response_items = list(message.content)
+    assert len(response_items) == 2
+    streamed_str, function_call = response_items
+    assert isinstance(streamed_str, StreamedStr)
+    assert len(streamed_str.to_string()) > 1  # Check StreamedStr was cached
+    assert isinstance(function_call, FunctionCall)
+    assert function_call() is None  # Check FunctionCall is successfully called
 
 
 @pytest.mark.openai
@@ -236,6 +274,27 @@ def test_openai_chat_model_complete_raises_tool_schema_parse_error():
             messages=[UserMessage("Return a test value of 42.")],
             output_types=[Test],
         )
+
+
+@pytest.mark.openai
+async def test_openai_chat_model_acomplete_async_streamed_response():
+    def get_weather(location: str) -> None:
+        """Get the weather for a location."""
+
+    chat_model = OpenaiChatModel("gpt-4o")
+    message = await chat_model.acomplete(
+        messages=[UserMessage("Tell me your favorite city. Then get its weather.")],
+        functions=[get_weather],
+        output_types=[AsyncStreamedResponse],
+    )
+    assert isinstance(message.content, AsyncStreamedResponse)
+    response_items = [x async for x in message.content]
+    assert len(response_items) == 2
+    streamed_str, function_call = response_items
+    assert isinstance(streamed_str, AsyncStreamedStr)
+    assert len(await streamed_str.to_string()) > 1  # Check AsyncStreamedStr was cached
+    assert isinstance(function_call, FunctionCall)
+    assert function_call() is None  # Check FunctionCall is successfully called
 
 
 @pytest.mark.openai

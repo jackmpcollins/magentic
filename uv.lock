@@ -1389,7 +1389,7 @@ wheels = [
 
 [[package]]
 name = "magentic"
-version = "0.33.0"
+version = "0.34.1"
 source = { editable = "." }
 dependencies = [
     { name = "filetype" },
@@ -1415,6 +1415,7 @@ dev = [
     { name = "litellm" },
     { name = "logfire" },
     { name = "mypy" },
+    { name = "pydeps" },
     { name = "pytest" },
     { name = "pytest-asyncio" },
     { name = "pytest-clarity" },
@@ -1457,6 +1458,7 @@ dev = [
     { name = "litellm" },
     { name = "logfire", specifier = ">=0.46.1,<0.50.0" },
     { name = "mypy" },
+    { name = "pydeps", specifier = ">=2.0.1" },
     { name = "pytest", specifier = ">=7.0.0" },
     { name = "pytest-asyncio", specifier = ">=0.18.0" },
     { name = "pytest-clarity", specifier = ">=0.1.0" },
@@ -2477,6 +2479,18 @@ wheels = [
 ]
 
 [[package]]
+name = "pydeps"
+version = "2.0.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "stdlib-list" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/65/b5/8163e1594c45cee4e2890c74b7a7c78f4b3973ffecd418cd5e37119b342d/pydeps-2.0.1.tar.gz", hash = "sha256:6f898ab683ef7c47b14c9cc86bf28b15adebc466cb343c784da4090b2573c704", size = 51327 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/71/67/2274bf061ca84621d9e3e006193a76a6ca94c760d16ff7c6414ca2323a79/pydeps-2.0.1-py3-none-any.whl", hash = "sha256:9e3589fff8ac2fc17d672c8132c8b7fab921d30fbb6b37b61bea2c9fc4f84901", size = 46450 },
+]
+
+[[package]]
 name = "pygments"
 version = "2.18.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3062,6 +3076,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/28/e3/55dcc2cfbc3ca9c29519eb6884dd1415ecb53b0e934862d3559ddcb7e20b/stack_data-0.6.3.tar.gz", hash = "sha256:836a778de4fec4dcd1dcd89ed8abff8a221f58308462e1c4aa2a3cf30148f0b9", size = 44707 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/f1/7b/ce1eafaf1a76852e2ec9b22edecf1daa58175c090266e9f6c64afcd81d91/stack_data-0.6.3-py3-none-any.whl", hash = "sha256:d5558e0c25a4cb0853cddad3d77da9891a08cb85dd9f9f91b9f8cd66e511e695", size = 24521 },
+]
+
+[[package]]
+name = "stdlib-list"
+version = "0.11.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/04/6b37a71e92ddca16b190b7df62494ac4779d58ced4787f73584eb32c8f03/stdlib_list-0.11.0.tar.gz", hash = "sha256:b74a7b643a77a12637e907f3f62f0ab9f67300bce4014f6b2d3c8b4c8fd63c66", size = 60335 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/16/fe/e07300c027a868d32d8ed7a425503401e91a03ff90e7ca525c115c634ffb/stdlib_list-0.11.0-py3-none-any.whl", hash = "sha256:8bf8decfffaaf273d4cfeb5bd852b910a00dec1037dcf163576803622bccf597", size = 83617 },
 ]
 
 [[package]]

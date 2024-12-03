@@ -114,6 +114,13 @@ async def test_agroupby(aiterable, key, expected):
     ] == expected
 
 
+async def test_agroupby_skip():
+    aiterable = agroupby(async_iter([1, 1, 2, 2, 3, 3]), lambda x: x)
+    key1, group1 = await anext(aiterable)
+    key2, group2 = await anext(aiterable)
+    assert [x async for x in group2] == [2, 2]
+
+
 iter_streamed_json_array_test_cases = [
     (["[]"], []),
     (['["He', 'llo", ', '"Wo', 'rld"]'], ['"Hello"', '"World"']),

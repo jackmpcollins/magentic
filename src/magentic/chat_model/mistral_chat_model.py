@@ -6,6 +6,7 @@ from typing import Any, TypeVar, overload
 import openai
 from openai.types.chat import ChatCompletionStreamOptionsParam
 
+from magentic._parsing import contains_string_type
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import AssistantMessage, Message
 from magentic.chat_model.openai_chat_model import (
@@ -26,22 +27,23 @@ class _MistralToolChoice(Enum):
 class _MistralOpenaiChatModel(OpenaiChatModel):
     """Modified OpenaiChatModel to be compatible with Mistral API."""
 
-    @staticmethod
-    def _get_stream_options() -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
         return openai.NOT_GIVEN
 
     @staticmethod
     def _get_tool_choice(  # type: ignore[override]
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
-        allow_string_output: bool,
+        output_types: Iterable[type],
     ) -> str | openai.NotGiven:
         """Create the tool choice argument.
 
         Mistral API has different options than the OpenAI API for `tool_choice`.
         See https://docs.mistral.ai/capabilities/function_calling/#tool_choice
         """
-        return openai.NOT_GIVEN if allow_string_output else _MistralToolChoice.ANY.value
+        if contains_string_type(output_types):
+            return openai.NOT_GIVEN
+        return _MistralToolChoice.ANY.value
 
     def _get_parallel_tool_calls(
         self, *, tools_specified: bool, output_types: Iterable[type]

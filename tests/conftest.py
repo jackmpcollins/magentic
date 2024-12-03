@@ -14,9 +14,10 @@ from vcr.request import Request
 @pytest.fixture(autouse=True, scope="session")
 def _load_dotenv():
     """Load .env file so API keys are available when rewriting VCR cassettes"""
+    # Prefer env vars from .env over existing env vars
+    load_dotenv(override=True)
     # Set default values so tests can run using existing cassettes without env vars
     load_dotenv(".env.template")
-    load_dotenv()
 
 
 def pytest_recording_configure(config: pytest.Config, vcr: VCR) -> None:
