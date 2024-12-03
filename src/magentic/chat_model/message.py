@@ -9,6 +9,7 @@ from typing import (
     NamedTuple,
     TypeVar,
     cast,
+    get_args,
     get_origin,
     overload,
 )
@@ -92,10 +93,19 @@ class SystemMessage(Message[str]):
         return SystemMessage(self.content.format(**kwargs))
 
 
+# OpenAI supports PNG, JPEG, WEBP, and non-animated GIF
+# Anthropic supports JPEG, PNG, GIF, or WebP
+ImageMimeType = Literal["image/jpeg", "image/png", "image/gif", "image/webp"]
+_IMAGE_MIME_TYPES: tuple[ImageMimeType, ...] = get_args(ImageMimeType)
+
+
 class ImageBytes(RootModel[bytes]):
     @property
-    def mime_type(self) -> str | None:
-        return filetype.guess_mime(self.root)
+    def mime_type(self) -> ImageMimeType | None:
+        mimetype: str | None = filetype.guess_mime(self.root)
+        if mimetype in _IMAGE_MIME_TYPES:
+            return cast(ImageMimeType, mimetype)
+        return None
 
     def as_base64(self) -> str:
         return base64.b64encode(self.root).decode("utf-8")
