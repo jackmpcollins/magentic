@@ -94,7 +94,7 @@ def test_user_message_format():
     user_message = UserMessage("Hello {x}")
     user_message_formatted = user_message.format(x="world")
 
-    assert_type(user_message_formatted, UserMessage)
+    assert_type(user_message_formatted, UserMessage[str])
     assert_type(user_message_formatted.content, str)
     assert user_message_formatted == UserMessage("Hello world")
 

@@ -70,8 +70,8 @@ def _(message: _RawMessage[Any]) -> MessageParam:
     return message.content  # type: ignore[no-any-return]
 
 
-@message_to_anthropic_message.register
-def _(message: UserMessage) -> MessageParam:
+@message_to_anthropic_message.register(UserMessage)
+def _(message: UserMessage[Any]) -> MessageParam:
     if isinstance(message.content, str):
         return {"role": AnthropicMessageRole.USER.value, "content": message.content}
     if isinstance(message.content, list):

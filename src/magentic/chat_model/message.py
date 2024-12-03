@@ -134,7 +134,7 @@ UserMessageContentT = TypeVar(
 )
 
 
-class UserMessage(Message[UserMessageContentT]):
+class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
     """A message sent by a user to an LLM chat model."""
 
     role: Literal["user"] = "user"
@@ -142,12 +142,12 @@ class UserMessage(Message[UserMessageContentT]):
     def __init__(self, content: UserMessageContentT, **data: Any):
         super().__init__(content=content, **data)
 
-    def format(self, **kwargs: Any) -> "UserMessage":
+    def format(self, **kwargs: Any) -> "UserMessage[UserMessageContentT]":
         if isinstance(self.content, str):
-            return UserMessage(self.content.format(**kwargs))
+            return UserMessage(self.content.format(**kwargs))  # type: ignore[arg-type]
         if isinstance(self.content, Iterable):
-            return UserMessage([block.format(**kwargs) for block in self.content])
-        return UserMessage(self.content.format(**kwargs))
+            return UserMessage([block.format(**kwargs) for block in self.content])  # type: ignore[arg-type]
+        return UserMessage(self.content)
 
 
 class Usage(NamedTuple):
@@ -258,7 +258,7 @@ class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
 
 AnyMessage = Annotated[
     # Do not include FunctionResultMessage which also uses "tool" role
-    SystemMessage | UserMessage | AssistantMessage[Any] | ToolResultMessage[Any],
+    SystemMessage | UserMessage[Any] | AssistantMessage[Any] | ToolResultMessage[Any],
     Field(discriminator="role"),
 ]
 """Union of all message types."""

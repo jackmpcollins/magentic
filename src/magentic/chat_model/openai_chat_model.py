@@ -77,8 +77,8 @@ def _(message: SystemMessage) -> ChatCompletionMessageParam:
     return {"role": OpenaiMessageRole.SYSTEM.value, "content": message.content}
 
 
-@message_to_openai_message.register
-def _(message: UserMessage) -> ChatCompletionUserMessageParam:
+@message_to_openai_message.register(UserMessage)
+def _(message: UserMessage[Any]) -> ChatCompletionUserMessageParam:
     if isinstance(message.content, str):
         return {"role": OpenaiMessageRole.USER.value, "content": message.content}
     if isinstance(message.content, list):
