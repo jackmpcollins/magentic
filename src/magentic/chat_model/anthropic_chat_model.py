@@ -74,7 +74,7 @@ def _(message: _RawMessage[Any]) -> MessageParam:
 def _(message: UserMessage[Any]) -> MessageParam:
     if isinstance(message.content, str):
         return {"role": AnthropicMessageRole.USER.value, "content": message.content}
-    if isinstance(message.content, list):
+    if isinstance(message.content, Iterable):
         content: list[TextBlockParam | ImageBlockParam] = []
         for block in message.content:
             if isinstance(block, str):

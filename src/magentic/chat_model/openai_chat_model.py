@@ -81,7 +81,7 @@ def _(message: SystemMessage) -> ChatCompletionMessageParam:
 def _(message: UserMessage[Any]) -> ChatCompletionUserMessageParam:
     if isinstance(message.content, str):
         return {"role": OpenaiMessageRole.USER.value, "content": message.content}
-    if isinstance(message.content, list):
+    if isinstance(message.content, Iterable):
         content: list[ChatCompletionContentPartParam] = []
         for block in message.content:
             if isinstance(block, str):
