@@ -1,5 +1,7 @@
+import base64
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Iterable, Sequence
+from functools import cached_property
 from typing import (
     Annotated,
     Any,
@@ -8,11 +10,15 @@ from typing import (
     NamedTuple,
     TypeVar,
     cast,
+    get_args,
     get_origin,
     overload,
 )
 
-from pydantic import BaseModel, Field, PrivateAttr
+import filetype
+from pydantic import BaseModel, Field, PrivateAttr, RootModel, model_validator
+
+# TODO: Add typing_extensions as dependency
 from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
@@ -34,10 +40,15 @@ class Placeholder(Generic[T]):
         self.name = name
 
     def format(self, **kwargs: Any) -> T:
+        # TODO: Raise helpful error if name not in kwargs
         value = kwargs[self.name]
         if not isinstance(value, get_origin(self.type_) or self.type_):
-            msg = f"{self.name} must be of type {self.type_}"
-            raise TypeError(msg)
+            try:
+                return self.type_(value)  # type: ignore[call-arg]
+            except Exception as e:
+                msg = f"{self.name} must have type {self.type_}, or be coercible to it."
+                raise TypeError(msg) from e
+
         return cast(T, value)
 
 
@@ -90,16 +101,60 @@ class SystemMessage(Message[str]):
         return SystemMessage(self.content.format(**kwargs))
 
 
-class UserMessage(Message[str]):
+# OpenAI supports PNG, JPEG, WEBP, and non-animated GIF
+# Anthropic supports JPEG, PNG, GIF, or WebP
+ImageMimeType = Literal["image/jpeg", "image/png", "image/gif", "image/webp"]
+_IMAGE_MIME_TYPES: tuple[ImageMimeType, ...] = get_args(ImageMimeType)
+
+
+class ImageBytes(RootModel[bytes]):
+    @cached_property
+    def mime_type(self) -> ImageMimeType:
+        mimetype: str | None = filetype.guess_mime(self.root)
+        assert mimetype in _IMAGE_MIME_TYPES
+        return cast(ImageMimeType, mimetype)
+
+    def as_base64(self) -> str:
+        return base64.b64encode(self.root).decode("utf-8")
+
+    def format(self, **kwargs: Any) -> "ImageBytes":
+        del kwargs
+        return self
+
+    @model_validator(mode="after")
+    def _is_image_bytes(self) -> Self:
+        mimetype: str | None = filetype.guess_mime(self.root)
+        if mimetype not in _IMAGE_MIME_TYPES:
+            msg = f"Unsupported image MIME type: {mimetype!r}"
+            raise ValueError(msg)
+        return self
+
+
+class ImageUrl(RootModel[str]):
+    def format(self, **kwargs: Any) -> "ImageUrl":
+        del kwargs
+        return self
+
+
+UserMessageContentT = TypeVar(
+    "UserMessageContentT", bound=str | Sequence[str | ImageBytes | ImageUrl]
+)
+
+
+class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
     """A message sent by a user to an LLM chat model."""
 
     role: Literal["user"] = "user"
 
-    def __init__(self, content: str, **data: Any):
+    def __init__(self, content: UserMessageContentT, **data: Any):
         super().__init__(content=content, **data)
 
-    def format(self, **kwargs: Any) -> "UserMessage":
-        return UserMessage(self.content.format(**kwargs))
+    def format(self, **kwargs: Any) -> "UserMessage[UserMessageContentT]":
+        if isinstance(self.content, str):
+            return UserMessage(self.content.format(**kwargs))  # type: ignore[arg-type]
+        if isinstance(self.content, Iterable):
+            return UserMessage([block.format(**kwargs) for block in self.content])  # type: ignore[arg-type]
+        return UserMessage(self.content)
 
 
 class Usage(NamedTuple):
@@ -210,7 +265,7 @@ class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
 
 AnyMessage = Annotated[
     # Do not include FunctionResultMessage which also uses "tool" role
-    SystemMessage | UserMessage | AssistantMessage[Any] | ToolResultMessage[Any],
+    SystemMessage | UserMessage[Any] | AssistantMessage[Any] | ToolResultMessage[Any],
     Field(discriminator="role"),
 ]
 """Union of all message types."""

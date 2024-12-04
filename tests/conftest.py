@@ -1,6 +1,7 @@
 import json
 from collections.abc import Iterator
 from itertools import count
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -96,3 +97,13 @@ def test_mock_create_unique_id():
 
     assert _create_unique_id() == "000000000"
     assert _create_unique_id() == "000000001"
+
+
+@pytest.fixture
+def image_bytes_jpg() -> bytes:
+    return Path("tests/data/python-powered.jpg").read_bytes()
+
+
+@pytest.fixture
+def image_bytes_png() -> bytes:
+    return Path("tests/data/python-powered.png").read_bytes()

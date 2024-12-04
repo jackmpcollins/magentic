@@ -51,6 +51,10 @@ test-vcr-once:  # Run the tests and record new VCR cassettes
 test-fix-vcr:  # Run the last failed tests and rewrite the VCR cassettes
 	uv run pytest -vv --last-failed --last-failed-no-failures=none --record-mode=rewrite
 
+.PHONY: test-fix-snapshots
+test-fix-snapshots:  # Run the tests and fix inline-snapshots
+	uv run pytest -vv --inline-snapshot=fix
+
 .PHONY: docs
 docs:  # Build the documentation
 	uv run mkdocs build
