@@ -100,6 +100,7 @@ def _(message: UserMessage[Any]) -> ChatCompletionUserMessageParam:
             else:
                 msg = f"Invalid block type: {type(block)}"
                 raise TypeError(msg)
+        return {"role": OpenaiMessageRole.USER.value, "content": content}
     msg = f"Invalid content type: {type(message.content)}"
     raise TypeError(msg)
 
