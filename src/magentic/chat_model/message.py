@@ -17,6 +17,8 @@ from typing import (
 
 import filetype
 from pydantic import BaseModel, Field, PrivateAttr, RootModel, model_validator
+
+# TODO: Add typing_extensions as dependency
 from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
@@ -38,10 +40,15 @@ class Placeholder(Generic[T]):
         self.name = name
 
     def format(self, **kwargs: Any) -> T:
+        # TODO: Raise helpful error if name not in kwargs
         value = kwargs[self.name]
         if not isinstance(value, get_origin(self.type_) or self.type_):
-            msg = f"{self.name} must be of type {self.type_}"
-            raise TypeError(msg)
+            try:
+                return self.type_(value)  # type: ignore[call-arg]
+            except Exception as e:
+                msg = f"{self.name} must have type {self.type_}, or be coercible to it."
+                raise TypeError(msg) from e
+
         return cast(T, value)
 
 
