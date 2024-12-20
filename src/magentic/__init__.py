@@ -11,6 +11,7 @@ from .chat_model.message import ToolResultMessage as ToolResultMessage
 from .chat_model.message import UserMessage as UserMessage
 from .chat_model.openai_chat_model import OpenaiChatModel as OpenaiChatModel
 from .chatprompt import chatprompt as chatprompt
+from .chatprompt_chain import chatprompt_chain as chatprompt_chain
 from .function_call import AsyncParallelFunctionCall as AsyncParallelFunctionCall
 from .function_call import FunctionCall as FunctionCall
 from .function_call import ParallelFunctionCall as ParallelFunctionCall
