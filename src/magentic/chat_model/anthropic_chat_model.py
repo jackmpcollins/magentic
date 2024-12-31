@@ -88,7 +88,7 @@ def _(message: UserImageMessage[Any]) -> MessageParam:
         "role": AnthropicMessageRole.USER.value,
         "content": [
             {
-                "type": "image",
+                "type": "document" if mime_type == "application/pdf" else "image",
                 "source": {
                     "type": "base64",
                     "media_type": mime_type,
