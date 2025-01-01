@@ -12,12 +12,19 @@ from typing import (
     TypeVar,
     cast,
     get_args,
-    get_origin,
     overload,
 )
 
 import filetype
-from pydantic import BaseModel, Field, PrivateAttr, RootModel, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    PrivateAttr,
+    RootModel,
+    TypeAdapter,
+    ValidationError,
+    model_validator,
+)
 
 # TODO: Add typing_extensions as dependency
 from typing_extensions import Self
@@ -46,16 +53,16 @@ class Placeholder(BaseModel, Generic[PlaceholderT]):
 
     def format(self, **kwargs: Any) -> PlaceholderT:
         # TODO: Raise helpful error if name not in kwargs
+        if self.name not in kwargs:
+            msg = f"Argument for {self.name!r} required by placeholder is missing"
+            raise ValueError(msg)
         value = kwargs[self.name]
-        # TODO: Use pydantic TypeAdapter here
-        if not isinstance(value, get_origin(self.type_) or self.type_):
-            try:
-                return self.type_(value)  # type: ignore[no-any-return]
-            except Exception as e:
-                msg = f"{self.name} must have type {self.type_}, or be coercible to it."
-                raise TypeError(msg) from e
-
-        return cast(PlaceholderT, value)
+        type_adapter: TypeAdapter[PlaceholderT] = TypeAdapter(self.type_)
+        try:
+            return type_adapter.validate_python(value)
+        except ValidationError as e:
+            msg = f"Argument for {self.name!r} must match placeholder type {self.type_!r} or be coercible to it"
+            raise ValueError(msg) from e
 
 
 ContentT = TypeVar("ContentT", covariant=True)

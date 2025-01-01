@@ -33,11 +33,11 @@ def test_placeholder_format():
 def test_placeholder_coercion():
     placeholder_str = Placeholder(str, "my_string")
     assert placeholder_str.format(my_string="test") == "test"
-    assert placeholder_str.format(my_string=True) == "True"
     placeholder_list_str = Placeholder(list[str], "my_list_str")
     assert placeholder_list_str.format(my_list_str=["test"]) == ["test"]
-    # Coerce set to list
-    assert placeholder_list_str.format(my_list_str={"test"}) == ["test"]
+    assert placeholder_list_str.format(my_list_str={"test"}) == ["test"]  # set -> list
+    with pytest.raises(ValueError):  # noqa: PT011
+        placeholder_str.format(my_string=True)  # bool does not coerce to str
 
 
 @pytest.mark.parametrize(
