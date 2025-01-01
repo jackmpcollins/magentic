@@ -158,7 +158,7 @@ def register_function_schema(
             _async_function_schema_registry.register(type_, cls)
         if issubclass(cls, FunctionSchema):
             _function_schema_registry.register(type_, cls)
-        return cls
+        return cls  # type: ignore[return-value]
 
     return _register
 

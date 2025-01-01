@@ -99,7 +99,7 @@ def litellm_async_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
         ):
             callback_calls.append({"kwargs": kwargs})
 
-    litellm.callbacks = [AddCallToList()]
+    litellm.callbacks = [AddCallToList()]  # type: ignore[list-item]
     yield callback_calls
     litellm.callbacks = original_success_callback  # type: ignore[assignment]
 
