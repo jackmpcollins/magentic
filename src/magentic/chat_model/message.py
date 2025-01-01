@@ -26,7 +26,7 @@ from magentic.function_call import FunctionCall
 T = TypeVar("T")
 
 
-class Placeholder(Generic[T]):
+class Placeholder(BaseModel, Generic[T]):
     """A placeholder for a value in a message.
 
     When formatting a message, the placeholder is replaced with the value.
@@ -35,16 +35,21 @@ class Placeholder(Generic[T]):
     messages.
     """
 
-    def __init__(self, type_: type[T], name: str):
-        self.type_ = type_
-        self.name = name
+    # TODO: Change to `type[T]` when pydantic supports it
+    # issue: https://github.com/pydantic/pydantic/issues/9099
+    type_: type
+    name: str
+
+    def __init__(self, type_: type[T], name: str, **data: Any):
+        super().__init__(type_=type_, name=name, **data)
 
     def format(self, **kwargs: Any) -> T:
         # TODO: Raise helpful error if name not in kwargs
         value = kwargs[self.name]
+        # TODO: Use pydantic TypeAdapter here
         if not isinstance(value, get_origin(self.type_) or self.type_):
             try:
-                return self.type_(value)  # type: ignore[call-arg]
+                return self.type_(value)  # type: ignore[no-any-return]
             except Exception as e:
                 msg = f"{self.name} must have type {self.type_}, or be coercible to it."
                 raise TypeError(msg) from e
