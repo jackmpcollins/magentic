@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import pytest
 from typing_extensions import assert_type
 
@@ -11,16 +9,6 @@ from magentic.chat_model.openai_chat_model import (
 )
 from magentic.chatprompt import chatprompt
 from magentic.vision import UserImageMessage
-
-
-@pytest.fixture
-def image_bytes_jpg() -> bytes:
-    return Path("tests/data/python-powered.jpg").read_bytes()
-
-
-@pytest.fixture
-def image_bytes_png() -> bytes:
-    return Path("tests/data/python-powered.png").read_bytes()
 
 
 def test_user_image_message_format_noop():

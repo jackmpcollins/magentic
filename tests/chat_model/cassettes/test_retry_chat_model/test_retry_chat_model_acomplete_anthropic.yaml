@@ -47,12 +47,12 @@ interactions:
     body:
       string: 'event: message_start
 
-        data: {"type":"message_start","message":{"id":"msg_01VZ98VHjWT3SjSLzFEZY5fS","type":"message","role":"assistant","model":"claude-3-haiku-20240307","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":420,"output_tokens":20}}       }
+        data: {"type":"message_start","message":{"id":"msg_01LJdQhZXFRtWfp54x3X2QBM","type":"message","role":"assistant","model":"claude-3-haiku-20240307","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":420,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":27}}            }
 
 
         event: content_block_start
 
-        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_01NV5SbdweQ2iUmb2HfSEwgJ","name":"return_country","input":{}}              }
+        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_0128s5vBxDXfrAtT52UbHrMg","name":"return_country","input":{}}           }
 
 
         event: ping
@@ -62,39 +62,38 @@ interactions:
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}               }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}        }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"name\":
-        \"Un"}               }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\""}             }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"ited
-        S"}             }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"name\":
+        \"Fran"} }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"tates\"}"}              }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"ce\"}"}            }
 
 
         event: content_block_stop
 
-        data: {"type":"content_block_stop","index":0            }
+        data: {"type":"content_block_stop","index":0     }
 
 
         event: message_delta
 
-        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":34}   }
+        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":33}       }
 
 
         event: message_stop
 
-        data: {"type":"message_stop" }
+        data: {"type":"message_stop"        }
 
 
         '
@@ -102,7 +101,7 @@ interactions:
       CF-Cache-Status:
       - DYNAMIC
       CF-RAY:
-      - 8e3692313b5ccf2f-SJC
+      - 8fb5d70bef21cf1a-SJC
       Cache-Control:
       - no-cache
       Connection:
@@ -110,15 +109,21 @@ interactions:
       Content-Type:
       - text/event-stream; charset=utf-8
       Date:
-      - Sat, 16 Nov 2024 09:49:27 GMT
+      - Wed, 01 Jan 2025 22:10:33 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
       - chunked
       X-Robots-Tag:
       - none
+      anthropic-ratelimit-requests-limit:
+      - '4000'
+      anthropic-ratelimit-requests-remaining:
+      - '3999'
+      anthropic-ratelimit-requests-reset:
+      - '2025-01-01T22:10:33Z'
       request-id:
-      - req_011Q394MNsaPdRbt3M9DRxKa
+      - req_015nj1BAKHvU6RAu97hfvMEB
       via:
       - 1.1 google
     status:
@@ -127,16 +132,15 @@ interactions:
 - request:
     body: '{"max_tokens": 1024, "messages": [{"role": "user", "content": [{"type":
       "text", "text": "Return a country."}]}, {"role": "assistant", "content": [{"id":
-      "toolu_01NV5SbdweQ2iUmb2HfSEwgJ", "input": {"name": "United States"}, "name":
-      "return_country", "type": "tool_use"}]}, {"role": "user", "content": [{"type":
-      "tool_result", "tool_use_id": "toolu_01NV5SbdweQ2iUmb2HfSEwgJ", "content": "1
-      validation error for Country\nname\n  Value error, Country must be Ireland.
-      [type=value_error, input_value=''United States'', input_type=str]\n    For further
-      information visit https://errors.pydantic.dev/2.9/v/value_error"}]}], "model":
-      "claude-3-haiku-20240307", "tools": [{"name": "return_country", "description":
-      "", "input_schema": {"properties": {"name": {"title": "Name", "type": "string"}},
-      "required": ["name"], "type": "object"}}], "tool_choice": {"type": "tool", "name":
-      "return_country"}, "stream": true}'
+      "toolu_0128s5vBxDXfrAtT52UbHrMg", "input": {"name": "France"}, "name": "return_country",
+      "type": "tool_use"}]}, {"role": "user", "content": [{"type": "tool_result",
+      "tool_use_id": "toolu_0128s5vBxDXfrAtT52UbHrMg", "content": "1 validation error
+      for Country\nname\n  Value error, Country must be Ireland. [type=value_error,
+      input_value=''France'', input_type=str]"}]}], "model": "claude-3-haiku-20240307",
+      "tools": [{"name": "return_country", "description": "", "input_schema": {"properties":
+      {"name": {"title": "Name", "type": "string"}}, "required": ["name"], "type":
+      "object"}}], "tool_choice": {"type": "tool", "name": "return_country"}, "stream":
+      true}'
     headers:
       accept:
       - application/json
@@ -147,7 +151,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '902'
+      - '807'
       content-type:
       - application/json
       host:
@@ -178,12 +182,12 @@ interactions:
     body:
       string: 'event: message_start
 
-        data: {"type":"message_start","message":{"id":"msg_01GJwKwqyhTjf7ojYQkjq9E3","type":"message","role":"assistant","model":"claude-3-haiku-20240307","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":550,"output_tokens":20}}               }
+        data: {"type":"message_start","message":{"id":"msg_01DkAx9AHFLGLUjVw4qzEfDq","type":"message","role":"assistant","model":"claude-3-haiku-20240307","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":523,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":20}}     }
 
 
         event: content_block_start
 
-        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_018Z12VXTMhnvbNNvrEJetW2","name":"return_country","input":{}}               }
+        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_018TVdhj1SFdjzt9ncZyqGqF","name":"return_country","input":{}}    }
 
 
         event: ping
@@ -193,38 +197,44 @@ interactions:
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}               }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}         }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"name\":"}         }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\""}   }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"
-        \"Ir"} }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"name\":
+        \"I"} }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"eland\"}"}           }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"rela"}
+        }
+
+
+        event: content_block_delta
+
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"nd\"}"}}
 
 
         event: content_block_stop
 
-        data: {"type":"content_block_stop","index":0               }
+        data: {"type":"content_block_stop","index":0              }
 
 
         event: message_delta
 
-        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":33}    }
+        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":33}}
 
 
         event: message_stop
 
-        data: {"type":"message_stop"         }
+        data: {"type":"message_stop" }
 
 
         '
@@ -232,7 +242,7 @@ interactions:
       CF-Cache-Status:
       - DYNAMIC
       CF-RAY:
-      - 8e369235aa3ccf2f-SJC
+      - 8fb5d70f6e12cf1a-SJC
       Cache-Control:
       - no-cache
       Connection:
@@ -240,15 +250,21 @@ interactions:
       Content-Type:
       - text/event-stream; charset=utf-8
       Date:
-      - Sat, 16 Nov 2024 09:49:28 GMT
+      - Wed, 01 Jan 2025 22:10:33 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
       - chunked
       X-Robots-Tag:
       - none
+      anthropic-ratelimit-requests-limit:
+      - '4000'
+      anthropic-ratelimit-requests-remaining:
+      - '3999'
+      anthropic-ratelimit-requests-reset:
+      - '2025-01-01T22:10:33Z'
       request-id:
-      - req_01H7dwLpn8fgBASN1nGRbSmp
+      - req_019VX6dqQcUcWy9VxWBwQkaC
       via:
       - 1.1 google
     status:

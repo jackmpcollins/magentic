@@ -47,12 +47,12 @@ interactions:
     body:
       string: 'event: message_start
 
-        data: {"type":"message_start","message":{"id":"msg_014GEw9nbwXfpJD1Fe4qRDnM","type":"message","role":"assistant","model":"claude-3-haiku-20240307","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":420,"output_tokens":19}}   }
+        data: {"type":"message_start","message":{"id":"msg_01QXdB1xcpJweakd3u88rrFQ","type":"message","role":"assistant","model":"claude-3-haiku-20240307","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":420,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":23}}     }
 
 
         event: content_block_start
 
-        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_01K9jd2baj8qyDtK6RufWKAQ","name":"return_country","input":{}}      }
+        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_01PE9YWKZYFYapmmRJmpK1nz","name":"return_country","input":{}}       }
 
 
         event: ping
@@ -62,38 +62,38 @@ interactions:
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}          }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}    }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"nam"}       }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"name\":
+        \""}               }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"e\""}               }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"Fran"}          }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":":
-        \"Canada\"}"}      }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"ce\"}"}  }
 
 
         event: content_block_stop
 
-        data: {"type":"content_block_stop","index":0}
+        data: {"type":"content_block_stop","index":0          }
 
 
         event: message_delta
 
-        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":33}               }
+        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":33}     }
 
 
         event: message_stop
 
-        data: {"type":"message_stop"  }
+        data: {"type":"message_stop"        }
 
 
         '
@@ -101,7 +101,7 @@ interactions:
       CF-Cache-Status:
       - DYNAMIC
       CF-RAY:
-      - 8e3692278c8624f7-SJC
+      - 8fb5d7047b35ce68-SJC
       Cache-Control:
       - no-cache
       Connection:
@@ -109,15 +109,21 @@ interactions:
       Content-Type:
       - text/event-stream; charset=utf-8
       Date:
-      - Sat, 16 Nov 2024 09:49:25 GMT
+      - Wed, 01 Jan 2025 22:10:32 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
       - chunked
       X-Robots-Tag:
       - none
+      anthropic-ratelimit-requests-limit:
+      - '4000'
+      anthropic-ratelimit-requests-remaining:
+      - '3999'
+      anthropic-ratelimit-requests-reset:
+      - '2025-01-01T22:10:31Z'
       request-id:
-      - req_01WxW4E852S5fmZZH5ZML24K
+      - req_01YLB9ifmK38V4L86JV2wRwD
       via:
       - 1.1 google
     status:
@@ -126,15 +132,15 @@ interactions:
 - request:
     body: '{"max_tokens": 1024, "messages": [{"role": "user", "content": [{"type":
       "text", "text": "Return a country."}]}, {"role": "assistant", "content": [{"id":
-      "toolu_01K9jd2baj8qyDtK6RufWKAQ", "input": {"name": "Canada"}, "name": "return_country",
+      "toolu_01PE9YWKZYFYapmmRJmpK1nz", "input": {"name": "France"}, "name": "return_country",
       "type": "tool_use"}]}, {"role": "user", "content": [{"type": "tool_result",
-      "tool_use_id": "toolu_01K9jd2baj8qyDtK6RufWKAQ", "content": "1 validation error
+      "tool_use_id": "toolu_01PE9YWKZYFYapmmRJmpK1nz", "content": "1 validation error
       for Country\nname\n  Value error, Country must be Ireland. [type=value_error,
-      input_value=''Canada'', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.9/v/value_error"}]}],
-      "model": "claude-3-haiku-20240307", "tools": [{"name": "return_country", "description":
-      "", "input_schema": {"properties": {"name": {"title": "Name", "type": "string"}},
-      "required": ["name"], "type": "object"}}], "tool_choice": {"type": "tool", "name":
-      "return_country"}, "stream": true}'
+      input_value=''France'', input_type=str]"}]}], "model": "claude-3-haiku-20240307",
+      "tools": [{"name": "return_country", "description": "", "input_schema": {"properties":
+      {"name": {"title": "Name", "type": "string"}}, "required": ["name"], "type":
+      "object"}}], "tool_choice": {"type": "tool", "name": "return_country"}, "stream":
+      true}'
     headers:
       accept:
       - application/json
@@ -145,7 +151,7 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '888'
+      - '807'
       content-type:
       - application/json
       host:
@@ -176,12 +182,12 @@ interactions:
     body:
       string: 'event: message_start
 
-        data: {"type":"message_start","message":{"id":"msg_01UBgsmCLMpbdkhQ6eoXW7JT","type":"message","role":"assistant","model":"claude-3-haiku-20240307","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":548,"output_tokens":20}}         }
+        data: {"type":"message_start","message":{"id":"msg_01CJsog62SZpsNreHswRkTeH","type":"message","role":"assistant","model":"claude-3-haiku-20240307","content":[],"stop_reason":null,"stop_sequence":null,"usage":{"input_tokens":523,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":28}}   }
 
 
         event: content_block_start
 
-        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_015KjkrGeWBkPA5ftLSiCkJ2","name":"return_country","input":{}}  }
+        data: {"type":"content_block_start","index":0,"content_block":{"type":"tool_use","id":"toolu_017gjcJVbJGr9r5XtG1ejabD","name":"return_country","input":{}}               }
 
 
         event: ping
@@ -191,43 +197,43 @@ interactions:
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}               }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":""}   }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\"name\":
-        "}           }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"{\""}      }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"\"Ire"}             }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"name\":
+        "}          }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"lan"}    }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"\"Ireland"}    }
 
 
         event: content_block_delta
 
-        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"d\"}"}   }
+        data: {"type":"content_block_delta","index":0,"delta":{"type":"input_json_delta","partial_json":"\"}"}   }
 
 
         event: content_block_stop
 
-        data: {"type":"content_block_stop","index":0             }
+        data: {"type":"content_block_stop","index":0               }
 
 
         event: message_delta
 
-        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":33}               }
+        data: {"type":"message_delta","delta":{"stop_reason":"tool_use","stop_sequence":null},"usage":{"output_tokens":33}       }
 
 
         event: message_stop
 
-        data: {"type":"message_stop"             }
+        data: {"type":"message_stop"               }
 
 
         '
@@ -235,7 +241,7 @@ interactions:
       CF-Cache-Status:
       - DYNAMIC
       CF-RAY:
-      - 8e36922c1e7c24f7-SJC
+      - 8fb5d7082e6ece68-SJC
       Cache-Control:
       - no-cache
       Connection:
@@ -243,15 +249,21 @@ interactions:
       Content-Type:
       - text/event-stream; charset=utf-8
       Date:
-      - Sat, 16 Nov 2024 09:49:26 GMT
+      - Wed, 01 Jan 2025 22:10:32 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
       - chunked
       X-Robots-Tag:
       - none
+      anthropic-ratelimit-requests-limit:
+      - '4000'
+      anthropic-ratelimit-requests-remaining:
+      - '3999'
+      anthropic-ratelimit-requests-reset:
+      - '2025-01-01T22:10:32Z'
       request-id:
-      - req_0142DmjkokQE8MX3zASJ8LrX
+      - req_01PPYTfsocr2YyJM9ZATmeNe
       via:
       - 1.1 google
     status:

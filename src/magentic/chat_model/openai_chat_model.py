@@ -1,19 +1,19 @@
-import base64
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequence
 from enum import Enum
 from functools import singledispatch
 from typing import Any, Generic, Literal, TypeVar, cast, overload
 
-import filetype
 import openai
 from openai.lib.streaming.chat._completions import ChatCompletionStreamState
 from openai.types.chat import (
     ChatCompletionChunk,
+    ChatCompletionContentPartParam,
     ChatCompletionMessageParam,
     ChatCompletionNamedToolChoiceParam,
     ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
     ChatCompletionToolParam,
+    ChatCompletionUserMessageParam,
 )
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
@@ -29,6 +29,8 @@ from magentic.chat_model.function_schema import (
 )
 from magentic.chat_model.message import (
     AssistantMessage,
+    ImageBytes,
+    ImageUrl,
     Message,
     SystemMessage,
     ToolResultMessage,
@@ -75,17 +77,39 @@ def _(message: SystemMessage) -> ChatCompletionMessageParam:
     return {"role": OpenaiMessageRole.SYSTEM.value, "content": message.content}
 
 
-@message_to_openai_message.register
-def _(message: UserMessage) -> ChatCompletionMessageParam:
-    return {"role": OpenaiMessageRole.USER.value, "content": message.content}
+@message_to_openai_message.register(UserMessage)
+def _(message: UserMessage[Any]) -> ChatCompletionUserMessageParam:
+    if isinstance(message.content, str):
+        return {"role": OpenaiMessageRole.USER.value, "content": message.content}
+    if isinstance(message.content, Iterable):
+        content: list[ChatCompletionContentPartParam] = []
+        for block in message.content:
+            if isinstance(block, str):
+                content.append({"type": "text", "text": block})
+            elif isinstance(block, ImageBytes):
+                content.append(
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": f"data:{block.mime_type};base64,{block.as_base64()}"
+                        },
+                    }
+                )
+            elif isinstance(block, ImageUrl):
+                content.append({"type": "image_url", "image_url": {"url": block.root}})
+            else:
+                msg = f"Invalid block type: {type(block)}"
+                raise TypeError(msg)
+        return {"role": OpenaiMessageRole.USER.value, "content": content}
+    msg = f"Invalid content type: {type(message.content)}"
+    raise TypeError(msg)
 
 
 @message_to_openai_message.register(UserImageMessage)
-def _(message: UserImageMessage[Any]) -> ChatCompletionMessageParam:
+def _(message: UserImageMessage[Any]) -> ChatCompletionUserMessageParam:
     if isinstance(message.content, bytes):
-        mime_type = filetype.guess_mime(message.content)
-        base64_image = base64.b64encode(message.content).decode("utf-8")
-        url = f"data:{mime_type};base64,{base64_image}"
+        image_bytes = ImageBytes(message.content)
+        url = f"data:{image_bytes.mime_type};base64,{image_bytes.as_base64()}"
     elif isinstance(message.content, str):
         url = message.content
     else:

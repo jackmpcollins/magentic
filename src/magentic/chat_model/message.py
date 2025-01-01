@@ -1,26 +1,33 @@
+import base64
 from abc import ABC, abstractmethod
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Iterable, Sequence
+from functools import cached_property
 from typing import (
     Annotated,
     Any,
     Generic,
     Literal,
     NamedTuple,
+    TypeAlias,
     TypeVar,
     cast,
+    get_args,
     get_origin,
     overload,
 )
 
-from pydantic import BaseModel, Field, PrivateAttr
+import filetype
+from pydantic import BaseModel, Field, PrivateAttr, RootModel, model_validator
+
+# TODO: Add typing_extensions as dependency
 from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
 
-T = TypeVar("T")
+PlaceholderT = TypeVar("PlaceholderT", covariant=True)
 
 
-class Placeholder(Generic[T]):
+class Placeholder(BaseModel, Generic[PlaceholderT]):
     """A placeholder for a value in a message.
 
     When formatting a message, the placeholder is replaced with the value.
@@ -29,19 +36,29 @@ class Placeholder(Generic[T]):
     messages.
     """
 
-    def __init__(self, type_: type[T], name: str):
-        self.type_ = type_
-        self.name = name
+    # TODO: Change to `type[PlaceholderT]` when pydantic supports it
+    # issue: https://github.com/pydantic/pydantic/issues/9099
+    type_: type
+    name: str
 
-    def format(self, **kwargs: Any) -> T:
+    def __init__(self, type_: type[PlaceholderT], name: str, **data: Any):
+        super().__init__(type_=type_, name=name, **data)
+
+    def format(self, **kwargs: Any) -> PlaceholderT:
+        # TODO: Raise helpful error if name not in kwargs
         value = kwargs[self.name]
+        # TODO: Use pydantic TypeAdapter here
         if not isinstance(value, get_origin(self.type_) or self.type_):
-            msg = f"{self.name} must be of type {self.type_}"
-            raise TypeError(msg)
-        return cast(T, value)
+            try:
+                return self.type_(value)  # type: ignore[no-any-return]
+            except Exception as e:
+                msg = f"{self.name} must have type {self.type_}, or be coercible to it."
+                raise TypeError(msg) from e
+
+        return cast(PlaceholderT, value)
 
 
-ContentT = TypeVar("ContentT")
+ContentT = TypeVar("ContentT", covariant=True)
 
 
 class Message(BaseModel, Generic[ContentT], ABC):
@@ -90,16 +107,85 @@ class SystemMessage(Message[str]):
         return SystemMessage(self.content.format(**kwargs))
 
 
-class UserMessage(Message[str]):
+# OpenAI supports PNG, JPEG, WEBP, and non-animated GIF
+# Anthropic supports JPEG, PNG, GIF, or WebP
+ImageMimeType = Literal["image/jpeg", "image/png", "image/gif", "image/webp"]
+_IMAGE_MIME_TYPES: tuple[ImageMimeType, ...] = get_args(ImageMimeType)
+
+
+class ImageBytes(RootModel[bytes]):
+    @cached_property
+    def mime_type(self) -> ImageMimeType:
+        mimetype: str | None = filetype.guess_mime(self.root)
+        assert mimetype in _IMAGE_MIME_TYPES
+        return cast(ImageMimeType, mimetype)
+
+    def as_base64(self) -> str:
+        return base64.b64encode(self.root).decode("utf-8")
+
+    def format(self, **kwargs: Any) -> Self:
+        del kwargs
+        return self
+
+    @model_validator(mode="after")
+    def _is_image_bytes(self) -> Self:
+        mimetype: str | None = filetype.guess_mime(self.root)
+        if mimetype not in _IMAGE_MIME_TYPES:
+            msg = f"Unsupported image MIME type: {mimetype!r}"
+            raise ValueError(msg)
+        return self
+
+
+class ImageUrl(RootModel[str]):
+    def format(self, **kwargs: Any) -> Self:
+        del kwargs
+        return self
+
+
+UserMessageContentBlock: TypeAlias = str | ImageBytes | ImageUrl
+UserMessageContentBlockT = TypeVar(
+    "UserMessageContentBlockT", bound=UserMessageContentBlock, covariant=True
+)
+UserMessageContentT = TypeVar(
+    "UserMessageContentT",
+    bound=str
+    | Sequence[UserMessageContentBlock | Placeholder[UserMessageContentBlock]],
+    covariant=True,
+)
+
+
+class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
     """A message sent by a user to an LLM chat model."""
 
     role: Literal["user"] = "user"
 
-    def __init__(self, content: str, **data: Any):
+    def __init__(self, content: UserMessageContentT, **data: Any):
         super().__init__(content=content, **data)
 
-    def format(self, **kwargs: Any) -> "UserMessage":
-        return UserMessage(self.content.format(**kwargs))
+    @overload
+    def format(self: "UserMessage[str]", **kwargs: Any) -> "UserMessage[str]": ...
+
+    @overload
+    def format(
+        self: "UserMessage[Sequence[UserMessageContentBlockT]]", **kwargs: Any
+    ) -> "UserMessage[Sequence[UserMessageContentBlockT]]": ...
+
+    @overload
+    def format(
+        self: "UserMessage[Sequence[Placeholder[UserMessageContentBlockT]]]",
+        **kwargs: Any,
+    ) -> "UserMessage[Sequence[UserMessageContentBlockT]]": ...
+
+    def format(
+        self: "UserMessage[str | Sequence[UserMessageContentBlockT | Placeholder[UserMessageContentBlockT]]]",
+        **kwargs: Any,
+    ) -> "UserMessage[str | Sequence[UserMessageContentBlockT]]":
+        if isinstance(self.content, str | Placeholder):
+            return UserMessage(self.content.format(**kwargs))
+        if isinstance(self.content, Iterable):
+            return UserMessage([block.format(**kwargs) for block in self.content])  # type: ignore[misc]
+        msg = f"Unsupported content type: {type(self.content)}"
+        raise ValueError(msg)
 
 
 class Usage(NamedTuple):
@@ -109,6 +195,10 @@ class Usage(NamedTuple):
     output_tokens: int
 
 
+T = TypeVar("T", covariant=True)
+
+
+# TODO: Test does this fail if ContentT is a FunctionCall or other non-pydantic type
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
@@ -119,7 +209,7 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
         super().__init__(content=content, **data)
 
     @classmethod
-    def _with_usage(cls, content: ContentT, usage_ref: list[Usage]) -> Self:
+    def _with_usage(cls, content: ContentT, usage_ref: list[Usage]) -> Self:  # type: ignore[misc]
         message = cls(content)
         message._usage_ref = usage_ref
         return message
@@ -139,7 +229,7 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
     def format(self: "AssistantMessage[T]", **kwargs: Any) -> "AssistantMessage[T]": ...
 
     def format(
-        self: "AssistantMessage[Placeholder[T]] | AssistantMessage[T]", **kwargs: Any
+        self: "AssistantMessage[Placeholder[T] | T]", **kwargs: Any
     ) -> "AssistantMessage[T]":
         if isinstance(self.content, str):
             formatted_content = cast(T, self.content.format(**kwargs))
@@ -210,7 +300,7 @@ class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
 
 AnyMessage = Annotated[
     # Do not include FunctionResultMessage which also uses "tool" role
-    SystemMessage | UserMessage | AssistantMessage[Any] | ToolResultMessage[Any],
+    SystemMessage | UserMessage[Any] | AssistantMessage[Any] | ToolResultMessage[Any],
     Field(discriminator="role"),
 ]
 """Union of all message types."""
