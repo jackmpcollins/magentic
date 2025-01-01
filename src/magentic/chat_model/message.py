@@ -203,7 +203,6 @@ class Usage(NamedTuple):
 T = TypeVar("T", covariant=True)
 
 
-# TODO: Test does this fail if ContentT is a FunctionCall or other non-pydantic type
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
