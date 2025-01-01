@@ -10,7 +10,7 @@ dependencies = [
     "openai>=1.40.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.0.0",
-    "typing-extensions>=4.0.1",
+    "typing-extensions>=4.5.0",
 ]
 
 [project.optional-dependencies]
@@ -80,6 +80,10 @@ venv = ".venv"
 addopts = "--block-network --cov-report=html --cov-report=term --cov=magentic"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning::",
+    "default::DeprecationWarning:magentic.*:",
+]
 markers = [
     "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
     "litellm_anthropic: Tests that query the Anthropic API via litellm. Requires the ANTHROPIC_API_KEY environment variable to be set.",
