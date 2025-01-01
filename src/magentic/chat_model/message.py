@@ -23,10 +23,10 @@ from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
 
-T = TypeVar("T")
+PlaceholderT = TypeVar("PlaceholderT", covariant=True)
 
 
-class Placeholder(BaseModel, Generic[T]):
+class Placeholder(BaseModel, Generic[PlaceholderT]):
     """A placeholder for a value in a message.
 
     When formatting a message, the placeholder is replaced with the value.
@@ -35,15 +35,15 @@ class Placeholder(BaseModel, Generic[T]):
     messages.
     """
 
-    # TODO: Change to `type[T]` when pydantic supports it
+    # TODO: Change to `type[PlaceholderT]` when pydantic supports it
     # issue: https://github.com/pydantic/pydantic/issues/9099
     type_: type
     name: str
 
-    def __init__(self, type_: type[T], name: str, **data: Any):
+    def __init__(self, type_: type[PlaceholderT], name: str, **data: Any):
         super().__init__(type_=type_, name=name, **data)
 
-    def format(self, **kwargs: Any) -> T:
+    def format(self, **kwargs: Any) -> PlaceholderT:
         # TODO: Raise helpful error if name not in kwargs
         value = kwargs[self.name]
         # TODO: Use pydantic TypeAdapter here
@@ -54,7 +54,7 @@ class Placeholder(BaseModel, Generic[T]):
                 msg = f"{self.name} must have type {self.type_}, or be coercible to it."
                 raise TypeError(msg) from e
 
-        return cast(T, value)
+        return cast(PlaceholderT, value)
 
 
 ContentT = TypeVar("ContentT", covariant=True)
@@ -169,6 +169,10 @@ class Usage(NamedTuple):
     output_tokens: int
 
 
+T = TypeVar("T", covariant=True)
+
+
+# TODO: Test does this fail if ContentT is a FunctionCall or other non-pydantic type
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
     """A message received from an LLM chat model."""
 
