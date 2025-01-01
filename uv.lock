@@ -1397,6 +1397,7 @@ dependencies = [
     { name = "openai" },
     { name = "pydantic" },
     { name = "pydantic-settings" },
+    { name = "typing-extensions" },
 ]
 
 [package.optional-dependencies]
@@ -1446,8 +1447,9 @@ requires-dist = [
     { name = "litellm", marker = "extra == 'litellm'", specifier = ">=1.41.12" },
     { name = "logfire-api", specifier = ">=0.1.0" },
     { name = "openai", specifier = ">=1.40.0" },
-    { name = "pydantic", specifier = ">=2.10" },
+    { name = "pydantic", specifier = ">=2.10.0" },
     { name = "pydantic-settings", specifier = ">=2.0.0" },
+    { name = "typing-extensions", specifier = ">=4.0.1" },
 ]
 
 [package.metadata.requires-dev]

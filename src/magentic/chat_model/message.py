@@ -25,8 +25,6 @@ from pydantic import (
     ValidationError,
     model_validator,
 )
-
-# TODO: Add typing_extensions as dependency
 from typing_extensions import Self
 
 from magentic.function_call import FunctionCall

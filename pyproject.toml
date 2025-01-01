@@ -10,6 +10,7 @@ dependencies = [
     "openai>=1.40.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.0.0",
+    "typing-extensions>=4.0.1",
 ]
 
 [project.optional-dependencies]
