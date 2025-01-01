@@ -8,6 +8,7 @@ from typing import (
     Generic,
     Literal,
     NamedTuple,
+    TypeAlias,
     TypeVar,
     cast,
     get_args,
@@ -141,13 +142,14 @@ class ImageUrl(RootModel[str]):
         return self
 
 
+UserMessageContentBlock: TypeAlias = str | ImageBytes | ImageUrl
 UserMessageContentBlockT = TypeVar(
-    "UserMessageContentBlockT", bound=str | ImageBytes | ImageUrl, covariant=True
+    "UserMessageContentBlockT", bound=UserMessageContentBlock, covariant=True
 )
 UserMessageContentT = TypeVar(
     "UserMessageContentT",
     bound=str
-    | Sequence[str | ImageBytes | ImageUrl | Placeholder[str | ImageBytes | ImageUrl]],
+    | Sequence[UserMessageContentBlock | Placeholder[UserMessageContentBlock]],
     covariant=True,
 )
 
