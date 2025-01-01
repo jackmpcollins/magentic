@@ -1,4 +1,5 @@
 import json
+import os
 from collections.abc import Iterator
 from itertools import count
 from pathlib import Path
@@ -19,6 +20,8 @@ def _load_dotenv():
     load_dotenv(override=True)
     # Set default values so tests can run using existing cassettes without env vars
     load_dotenv(".env.template")
+    # Remove URL from error messages to avoid them changing with pydantic version
+    os.environ["PYDANTIC_ERRORS_INCLUDE_URL"] = "false"
 
 
 def pytest_recording_configure(config: pytest.Config, vcr: VCR) -> None:
