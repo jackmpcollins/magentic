@@ -57,7 +57,7 @@ class Placeholder(BaseModel, Generic[T]):
         return cast(T, value)
 
 
-ContentT = TypeVar("ContentT")
+ContentT = TypeVar("ContentT", covariant=True)
 
 
 class Message(BaseModel, Generic[ContentT], ABC):
@@ -179,7 +179,7 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
         super().__init__(content=content, **data)
 
     @classmethod
-    def _with_usage(cls, content: ContentT, usage_ref: list[Usage]) -> Self:
+    def _with_usage(cls, content: ContentT, usage_ref: list[Usage]) -> Self:  # type: ignore[misc]
         message = cls(content)
         message._usage_ref = usage_ref
         return message
