@@ -122,7 +122,7 @@ class ImageBytes(RootModel[bytes]):
     def as_base64(self) -> str:
         return base64.b64encode(self.root).decode("utf-8")
 
-    def format(self, **kwargs: Any) -> "ImageBytes":
+    def format(self, **kwargs: Any) -> Self:
         del kwargs
         return self
 
@@ -136,13 +136,19 @@ class ImageBytes(RootModel[bytes]):
 
 
 class ImageUrl(RootModel[str]):
-    def format(self, **kwargs: Any) -> "ImageUrl":
+    def format(self, **kwargs: Any) -> Self:
         del kwargs
         return self
 
 
+UserMessageContentBlockT = TypeVar(
+    "UserMessageContentBlockT", bound=str | ImageBytes | ImageUrl, covariant=True
+)
 UserMessageContentT = TypeVar(
-    "UserMessageContentT", bound=str | Sequence[str | ImageBytes | ImageUrl]
+    "UserMessageContentT",
+    bound=str
+    | Sequence[str | ImageBytes | ImageUrl | Placeholder[str | ImageBytes | ImageUrl]],
+    covariant=True,
 )
 
 
@@ -154,12 +160,30 @@ class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
     def __init__(self, content: UserMessageContentT, **data: Any):
         super().__init__(content=content, **data)
 
-    def format(self, **kwargs: Any) -> "UserMessage[UserMessageContentT]":
-        if isinstance(self.content, str):
-            return UserMessage(self.content.format(**kwargs))  # type: ignore[arg-type]
+    @overload
+    def format(self: "UserMessage[str]", **kwargs: Any) -> "UserMessage[str]": ...
+
+    @overload
+    def format(
+        self: "UserMessage[Sequence[UserMessageContentBlockT]]", **kwargs: Any
+    ) -> "UserMessage[Sequence[UserMessageContentBlockT]]": ...
+
+    @overload
+    def format(
+        self: "UserMessage[Sequence[Placeholder[UserMessageContentBlockT]]]",
+        **kwargs: Any,
+    ) -> "UserMessage[Sequence[UserMessageContentBlockT]]": ...
+
+    def format(
+        self: "UserMessage[str | Sequence[UserMessageContentBlockT | Placeholder[UserMessageContentBlockT]]]",
+        **kwargs: Any,
+    ) -> "UserMessage[str | Sequence[UserMessageContentBlockT]]":
+        if isinstance(self.content, str | Placeholder):
+            return UserMessage(self.content.format(**kwargs))
         if isinstance(self.content, Iterable):
-            return UserMessage([block.format(**kwargs) for block in self.content])  # type: ignore[arg-type]
-        return UserMessage(self.content)
+            return UserMessage([block.format(**kwargs) for block in self.content])  # type: ignore[misc]
+        msg = f"Unsupported content type: {type(self.content)}"
+        raise ValueError(msg)
 
 
 class Usage(NamedTuple):
@@ -203,7 +227,7 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
     def format(self: "AssistantMessage[T]", **kwargs: Any) -> "AssistantMessage[T]": ...
 
     def format(
-        self: "AssistantMessage[Placeholder[T]] | AssistantMessage[T]", **kwargs: Any
+        self: "AssistantMessage[Placeholder[T] | T]", **kwargs: Any
     ) -> "AssistantMessage[T]":
         if isinstance(self.content, str):
             formatted_content = cast(T, self.content.format(**kwargs))
