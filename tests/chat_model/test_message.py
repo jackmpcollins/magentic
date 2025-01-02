@@ -1,3 +1,4 @@
+from typing import TYPE_CHECKING, cast
 from unittest.mock import ANY, MagicMock
 
 import pytest
@@ -138,6 +139,17 @@ def test_assistant_message_format_placeholder():
     assert_type(assistant_message_formatted, AssistantMessage[Country])
     assert_type(assistant_message_formatted.content, Country)
     assert assistant_message_formatted == AssistantMessage(Country(name="USA"))
+
+    if TYPE_CHECKING:  # Avoid runtime error for None missing `format` method
+        assert_type(cast(AssistantMessage[str], None).format(), AssistantMessage[str])
+        assert_type(
+            cast(AssistantMessage[Placeholder[int]], None).format(),
+            AssistantMessage[int],
+        )
+        assert_type(  # type: ignore[assert-type]  # Breaks mypy but okay with pyright
+            cast(AssistantMessage[str | Placeholder[int]], None).format(),
+            AssistantMessage[str | int],
+        )
 
 
 def test_function_result_message_eq():

@@ -230,7 +230,9 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
     ) -> "AssistantMessage[T]": ...
 
     @overload
-    def format(self: "AssistantMessage[T]", **kwargs: Any) -> "AssistantMessage[T]": ...
+    def format(
+        self: "AssistantMessage[Placeholder[T] | T]", **kwargs: Any
+    ) -> "AssistantMessage[T]": ...
 
     def format(
         self: "AssistantMessage[Placeholder[T] | T]", **kwargs: Any
