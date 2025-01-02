@@ -3,11 +3,13 @@ from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Iterable, Sequence
 from functools import cached_property
 from typing import (
+    TYPE_CHECKING,
     Annotated,
     Any,
     Generic,
     Literal,
     NamedTuple,
+    Protocol,
     TypeAlias,
     TypeVar,
     cast,
@@ -61,6 +63,19 @@ class Placeholder(BaseModel, Generic[PlaceholderT]):
         except ValidationError as e:
             msg = f"Argument for {self.name!r} must match placeholder type {self.type_!r} or be coercible to it"
             raise ValueError(msg) from e
+
+    if TYPE_CHECKING:
+        # HACK: Allows us to define protocol `NotPlaceholder`
+        def __repr__(self) -> None: ...  # type: ignore[override]
+
+
+class NotPlaceholder(Protocol):
+    """Protocol that matches any type that is not a Placeholder."""
+
+    # This matches all Python objects because they all have a `__repr__` method that
+    # returns a string. However, to the type checker `Placeholder` appears to have a
+    # `__repr__` method that returns `None`, so the protocol does not match it.
+    def __repr__(self) -> str: ...
 
 
 ContentT = TypeVar("ContentT", covariant=True)
@@ -201,6 +216,7 @@ class Usage(NamedTuple):
 
 
 T = TypeVar("T", covariant=True)
+NotPlaceholderT = TypeVar("NotPlaceholderT", bound=NotPlaceholder, covariant=True)
 
 
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
@@ -236,17 +252,16 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
 
     @overload
     def format(
-        self: "AssistantMessage[Placeholder[T] | T]", **kwargs: Any
-    ) -> "AssistantMessage[T]": ...
+        self: "AssistantMessage[NotPlaceholderT | Placeholder[T]]", **kwargs: Any
+    ) -> "AssistantMessage[NotPlaceholderT | T]": ...
 
     def format(
-        self: "AssistantMessage[str | Placeholder[T] | T]", **kwargs: Any
-    ) -> "AssistantMessage[str | T]":
+        self: "AssistantMessage[str | NotPlaceholderT | Placeholder[T]]", **kwargs: Any
+    ) -> "AssistantMessage[str | NotPlaceholderT | T]":
         if isinstance(self.content, str):
             return AssistantMessage(self.content.format(**kwargs))
         if isinstance(self.content, Placeholder):
-            content = cast(Placeholder[T], self.content)
-            return AssistantMessage(content.format(**kwargs))
+            return AssistantMessage(self.content.format(**kwargs))
         return AssistantMessage(self.content)
 
 

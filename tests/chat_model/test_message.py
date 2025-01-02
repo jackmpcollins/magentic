@@ -149,7 +149,7 @@ def test_assistant_message_format_placeholder():
             cast(AssistantMessage[Placeholder[int]], None).format(),
             AssistantMessage[int],
         )
-        assert_type(  # type: ignore[assert-type]  # Breaks mypy but okay with pyright
+        assert_type(
             cast(AssistantMessage[str | Placeholder[int]], None).format(),
             AssistantMessage[str | int],
         )
