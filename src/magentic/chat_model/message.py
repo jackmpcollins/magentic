@@ -226,6 +226,11 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
 
     @overload
     def format(
+        self: "AssistantMessage[str]", **kwargs: Any
+    ) -> "AssistantMessage[str]": ...
+
+    @overload
+    def format(
         self: "AssistantMessage[Placeholder[T]]", **kwargs: Any
     ) -> "AssistantMessage[T]": ...
 
@@ -235,11 +240,10 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
     ) -> "AssistantMessage[T]": ...
 
     def format(
-        self: "AssistantMessage[Placeholder[T] | T]", **kwargs: Any
-    ) -> "AssistantMessage[T]":
+        self: "AssistantMessage[str | Placeholder[T] | T]", **kwargs: Any
+    ) -> "AssistantMessage[str | T]":
         if isinstance(self.content, str):
-            formatted_content = cast(T, self.content.format(**kwargs))
-            return AssistantMessage(formatted_content)
+            return AssistantMessage(self.content.format(**kwargs))
         if isinstance(self.content, Placeholder):
             content = cast(Placeholder[T], self.content)
             return AssistantMessage(content.format(**kwargs))
