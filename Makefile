@@ -47,12 +47,16 @@ testcov: test  # Run tests and generate a coverage report
 test-vcr-once:  # Run the tests and record new VCR cassettes
 	uv run pytest -vv --record-mode=once
 
-.PHONY: test-fix-vcr
-test-fix-vcr:  # Run the last failed tests and rewrite the VCR cassettes
+.PHONY: test-vcr-fix
+test-vcr-fix:  # Run the last failed tests and rewrite the VCR cassettes
 	uv run pytest -vv --last-failed --last-failed-no-failures=none --record-mode=rewrite
 
-.PHONY: test-fix-snapshots
-test-fix-snapshots:  # Run the tests and fix inline-snapshots
+.PHONY: test-snapshots-create
+test-snapshots-create:  # Run the tests and create new inline-snapshots
+	uv run pytest -vv --inline-snapshot=create
+
+.PHONY: test-snapshots-fix
+test-snapshots-fix:  # Run the tests and fix inline-snapshots
 	uv run pytest -vv --inline-snapshot=fix
 
 .PHONY: docs
