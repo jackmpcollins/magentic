@@ -11,6 +11,7 @@ from magentic.chatprompt import chatprompt
 from magentic.vision import UserImageMessage
 
 
+# TODO: Remove when UserImageMessage is removed
 def test_user_image_message_format_noop():
     image_message = UserImageMessage("https://example.com/image.jpg")
     image_message_formatted = image_message.format(foo="bar")
@@ -20,6 +21,7 @@ def test_user_image_message_format_noop():
     assert image_message_formatted == UserImageMessage("https://example.com/image.jpg")
 
 
+# TODO: Remove when UserImageMessage is removed
 def test_user_image_message_format_placeholder(image_bytes_jpg):
     image_message = UserImageMessage(Placeholder(bytes, "image"))
     image_message_formatted = image_message.format(image=image_bytes_jpg)
@@ -29,6 +31,7 @@ def test_user_image_message_format_placeholder(image_bytes_jpg):
     assert image_message_formatted == UserImageMessage(image_bytes_jpg)
 
 
+# TODO: Remove when UserImageMessage is removed
 def test_message_to_openai_message_user_image_message_str():
     image_message = UserImageMessage("https://example.com/image.jpg")
     assert message_to_openai_message(image_message) == {
@@ -42,6 +45,7 @@ def test_message_to_openai_message_user_image_message_str():
     }
 
 
+# TODO: Remove when UserImageMessage is removed
 def test_message_to_openai_message_user_image_message_bytes_jpg(image_bytes_jpg):
     image_message = UserImageMessage(image_bytes_jpg)
     assert message_to_openai_message(image_message) == {
@@ -58,6 +62,7 @@ def test_message_to_openai_message_user_image_message_bytes_jpg(image_bytes_jpg)
     }
 
 
+# TODO: Remove when UserImageMessage is removed
 def test_message_to_openai_message_user_image_message_bytes_png(image_bytes_png):
     image_message = UserImageMessage(image_bytes_png)
     assert message_to_openai_message(image_message) == {
