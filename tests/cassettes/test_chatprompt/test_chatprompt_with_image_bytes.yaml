@@ -1,0 +1,107 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": [{"type": "text", "text": "Describe
+      this image in one word."}, {"type": "image_url", "image_url": {"url": "data:image/jpeg;base64,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"}}]}],
+      "model": "gpt-4o", "stream": true, "stream_options": {"include_usage": true}}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '3893'
+      content-type:
+      - application/json
+      host:
+      - api.openai.com
+      user-agent:
+      - OpenAI/Python 1.54.4
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.54.4
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.openai.com/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"chatcmpl-Al3zttq5SMgHHptDHycLNhVKWSgZK","object":"chat.completion.chunk","created":1735780145,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_5f20662549","choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-Al3zttq5SMgHHptDHycLNhVKWSgZK","object":"chat.completion.chunk","created":1735780145,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_5f20662549","choices":[{"index":0,"delta":{"content":"Python"},"logprobs":null,"finish_reason":null}],"usage":null}
+
+
+        data: {"id":"chatcmpl-Al3zttq5SMgHHptDHycLNhVKWSgZK","object":"chat.completion.chunk","created":1735780145,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_5f20662549","choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}],"usage":null}
+
+
+        data: {"id":"chatcmpl-Al3zttq5SMgHHptDHycLNhVKWSgZK","object":"chat.completion.chunk","created":1735780145,"model":"gpt-4o-2024-08-06","system_fingerprint":"fp_5f20662549","choices":[],"usage":{"prompt_tokens":269,"completion_tokens":1,"total_tokens":270,"prompt_tokens_details":{"cached_tokens":0,"audio_tokens":0},"completion_tokens_details":{"reasoning_tokens":0,"audio_tokens":0,"accepted_prediction_tokens":0,"rejected_prediction_tokens":0}}}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 8fb6dc8b2eb608ea-LAX
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream; charset=utf-8
+      Date:
+      - Thu, 02 Jan 2025 01:09:05 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      access-control-expose-headers:
+      - X-Request-ID
+      alt-svc:
+      - h3=":443"; ma=86400
+      openai-processing-ms:
+      - '1723'
+      openai-version:
+      - '2020-10-01'
+      strict-transport-security:
+      - max-age=31536000; includeSubDomains; preload
+      x-ratelimit-limit-input-images:
+      - '50000'
+      x-ratelimit-limit-requests:
+      - '500'
+      x-ratelimit-limit-tokens:
+      - '30000'
+      x-ratelimit-remaining-input-images:
+      - '49999'
+      x-ratelimit-remaining-requests:
+      - '499'
+      x-ratelimit-remaining-tokens:
+      - '29210'
+      x-ratelimit-reset-input-images:
+      - 1ms
+      x-ratelimit-reset-requests:
+      - 120ms
+      x-ratelimit-reset-tokens:
+      - 1.58s
+      x-request-id:
+      - req_7f310c79febc0cc7408c4010f5ce3b09
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -326,6 +326,19 @@ def test_openai_chat_model_complete_raises_tool_schema_parse_error():
 
 
 @pytest.mark.openai
+def test_openai_chat_model_complete_image_bytes(image_bytes_jpg):
+    chat_model = OpenaiChatModel("gpt-4o")
+    message = chat_model.complete(
+        messages=[
+            UserMessage(
+                ("Describe this image in one word.", ImageBytes(image_bytes_jpg))
+            )
+        ]
+    )
+    assert isinstance(message.content, str)
+
+
+@pytest.mark.openai
 async def test_openai_chat_model_acomplete_async_streamed_response():
     def get_weather(location: str) -> None:
         """Get the weather for a location."""

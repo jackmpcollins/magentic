@@ -187,6 +187,19 @@ def test_anthropic_chat_model_complete_streamed_response():
     assert function_call() is None  # Check FunctionCall is successfully called
 
 
+@pytest.mark.anthropic
+def test_anthropic_chat_model_complete_image_bytes(image_bytes_jpg):
+    chat_model = AnthropicChatModel("claude-3-haiku-20240307")
+    message = chat_model.complete(
+        messages=[
+            UserMessage(
+                ("Describe this image in one word.", ImageBytes(image_bytes_jpg))
+            )
+        ]
+    )
+    assert isinstance(message.content, str)
+
+
 @pytest.mark.parametrize(
     ("prompt", "output_types", "expected_output_type"),
     [

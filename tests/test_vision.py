@@ -79,6 +79,7 @@ def test_message_to_openai_message_user_image_message_bytes_png(image_bytes_png)
     }
 
 
+# TODO: Remove when UserImageMessage is removed
 @pytest.mark.openai
 def test_chatprompt_with_user_image_message(image_bytes_jpg):
     @chatprompt(
@@ -92,6 +93,7 @@ def test_chatprompt_with_user_image_message(image_bytes_jpg):
     assert isinstance(output, str)
 
 
+# TODO: Remove when UserImageMessage is removed
 @pytest.mark.anthropic
 def test_chatprompt_with_user_image_message_anthropic(image_bytes_jpg):
     @chatprompt(
