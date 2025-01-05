@@ -119,6 +119,7 @@ def test_user_message_format_type_hints():
     if TYPE_CHECKING:  # Avoid runtime error for None missing `format` method
         assert_type(cast(UserMessage[Literal["x"]], None).format(), UserMessage[str])
         # mypy does not convert `Literal` to `str` in these cases but pyright does
+        # issue: https://github.com/python/mypy/issues/18419
         # assert_type(cast(UserMessage[Sequence[Literal["x"]]], None).format(), UserMessage[Sequence[str]])  # noqa: ERA001
         # assert_type(cast(UserMessage[Sequence[Literal["x"] | ImageBytes]], None).format(), UserMessage[Sequence[str | ImageBytes]])  # noqa: ERA001
 
