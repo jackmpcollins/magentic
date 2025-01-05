@@ -11,6 +11,7 @@ from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
     ImageBytes,
+    ImageUrl,
     Placeholder,
     SystemMessage,
     ToolResultMessage,
@@ -18,6 +19,9 @@ from magentic.chat_model.message import (
     UserMessage,
 )
 from magentic.function_call import FunctionCall
+
+if TYPE_CHECKING:
+    from collections.abc import Sequence
 
 
 def test_placeholder_format():
@@ -111,6 +115,82 @@ def test_user_message_format():
     assert user_message_formatted == UserMessage("Hello world")
 
 
+def test_user_message_format_type_hints():
+    if TYPE_CHECKING:  # Avoid runtime error for None missing `format` method
+        assert_type(cast(UserMessage[Literal["x"]], None).format(), UserMessage[str])
+        # mypy does not convert `Literal` to `str` in these cases but pyright does
+        # assert_type(cast(UserMessage[Sequence[Literal["x"]]], None).format(), UserMessage[Sequence[str]])  # noqa: ERA001
+        # assert_type(cast(UserMessage[Sequence[Literal["x"] | ImageBytes]], None).format(), UserMessage[Sequence[str | ImageBytes]])  # noqa: ERA001
+
+        assert_type(cast(UserMessage[str], None).format(), UserMessage[str])
+
+        assert_type(
+            cast(UserMessage[Sequence[str]], None).format(), UserMessage[Sequence[str]]
+        )
+        assert_type(
+            cast(UserMessage[str | Sequence[str]], None).format(),
+            UserMessage[str | Sequence[str]],
+        )
+
+        assert_type(
+            cast(UserMessage[Sequence[ImageBytes]], None).format(),
+            UserMessage[Sequence[ImageBytes]],
+        )
+        assert_type(
+            cast(UserMessage[Sequence[str | ImageBytes]], None).format(),
+            UserMessage[Sequence[str | ImageBytes]],
+        )
+        assert_type(
+            cast(UserMessage[str | Sequence[str | ImageBytes]], None).format(),
+            UserMessage[str | Sequence[str | ImageBytes]],
+        )
+
+        assert_type(
+            cast(UserMessage[Sequence[Placeholder[ImageUrl]]], None).format(),
+            UserMessage[Sequence[ImageUrl]],
+        )
+        assert_type(
+            cast(UserMessage[Sequence[str | Placeholder[ImageUrl]]], None).format(),
+            UserMessage[Sequence[str | ImageUrl]],
+        )
+        assert_type(
+            cast(
+                UserMessage[Sequence[ImageBytes | Placeholder[ImageUrl]]], None
+            ).format(),
+            UserMessage[Sequence[ImageBytes | ImageUrl]],
+        )
+        assert_type(
+            cast(
+                UserMessage[Sequence[str | ImageBytes | Placeholder[ImageUrl]]], None
+            ).format(),
+            UserMessage[Sequence[str | ImageBytes | ImageUrl]],
+        )
+
+        assert_type(
+            cast(UserMessage[str | Sequence[Placeholder[ImageUrl]]], None).format(),
+            UserMessage[str | Sequence[ImageUrl]],
+        )
+        assert_type(
+            cast(
+                UserMessage[str | Sequence[str | Placeholder[ImageUrl]]], None
+            ).format(),
+            UserMessage[str | Sequence[str | ImageUrl]],
+        )
+        assert_type(
+            cast(
+                UserMessage[str | Sequence[ImageBytes | Placeholder[ImageUrl]]], None
+            ).format(),
+            UserMessage[str | Sequence[ImageBytes | ImageUrl]],
+        )
+        assert_type(
+            cast(
+                UserMessage[str | Sequence[str | ImageBytes | Placeholder[ImageUrl]]],
+                None,
+            ).format(),
+            UserMessage[str | Sequence[str | ImageBytes | ImageUrl]],
+        )
+
+
 def test_assistant_message_usage():
     assistant_message = AssistantMessage("Hello")
     assert assistant_message.usage is None
@@ -140,6 +220,8 @@ def test_assistant_message_format_placeholder():
     assert_type(assistant_message_formatted.content, Country)
     assert assistant_message_formatted == AssistantMessage(Country(name="USA"))
 
+
+def test_assistant_message_format_type_hints():
     if TYPE_CHECKING:  # Avoid runtime error for None missing `format` method
         assert_type(
             cast(AssistantMessage[Literal["x"]], None).format(), AssistantMessage[str]

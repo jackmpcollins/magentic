@@ -31,6 +31,9 @@ from typing_extensions import Self
 
 from magentic.function_call import FunctionCall
 
+if TYPE_CHECKING:
+    from magentic.typing import NonStringSequence
+
 PlaceholderT = TypeVar("PlaceholderT", covariant=True)
 
 
@@ -162,16 +165,22 @@ class ImageUrl(RootModel[str]):
         return self
 
 
-UserMessageContentBlock: TypeAlias = str | ImageBytes | ImageUrl
-UserMessageContentBlockT = TypeVar(
-    "UserMessageContentBlockT", bound=UserMessageContentBlock, covariant=True
-)
+UserMessageContentBlock: TypeAlias = ImageBytes | ImageUrl
 UserMessageContentT = TypeVar(
     "UserMessageContentT",
     bound=str
-    | Sequence[UserMessageContentBlock | Placeholder[UserMessageContentBlock]],
+    | Sequence[str | UserMessageContentBlock | Placeholder[UserMessageContentBlock]],
     covariant=True,
 )
+UserMessageContentBlockT = TypeVar(
+    "UserMessageContentBlockT", bound=UserMessageContentBlock
+)
+UserMessageContentBlockT2 = TypeVar(
+    "UserMessageContentBlockT2", bound=UserMessageContentBlock
+)
+# These allow type hinting that a `str` _might_ be part of the union
+StrT = TypeVar("StrT", str, str)
+StrT2 = TypeVar("StrT2", str, str)
 
 
 class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
@@ -187,20 +196,15 @@ class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
 
     @overload
     def format(
-        self: "UserMessage[Sequence[UserMessageContentBlockT]]", **kwargs: Any
-    ) -> "UserMessage[Sequence[UserMessageContentBlockT]]": ...
-
-    @overload
-    def format(
-        self: "UserMessage[Sequence[Placeholder[UserMessageContentBlockT]]]",
+        self: "UserMessage[StrT | NonStringSequence[StrT2 | UserMessageContentBlockT | Placeholder[UserMessageContentBlockT2]]]",
         **kwargs: Any,
-    ) -> "UserMessage[Sequence[UserMessageContentBlockT]]": ...
+    ) -> "UserMessage[StrT | Sequence[StrT2 | UserMessageContentBlockT | UserMessageContentBlockT2]]": ...
 
     def format(
-        self: "UserMessage[str | Sequence[UserMessageContentBlockT | Placeholder[UserMessageContentBlockT]]]",
+        self: "UserMessage[StrT | NonStringSequence[StrT2 | UserMessageContentBlockT | Placeholder[UserMessageContentBlockT2]]]",
         **kwargs: Any,
-    ) -> "UserMessage[str | Sequence[UserMessageContentBlockT]]":
-        if isinstance(self.content, str | Placeholder):
+    ) -> "UserMessage[StrT | Sequence[StrT2 | UserMessageContentBlockT | UserMessageContentBlockT2]]":
+        if isinstance(self.content, str):
             return UserMessage(self.content.format(**kwargs))
         if isinstance(self.content, Iterable):
             return UserMessage([block.format(**kwargs) for block in self.content])  # type: ignore[misc]
