@@ -48,7 +48,7 @@ escaped_string.format(example="test")
 
 ## Placeholder
 
-The `Placeholder` class enables templating of `AssistantMessage` content within the `@chatprompt` decorator. This allows dynamic changing of the messages used to prompt the model based on the arguments provided when the function is called.
+The `Placeholder` class enables templating of message content within the `@chatprompt` decorator. This allows dynamic changing of the messages used to prompt the model based on the arguments provided when the function is called.
 
 ```python
 from magentic import chatprompt, AssistantMessage, Placeholder, UserMessage
@@ -75,7 +75,7 @@ get_similar_quote(
 # Quote(quote='The Force will be with you, always.', character='Obi-Wan Kenobi')
 ```
 
-`Placeholder` can also be utilized in the `format` method of custom `Message` subclasses to provide an explicit way of inserting values from the function arguments. For example, see `UserImageMessage` in (TODO: link to GPT-vision page).
+`Placeholder` can also be used in `UserMessage` to allow inserting `ImageBytes`, `ImageUrl`, or other content blocks from function arguments. For more information see [Vision](vision.md).
 
 ## FunctionCall
 

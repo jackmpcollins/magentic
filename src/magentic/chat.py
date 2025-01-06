@@ -1,5 +1,5 @@
 import inspect
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 from typing import Any, ParamSpec, TypeVar
 
 from magentic.backend import get_chat_model
@@ -19,6 +19,7 @@ from magentic.prompt_function import BasePromptFunction
 from magentic.streaming import async_iter, azip
 
 P = ParamSpec("P")
+# TODO: Use `Self` from typing_extensions
 Self = TypeVar("Self", bound="Chat")
 
 
@@ -37,7 +38,7 @@ class Chat:
 
     def __init__(
         self,
-        messages: list[Message[Any]] | None = None,
+        messages: Sequence[Message[Any]] | None = None,
         functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[Any]] | None = None,
         model: ChatModel | None = None,

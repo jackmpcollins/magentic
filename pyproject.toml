@@ -1,6 +1,6 @@
 [project]
 name = "magentic"
-version = "0.34.1"
+version = "0.35.0"
 description = "Seamlessly integrate LLMs as Python functions"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -8,12 +8,13 @@ dependencies = [
     "filetype>=1.2.0",
     "logfire-api>=0.1.0",
     "openai>=1.40.0",
-    "pydantic>=2.7.0",
+    "pydantic>=2.10.0",
     "pydantic-settings>=2.0.0",
+    "typing-extensions>=4.5.0",
 ]
 
 [project.optional-dependencies]
-anthropic = ["anthropic>=0.27.0"]
+anthropic = ["anthropic>=0.41.0"]
 litellm = ["litellm>=1.41.12"]
 
 [build-system]
@@ -52,6 +53,9 @@ examples = ["ghapi>=1.0.5", "jupyter", "pandas>=2.2.1"]
 skip_covered = "true"
 show_missing = "true"
 
+[tool.logfire]
+ignore_no_config = true
+
 [tool.mypy]
 check_untyped_defs = true
 disable_error_code = ["empty-body"]
@@ -76,6 +80,10 @@ venv = ".venv"
 addopts = "--block-network --cov-report=html --cov-report=term --cov=magentic"
 asyncio_default_fixture_loop_scope = "function"
 asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning::",
+    "default::DeprecationWarning:magentic.*:",
+]
 markers = [
     "anthropic: Tests that query the Anthropic API. Requires the ANTHROPIC_API_KEY environment variable to be set.",
     "litellm_anthropic: Tests that query the Anthropic API via litellm. Requires the ANTHROPIC_API_KEY environment variable to be set.",
@@ -135,7 +143,8 @@ split-on-trailing-comma = false
     "T20", # flake8-print
 ]
 "tests/*" = [
-    "S", # flake8-bandit
+    "S",   # flake8-bandit
+    "T20", # flake8-print
 ]
 
 [tool.uv]

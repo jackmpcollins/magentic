@@ -4,7 +4,10 @@ from ._streamed_response import AsyncStreamedResponse as AsyncStreamedResponse
 from ._streamed_response import StreamedResponse as StreamedResponse
 from .chat_model.message import AnyMessage as AnyMessage
 from .chat_model.message import AssistantMessage as AssistantMessage
+from .chat_model.message import DocumentBytes as DocumentBytes
 from .chat_model.message import FunctionResultMessage as FunctionResultMessage
+from .chat_model.message import ImageBytes as ImageBytes
+from .chat_model.message import ImageUrl as ImageUrl
 from .chat_model.message import Placeholder as Placeholder
 from .chat_model.message import SystemMessage as SystemMessage
 from .chat_model.message import ToolResultMessage as ToolResultMessage
