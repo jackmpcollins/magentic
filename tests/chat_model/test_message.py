@@ -224,10 +224,10 @@ def test_assistant_message_format_placeholder():
 
 def test_assistant_message_format_type_hints():
     if TYPE_CHECKING:  # Avoid runtime error for None missing `format` method
+        assert_type(cast(AssistantMessage[str], None).format(), AssistantMessage[str])
         assert_type(
             cast(AssistantMessage[Literal["x"]], None).format(), AssistantMessage[str]
         )
-        assert_type(cast(AssistantMessage[str], None).format(), AssistantMessage[str])
         assert_type(
             cast(AssistantMessage[Placeholder[int]], None).format(),
             AssistantMessage[int],
@@ -236,6 +236,12 @@ def test_assistant_message_format_type_hints():
             cast(AssistantMessage[str | Placeholder[int]], None).format(),
             AssistantMessage[str | int],
         )
+        assert_type(
+            cast(AssistantMessage[Literal["x"] | Placeholder[int]], None).format(),
+            AssistantMessage[str | int],
+        )
+        # Literal matches NotPlaceholder rather than str, so we cannot show that this will become str instead of Literal
+        # assert_type(cast(AssistantMessage[Literal["x"] | int | Placeholder[int]], None).format(), AssistantMessage[str | int])  # noqa: ERA001
 
 
 def test_function_result_message_eq():

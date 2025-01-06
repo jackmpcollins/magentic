@@ -219,8 +219,8 @@ class Usage(NamedTuple):
     output_tokens: int
 
 
-T = TypeVar("T", covariant=True)
-NotPlaceholderT = TypeVar("NotPlaceholderT", bound=NotPlaceholder, covariant=True)
+T = TypeVar("T")
+NotPlaceholderT = TypeVar("NotPlaceholderT", bound=NotPlaceholder)
 
 
 class AssistantMessage(Message[ContentT], Generic[ContentT]):
@@ -249,10 +249,17 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
         self: "AssistantMessage[str]", **kwargs: Any
     ) -> "AssistantMessage[str]": ...
 
+    # TODO: Combine with overload below (using StrT) when mypy respects typevar contraints
+    # issue: https://github.com/python/mypy/issues/18419
     @overload
     def format(
         self: "AssistantMessage[Placeholder[T]]", **kwargs: Any
     ) -> "AssistantMessage[T]": ...
+
+    @overload
+    def format(
+        self: "AssistantMessage[str | Placeholder[T]]", **kwargs: Any
+    ) -> "AssistantMessage[str | T]": ...
 
     @overload
     def format(
