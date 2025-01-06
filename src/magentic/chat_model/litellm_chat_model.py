@@ -2,7 +2,7 @@ from collections.abc import Callable, Iterable, Sequence
 from typing import Any, Literal, TypeVar, cast, overload
 
 import openai
-from openai.lib.streaming.chat._completions import ChatCompletionStreamState
+from openai.lib.streaming.chat import ChatCompletionStreamState
 from openai.types.chat import ChatCompletionNamedToolChoiceParam
 
 from magentic._parsing import contains_string_type

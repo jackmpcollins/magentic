@@ -4,7 +4,7 @@ from functools import singledispatch
 from typing import Any, Generic, Literal, TypeVar, cast, overload
 
 import openai
-from openai.lib.streaming.chat._completions import ChatCompletionStreamState
+from openai.lib.streaming.chat import ChatCompletionStreamState
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionContentPartParam,
