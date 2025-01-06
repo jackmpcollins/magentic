@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
+    ImageBytes,
     Placeholder,
     SystemMessage,
     ToolResultMessage,
@@ -190,4 +191,15 @@ def test_chatprompt_with_function_call_and_result():
     def do_math() -> str: ...
 
     output = do_math()
+    assert isinstance(output, str)
+
+
+@pytest.mark.openai
+def test_chatprompt_with_image_bytes(image_bytes_jpg):
+    @chatprompt(
+        UserMessage(["Describe this image in one word.", ImageBytes(image_bytes_jpg)]),
+    )
+    def describe_image() -> str: ...
+
+    output = describe_image()
     assert isinstance(output, str)

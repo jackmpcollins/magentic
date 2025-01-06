@@ -1,11 +1,17 @@
 from typing import Any, Generic, TypeVar, overload
 
+from typing_extensions import deprecated
+
 from magentic.chat_model.message import Message, Placeholder
 
 T = TypeVar("T", bytes, str)
 ImageContentT = TypeVar("ImageContentT")
 
 
+@deprecated(
+    "UserImageMessage is deprecated and will be removed in a future version."
+    " Use UserMessage with ImageBytes and ImageUrl types instead."
+)
 class UserImageMessage(Message[ImageContentT], Generic[ImageContentT]):
     """A message containing an image sent by a user to an LLM chat model."""
 

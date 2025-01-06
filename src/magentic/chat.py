@@ -19,6 +19,7 @@ from magentic.prompt_function import BasePromptFunction
 from magentic.streaming import async_iter, azip
 
 P = ParamSpec("P")
+# TODO: Use `Self` from typing_extensions
 Self = TypeVar("Self", bound="Chat")
 
 

@@ -1,7 +1,26 @@
 import inspect
 import types
 from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, TypeGuard, TypeVar, Union, get_args, get_origin
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Protocol,
+    TypeGuard,
+    TypeVar,
+    Union,
+    get_args,
+    get_origin,
+)
+
+T_co = TypeVar("T_co", covariant=True)
+
+if TYPE_CHECKING:
+    # Cannot be defined at runtime because Protocol cannot inherit from non-Protocol
+    class NonStringSequence(Sequence[T_co], Protocol[T_co]):  # type: ignore[misc]
+        """Protocol that matches Sequences except for `str`."""
+
+        # HACK: Works because `__contains__` method of `str` does not match `Sequence`
+        # See: https://github.com/python/typing/issues/256#issuecomment-1442633430
 
 
 def is_union_type(type_: type) -> bool:
