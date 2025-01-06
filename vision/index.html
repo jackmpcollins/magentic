@@ -464,9 +464,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#userimagemessage" class="md-nav__link">
+  <a href="#imageurl" class="md-nav__link">
     <span class="md-ellipsis">
-      UserImageMessage
+      ImageUrl
     </span>
   </a>
   
@@ -482,9 +482,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#bytes" class="md-nav__link">
+  <a href="#imagebytes" class="md-nav__link">
     <span class="md-ellipsis">
-      bytes
+      ImageBytes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentbytes" class="md-nav__link">
+    <span class="md-ellipsis">
+      DocumentBytes
     </span>
   </a>
   
@@ -735,9 +744,9 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#userimagemessage" class="md-nav__link">
+  <a href="#imageurl" class="md-nav__link">
     <span class="md-ellipsis">
-      UserImageMessage
+      ImageUrl
     </span>
   </a>
   
@@ -753,9 +762,18 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#bytes" class="md-nav__link">
+  <a href="#imagebytes" class="md-nav__link">
     <span class="md-ellipsis">
-      bytes
+      ImageBytes
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#documentbytes" class="md-nav__link">
+    <span class="md-ellipsis">
+      DocumentBytes
     </span>
   </a>
   
@@ -785,18 +803,22 @@
 
 
 <h1 id="vision">Vision<a class="headerlink" href="#vision" title="Permanent link">&para;</a></h1>
-<p>Image inputs can be provided to LLMs in magentic by using the <code>UserImageMessage</code> message type.</p>
+<p>Image inputs can be provided to LLMs in magentic by using <code>ImageBytes</code> or <code>ImageUrl</code> within the <code>UserMessage</code> message type. The LLM used must support vision, for example <code>gpt-4o</code> (the default <code>ChatModel</code>). The model can be set by passing the <code>model</code> parameter to <code>@chatprompt</code>, or through the other methods of <a href="../configuration/">configuration</a>.</p>
 <div class="admonition note">
 <p class="admonition-title">Anthropic Image URLs</p>
 <p>Anthropic models currently do not support supplying an image as a url, just bytes.</p>
 </div>
-<p>For more information visit the <a href="https://platform.openai.com/docs/guides/vision">OpenAI Vision API documentation</a> or the <a href="https://docs.anthropic.com/en/docs/build-with-claude/vision#example-multiple-images">Anthropic Vision API documentation</a>.</p>
-<h2 id="userimagemessage">UserImageMessage<a class="headerlink" href="#userimagemessage" title="Permanent link">&para;</a></h2>
-<p>The <code>UserImageMessage</code> can be used in <code>@chatprompt</code> alongside other messages. The LLM must be set to an OpenAI or Anthropic model that supports vision, for example <code>gpt-4o</code> (the default <code>ChatModel</code>). This can be done by passing the <code>model</code> parameter to <code>@chatprompt</code>, or through the other methods of <a href="../configuration/">configuration</a>.</p>
+<p>For more information visit the <a href="https://platform.openai.com/docs/guides/vision">OpenAI Vision API documentation</a> or the <a href="https://docs.anthropic.com/en/docs/build-with-claude/vision">Anthropic Vision API documentation</a>.</p>
+<p>Document inputs can also be provided using the <code>DocumentBytes</code> object. This is currently only supported by some Anthropic models. See the <a href="https://docs.anthropic.com/en/docs/build-with-claude/pdf-support">Anthropic PDF Support documentation</a> for more information.</p>
+<div class="admonition warning">
+<p class="admonition-title">UserImageMessage Deprecation</p>
+<p>Previously the <code>UserImageMessage</code> was used for vision capabilities. This is now deprecated and will be removed in a future version of Magentic. It is recommended to use <code>ImageBytes</code> or <code>ImageUrl</code> within the <code>UserMessage</code> message type instead to ensure compatibility with future updates.</p>
+</div>
+<h2 id="imageurl">ImageUrl<a class="headerlink" href="#imageurl" title="Permanent link">&para;</a></h2>
+<p>As shown in <a href="../chat-prompting/">Chat Prompting</a>, <code>@chatprompt</code> can be used to supply a group of messages as a prompt to the LLM. <code>UserMessage</code> accepts a sequence of content blocks as input, which can be <code>str</code>, <code>ImageBytes</code>, <code>ImageUrl</code>, or other content types. <code>ImageUrl</code> is used to provide an image url to the LLM.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span><span class="p">,</span> <span class="n">Field</span>
 
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">ImageUrl</span><span class="p">,</span> <span class="n">UserMessage</span>
 
 
 <span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
@@ -808,8 +830,12 @@
 
 
 <span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">),</span>
+    <span class="n">UserMessage</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">,</span>
+            <span class="n">ImageUrl</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
 <span class="p">)</span>
 <span class="k">def</span> <span class="nf">describe_image</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">ImageDetails</span><span class="p">:</span> <span class="o">...</span>
 
@@ -822,30 +848,32 @@
 </code></pre></div>
 <p>For more info on the <code>@chatprompt</code> decorator, see <a href="../chat-prompting/">Chat Prompting</a>.</p>
 <h2 id="placeholder">Placeholder<a class="headerlink" href="#placeholder" title="Permanent link">&para;</a></h2>
-<p>In the previous example, the image url was tied to the function. To provide the image as a function parameter, use <code>Placeholder</code>. This substitutes a function argument into the message when the function is called.</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<p>In the previous example, the image url was tied to the function. To provide the image as a function parameter, use <code>Placeholder</code>. This substitutes a function argument into the message when the function is called. The placeholder will also automatically coerce the argument to the correct type if possible, for example <code>str</code> to <code>ImageUrl</code>.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">ImageUrl</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
 
 
 <span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
 
 
 <span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-<span class="hll">    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">str</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">)),</span>
-</span><span class="p">)</span>
+    <span class="n">UserMessage</span><span class="p">(</span>
+        <span class="p">[</span>
+<span class="hll">            <span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">,</span>
+</span>            <span class="n">Placeholder</span><span class="p">(</span><span class="n">ImageUrl</span><span class="p">,</span> <span class="s2">&quot;image_url&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
+<span class="p">)</span>
 <span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_url</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
 
 <span class="n">describe_image</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">)</span>
 <span class="c1"># &#39;A wooden boardwalk meanders through lush green wetlands under a partly cloudy blue sky.&#39;</span>
 </code></pre></div>
-<h2 id="bytes">bytes<a class="headerlink" href="#bytes" title="Permanent link">&para;</a></h2>
-<p><code>UserImageMessage</code> can also accept <code>bytes</code> as input. Like <code>str</code>, this can be passed directly or via <code>Placeholder</code>.</p>
+<h2 id="imagebytes">ImageBytes<a class="headerlink" href="#imagebytes" title="Permanent link">&para;</a></h2>
+<p><code>UserMessage</code> can also accept <code>ImageBytes</code> as a content block. Like <code>ImageUrl</code>, this can be passed directly or via <code>Placeholder</code>.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">requests</span>
 
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">ImageBytes</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
 
 
 <span class="n">IMAGE_URL_WOODEN_BOARDWALK</span> <span class="o">=</span> <span class="s2">&quot;https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg&quot;</span>
@@ -861,8 +889,12 @@
 
 
 <span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">),</span>
-    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="s2">&quot;image_bytes&quot;</span><span class="p">)),</span>
+    <span class="n">UserMessage</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;Describe the following image in one sentence.&quot;</span><span class="p">,</span>
+            <span class="n">Placeholder</span><span class="p">(</span><span class="n">ImageBytes</span><span class="p">,</span> <span class="s2">&quot;image_bytes&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
 <span class="p">)</span>
 <span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
 
@@ -870,6 +902,30 @@
 <span class="n">image_bytes</span> <span class="o">=</span> <span class="n">url_to_bytes</span><span class="p">(</span><span class="n">IMAGE_URL_WOODEN_BOARDWALK</span><span class="p">)</span>
 <span class="n">describe_image</span><span class="p">(</span><span class="n">image_bytes</span><span class="p">)</span>
 <span class="c1"># &#39;The image shows a wooden boardwalk extending through a lush green wetland with a backdrop of blue skies and scattered clouds.&#39;</span>
+</code></pre></div>
+<h2 id="documentbytes">DocumentBytes<a class="headerlink" href="#documentbytes" title="Permanent link">&para;</a></h2>
+<p><code>DocumentBytes</code> is used to provide a document as bytes to the LLM. This is currently only supported by some Anthropic models.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">DocumentBytes</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
+<span class="kn">from</span> <span class="nn">magentic.chat_model.anthropic_chat_model</span> <span class="kn">import</span> <span class="n">AnthropicChatModel</span>
+
+
+<span class="nd">@chatprompt</span><span class="p">(</span>
+    <span class="n">UserMessage</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">&quot;Repeat the contents of this document.&quot;</span><span class="p">,</span>
+            <span class="n">Placeholder</span><span class="p">(</span><span class="n">DocumentBytes</span><span class="p">,</span> <span class="s2">&quot;document_bytes&quot;</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">AnthropicChatModel</span><span class="p">(</span><span class="s2">&quot;claude-3-5-sonnet-20241022&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="k">def</span> <span class="nf">read_document</span><span class="p">(</span><span class="n">document_bytes</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span> <span class="o">...</span>
+
+
+<span class="n">document_bytes</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">read_bytes</span><span class="p">()</span>
+<span class="n">read_document</span><span class="p">(</span><span class="n">document_bytes</span><span class="p">)</span>
+<span class="c1"># &#39;This is a test PDF.&#39;</span>
 </code></pre></div>
 
 

@@ -890,7 +890,7 @@
 <span class="c1"># &#39;Curly braces {example} will be filled in!&#39;</span>
 </code></pre></div>
 <h2 id="placeholder">Placeholder<a class="headerlink" href="#placeholder" title="Permanent link">&para;</a></h2>
-<p>The <code>Placeholder</code> class enables templating of <code>AssistantMessage</code> content within the <code>@chatprompt</code> decorator. This allows dynamic changing of the messages used to prompt the model based on the arguments provided when the function is called.</p>
+<p>The <code>Placeholder</code> class enables templating of message content within the <code>@chatprompt</code> decorator. This allows dynamic changing of the messages used to prompt the model based on the arguments provided when the function is called.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">AssistantMessage</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span>
 <span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">BaseModel</span>
 
@@ -914,7 +914,7 @@
 <span class="p">)</span>
 <span class="c1"># Quote(quote=&#39;The Force will be with you, always.&#39;, character=&#39;Obi-Wan Kenobi&#39;)</span>
 </code></pre></div>
-<p><code>Placeholder</code> can also be utilized in the <code>format</code> method of custom <code>Message</code> subclasses to provide an explicit way of inserting values from the function arguments. For example, see <code>UserImageMessage</code> in (TODO: link to GPT-vision page).</p>
+<p><code>Placeholder</code> can also be used in <code>UserMessage</code> to allow inserting <code>ImageBytes</code>, <code>ImageUrl</code>, or other content blocks from function arguments. For more information see <a href="../vision/">Vision</a>.</p>
 <h2 id="functioncall">FunctionCall<a class="headerlink" href="#functioncall" title="Permanent link">&para;</a></h2>
 <p>The content of an <code>AssistantMessage</code> can be a <code>FunctionCall</code>. This can be used to demonstrate to the LLM when/how it should call a function.</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="p">(</span>

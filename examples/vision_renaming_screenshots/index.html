@@ -1322,26 +1322,32 @@ class ScreenshotDetails(BaseModel):
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Create a prompt-function to return details given an image</span>
 
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span><span class="p">,</span> <span class="n">chatprompt</span>
-<span class="kn">from</span> <span class="nn">magentic.vision</span> <span class="kn">import</span> <span class="n">UserImageMessage</span>
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">ImageBytes</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">Placeholder</span><span class="p">,</span> <span class="n">UserMessage</span><span class="p">,</span> <span class="n">chatprompt</span>
 
 
 <span class="nd">@chatprompt</span><span class="p">(</span>
-    <span class="n">UserMessage</span><span class="p">(</span><span class="s2">"Describe the screenshot, then provide a suitable file name."</span><span class="p">),</span>
-    <span class="n">UserImageMessage</span><span class="p">(</span><span class="n">Placeholder</span><span class="p">(</span><span class="nb">bytes</span><span class="p">,</span> <span class="s2">"image"</span><span class="p">)),</span>
+    <span class="n">UserMessage</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="s2">"Describe the screenshot, then provide a suitable file name."</span><span class="p">,</span>
+            <span class="n">Placeholder</span><span class="p">(</span><span class="n">ImageBytes</span><span class="p">,</span> <span class="s2">"image"</span><span class="p">),</span>
+        <span class="p">]</span>
+    <span class="p">),</span>
     <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">"gpt-4-turbo"</span><span class="p">),</span>
 <span class="p">)</span>
 <span class="k">def</span> <span class="nf">describe_image</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="nb">bytes</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ScreenshotDetails</span><span class="p">:</span> <span class="o">...</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-4"># Create a prompt-function to return details given an image
 
-from magentic import OpenaiChatModel, Placeholder, UserMessage, chatprompt
-from magentic.vision import UserImageMessage
+from magentic import ImageBytes, OpenaiChatModel, Placeholder, UserMessage, chatprompt
 
 
 @chatprompt(
-    UserMessage("Describe the screenshot, then provide a suitable file name."),
-    UserImageMessage(Placeholder(bytes, "image")),
+    UserMessage(
+        [
+            "Describe the screenshot, then provide a suitable file name.",
+            Placeholder(ImageBytes, "image"),
+        ]
+    ),
     model=OpenaiChatModel("gpt-4-turbo"),
 )
 def describe_image(image: bytes) -&gt; ScreenshotDetails: ...</div>
