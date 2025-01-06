@@ -1,6 +1,6 @@
 # Vision
 
-Image inputs can be provided to LLMs in magentic by using the `UserImageMessage` message type.
+Image inputs can be provided to LLMs in magentic by using `ImageBytes` or `ImageUrl` within the `UserMessage` message type. The LLM used must support vision, for example `gpt-4o` (the default `ChatModel`). The model can be set by passing the `model` parameter to `@chatprompt`, or through the other methods of [configuration](configuration.md).
 
 !!! note "Anthropic Image URLs"
 
@@ -8,15 +8,18 @@ Image inputs can be provided to LLMs in magentic by using the `UserImageMessage`
 
 For more information visit the [OpenAI Vision API documentation](https://platform.openai.com/docs/guides/vision) or the [Anthropic Vision API documentation](https://docs.anthropic.com/en/docs/build-with-claude/vision#example-multiple-images).
 
-## UserImageMessage
+!!! warning "UserImageMessage Deprecation"
 
-The `UserImageMessage` can be used in `@chatprompt` alongside other messages. The LLM must be set to an OpenAI or Anthropic model that supports vision, for example `gpt-4o` (the default `ChatModel`). This can be done by passing the `model` parameter to `@chatprompt`, or through the other methods of [configuration](configuration.md).
+    Previously the `UserImageMessage` was used for vision capabilities. This is now deprecated and will be removed in a future version of Magentic. It is recommended to use `ImageBytes` or `ImageUrl` within the `UserMessage` message type instead to ensure compatibility with future updates.
+
+## ImageUrl
+
+As shown in [Chat Prompting](chat-prompting.md), `@chatprompt` can be used to supply a group of messages as a prompt to the LLM. `UserMessage` accepts a sequence of content blocks as input, which can be `str`, `ImageBytes`, `ImageUrl`, or other content types. `ImageUrl` is used to provide an image url to the LLM.
 
 ```python
 from pydantic import BaseModel, Field
 
-from magentic import chatprompt, UserMessage
-from magentic.vision import UserImageMessage
+from magentic import chatprompt, ImageUrl, UserMessage
 
 
 IMAGE_URL_WOODEN_BOARDWALK = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
@@ -28,8 +31,12 @@ class ImageDetails(BaseModel):
 
 
 @chatprompt(
-    UserMessage("Describe the following image in one sentence."),
-    UserImageMessage(IMAGE_URL_WOODEN_BOARDWALK),
+    UserMessage(
+        [
+            "Describe the following image in one sentence.",
+            ImageUrl(IMAGE_URL_WOODEN_BOARDWALK),
+        ]
+    ),
 )
 def describe_image() -> ImageDetails: ...
 
@@ -48,16 +55,19 @@ For more info on the `@chatprompt` decorator, see [Chat Prompting](chat-promptin
 In the previous example, the image url was tied to the function. To provide the image as a function parameter, use `Placeholder`. This substitutes a function argument into the message when the function is called.
 
 ```python hl_lines="10"
-from magentic import chatprompt, Placeholder, UserMessage
-from magentic.vision import UserImageMessage
+from magentic import chatprompt, ImageUrl, Placeholder, UserMessage
 
 
 IMAGE_URL_WOODEN_BOARDWALK = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
 
 
 @chatprompt(
-    UserMessage("Describe the following image in one sentence."),
-    UserImageMessage(Placeholder(str, "image_url")),
+    UserMessage(
+        [
+            "Describe the following image in one sentence.",
+            Placeholder(ImageUrl, "image_url"),
+        ]
+    ),
 )
 def describe_image(image_url: str) -> str: ...
 
@@ -66,15 +76,14 @@ describe_image(IMAGE_URL_WOODEN_BOARDWALK)
 # 'A wooden boardwalk meanders through lush green wetlands under a partly cloudy blue sky.'
 ```
 
-## bytes
+## ImageBytes
 
-`UserImageMessage` can also accept `bytes` as input. Like `str`, this can be passed directly or via `Placeholder`.
+`UserMessage` can also accept `ImageBytes` as a content block. Like `ImageUrl`, this can be passed directly or via `Placeholder`.
 
 ```python
 import requests
 
-from magentic import chatprompt, Placeholder, UserMessage
-from magentic.vision import UserImageMessage
+from magentic import chatprompt, ImageBytes, Placeholder, UserMessage
 
 
 IMAGE_URL_WOODEN_BOARDWALK = "https://upload.wikimedia.org/wikipedia/commons/thumb/d/dd/Gfp-wisconsin-madison-the-nature-boardwalk.jpg/2560px-Gfp-wisconsin-madison-the-nature-boardwalk.jpg"
@@ -90,8 +99,12 @@ def url_to_bytes(url: str) -> bytes:
 
 
 @chatprompt(
-    UserMessage("Describe the following image in one sentence."),
-    UserImageMessage(Placeholder(bytes, "image_bytes")),
+    UserMessage(
+        [
+            "Describe the following image in one sentence.",
+            Placeholder(ImageBytes, "image_bytes"),
+        ]
+    ),
 )
 def describe_image(image_bytes: bytes) -> str: ...
 
