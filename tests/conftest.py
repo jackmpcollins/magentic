@@ -103,6 +103,11 @@ def test_mock_create_unique_id():
 
 
 @pytest.fixture
+def document_bytes_pdf() -> bytes:
+    return Path("tests/data/test.pdf").read_bytes()
+
+
+@pytest.fixture
 def image_bytes_jpg() -> bytes:
     return Path("tests/data/python-powered.jpg").read_bytes()
 
