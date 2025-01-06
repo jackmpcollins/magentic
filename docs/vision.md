@@ -6,7 +6,9 @@ Image inputs can be provided to LLMs in magentic by using `ImageBytes` or `Image
 
     Anthropic models currently do not support supplying an image as a url, just bytes.
 
-For more information visit the [OpenAI Vision API documentation](https://platform.openai.com/docs/guides/vision) or the [Anthropic Vision API documentation](https://docs.anthropic.com/en/docs/build-with-claude/vision#example-multiple-images).
+For more information visit the [OpenAI Vision API documentation](https://platform.openai.com/docs/guides/vision) or the [Anthropic Vision API documentation](https://docs.anthropic.com/en/docs/build-with-claude/vision).
+
+Document inputs can also be provided using the `DocumentBytes` object. This is currently only supported by some Anthropic models. See the [Anthropic PDF Support documentation](https://docs.anthropic.com/en/docs/build-with-claude/pdf-support) for more information.
 
 !!! warning "UserImageMessage Deprecation"
 
@@ -112,4 +114,32 @@ def describe_image(image_bytes: bytes) -> str: ...
 image_bytes = url_to_bytes(IMAGE_URL_WOODEN_BOARDWALK)
 describe_image(image_bytes)
 # 'The image shows a wooden boardwalk extending through a lush green wetland with a backdrop of blue skies and scattered clouds.'
+```
+
+## DocumentBytes
+
+`DocumentBytes` is used to provide a document as bytes to the LLM. This is currently only supported by some Anthropic models.
+
+```python
+from pathlib import Path
+
+from magentic import chatprompt, DocumentBytes, Placeholder, UserMessage
+from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
+
+
+@chatprompt(
+    UserMessage(
+        [
+            "Repeat the contents of this document.",
+            Placeholder(DocumentBytes, "document_bytes"),
+        ]
+    ),
+    model=AnthropicChatModel("claude-3-5-sonnet-20241022"),
+)
+def read_document(document_bytes: bytes) -> str: ...
+
+
+document_bytes = Path("...").read_bytes()
+read_document(document_bytes)
+# 'This is a test PDF.'
 ```
