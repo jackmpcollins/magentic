@@ -14,9 +14,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-anthropic = [
-    "anthropic>=0.41.0",
-]
+anthropic = ["anthropic>=0.41.0"]
 litellm = ["litellm>=1.41.12"]
 
 [build-system]
@@ -144,7 +142,8 @@ split-on-trailing-comma = false
     "T20", # flake8-print
 ]
 "tests/*" = [
-    "S", # flake8-bandit
+    "S",   # flake8-bandit
+    "T20", # flake8-print
 ]
 
 [tool.uv]

@@ -213,6 +213,19 @@ def test_anthropic_chat_model_complete_streamed_response():
 
 
 @pytest.mark.anthropic
+def test_anthropic_chat_model_complete_document_bytes(document_bytes_pdf):
+    chat_model = AnthropicChatModel("claude-3-5-sonnet-20241022")
+    message = chat_model.complete(
+        messages=[
+            UserMessage(("Repeat the PDF text.", DocumentBytes(document_bytes_pdf)))
+        ]
+    )
+    assert isinstance(message.content, str)
+    print(message.content)
+    assert message.content == "This is a test PDF."
+
+
+@pytest.mark.anthropic
 def test_anthropic_chat_model_complete_image_bytes(image_bytes_jpg):
     chat_model = AnthropicChatModel("claude-3-haiku-20240307")
     message = chat_model.complete(
