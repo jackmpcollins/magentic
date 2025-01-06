@@ -14,7 +14,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-anthropic = ["anthropic>=0.27.0"]
+anthropic = [
+    "anthropic>=0.41.0",
+]
 litellm = ["litellm>=1.41.12"]
 
 [build-system]
