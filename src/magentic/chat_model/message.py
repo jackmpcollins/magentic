@@ -34,10 +34,10 @@ from magentic.function_call import FunctionCall
 if TYPE_CHECKING:
     from magentic.typing import NonStringSequence
 
-PlaceholderT = TypeVar("PlaceholderT", covariant=True)
+PlaceholderTypeT = TypeVar("PlaceholderTypeT", covariant=True)
 
 
-class Placeholder(BaseModel, Generic[PlaceholderT]):
+class Placeholder(BaseModel, Generic[PlaceholderTypeT]):
     """A placeholder for a value in a message.
 
     When formatting a message, the placeholder is replaced with the value.
@@ -51,16 +51,16 @@ class Placeholder(BaseModel, Generic[PlaceholderT]):
     type_: type
     name: str
 
-    def __init__(self, type_: type[PlaceholderT], name: str, **data: Any):
+    def __init__(self, type_: type[PlaceholderTypeT], name: str, **data: Any):
         super().__init__(type_=type_, name=name, **data)
 
-    def format(self, **kwargs: Any) -> PlaceholderT:
+    def format(self, **kwargs: Any) -> PlaceholderTypeT:
         # TODO: Raise helpful error if name not in kwargs
         if self.name not in kwargs:
             msg = f"Argument for {self.name!r} required by placeholder is missing"
             raise ValueError(msg)
         value = kwargs[self.name]
-        type_adapter: TypeAdapter[PlaceholderT] = TypeAdapter(self.type_)
+        type_adapter: TypeAdapter[PlaceholderTypeT] = TypeAdapter(self.type_)
         try:
             return type_adapter.validate_python(value)
         except ValidationError as e:
