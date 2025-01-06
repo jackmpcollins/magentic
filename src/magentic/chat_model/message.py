@@ -129,6 +129,39 @@ class SystemMessage(Message[str]):
         return SystemMessage(self.content.format(**kwargs))
 
 
+# Anthropic supports PDF: https://docs.anthropic.com/en/docs/build-with-claude/pdf-support
+DocumentMimeType = Literal["application/pdf"]
+_DOCUMENT_MIME_TYPES: tuple[DocumentMimeType, ...] = get_args(DocumentMimeType)
+
+
+class DocumentBytes(RootModel[bytes]):
+    """Bytes representing a document file."""
+
+    @cached_property
+    def mime_type(self) -> DocumentMimeType:
+        mimetype: str | None = filetype.guess_mime(self.root)
+        assert mimetype in _DOCUMENT_MIME_TYPES
+        return cast(DocumentMimeType, mimetype)
+
+    def __init__(self, root: bytes, **data: Any):
+        super().__init__(root=root, **data)
+
+    def as_base64(self) -> str:
+        return base64.b64encode(self.root).decode("utf-8")
+
+    def format(self, **kwargs: Any) -> Self:
+        del kwargs
+        return self
+
+    @model_validator(mode="after")
+    def _is_document_bytes(self) -> Self:
+        mimetype: str | None = filetype.guess_mime(self.root)
+        if mimetype not in _DOCUMENT_MIME_TYPES:
+            msg = f"Unsupported document MIME type: {mimetype!r}"
+            raise ValueError(msg)
+        return self
+
+
 # OpenAI supports PNG, JPEG, WEBP, and non-animated GIF
 # Anthropic supports JPEG, PNG, GIF, or WebP
 ImageMimeType = Literal["image/jpeg", "image/png", "image/gif", "image/webp"]
@@ -136,6 +169,8 @@ _IMAGE_MIME_TYPES: tuple[ImageMimeType, ...] = get_args(ImageMimeType)
 
 
 class ImageBytes(RootModel[bytes]):
+    """Bytes representing an image file."""
+
     @cached_property
     def mime_type(self) -> ImageMimeType:
         mimetype: str | None = filetype.guess_mime(self.root)
@@ -159,12 +194,14 @@ class ImageBytes(RootModel[bytes]):
 
 
 class ImageUrl(RootModel[str]):
+    """String representing a URL to an image."""
+
     def format(self, **kwargs: Any) -> Self:
         del kwargs
         return self
 
 
-UserMessageContentBlock: TypeAlias = ImageBytes | ImageUrl
+UserMessageContentBlock: TypeAlias = DocumentBytes | ImageBytes | ImageUrl
 UserMessageContentT = TypeVar(
     "UserMessageContentT",
     bound=str
