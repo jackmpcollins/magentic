@@ -55,7 +55,6 @@ class Placeholder(BaseModel, Generic[PlaceholderTypeT]):
         super().__init__(type_=type_, name=name, **data)
 
     def format(self, **kwargs: Any) -> PlaceholderTypeT:
-        # TODO: Raise helpful error if name not in kwargs
         if self.name not in kwargs:
             msg = f"Argument for {self.name!r} required by placeholder is missing"
             raise ValueError(msg)
