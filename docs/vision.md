@@ -52,7 +52,7 @@ For more info on the `@chatprompt` decorator, see [Chat Prompting](chat-promptin
 
 ## Placeholder
 
-In the previous example, the image url was tied to the function. To provide the image as a function parameter, use `Placeholder`. This substitutes a function argument into the message when the function is called.
+In the previous example, the image url was tied to the function. To provide the image as a function parameter, use `Placeholder`. This substitutes a function argument into the message when the function is called. The placeholder will also automatically coerce the argument to the correct type if possible, for example `str` to `ImageUrl`.
 
 ```python hl_lines="10"
 from magentic import chatprompt, ImageUrl, Placeholder, UserMessage
