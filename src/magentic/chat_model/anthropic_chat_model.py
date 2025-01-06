@@ -17,6 +17,7 @@ from magentic.chat_model.function_schema import (
 )
 from magentic.chat_model.message import (
     AssistantMessage,
+    DocumentBytes,
     ImageBytes,
     Message,
     SystemMessage,
@@ -40,6 +41,7 @@ try:
     from anthropic.lib.streaming import MessageStreamEvent
     from anthropic.lib.streaming._messages import accumulate_event
     from anthropic.types import (
+        DocumentBlockParam,
         ImageBlockParam,
         MessageParam,
         TextBlockParam,
@@ -75,10 +77,21 @@ def _(message: UserMessage[Any]) -> MessageParam:
     if isinstance(message.content, str):
         return {"role": AnthropicMessageRole.USER.value, "content": message.content}
     if isinstance(message.content, Iterable):
-        content: list[TextBlockParam | ImageBlockParam] = []
+        content: list[TextBlockParam | DocumentBlockParam | ImageBlockParam] = []
         for block in message.content:
             if isinstance(block, str):
                 content.append({"type": "text", "text": block})
+            elif isinstance(block, DocumentBytes):
+                content.append(
+                    {
+                        "type": "document",
+                        "source": {
+                            "type": "base64",
+                            "media_type": block.mime_type,
+                            "data": block.as_base64(),
+                        },
+                    }
+                )
             elif isinstance(block, ImageBytes):
                 content.append(
                     {
@@ -109,7 +122,7 @@ def _(message: UserImageMessage[Any]) -> MessageParam:
         "role": AnthropicMessageRole.USER.value,
         "content": [
             {
-                "type": "document" if mime_type == "application/pdf" else "image",
+                "type": "image",
                 "source": {
                     "type": "base64",
                     "media_type": image_bytes.mime_type,
