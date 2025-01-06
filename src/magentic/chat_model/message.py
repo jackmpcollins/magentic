@@ -135,6 +135,8 @@ _DOCUMENT_MIME_TYPES: tuple[DocumentMimeType, ...] = get_args(DocumentMimeType)
 
 
 class DocumentBytes(RootModel[bytes]):
+    """Bytes representing a document file."""
+
     @cached_property
     def mime_type(self) -> DocumentMimeType:
         mimetype: str | None = filetype.guess_mime(self.root)
@@ -167,6 +169,8 @@ _IMAGE_MIME_TYPES: tuple[ImageMimeType, ...] = get_args(ImageMimeType)
 
 
 class ImageBytes(RootModel[bytes]):
+    """Bytes representing an image file."""
+
     @cached_property
     def mime_type(self) -> ImageMimeType:
         mimetype: str | None = filetype.guess_mime(self.root)
@@ -190,6 +194,8 @@ class ImageBytes(RootModel[bytes]):
 
 
 class ImageUrl(RootModel[str]):
+    """String representing a URL to an image."""
+
     def format(self, **kwargs: Any) -> Self:
         del kwargs
         return self
