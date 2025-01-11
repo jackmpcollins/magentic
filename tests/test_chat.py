@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from magentic.chat import Chat
+from magentic._chat import Chat
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,

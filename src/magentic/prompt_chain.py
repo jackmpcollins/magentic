@@ -3,7 +3,7 @@ from collections.abc import Callable
 from functools import wraps
 from typing import Any, ParamSpec, TypeVar, cast
 
-from magentic.chat import Chat
+from magentic._chat import Chat
 from magentic.chat_model.base import ChatModel
 from magentic.function_call import FunctionCall
 from magentic.logger import logfire
