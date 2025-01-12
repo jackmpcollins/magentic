@@ -10,13 +10,13 @@
       
       
       
-        <link rel="canonical" href="https://magentic.dev/retrying/">
+        <link rel="canonical" href="https://magentic.dev/chat/">
       
       
-        <link rel="prev" href="../vision/">
+        <link rel="prev" href="../chat-prompting/">
       
       
-        <link rel="next" href="../logging-and-tracing/">
+        <link rel="next" href="../function-calling/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -24,7 +24,7 @@
     
     
       
-        <title>Retrying - Magentic</title>
+        <title>Chat - Magentic</title>
       
     
     
@@ -97,7 +97,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#retrying" class="md-skip">
+        <a href="#chat" class="md-skip">
           Skip to content
         </a>
       
@@ -133,7 +133,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Retrying
+              Chat
             
           </span>
         </div>
@@ -333,10 +333,30 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="../chat/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Chat
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   <span class="md-ellipsis">
@@ -345,6 +365,73 @@
   
 
       </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="Page contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Page contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#basic-usage" class="md-nav__link">
+    <span class="md-ellipsis">
+      Basic Usage
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#function-calling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Function Calling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      Streaming
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#asyncio" class="md-nav__link">
+    <span class="md-ellipsis">
+      Asyncio
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      Agent
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -453,30 +540,10 @@
       
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  <span class="md-ellipsis">
-    Retrying
-  </span>
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../retrying/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -485,52 +552,6 @@
   
 
       </a>
-      
-        
-
-  
-
-<nav class="md-nav md-nav--secondary" aria-label="Page contents">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Page contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#llm-assisted-retries" class="md-nav__link">
-    <span class="md-ellipsis">
-      LLM-Assisted Retries
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="LLM-Assisted Retries">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#retrychatmodel" class="md-nav__link">
-    <span class="md-ellipsis">
-      RetryChatModel
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -752,26 +773,47 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#llm-assisted-retries" class="md-nav__link">
+  <a href="#basic-usage" class="md-nav__link">
     <span class="md-ellipsis">
-      LLM-Assisted Retries
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="LLM-Assisted Retries">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#retrychatmodel" class="md-nav__link">
-    <span class="md-ellipsis">
-      RetryChatModel
+      Basic Usage
     </span>
   </a>
   
 </li>
-        
-      </ul>
-    </nav>
+      
+        <li class="md-nav__item">
+  <a href="#function-calling" class="md-nav__link">
+    <span class="md-ellipsis">
+      Function Calling
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#streaming" class="md-nav__link">
+    <span class="md-ellipsis">
+      Streaming
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#asyncio" class="md-nav__link">
+    <span class="md-ellipsis">
+      Asyncio
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agent" class="md-nav__link">
+    <span class="md-ellipsis">
+      Agent
+    </span>
+  </a>
   
 </li>
       
@@ -790,7 +832,7 @@
                   
 
   
-    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/retrying.md" title="Edit this page" class="md-content__button md-icon">
+    <a href="https://github.com/jackmpcollins/magentic/blob/main/docs/chat.md" title="Edit this page" class="md-content__button md-icon">
       
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20H6V4h7v5h5v3.1l2-2V8l-6-6H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h4zm10.2-7c.1 0 .3.1.4.2l1.3 1.3c.2.2.2.6 0 .8l-1 1-2.1-2.1 1-1c.1-.1.2-.2.4-.2m0 3.9L14.1 23H12v-2.1l6.1-6.1z"/></svg>
     </a>
@@ -798,68 +840,125 @@
   
 
 
-<h1 id="retrying">Retrying<a class="headerlink" href="#retrying" title="Permanent link">&para;</a></h1>
-<h2 id="llm-assisted-retries">LLM-Assisted Retries<a class="headerlink" href="#llm-assisted-retries" title="Permanent link">&para;</a></h2>
-<p>Occasionally the LLM returns an output that cannot be parsed into any of the output types or function calls that were requested. Additionally, the pydantic models you define might have extra validation that is not represented by the type annotations alone. In these cases, LLM-assisted retries can be used to automatically resubmit the output as well as the associated error message back to the LLM, giving it another opportunity with more information to meet the output schema requirements.</p>
-<p>To enable retries, simply set the <code>max_retries</code> parameter to a non-zero value in <code>@prompt</code> or <code>@chatprompt</code>.</p>
-<p>In this example</p>
-<ul>
-<li>the LLM first returns a country that is not Ireland</li>
-<li>then the pydantic model validation fails with error "Country must be Ireland"</li>
-<li>the original output as well as a message containing the error are resubmitted to the LLM</li>
-<li>the LLM correctly meets the output requirement returning "Ireland"</li>
-</ul>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Annotated</span>
+<h1 id="chat">Chat<a class="headerlink" href="#chat" title="Permanent link">&para;</a></h1>
+<p>This page covers the <code>Chat</code> class which can be used to manage an ongoing conversation with an LLM chat model. To define a reusable LLM query template use the <code>@chatprompt</code> decorator instead, see <a href="../chat-prompting/">Chat Prompting</a>.</p>
+<p>The <code>Chat</code> class represents an ongoing conversation with an LLM. It keeps track of the messages exchanged between the user and the model and allows submitting the conversation to the model to get a response.</p>
+<h2 id="basic-usage">Basic Usage<a class="headerlink" href="#basic-usage" title="Permanent link">&para;</a></h2>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">Chat</span><span class="p">,</span> <span class="n">OpenaiChatModel</span><span class="p">,</span> <span class="n">UserMessage</span>
 
-<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt</span>
-<span class="kn">from</span> <span class="nn">pydantic</span> <span class="kn">import</span> <span class="n">AfterValidator</span><span class="p">,</span> <span class="n">BaseModel</span>
-
-
-<span class="k">def</span> <span class="nf">assert_is_ireland</span><span class="p">(</span><span class="n">v</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
-    <span class="k">if</span> <span class="n">v</span> <span class="o">!=</span> <span class="s2">&quot;Ireland&quot;</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Country must be Ireland&quot;</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">v</span>
-
-
-<span class="k">class</span> <span class="nc">Country</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
-    <span class="n">name</span><span class="p">:</span> <span class="n">Annotated</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">AfterValidator</span><span class="p">(</span><span class="n">assert_is_ireland</span><span class="p">)]</span>
-    <span class="n">capital</span><span class="p">:</span> <span class="nb">str</span>
-
-
-<span class="nd">@prompt</span><span class="p">(</span>
-    <span class="s2">&quot;Return a country&quot;</span><span class="p">,</span>
-    <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span>
+<span class="c1"># Create a new Chat instance</span>
+<span class="n">chat</span> <span class="o">=</span> <span class="n">Chat</span><span class="p">(</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span><span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Say hello&quot;</span><span class="p">)],</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">),</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">get_country</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Country</span><span class="p">:</span> <span class="o">...</span>
 
+<span class="c1"># Append a new user message</span>
+<span class="n">chat</span> <span class="o">=</span> <span class="n">chat</span><span class="o">.</span><span class="n">add_user_message</span><span class="p">(</span><span class="s2">&quot;Actually, say goodbye!&quot;</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">chat</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span>
+<span class="c1"># [UserMessage(&#39;Say hello&#39;), UserMessage(&#39;Actually, say goodbye!&#39;)]</span>
 
-<span class="n">get_country</span><span class="p">()</span>
-<span class="c1"># 05:13:55.607 Calling prompt-function get_country</span>
-<span class="c1"># 05:13:55.622   LLM-assisted retries enabled. Max 3</span>
-<span class="c1"># 05:13:55.627     Chat Completion with &#39;gpt-4o&#39; [LLM]</span>
-<span class="c1"># 05:13:56.309     streaming response from &#39;gpt-4o&#39; took 0.11s [LLM]</span>
-<span class="c1"># 05:13:56.310     Retrying Chat Completion. Attempt 1.</span>
-<span class="c1"># 05:13:56.322     Chat Completion with &#39;gpt-4o&#39; [LLM]</span>
-<span class="c1"># 05:13:57.456     streaming response from &#39;gpt-4o&#39; took 0.00s [LLM]</span>
-<span class="c1">#</span>
-<span class="c1"># Country(name=&#39;Ireland&#39;, capital=&#39;Dublin&#39;)</span>
+<span class="c1"># Submit the chat to the LLM to get a response</span>
+<span class="n">chat</span> <span class="o">=</span> <span class="n">chat</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">chat</span><span class="o">.</span><span class="n">last_message</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+<span class="c1"># &#39;Hello! Just kidding—goodbye!&#39;</span>
 </code></pre></div>
-<p>LLM-Assisted retries are intended to address cases where the LLM failed to generate valid output. Errors due to LLM provider rate limiting, internet connectivity issues, or other issues that cannot be solved by reprompting the LLM should be handled using other methods. For example <a href="https://github.com/jd/tenacity">jd/tenacity</a> or <a href="https://github.com/hynek/stamina">hynek/stamina</a> to retry a Python function.</p>
-<h3 id="retrychatmodel">RetryChatModel<a class="headerlink" href="#retrychatmodel" title="Permanent link">&para;</a></h3>
-<p>Under the hood, LLM-assisted retries are implemented using the <code>RetryChatModel</code> which wraps any other <code>ChatModel</code>, catches exceptions, and resubmits them to the LLM. To implement your own retry handling you can follow the pattern of this class. Please file a <a href="https://github.com/jackmpcollins/magentic/issues">GitHub issue</a> if you encounter exceptions that should be included in the LLM-assisted retries.</p>
-<p>To use the <code>RetryChatModel</code> directly rather than via the <code>max_retries</code> parameter, simply pass it as the <code>model</code> argument to the decorator. Extending the example above</p>
-<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">OpenaiChatModel</span>
-<span class="kn">from</span> <span class="nn">magentic.chat_model.retry_chat_model</span> <span class="kn">import</span> <span class="n">RetryChatModel</span>
-
-
-<span class="nd">@prompt</span><span class="p">(</span>
-    <span class="s2">&quot;Return a country&quot;</span><span class="p">,</span>
-    <span class="n">model</span><span class="o">=</span><span class="n">RetryChatModel</span><span class="p">(</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4o-mini&quot;</span><span class="p">),</span> <span class="n">max_retries</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+<p>Note that all methods of <code>Chat</code> return a new <code>Chat</code> instance with the updated messages. This allows branching the conversation and keeping track of multiple conversation paths.</p>
+<p>The following methods are available to manually add messages to the chat by providing just the content of the message:</p>
+<ul>
+<li><code>add_system_message</code>: Adds a system message to the chat.</li>
+<li><code>add_user_message</code>: Adds a user message to the chat.</li>
+<li><code>add_assistant_message</code>: Adds an assistant message to the chat.</li>
+</ul>
+<p>There is also a generic <code>add_message</code> method to add a <code>Message</code> object to the chat. And the <code>submit</code> method is used to submit the chat to the LLM model which adds an <code>AssistantMessage</code> to the chat containing the model's response.</p>
+<h2 id="function-calling">Function Calling<a class="headerlink" href="#function-calling" title="Permanent link">&para;</a></h2>
+<p>Function calling can be done with the <code>Chat</code> class by providing the list of functions when creating the instance, similar to the <code>@chatprompt</code> decorator. Similarly, structured outputs can be returned by setting the <code>output_types</code> parameter.</p>
+<p>If the last message in the chat is an <code>AssistantMessage</code> containing a <code>FunctionCall</code> or <code>ParallelFunctionCall</code>, calling the <code>exec_function_call</code> method will execute the function call(s) and append the result(s) to the chat. Then, if needed, the chat can be submitted to the LLM again to get another response.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">AssistantMessage</span><span class="p">,</span>
+    <span class="n">Chat</span><span class="p">,</span>
+    <span class="n">FunctionCall</span><span class="p">,</span>
+    <span class="n">OpenaiChatModel</span><span class="p">,</span>
+    <span class="n">UserMessage</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="k">def</span> <span class="nf">get_country</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">Country</span><span class="p">:</span> <span class="o">...</span>
 
 
-<span class="n">get_country</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">get_current_weather</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;fahrenheit&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current weather in a given location&quot;&quot;&quot;</span>
+    <span class="c1"># Pretend to query an API</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;forecast&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sunny&quot;</span><span class="p">,</span> <span class="s2">&quot;windy&quot;</span><span class="p">]}</span>
+
+
+<span class="n">chat</span> <span class="o">=</span> <span class="n">Chat</span><span class="p">(</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span><span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;What&#39;s the weather like in Boston?&quot;</span><span class="p">)],</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">get_current_weather</span><span class="p">],</span>
+    <span class="c1"># `FunctionCall` must be in output_types to get `FunctionCall` outputs</span>
+    <span class="n">output_types</span><span class="o">=</span><span class="p">[</span><span class="n">FunctionCall</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">model</span><span class="o">=</span><span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">),</span>
+<span class="p">)</span>
+<span class="hll"><span class="n">chat</span> <span class="o">=</span> <span class="n">chat</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>
+</span><span class="hll"><span class="nb">print</span><span class="p">(</span><span class="n">chat</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span>
+</span><span class="hll"><span class="c1"># [UserMessage(&quot;What&#39;s the weather like in Boston?&quot;),</span>
+</span><span class="c1">#  AssistantMessage(FunctionCall(&lt;function get_current_weather at 0x130a92160&gt;, &#39;Boston&#39;))]</span>
+
+<span class="c1"># Execute the function call and append the result to the chat</span>
+<span class="n">chat</span> <span class="o">=</span> <span class="n">chat</span><span class="o">.</span><span class="n">exec_function_call</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">chat</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span>
+<span class="c1"># [UserMessage(&quot;What&#39;s the weather like in Boston?&quot;),</span>
+<span class="c1">#  AssistantMessage(FunctionCall(&lt;function get_current_weather at 0x130a92160&gt;, &#39;Boston&#39;)),</span>
+<span class="c1">#  FunctionResultMessage({&#39;location&#39;: &#39;Boston&#39;, &#39;temperature&#39;: &#39;72&#39;, &#39;unit&#39;: &#39;fahrenheit&#39;, &#39;forecast&#39;: [&#39;sunny&#39;, &#39;windy&#39;]},</span>
+<span class="c1">#                        FunctionCall(&lt;function get_current_weather at 0x130a92160&gt;, &#39;Boston&#39;))]</span>
+
+<span class="c1"># Submit the chat again to get the final LLM response</span>
+<span class="n">chat</span> <span class="o">=</span> <span class="n">chat</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">chat</span><span class="o">.</span><span class="n">messages</span><span class="p">)</span>
+<span class="c1"># [UserMessage(&quot;What&#39;s the weather like in Boston?&quot;),</span>
+<span class="c1">#  AssistantMessage(FunctionCall(&lt;function get_current_weather at 0x130a92160&gt;, &#39;Boston&#39;)),</span>
+<span class="c1">#  FunctionResultMessage({&#39;location&#39;: &#39;Boston&#39;, &#39;temperature&#39;: &#39;72&#39;, &#39;unit&#39;: &#39;fahrenheit&#39;, &#39;forecast&#39;: [&#39;sunny&#39;, &#39;windy&#39;]},</span>
+<span class="c1">#                        FunctionCall(&lt;function get_current_weather at 0x130a92160&gt;, &#39;Boston&#39;)),</span>
+<span class="c1">#  AssistantMessage(&quot;The current weather in Boston is 72°F, and it&#39;s sunny with windy conditions.&quot;)]</span>
+</code></pre></div>
+<h2 id="streaming">Streaming<a class="headerlink" href="#streaming" title="Permanent link">&para;</a></h2>
+<p>Streaming types such as <code>StreamedStr</code>, <code>StreamedOutput</code>, and <code>Iterable[T]</code> can be provided in the <code>output_types</code> parameter. When the <code>.submit()</code> method is called, an <code>AssistantMessage</code> containing the streamed type will be appended to the chat immediately. This allows the streamed type to be accessed and streamed from. For more information on streaming types, see <a href="../streaming/">Streaming</a>.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">Chat</span><span class="p">,</span> <span class="n">UserMessage</span><span class="p">,</span> <span class="n">StreamedStr</span>
+
+<span class="n">chat</span> <span class="o">=</span> <span class="n">Chat</span><span class="p">(</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span><span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;Tell me about the Golden Gate Bridge.&quot;</span><span class="p">)],</span>
+    <span class="n">output_types</span><span class="o">=</span><span class="p">[</span><span class="n">StreamedStr</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="n">chat</span> <span class="o">=</span> <span class="n">chat</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">chat</span><span class="o">.</span><span class="n">last_message</span><span class="o">.</span><span class="n">content</span><span class="p">))</span>
+<span class="c1"># &lt;class &#39;magentic.streaming.StreamedStr&#39;&gt;</span>
+
+<span class="k">for</span> <span class="n">chunk</span> <span class="ow">in</span> <span class="n">chat</span><span class="o">.</span><span class="n">last_message</span><span class="o">.</span><span class="n">content</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">chunk</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="c1"># (streamed) &#39;The Golden Gate Bridge is an iconic suspension bridge...</span>
+</code></pre></div>
+<h2 id="asyncio">Asyncio<a class="headerlink" href="#asyncio" title="Permanent link">&para;</a></h2>
+<p>The <code>Chat</code> class also support asynchronous usage through the following methods:</p>
+<ul>
+<li><code>asubmit</code>: Asynchronously submit the chat to the LLM model.</li>
+<li><code>aexec_function_call</code>: Asynchronously execute the function call in the chat. This is required to handle the <code>AsyncParallelFunctionCall</code> output type.</li>
+</ul>
+<h2 id="agent">Agent<a class="headerlink" href="#agent" title="Permanent link">&para;</a></h2>
+<p>A very basic form of an agent can be created by running a loop that submits the chat to the LLM and executes function calls until some stop condition is met.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">Chat</span><span class="p">,</span> <span class="n">FunctionCall</span><span class="p">,</span> <span class="n">ParallelFunctionCall</span><span class="p">,</span> <span class="n">UserMessage</span>
+
+
+<span class="k">def</span> <span class="nf">get_current_weather</span><span class="p">(</span><span class="n">location</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="s2">&quot;fahrenheit&quot;</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Get the current weather in a given location&quot;&quot;&quot;</span>
+    <span class="c1"># Pretend to query an API</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;temperature&quot;</span><span class="p">:</span> <span class="s2">&quot;72&quot;</span><span class="p">,</span> <span class="s2">&quot;forecast&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;sunny&quot;</span><span class="p">,</span> <span class="s2">&quot;windy&quot;</span><span class="p">]}</span>
+
+
+<span class="n">chat</span> <span class="o">=</span> <span class="n">Chat</span><span class="p">(</span>
+    <span class="n">messages</span><span class="o">=</span><span class="p">[</span><span class="n">UserMessage</span><span class="p">(</span><span class="s2">&quot;What&#39;s the weather like in Boston?&quot;</span><span class="p">)],</span>
+    <span class="n">functions</span><span class="o">=</span><span class="p">[</span><span class="n">get_current_weather</span><span class="p">],</span>
+    <span class="n">output_types</span><span class="o">=</span><span class="p">[</span><span class="n">FunctionCall</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+<span class="p">)</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>
+<span class="k">while</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">chat</span><span class="o">.</span><span class="n">last_message</span><span class="o">.</span><span class="n">content</span><span class="p">,</span> <span class="n">FunctionCall</span> <span class="o">|</span> <span class="n">ParallelFunctionCall</span><span class="p">):</span>
+    <span class="n">chat</span> <span class="o">=</span> <span class="n">chat</span><span class="o">.</span><span class="n">exec_function_call</span><span class="p">()</span><span class="o">.</span><span class="n">submit</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">chat</span><span class="o">.</span><span class="n">last_message</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+<span class="c1"># &#39;The current weather in Boston is 72°F, with sunny and windy conditions.&#39;</span>
 </code></pre></div>
 
 

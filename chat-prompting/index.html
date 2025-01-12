@@ -16,7 +16,7 @@
         <link rel="prev" href="../structured-outputs/">
       
       
-        <link rel="next" href="../function-calling/">
+        <link rel="next" href="../chat/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -438,6 +438,26 @@
   
   
     <li class="md-nav__item">
+      <a href="../chat/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Chat
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../function-calling/" class="md-nav__link">
         
   
@@ -627,10 +647,10 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_13" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_14" >
         
           
-          <label class="md-nav__link" for="__nav_13" id="__nav_13_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_14" id="__nav_14_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -641,8 +661,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_13_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_13">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_14_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_14">
             <span class="md-nav__icon md-icon"></span>
             Examples
           </label>
@@ -851,6 +871,7 @@
 
 
 <h1 id="chat-prompting">Chat Prompting<a class="headerlink" href="#chat-prompting" title="Permanent link">&para;</a></h1>
+<p>This page covers the <code>@chatprompt</code> decorator which can be used to define an LLM query template (message templates, optional LLM, functions, and return type). To manage an ongoing conversation with an LLM, see <a href="../chat/">Chat</a>.</p>
 <h2 id="chatprompt">@chatprompt<a class="headerlink" href="#chatprompt" title="Permanent link">&para;</a></h2>
 <p>The <code>@chatprompt</code> decorator works just like <code>@prompt</code> but allows you to pass chat messages as a template rather than a single text prompt. This can be used to provide a system message or for few-shot prompting where you provide example responses to guide the model's output. Format fields denoted by curly braces <code>{example}</code> will be filled in all messages (except <code>FunctionResultMessage</code>).</p>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">chatprompt</span><span class="p">,</span> <span class="n">AssistantMessage</span><span class="p">,</span> <span class="n">SystemMessage</span><span class="p">,</span> <span class="n">UserMessage</span>
