@@ -2,7 +2,7 @@ import inspect
 from collections.abc import Callable, Iterable, Sequence
 from typing import Any, ParamSpec
 
-from typing_extensions import Self
+from typing_extensions import Self, deprecated
 
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
@@ -52,6 +52,10 @@ class Chat:
         self._model = model
 
     @classmethod
+    @deprecated(
+        "Chat.from_prompt will be removed in a future version."
+        " Instead, use the regular init method, `Chat(messages, functions, output_types, model)`."
+    )
     def from_prompt(
         cls: type[Self],
         prompt: BasePromptFunction[P, Any],

@@ -5,6 +5,7 @@ from typing import Any, ParamSpec, TypeVar, cast
 
 from magentic._chat import Chat
 from magentic.chat_model.base import ChatModel
+from magentic.chat_model.message import UserMessage
 from magentic.function_call import FunctionCall
 from magentic.logger import logfire
 from magentic.prompt_function import AsyncPromptFunction, PromptFunction
@@ -45,8 +46,15 @@ def prompt_chain(
                     f"Calling async prompt-chain {func.__name__}",
                     **func_signature.bind(*args, **kwargs).arguments,
                 ):
-                    chat = await Chat.from_prompt(
-                        async_prompt_function, *args, **kwargs
+                    chat = await Chat(
+                        messages=[
+                            UserMessage(
+                                content=async_prompt_function.format(*args, **kwargs)
+                            )
+                        ],
+                        functions=async_prompt_function.functions,
+                        output_types=async_prompt_function.return_types,
+                        model=async_prompt_function._model,  # Keep `None` value if unset
                     ).asubmit()
                     num_calls = 0
                     while isinstance(chat.last_message.content, FunctionCall):
@@ -79,7 +87,14 @@ def prompt_chain(
                 f"Calling prompt-chain {func.__name__}",
                 **func_signature.bind(*args, **kwargs).arguments,
             ):
-                chat = Chat.from_prompt(prompt_function, *args, **kwargs).submit()
+                chat = Chat(
+                    messages=[
+                        UserMessage(content=prompt_function.format(*args, **kwargs))
+                    ],
+                    functions=prompt_function.functions,
+                    output_types=prompt_function.return_types,
+                    model=prompt_function._model,  # Keep `None` value if unset
+                ).submit()
                 num_calls = 0
                 while isinstance(chat.last_message.content, FunctionCall):
                     if max_calls is not None and num_calls >= max_calls:
