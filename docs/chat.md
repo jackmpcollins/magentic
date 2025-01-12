@@ -119,3 +119,33 @@ The `Chat` class also support asynchronous usage through the following methods:
 
 - `asubmit`: Asynchronously submit the chat to the LLM model.
 - `aexec_function_call`: Asynchronously execute the function call in the chat. This is required to handle the `AsyncParallelFunctionCall` output type.
+
+## Agent
+
+A very basic form of an agent can be created by running a loop that submits the chat to the LLM and executes function calls until some stop condition is met.
+
+```python
+from magentic import Chat, FunctionCall, ParallelFunctionCall, UserMessage
+
+
+def get_current_weather(location, unit="fahrenheit"):
+    """Get the current weather in a given location"""
+    # Pretend to query an API
+    return {
+        "location": location,
+        "temperature": "72",
+        "unit": unit,
+        "forecast": ["sunny", "windy"],
+    }
+
+
+chat = Chat(
+    messages=[UserMessage("What's the weather like in Boston?")],
+    functions=[get_current_weather],
+    output_types=[FunctionCall, str],
+).submit()
+while isinstance(chat.last_message.content, FunctionCall | ParallelFunctionCall):
+    chat = chat.exec_function_call().submit()
+print(chat.last_message.content)
+# 'The current weather in Boston is 72°F, with sunny and windy conditions.'
+```
