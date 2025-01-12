@@ -2,10 +2,10 @@ interactions:
 - request:
     body: '{"messages": [{"role": "system", "content": "You are a movie buff."}, {"role":
       "user", "content": "What is your favorite quote from Harry Potter?"}, {"role":
-      "assistant", "content": null, "tool_calls": [{"id": "000000000", "type": "function",
-      "function": {"name": "return_quote", "arguments": "{\"quote\":\"It does not
-      do to dwell on dreams and forget to live.\",\"character\":\"Albus Dumbledore\"}"}}]},
-      {"role": "tool", "tool_call_id": "000000000", "content": "null"}, {"role": "assistant",
+      "assistant", "tool_calls": [{"id": "000000000", "type": "function", "function":
+      {"name": "return_quote", "arguments": "{\"quote\":\"It does not do to dwell
+      on dreams and forget to live.\",\"character\":\"Albus Dumbledore\"}"}}]}, {"role":
+      "tool", "tool_call_id": "000000000", "content": "null"}, {"role": "assistant",
       "content": "."}, {"role": "user", "content": "What is your favorite quote from
       {movie}?"}], "model": "mistral-large-latest", "stream": true, "tool_choice":
       "any", "tools": [{"type": "function", "function": {"name": "return_quote", "parameters":
@@ -20,13 +20,13 @@ interactions:
       connection:
       - keep-alive
       content-length:
-      - '914'
+      - '897'
       content-type:
       - application/json
       host:
       - api.mistral.ai
       user-agent:
-      - OpenAI/Python 1.54.4
+      - OpenAI/Python 1.59.3
       x-stainless-arch:
       - arm64
       x-stainless-async:
@@ -36,7 +36,7 @@ interactions:
       x-stainless-os:
       - MacOS
       x-stainless-package-version:
-      - 1.54.4
+      - 1.59.3
       x-stainless-retry-count:
       - '0'
       x-stainless-runtime:
@@ -47,10 +47,10 @@ interactions:
     uri: https://api.mistral.ai/v1/chat/completions
   response:
     body:
-      string: 'data: {"id":"b8ffbb14857d4d0fa4833410483e048f","object":"chat.completion.chunk","created":1732409785,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
+      string: 'data: {"id":"60db5249cccd497a86a6e391d041494f","object":"chat.completion.chunk","created":1736659116,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null}]}
 
 
-        data: {"id":"b8ffbb14857d4d0fa4833410483e048f","object":"chat.completion.chunk","created":1732409785,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"tool_calls":[{"id":"cIwFIgNyc","function":{"name":"return_quote","arguments":"{\"quote\":
+        data: {"id":"60db5249cccd497a86a6e391d041494f","object":"chat.completion.chunk","created":1736659116,"model":"mistral-large-latest","choices":[{"index":0,"delta":{"tool_calls":[{"id":"JdDHRctXt","function":{"name":"return_quote","arguments":"{\"quote\":
         \"May the Force be with you.\", \"character\": \"Obi-Wan Kenobi\"}"}}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":185,"total_tokens":223,"completion_tokens":38}}
 
 
@@ -62,13 +62,13 @@ interactions:
       CF-Cache-Status:
       - DYNAMIC
       CF-RAY:
-      - 8e757066ba8b175e-SJC
+      - 900aafcb9a46171e-SJC
       Connection:
       - keep-alive
       Content-Type:
       - text/event-stream; charset=utf-8
       Date:
-      - Sun, 24 Nov 2024 00:56:26 GMT
+      - Sun, 12 Jan 2025 05:18:37 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
@@ -84,15 +84,15 @@ interactions:
       ratelimitbysize-remaining:
       - '1967969'
       ratelimitbysize-reset:
-      - '35'
+      - '26'
       x-envoy-upstream-service-time:
-      - '1194'
+      - '2221'
       x-kong-proxy-latency:
-      - '1'
+      - '3'
       x-kong-request-id:
-      - 3627e2565677d509dc0d4a4a83ca3175
+      - 75058115a5adf01609a9bc5a00f2c921
       x-kong-upstream-latency:
-      - '1195'
+      - '2222'
       x-ratelimitbysize-limit-minute:
       - '2000000'
       x-ratelimitbysize-limit-month:
@@ -100,7 +100,7 @@ interactions:
       x-ratelimitbysize-remaining-minute:
       - '1967969'
       x-ratelimitbysize-remaining-month:
-      - '9998079275'
+      - '9999967969'
     status:
       code: 200
       message: OK
