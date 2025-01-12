@@ -10,7 +10,9 @@ from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
     Message,
+    SystemMessage,
     UserMessage,
+    UserMessageContentBlock,
 )
 from magentic.function_call import (
     AsyncParallelFunctionCall,
@@ -39,6 +41,7 @@ class Chat:
     def __init__(
         self,
         messages: Sequence[Message[Any]] | None = None,
+        *,
         functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[Any]] | None = None,
         model: ChatModel | None = None,
@@ -84,7 +87,13 @@ class Chat:
             model=self._model,  # Keep `None` value if unset
         )
 
-    def add_user_message(self, content: str) -> Self:
+    def add_system_message(self, content: str) -> Self:
+        """Add a system message to the chat."""
+        return self.add_message(SystemMessage(content=content))
+
+    def add_user_message(
+        self, content: str | Sequence[str | UserMessageContentBlock]
+    ) -> Self:
         """Add a user message to the chat."""
         return self.add_message(UserMessage(content=content))
 
