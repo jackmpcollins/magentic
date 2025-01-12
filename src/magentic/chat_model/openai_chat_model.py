@@ -133,7 +133,6 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
         function_schema = FunctionCallFunctionSchema(message.content.function)
         return {
             "role": OpenaiMessageRole.ASSISTANT.value,
-            "content": None,
             "tool_calls": [
                 {
                     "id": message.content._unique_id,
@@ -149,7 +148,6 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     if isinstance(message.content, ParallelFunctionCall):
         return {
             "role": OpenaiMessageRole.ASSISTANT.value,
-            "content": None,
             "tool_calls": [
                 {
                     "id": function_call._unique_id,
@@ -194,7 +192,6 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     function_schema = function_schema_for_type(type(message.content))
     return {
         "role": OpenaiMessageRole.ASSISTANT.value,
-        "content": None,
         "tool_calls": [
             {
                 # Can be random because no result will be inserted back into the chat

@@ -60,7 +60,6 @@ def plus(a: int, b: int) -> int:
             AssistantMessage(42),
             {
                 "role": "assistant",
-                "content": None,
                 "tool_calls": [
                     {
                         "id": ANY,
@@ -74,7 +73,6 @@ def plus(a: int, b: int) -> int:
             AssistantMessage(FunctionCall(plus, 1, 2)),
             {
                 "role": "assistant",
-                "content": None,
                 "tool_calls": [
                     {
                         "id": ANY,
@@ -92,7 +90,6 @@ def plus(a: int, b: int) -> int:
             ),
             {
                 "role": "assistant",
-                "content": None,
                 "tool_calls": [
                     {
                         "id": ANY,
