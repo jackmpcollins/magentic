@@ -105,6 +105,7 @@ class Chat:
         """Add an assistant message to the chat."""
         return self.add_message(AssistantMessage(content=content))
 
+    # TODO: Allow restricting functions and/or output types here
     def submit(self) -> Self:
         """Request an LLM message to be added to the chat."""
         output_message: AssistantMessage[Any] = self.model.complete(
@@ -123,6 +124,7 @@ class Chat:
         )
         return self.add_message(output_message)
 
+    # TODO: Add optional error handling to this method, with param to toggle
     def exec_function_call(self) -> Self:
         """If the last message is a function call, execute it and add the result."""
         if isinstance(self.last_message.content, FunctionCall):
