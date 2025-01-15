@@ -64,6 +64,9 @@ In some cases, you need the model to perform multiple function calls to reach a 
 
 In the following example, when `describe_weather` is called the LLM first calls the `get_current_weather` function, then uses the result of this to formulate its final answer which gets returned.
 
+!!! tip
+    The `@prompt_chain` decorator also accepts a sequence of `Message` objects as its first argument, similar to [`@chatprompt`](./chat-prompting.md).
+
 ```python
 from magentic import prompt_chain
 
