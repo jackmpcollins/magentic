@@ -910,8 +910,12 @@
 <span class="c1"># 3</span>
 </code></pre></div>
 <h2 id="prompt_chain">@prompt_chain<a class="headerlink" href="#prompt_chain" title="Permanent link">&para;</a></h2>
-<p>In some cases, you need the model to perform multiple function calls to reach a final answer. The <code>@prompt_chain</code> decorator will execute function calls automatically, append the result to the list of messages, and query the LLM again until a final answer is reached.</p>
+<p>In some cases, you need the model to perform multiple function calls to reach a final answer. The <code>@prompt_chain</code> decorator is designed for this purpose. When a function decorated with <code>@prompt_chain</code> is called, the LLM is queried, then any function calls are automatically executed and the results appended to the list of messages. Then the LLM is queried again and this repeats until a final answer is reached.</p>
 <p>In the following example, when <code>describe_weather</code> is called the LLM first calls the <code>get_current_weather</code> function, then uses the result of this to formulate its final answer which gets returned.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The <code>@prompt_chain</code> decorator also accepts a sequence of <code>Message</code> objects as its first argument, similar to <a href="../chat-prompting/"><code>@chatprompt</code></a>.</p>
+</div>
 <div class="language-python highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">prompt_chain</span>
 
 
@@ -932,6 +936,7 @@
 <span class="c1"># &#39;The current weather in Boston is 72°F and it is sunny and windy.&#39;</span>
 </code></pre></div>
 <p>LLM-powered functions created using <code>@prompt</code>, <code>@chatprompt</code> and <code>@prompt_chain</code> can be supplied as <code>functions</code> to other <code>@prompt</code>/<code>@prompt_chain</code> decorators, just like regular python functions!</p>
+<p>To create a customized version of this function-execution loop, see <a href="../chat/#agent">Chat#Agent</a>.</p>
 <h2 id="parallelfunctioncall">ParallelFunctionCall<a class="headerlink" href="#parallelfunctioncall" title="Permanent link">&para;</a></h2>
 <p>The most recent LLMs support "parallel function calling". This allows the model to call multiple functions at once. These functions can be executed concurrently, avoiding having to make several serial queries to the model.</p>
 <p>You can use <code>ParallelFunctionCall</code> (and <code>AsyncParallelFunctionCall</code>) as a return annotation to indicate that you expect the LLM to make one or more function calls. The returned <code>ParallelFunctionCall</code> is a container of <code>FunctionCall</code> instances. When called, it returns a tuple of their results.</p>
