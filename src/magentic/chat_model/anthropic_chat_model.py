@@ -6,6 +6,7 @@ from itertools import groupby
 from typing import Any, Generic, TypeVar, cast, overload
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
+from magentic._streamed_response import StreamedResponse
 from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
@@ -34,6 +35,7 @@ from magentic.chat_model.stream import (
     StreamState,
 )
 from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
+from magentic.streaming import StreamedStr
 from magentic.vision import UserImageMessage
 
 try:
@@ -48,6 +50,7 @@ try:
         ToolChoiceParam,
         ToolChoiceToolParam,
         ToolParam,
+        ToolUseBlockParam,
     )
 except ImportError as error:
     msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install 'magentic[anthropic]'`."
@@ -177,7 +180,26 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
             ],
         }
 
-    # TODO: Add support for StreamedResponse here
+    if isinstance(message.content, StreamedResponse):
+        content_blocks: list[TextBlockParam | ToolUseBlockParam] = []
+        for item in message.content:
+            if isinstance(item, StreamedStr):
+                content_blocks.append({"type": "text", "text": str(item)})
+            elif isinstance(item, FunctionCall):
+                function_schema = FunctionCallFunctionSchema(item.function)
+                content_blocks.append(
+                    {
+                        "type": "tool_use",
+                        "id": item._unique_id,
+                        "name": function_schema.name,
+                        "input": json.loads(function_schema.serialize_args(item)),
+                    }
+                )
+
+        return {
+            "role": AnthropicMessageRole.ASSISTANT.value,
+            "content": content_blocks,
+        }
 
     function_schema = function_schema_for_type(type(message.content))
     return {
