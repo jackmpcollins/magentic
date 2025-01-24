@@ -9,6 +9,7 @@ from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionContentPartParam,
     ChatCompletionMessageParam,
+    ChatCompletionMessageToolCallParam,
     ChatCompletionNamedToolChoiceParam,
     ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
@@ -17,7 +18,7 @@ from openai.types.chat import (
 )
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
-from magentic._streamed_response import StreamedResponse
+from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
@@ -46,7 +47,7 @@ from magentic.chat_model.stream import (
     StreamState,
 )
 from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
-from magentic.streaming import StreamedStr
+from magentic.streaming import AsyncStreamedStr, StreamedStr
 from magentic.vision import UserImageMessage
 
 
@@ -122,43 +123,36 @@ def _(message: UserImageMessage[Any]) -> ChatCompletionUserMessageParam:
     }
 
 
+def _function_call_to_tool_call_block(
+    function_call: FunctionCall[Any],
+) -> ChatCompletionMessageToolCallParam:
+    function_schema = FunctionCallFunctionSchema(function_call.function)
+    return {
+        "id": function_call._unique_id,
+        "type": "function",
+        "function": {
+            "name": function_schema.name,
+            "arguments": function_schema.serialize_args(function_call),
+        },
+    }
+
+
 @message_to_openai_message.register(AssistantMessage)
 def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     if isinstance(message.content, str):
         return {"role": OpenaiMessageRole.ASSISTANT.value, "content": message.content}
 
-    function_schema: FunctionSchema[Any]
-
     if isinstance(message.content, FunctionCall):
-        function_schema = FunctionCallFunctionSchema(message.content.function)
         return {
             "role": OpenaiMessageRole.ASSISTANT.value,
-            "tool_calls": [
-                {
-                    "id": message.content._unique_id,
-                    "type": "function",
-                    "function": {
-                        "name": function_schema.name,
-                        "arguments": function_schema.serialize_args(message.content),
-                    },
-                }
-            ],
+            "tool_calls": [_function_call_to_tool_call_block(message.content)],
         }
 
     if isinstance(message.content, ParallelFunctionCall):
         return {
             "role": OpenaiMessageRole.ASSISTANT.value,
             "tool_calls": [
-                {
-                    "id": function_call._unique_id,
-                    "type": "function",
-                    "function": {
-                        "name": FunctionCallFunctionSchema(function_call.function).name,
-                        "arguments": FunctionCallFunctionSchema(
-                            function_call.function
-                        ).serialize_args(function_call),
-                    },
-                }
+                _function_call_to_tool_call_block(function_call)
                 for function_call in message.content
             ],
         }
@@ -168,23 +162,39 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
         function_calls: list[FunctionCall[Any]] = []
         for item in message.content:
             if isinstance(item, StreamedStr):
-                content.append(str(item))
+                content.append(item.to_string())
             elif isinstance(item, FunctionCall):
                 function_calls.append(item)
         return {
             "role": OpenaiMessageRole.ASSISTANT.value,
             "content": " ".join(content),
             "tool_calls": [
-                {
-                    "id": function_call._unique_id,
-                    "type": "function",
-                    "function": {
-                        "name": FunctionCallFunctionSchema(function_call.function).name,
-                        "arguments": FunctionCallFunctionSchema(
-                            function_call.function
-                        ).serialize_args(function_call),
-                    },
-                }
+                _function_call_to_tool_call_block(function_call)
+                for function_call in function_calls
+            ],
+        }
+
+    if isinstance(message.content, AsyncStreamedResponse):
+        from magentic.utilities import ASYNC_RUNNER
+
+        async def collect_content_and_function_calls():
+            content: list[str] = []
+            function_calls: list[FunctionCall[Any]] = []
+            async for item in message.content:
+                if isinstance(item, AsyncStreamedStr):
+                    content.append(await item.to_string())
+                elif isinstance(item, FunctionCall):
+                    function_calls.append(item)
+            return content, function_calls
+
+        content, function_calls = ASYNC_RUNNER.run_coroutine(
+            collect_content_and_function_calls()
+        )
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": " ".join(content),
+            "tool_calls": [
+                _function_call_to_tool_call_block(function_call)
                 for function_call in function_calls
             ],
         }
