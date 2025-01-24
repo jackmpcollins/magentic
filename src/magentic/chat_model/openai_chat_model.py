@@ -23,7 +23,6 @@ from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
-    FunctionSchema,
     function_schema_for_type,
     get_async_function_schemas,
     get_function_schemas,
@@ -174,31 +173,6 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
             ],
         }
 
-    if isinstance(message.content, AsyncStreamedResponse):
-        from magentic.utilities import ASYNC_RUNNER
-
-        async def collect_content_and_function_calls():
-            content: list[str] = []
-            function_calls: list[FunctionCall[Any]] = []
-            async for item in message.content:
-                if isinstance(item, AsyncStreamedStr):
-                    content.append(await item.to_string())
-                elif isinstance(item, FunctionCall):
-                    function_calls.append(item)
-            return content, function_calls
-
-        content, function_calls = ASYNC_RUNNER.run_coroutine(
-            collect_content_and_function_calls()
-        )
-        return {
-            "role": OpenaiMessageRole.ASSISTANT.value,
-            "content": " ".join(content),
-            "tool_calls": [
-                _function_call_to_tool_call_block(function_call)
-                for function_call in function_calls
-            ],
-        }
-
     function_schema = function_schema_for_type(type(message.content))
     return {
         "role": OpenaiMessageRole.ASSISTANT.value,
@@ -228,6 +202,31 @@ def _(message: ToolResultMessage[Any]) -> ChatCompletionMessageParam:
         "tool_call_id": message.tool_call_id,
         "content": content,
     }
+
+
+async def async_message_to_openai_message(
+    message: Message[Any],
+) -> ChatCompletionMessageParam:
+    """Convert a Message to an OpenAI message (async version)."""
+    if isinstance(message.content, AsyncStreamedResponse):
+        content: list[str] = []
+        function_calls: list[FunctionCall[Any]] = []
+        async for item in message.content:
+            if isinstance(item, AsyncStreamedStr):
+                content.append(await item.to_string())
+            elif isinstance(item, FunctionCall):
+                function_calls.append(item)
+
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": " ".join(content),
+            "tool_calls": [
+                _function_call_to_tool_call_block(function_call)
+                for function_call in function_calls
+            ],
+        }
+    else:  # noqa: RET505
+        return message_to_openai_message(message)
 
 
 # TODO: Use ToolResultMessage to solve this at magentic level
@@ -556,7 +555,7 @@ class OpenaiChatModel(ChatModel):
         ] = await self._async_client.chat.completions.create(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
-                [message_to_openai_message(m) for m in messages]
+                [await async_message_to_openai_message(m) for m in messages]
             ),
             max_tokens=_if_given(self.max_tokens),
             seed=_if_given(self.seed),

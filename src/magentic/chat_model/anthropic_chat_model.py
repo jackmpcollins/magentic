@@ -1,4 +1,3 @@
-import asyncio
 import json
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequence
 from enum import Enum
@@ -12,7 +11,6 @@ from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
-    FunctionSchema,
     function_schema_for_type,
     get_async_function_schemas,
     get_function_schemas,
@@ -183,25 +181,6 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
             "content": content_blocks,
         }
 
-    if isinstance(message.content, AsyncStreamedResponse):
-        from magentic.utilities import ASYNC_RUNNER
-
-        async def collect_content_blocks():
-            content_blocks: list[TextBlockParam | ToolUseBlockParam] = []
-            async for item in message.content:
-                if isinstance(item, AsyncStreamedStr):
-                    content_blocks.append(
-                        {"type": "text", "text": await item.to_string()}
-                    )
-                elif isinstance(item, FunctionCall):
-                    content_blocks.append(_function_call_to_tool_call_block(item))
-            return content_blocks
-
-        return {
-            "role": AnthropicMessageRole.ASSISTANT.value,
-            "content": ASYNC_RUNNER.run_coroutine(collect_content_blocks()),
-        }
-
     function_schema = function_schema_for_type(type(message.content))
     return {
         "role": AnthropicMessageRole.ASSISTANT.value,
@@ -234,6 +213,24 @@ def _(message: ToolResultMessage[Any]) -> MessageParam:
             }
         ],
     }
+
+
+async def async_message_to_anthropic_message(message: Message[Any]) -> MessageParam:
+    """Convert a Message to an Anthropic message (async version)."""
+    if isinstance(message.content, AsyncStreamedResponse):
+        content_blocks: list[TextBlockParam | ToolUseBlockParam] = []
+        async for item in message.content:
+            if isinstance(item, AsyncStreamedStr):
+                content_blocks.append({"type": "text", "text": await item.to_string()})
+            elif isinstance(item, FunctionCall):
+                content_blocks.append(_function_call_to_tool_call_block(item))
+
+        return {
+            "role": AnthropicMessageRole.ASSISTANT.value,
+            "content": content_blocks,
+        }
+    else:  # noqa: RET505
+        return message_to_anthropic_message(message)
 
 
 # TODO: Move this to the magentic level by allowing `UserMessage` have a list of content
@@ -515,7 +512,7 @@ class AnthropicChatModel(ChatModel):
         ] = await self._async_client.messages.stream(
             model=self.model,
             messages=_combine_messages(
-                [message_to_anthropic_message(m) for m in messages]
+                [await async_message_to_anthropic_message(m) for m in messages]
             ),
             max_tokens=self.max_tokens,
             stop_sequences=_if_given(stop),
