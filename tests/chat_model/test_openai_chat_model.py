@@ -141,10 +141,10 @@ async def test_async_message_to_openai_message():
             yield "Hello"
             yield "World"
 
-        yield AsyncStreamedStr(async_string_generator())
+        yield AsyncStreamedStr(async_string_generator())  # type: ignore  # noqa: PGH003
         yield FunctionCall(plus, 1, 2)
 
-    async_streamed_response = AsyncStreamedResponse(generate_async_streamed_response())
+    async_streamed_response = AsyncStreamedResponse(generate_async_streamed_response())  # type: ignore  # noqa: PGH003
     message = AssistantMessage(async_streamed_response)
     assert await async_message_to_openai_message(message) == {
         "role": "assistant",

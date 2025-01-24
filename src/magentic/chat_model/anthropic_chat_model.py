@@ -135,7 +135,9 @@ def _(message: UserImageMessage[Any]) -> MessageParam:
     }
 
 
-def _function_call_to_tool_call_block(function_call: FunctionCall) -> ToolUseBlockParam:
+def _function_call_to_tool_call_block(
+    function_call: FunctionCall[Any],
+) -> ToolUseBlockParam:
     function_schema = FunctionCallFunctionSchema(function_call.function)
     return {
         "type": "tool_use",
