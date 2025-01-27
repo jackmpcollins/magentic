@@ -28,7 +28,7 @@ from magentic.chat_model.openai_chat_model import (
     message_to_openai_message,
 )
 from magentic.function_call import FunctionCall, ParallelFunctionCall
-from magentic.streaming import AsyncStreamedStr, StreamedStr
+from magentic.streaming import AsyncStreamedStr, StreamedStr, async_iter
 
 
 def plus(a: int, b: int) -> int:
@@ -136,19 +136,14 @@ def test_message_to_openai_message(message, expected_openai_message):
 
 
 async def test_async_message_to_openai_message():
-    async def generate_async_streamed_response():
-        async def async_string_generator():
-            yield "Hello"
-            yield "World"
-
-        yield AsyncStreamedStr(async_string_generator())  # type: ignore  # noqa: PGH003
-        yield FunctionCall(plus, 1, 2)
-
-    async_streamed_response = AsyncStreamedResponse(generate_async_streamed_response())  # type: ignore  # noqa: PGH003
+    async_streamed_str = AsyncStreamedStr(async_iter(["Hello", " World"]))
+    async_streamed_response = AsyncStreamedResponse(
+        async_iter([async_streamed_str, FunctionCall(plus, 1, 2)])
+    )
     message = AssistantMessage(async_streamed_response)
     assert await async_message_to_openai_message(message) == {
         "role": "assistant",
-        "content": "HelloWorld",
+        "content": "Hello World",
         "tool_calls": [
             {
                 "id": ANY,
