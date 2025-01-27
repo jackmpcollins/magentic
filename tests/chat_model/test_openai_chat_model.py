@@ -27,7 +27,11 @@ from magentic.chat_model.openai_chat_model import (
     async_message_to_openai_message,
     message_to_openai_message,
 )
-from magentic.function_call import FunctionCall, ParallelFunctionCall
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+)
 from magentic.streaming import AsyncStreamedStr, StreamedStr, async_iter
 
 
@@ -137,6 +141,28 @@ def test_message_to_openai_message(message, expected_openai_message):
 
 async_message_to_openai_message_test_cases = [
     *message_to_openai_message_test_cases,
+    (
+        AssistantMessage(
+            AsyncParallelFunctionCall(
+                async_iter([FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)])
+            )
+        ),
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "id": ANY,
+                    "type": "function",
+                    "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
+                },
+                {
+                    "id": ANY,
+                    "type": "function",
+                    "function": {"name": "plus", "arguments": '{"a":3,"b":4}'},
+                },
+            ],
+        },
+    ),
     (
         AssistantMessage(
             AsyncStreamedResponse(

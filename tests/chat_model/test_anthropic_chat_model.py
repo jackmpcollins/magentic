@@ -130,6 +130,30 @@ async_message_to_anthropic_message_test_cases = [
     *message_to_anthropic_message_test_cases,
     (
         AssistantMessage(
+            AsyncParallelFunctionCall(
+                async_iter([FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)])
+            )
+        ),
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": ANY,
+                    "name": "plus",
+                    "input": {"a": 1, "b": 2},
+                },
+                {
+                    "type": "tool_use",
+                    "id": ANY,
+                    "name": "plus",
+                    "input": {"a": 3, "b": 4},
+                },
+            ],
+        },
+    ),
+    (
+        AssistantMessage(
             AsyncStreamedResponse(
                 async_iter(
                     [
