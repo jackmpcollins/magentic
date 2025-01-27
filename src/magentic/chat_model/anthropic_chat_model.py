@@ -6,12 +6,11 @@ from itertools import groupby
 from typing import Any, Generic, TypeVar, cast, overload
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
-from magentic._streamed_response import StreamedResponse
+from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
-    FunctionSchema,
     function_schema_for_type,
     get_async_function_schemas,
     get_function_schemas,
@@ -35,7 +34,7 @@ from magentic.chat_model.stream import (
     StreamState,
 )
 from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
-from magentic.streaming import StreamedStr
+from magentic.streaming import AsyncStreamedStr, StreamedStr
 from magentic.vision import UserImageMessage
 
 try:
@@ -67,6 +66,12 @@ def message_to_anthropic_message(message: Message[Any]) -> MessageParam:
     """Convert a Message to an OpenAI message."""
     # TODO: Add instructions for registering new Message type to this error message
     raise NotImplementedError(type(message))
+
+
+@singledispatch
+async def async_message_to_anthropic_message(message: Message[Any]) -> MessageParam:
+    """Async version of `message_to_anthropic_message`."""
+    return message_to_anthropic_message(message)
 
 
 @message_to_anthropic_message.register(_RawMessage)
@@ -136,6 +141,18 @@ def _(message: UserImageMessage[Any]) -> MessageParam:
     }
 
 
+def _function_call_to_tool_call_block(
+    function_call: FunctionCall[Any],
+) -> ToolUseBlockParam:
+    function_schema = FunctionCallFunctionSchema(function_call.function)
+    return {
+        "type": "tool_use",
+        "id": function_call._unique_id,
+        "name": function_schema.name,
+        "input": json.loads(function_schema.serialize_args(function_call)),
+    }
+
+
 @message_to_anthropic_message.register(AssistantMessage)
 def _(message: AssistantMessage[Any]) -> MessageParam:
     if isinstance(message.content, str):
@@ -144,38 +161,17 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
             "content": message.content,
         }
 
-    function_schema: FunctionSchema[Any]
-
     if isinstance(message.content, FunctionCall):
-        function_schema = FunctionCallFunctionSchema(message.content.function)
         return {
             "role": AnthropicMessageRole.ASSISTANT.value,
-            "content": [
-                {
-                    "type": "tool_use",
-                    "id": message.content._unique_id,
-                    "name": function_schema.name,
-                    "input": json.loads(
-                        function_schema.serialize_args(message.content)
-                    ),
-                }
-            ],
+            "content": [_function_call_to_tool_call_block(message.content)],
         }
 
     if isinstance(message.content, ParallelFunctionCall):
         return {
             "role": AnthropicMessageRole.ASSISTANT.value,
             "content": [
-                {
-                    "type": "tool_use",
-                    "id": function_call._unique_id,
-                    "name": FunctionCallFunctionSchema(function_call.function).name,
-                    "input": json.loads(
-                        FunctionCallFunctionSchema(
-                            function_call.function
-                        ).serialize_args(function_call)
-                    ),
-                }
+                _function_call_to_tool_call_block(function_call)
                 for function_call in message.content
             ],
         }
@@ -184,18 +180,9 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
         content_blocks: list[TextBlockParam | ToolUseBlockParam] = []
         for item in message.content:
             if isinstance(item, StreamedStr):
-                content_blocks.append({"type": "text", "text": str(item)})
+                content_blocks.append({"type": "text", "text": item.to_string()})
             elif isinstance(item, FunctionCall):
-                function_schema = FunctionCallFunctionSchema(item.function)
-                content_blocks.append(
-                    {
-                        "type": "tool_use",
-                        "id": item._unique_id,
-                        "name": function_schema.name,
-                        "input": json.loads(function_schema.serialize_args(item)),
-                    }
-                )
-
+                content_blocks.append(_function_call_to_tool_call_block(item))
         return {
             "role": AnthropicMessageRole.ASSISTANT.value,
             "content": content_blocks,
@@ -214,6 +201,22 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
             }
         ],
     }
+
+
+@async_message_to_anthropic_message.register(AssistantMessage)
+async def _(message: AssistantMessage[Any]) -> MessageParam:
+    if isinstance(message.content, AsyncStreamedResponse):
+        content_blocks: list[TextBlockParam | ToolUseBlockParam] = []
+        async for item in message.content:
+            if isinstance(item, AsyncStreamedStr):
+                content_blocks.append({"type": "text", "text": await item.to_string()})
+            elif isinstance(item, FunctionCall):
+                content_blocks.append(_function_call_to_tool_call_block(item))
+        return {
+            "role": AnthropicMessageRole.ASSISTANT.value,
+            "content": content_blocks,
+        }
+    return message_to_anthropic_message(message)
 
 
 @message_to_anthropic_message.register(ToolResultMessage)
@@ -514,7 +517,7 @@ class AnthropicChatModel(ChatModel):
         ] = await self._async_client.messages.stream(
             model=self.model,
             messages=_combine_messages(
-                [message_to_anthropic_message(m) for m in messages]
+                [await async_message_to_anthropic_message(m) for m in messages]
             ),
             max_tokens=self.max_tokens,
             stop_sequences=_if_given(stop),

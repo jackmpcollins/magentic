@@ -24,114 +24,150 @@ from magentic.chat_model.message import (
 )
 from magentic.chat_model.openai_chat_model import (
     OpenaiChatModel,
+    async_message_to_openai_message,
     message_to_openai_message,
 )
 from magentic.function_call import FunctionCall, ParallelFunctionCall
-from magentic.streaming import AsyncStreamedStr, StreamedStr
+from magentic.streaming import AsyncStreamedStr, StreamedStr, async_iter
 
 
 def plus(a: int, b: int) -> int:
     return a + b
 
 
+message_to_openai_message_test_cases = [
+    (
+        _RawMessage({"role": "user", "content": "Hello"}),
+        {"role": "user", "content": "Hello"},
+    ),
+    (SystemMessage("Hello"), {"role": "system", "content": "Hello"}),
+    (UserMessage("Hello"), {"role": "user", "content": "Hello"}),
+    (
+        UserMessage([ImageUrl("https://example.com/image.jpg")]),
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "https://example.com/image.jpg"},
+                }
+            ],
+        },
+    ),
+    (AssistantMessage("Hello"), {"role": "assistant", "content": "Hello"}),
+    (
+        AssistantMessage(42),
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "id": ANY,
+                    "type": "function",
+                    "function": {"name": "return_int", "arguments": '{"value":42}'},
+                }
+            ],
+        },
+    ),
+    (
+        AssistantMessage(FunctionCall(plus, 1, 2)),
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "id": ANY,
+                    "type": "function",
+                    "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
+                }
+            ],
+        },
+    ),
+    (
+        AssistantMessage(
+            ParallelFunctionCall([FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)])
+        ),
+        {
+            "role": "assistant",
+            "tool_calls": [
+                {
+                    "id": ANY,
+                    "type": "function",
+                    "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
+                },
+                {
+                    "id": ANY,
+                    "type": "function",
+                    "function": {"name": "plus", "arguments": '{"a":3,"b":4}'},
+                },
+            ],
+        },
+    ),
+    (
+        AssistantMessage(
+            StreamedResponse([StreamedStr(["Hello"]), FunctionCall(plus, 1, 2)])
+        ),
+        {
+            "role": "assistant",
+            "content": "Hello",
+            "tool_calls": [
+                {
+                    "id": ANY,
+                    "type": "function",
+                    "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
+                },
+            ],
+        },
+    ),
+    (
+        FunctionResultMessage(3, FunctionCall(plus, 1, 2)),
+        {
+            "role": "tool",
+            "tool_call_id": ANY,
+            "content": '{"value":3}',
+        },
+    ),
+]
+
+
 @pytest.mark.parametrize(
-    ("message", "expected_openai_message"),
-    [
-        (
-            _RawMessage({"role": "user", "content": "Hello"}),
-            {"role": "user", "content": "Hello"},
-        ),
-        (SystemMessage("Hello"), {"role": "system", "content": "Hello"}),
-        (UserMessage("Hello"), {"role": "user", "content": "Hello"}),
-        (
-            UserMessage([ImageUrl("https://example.com/image.jpg")]),
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": "https://example.com/image.jpg"},
-                    }
-                ],
-            },
-        ),
-        (AssistantMessage("Hello"), {"role": "assistant", "content": "Hello"}),
-        (
-            AssistantMessage(42),
-            {
-                "role": "assistant",
-                "tool_calls": [
-                    {
-                        "id": ANY,
-                        "type": "function",
-                        "function": {"name": "return_int", "arguments": '{"value":42}'},
-                    }
-                ],
-            },
-        ),
-        (
-            AssistantMessage(FunctionCall(plus, 1, 2)),
-            {
-                "role": "assistant",
-                "tool_calls": [
-                    {
-                        "id": ANY,
-                        "type": "function",
-                        "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
-                    }
-                ],
-            },
-        ),
-        (
-            AssistantMessage(
-                ParallelFunctionCall(
-                    [FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)]
-                )
-            ),
-            {
-                "role": "assistant",
-                "tool_calls": [
-                    {
-                        "id": ANY,
-                        "type": "function",
-                        "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
-                    },
-                    {
-                        "id": ANY,
-                        "type": "function",
-                        "function": {"name": "plus", "arguments": '{"a":3,"b":4}'},
-                    },
-                ],
-            },
-        ),
-        (
-            AssistantMessage(
-                StreamedResponse([StreamedStr(["Hello"]), FunctionCall(plus, 1, 2)])
-            ),
-            {
-                "role": "assistant",
-                "content": "Hello",
-                "tool_calls": [
-                    {
-                        "id": ANY,
-                        "type": "function",
-                        "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
-                    },
-                ],
-            },
-        ),
-        (
-            FunctionResultMessage(3, FunctionCall(plus, 1, 2)),
-            {
-                "role": "tool",
-                "tool_call_id": ANY,
-                "content": '{"value":3}',
-            },
-        ),
-    ],
+    ("message", "expected_openai_message"), message_to_openai_message_test_cases
 )
 def test_message_to_openai_message(message, expected_openai_message):
     assert message_to_openai_message(message) == expected_openai_message
+
+
+async_message_to_openai_message_test_cases = [
+    *message_to_openai_message_test_cases,
+    (
+        AssistantMessage(
+            AsyncStreamedResponse(
+                async_iter(
+                    [
+                        AsyncStreamedStr(async_iter(["Hello", " World"])),
+                        FunctionCall(plus, 1, 2),
+                    ]
+                )
+            )
+        ),
+        {
+            "role": "assistant",
+            "content": "Hello World",
+            "tool_calls": [
+                {
+                    "id": ANY,
+                    "type": "function",
+                    "function": {"name": "plus", "arguments": '{"a":1,"b":2}'},
+                },
+            ],
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_openai_message"), async_message_to_openai_message_test_cases
+)
+async def test_async_message_to_openai_message(message, expected_openai_message):
+    assert await async_message_to_openai_message(message) == expected_openai_message
 
 
 def test_message_to_openai_message_user_image_message_bytes_jpg(image_bytes_jpg):
