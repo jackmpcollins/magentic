@@ -33,7 +33,12 @@ from magentic.chat_model.stream import (
     StreamParser,
     StreamState,
 )
-from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+    _create_unique_id,
+)
 from magentic.streaming import AsyncStreamedStr, StreamedStr
 from magentic.vision import UserImageMessage
 
@@ -205,6 +210,15 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
 
 @async_message_to_anthropic_message.register(AssistantMessage)
 async def _(message: AssistantMessage[Any]) -> MessageParam:
+    if isinstance(message.content, AsyncParallelFunctionCall):
+        return {
+            "role": AnthropicMessageRole.ASSISTANT.value,
+            "content": [
+                _function_call_to_tool_call_block(function_call)
+                async for function_call in message.content
+            ],
+        }
+
     if isinstance(message.content, AsyncStreamedResponse):
         content_blocks: list[TextBlockParam | ToolUseBlockParam] = []
         async for item in message.content:

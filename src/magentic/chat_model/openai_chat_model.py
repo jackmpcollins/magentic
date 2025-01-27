@@ -45,7 +45,12 @@ from magentic.chat_model.stream import (
     StreamParser,
     StreamState,
 )
-from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+    _create_unique_id,
+)
 from magentic.streaming import AsyncStreamedStr, StreamedStr
 from magentic.vision import UserImageMessage
 
@@ -200,6 +205,15 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
 
 @async_message_to_openai_message.register(AssistantMessage)
 async def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
+    if isinstance(message.content, AsyncParallelFunctionCall):
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "tool_calls": [
+                _function_call_to_tool_call_block(function_call)
+                async for function_call in message.content
+            ],
+        }
+
     if isinstance(message.content, AsyncStreamedResponse):
         content: list[str] = []
         function_calls: list[FunctionCall[Any]] = []
