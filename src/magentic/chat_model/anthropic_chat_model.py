@@ -68,6 +68,12 @@ def message_to_anthropic_message(message: Message[Any]) -> MessageParam:
     raise NotImplementedError(type(message))
 
 
+@singledispatch
+async def async_message_to_anthropic_message(message: Message[Any]) -> MessageParam:
+    """Async version of `message_to_anthropic_message`."""
+    return message_to_anthropic_message(message)
+
+
 @message_to_anthropic_message.register(_RawMessage)
 def _(message: _RawMessage[Any]) -> MessageParam:
     # TODO: Validate the message content
@@ -177,7 +183,6 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
                 content_blocks.append({"type": "text", "text": item.to_string()})
             elif isinstance(item, FunctionCall):
                 content_blocks.append(_function_call_to_tool_call_block(item))
-
         return {
             "role": AnthropicMessageRole.ASSISTANT.value,
             "content": content_blocks,
@@ -198,6 +203,22 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
     }
 
 
+@async_message_to_anthropic_message.register(AssistantMessage)
+async def _(message: AssistantMessage[Any]) -> MessageParam:
+    if isinstance(message.content, AsyncStreamedResponse):
+        content_blocks: list[TextBlockParam | ToolUseBlockParam] = []
+        async for item in message.content:
+            if isinstance(item, AsyncStreamedStr):
+                content_blocks.append({"type": "text", "text": await item.to_string()})
+            elif isinstance(item, FunctionCall):
+                content_blocks.append(_function_call_to_tool_call_block(item))
+        return {
+            "role": AnthropicMessageRole.ASSISTANT.value,
+            "content": content_blocks,
+        }
+    return message_to_anthropic_message(message)
+
+
 @message_to_anthropic_message.register(ToolResultMessage)
 def _(message: ToolResultMessage[Any]) -> MessageParam:
     if isinstance(message.content, str):
@@ -215,23 +236,6 @@ def _(message: ToolResultMessage[Any]) -> MessageParam:
             }
         ],
     }
-
-
-async def async_message_to_anthropic_message(message: Message[Any]) -> MessageParam:
-    """Convert a Message to an Anthropic message (async version)."""
-    if isinstance(message.content, AsyncStreamedResponse):
-        content_blocks: list[TextBlockParam | ToolUseBlockParam] = []
-        async for item in message.content:
-            if isinstance(item, AsyncStreamedStr):
-                content_blocks.append({"type": "text", "text": await item.to_string()})
-            elif isinstance(item, FunctionCall):
-                content_blocks.append(_function_call_to_tool_call_block(item))
-
-        return {
-            "role": AnthropicMessageRole.ASSISTANT.value,
-            "content": content_blocks,
-        }
-    return message_to_anthropic_message(message)
 
 
 # TODO: Move this to the magentic level by allowing `UserMessage` have a list of content

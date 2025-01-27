@@ -64,6 +64,14 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
     raise NotImplementedError(type(message))
 
 
+@singledispatch
+async def async_message_to_openai_message(
+    message: Message[Any],
+) -> ChatCompletionMessageParam:
+    """Async version of `message_to_openai_message`."""
+    return message_to_openai_message(message)
+
+
 @message_to_openai_message.register(_RawMessage)
 def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
     assert isinstance(message.content, dict)
@@ -190,6 +198,27 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     }
 
 
+@async_message_to_openai_message.register(AssistantMessage)
+async def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
+    if isinstance(message.content, AsyncStreamedResponse):
+        content: list[str] = []
+        function_calls: list[FunctionCall[Any]] = []
+        async for item in message.content:
+            if isinstance(item, AsyncStreamedStr):
+                content.append(await item.to_string())
+            elif isinstance(item, FunctionCall):
+                function_calls.append(item)
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": " ".join(content),
+            "tool_calls": [
+                _function_call_to_tool_call_block(function_call)
+                for function_call in function_calls
+            ],
+        }
+    return message_to_openai_message(message)
+
+
 @message_to_openai_message.register(ToolResultMessage)
 def _(message: ToolResultMessage[Any]) -> ChatCompletionMessageParam:
     if isinstance(message.content, str):
@@ -202,30 +231,6 @@ def _(message: ToolResultMessage[Any]) -> ChatCompletionMessageParam:
         "tool_call_id": message.tool_call_id,
         "content": content,
     }
-
-
-async def async_message_to_openai_message(
-    message: Message[Any],
-) -> ChatCompletionMessageParam:
-    """Convert a Message to an OpenAI message (async version)."""
-    if isinstance(message.content, AsyncStreamedResponse):
-        content: list[str] = []
-        function_calls: list[FunctionCall[Any]] = []
-        async for item in message.content:
-            if isinstance(item, AsyncStreamedStr):
-                content.append(await item.to_string())
-            elif isinstance(item, FunctionCall):
-                function_calls.append(item)
-
-        return {
-            "role": OpenaiMessageRole.ASSISTANT.value,
-            "content": " ".join(content),
-            "tool_calls": [
-                _function_call_to_tool_call_block(function_call)
-                for function_call in function_calls
-            ],
-        }
-    return message_to_openai_message(message)
 
 
 # TODO: Use ToolResultMessage to solve this at magentic level
