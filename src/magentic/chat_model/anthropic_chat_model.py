@@ -231,8 +231,7 @@ async def async_message_to_anthropic_message(message: Message[Any]) -> MessagePa
             "role": AnthropicMessageRole.ASSISTANT.value,
             "content": content_blocks,
         }
-    else:  # noqa: RET505
-        return message_to_anthropic_message(message)
+    return message_to_anthropic_message(message)
 
 
 # TODO: Move this to the magentic level by allowing `UserMessage` have a list of content

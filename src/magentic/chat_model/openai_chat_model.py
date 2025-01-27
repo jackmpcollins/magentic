@@ -225,8 +225,7 @@ async def async_message_to_openai_message(
                 for function_call in function_calls
             ],
         }
-    else:  # noqa: RET505
-        return message_to_openai_message(message)
+    return message_to_openai_message(message)
 
 
 # TODO: Use ToolResultMessage to solve this at magentic level
