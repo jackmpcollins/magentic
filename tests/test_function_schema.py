@@ -2,7 +2,8 @@ import collections.abc
 import json
 import typing
 from collections import OrderedDict
-from typing import Annotated, Any, Callable, Generic, TypeVar, get_origin
+from collections.abc import Callable
+from typing import Annotated, Any, Generic, TypeVar, get_origin
 
 import pytest
 from pydantic import BaseModel, Field, create_model
