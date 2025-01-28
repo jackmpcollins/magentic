@@ -2,7 +2,7 @@ import collections.abc
 import json
 import typing
 from collections import OrderedDict
-from typing import Annotated, Any, Generic, TypeVar, get_origin
+from typing import Annotated, Any, Callable, Generic, TypeVar, get_origin
 
 import pytest
 from pydantic import BaseModel, Field, create_model
@@ -832,7 +832,9 @@ def test_function_call_function_schema_with_default_value():
     assert output() == 4
 
 
-function_call_function_schema_args_test_cases = [
+FunctionSchemaArgTestCaseType = list[tuple[Callable[..., Any], str, FunctionCall[Any]]]
+
+function_call_function_schema_args_test_cases: FunctionSchemaArgTestCaseType = [
     (plus, '{"a": 1, "b": 2}', FunctionCall(plus, 1, 2)),
     (
         plus_no_type_hints,
@@ -873,7 +875,7 @@ function_call_function_schema_args_test_cases = [
     ),
 ]
 
-function_call_function_schema_args_empty_string_test_case = [
+function_call_function_schema_args_empty_string_test_case: FunctionSchemaArgTestCaseType = [
     (
         return_constant,
         "",
