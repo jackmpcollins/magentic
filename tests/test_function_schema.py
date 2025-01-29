@@ -878,6 +878,7 @@ function_call_function_schema_args_test_cases = [
     ("function", "args_str", "expected_args"),
     [
         *function_call_function_schema_args_test_cases,
+        # Anthropic message stream returns empty string for function call with no arguments
         (return_constant, "", FunctionCall(return_constant)),
     ],
 )
