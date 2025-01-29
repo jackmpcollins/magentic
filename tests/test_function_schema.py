@@ -876,19 +876,13 @@ function_call_function_schema_args_test_cases: FunctionSchemaArgTestCaseType = [
     ),
 ]
 
-function_call_function_schema_args_empty_string_test_case: FunctionSchemaArgTestCaseType = [
-    (
-        return_constant,
-        "",
-        FunctionCall(return_constant),
-    ),
-]
-
 
 @pytest.mark.parametrize(
     ("function", "args_str", "expected_args"),
-    function_call_function_schema_args_test_cases
-    + function_call_function_schema_args_empty_string_test_case,
+    [
+        *function_call_function_schema_args_test_cases,
+        (return_constant, "", FunctionCall(return_constant)),
+    ],
 )
 def test_function_call_function_schema_parse_args(function, args_str, expected_args):
     parsed_args = FunctionCallFunctionSchema(function).parse_args(args_str)
