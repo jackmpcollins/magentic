@@ -2,7 +2,6 @@ import collections.abc
 import json
 import typing
 from collections import OrderedDict
-from collections.abc import Callable
 from typing import Annotated, Any, Generic, TypeVar, get_origin
 
 import pytest
@@ -833,9 +832,7 @@ def test_function_call_function_schema_with_default_value():
     assert output() == 4
 
 
-FunctionSchemaArgTestCaseType = list[tuple[Callable[..., Any], str, FunctionCall[Any]]]
-
-function_call_function_schema_args_test_cases: FunctionSchemaArgTestCaseType = [
+function_call_function_schema_args_test_cases = [
     (plus, '{"a": 1, "b": 2}', FunctionCall(plus, 1, 2)),
     (
         plus_no_type_hints,
