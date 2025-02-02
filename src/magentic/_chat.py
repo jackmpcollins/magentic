@@ -1,8 +1,8 @@
 import inspect
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, ParamSpec
+from typing import Any, Generic, ParamSpec
 
-from typing_extensions import Self, deprecated
+from typing_extensions import Self, TypeVar, deprecated
 
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
@@ -22,10 +22,20 @@ from magentic.function_call import (
 from magentic.prompt_function import BasePromptFunction
 from magentic.streaming import async_iter, azip
 
+LastMessageT = TypeVar("LastMessageT", bound=Message[Any])
+OutputT = TypeVar("OutputT", bound=type[Any], default=type[str])  # default to `str`
+MessageT = TypeVar("MessageT", bound=Message[Any])
+T = TypeVar("T")
+TypeT = TypeVar("TypeT", bound=type[Any])
 P = ParamSpec("P")
 
+# Same as in message.py but without Placeholder
+UserMessageContentT = TypeVar(
+    "UserMessageContentT", bound=str | Sequence[str | UserMessageContentBlock]
+)
 
-class Chat:
+
+class Chat(Generic[LastMessageT, OutputT]):
     """A chat with an LLM chat model.
 
     Examples
@@ -43,7 +53,7 @@ class Chat:
         messages: Sequence[Message[Any]] | None = None,
         *,
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[Any]] | None = None,
+        output_types: Iterable[OutputT] | None = None,
         model: ChatModel | None = None,
     ):
         self._messages = list(messages) if messages else []
@@ -75,38 +85,38 @@ class Chat:
         return self._messages.copy()
 
     @property
-    def last_message(self) -> Message[Any]:
-        return self._messages[-1]
+    def last_message(self) -> LastMessageT:
+        return self._messages[-1]  # type: ignore[assignment]
 
     @property
     def model(self) -> ChatModel:
         return self._model or get_chat_model()
 
-    def add_message(self, message: Message[Any]) -> Self:
+    def add_message(self, message: MessageT) -> "Chat[MessageT, OutputT]":
         """Add a message to the chat."""
-        return type(self)(
+        return Chat(
             messages=[*self._messages, message],
             functions=self._functions,
             output_types=self._output_types,
             model=self._model,  # Keep `None` value if unset
-        )
+        )  # type: ignore[assignment]
 
-    def add_system_message(self, content: str) -> Self:
+    def add_system_message(self, content: str) -> "Chat[SystemMessage, OutputT]":
         """Add a system message to the chat."""
         return self.add_message(SystemMessage(content=content))
 
     def add_user_message(
-        self, content: str | Sequence[str | UserMessageContentBlock]
-    ) -> Self:
+        self, content: UserMessageContentT
+    ) -> "Chat[UserMessage[UserMessageContentT], OutputT]":
         """Add a user message to the chat."""
         return self.add_message(UserMessage(content=content))
 
-    def add_assistant_message(self, content: Any) -> Self:
+    def add_assistant_message(self, content: T) -> "Chat[AssistantMessage[T], OutputT]":
         """Add an assistant message to the chat."""
         return self.add_message(AssistantMessage(content=content))
 
     # TODO: Allow restricting functions and/or output types here
-    def submit(self) -> Self:
+    def submit(self) -> "Chat[AssistantMessage[OutputT], OutputT]":
         """Request an LLM message to be added to the chat."""
         output_message: AssistantMessage[Any] = self.model.complete(
             messages=self._messages,
@@ -115,7 +125,7 @@ class Chat:
         )
         return self.add_message(output_message)
 
-    async def asubmit(self) -> Self:
+    async def asubmit(self) -> "Chat[AssistantMessage[OutputT], OutputT]":
         """Async version of `submit`."""
         output_message: AssistantMessage[Any] = await self.model.acomplete(
             messages=self._messages,
@@ -125,7 +135,7 @@ class Chat:
         return self.add_message(output_message)
 
     # TODO: Add optional error handling to this method, with param to toggle
-    def exec_function_call(self) -> Self:
+    def exec_function_call(self) -> "Chat[FunctionResultMessage[Any], OutputT]":
         """If the last message is a function call, execute it and add the result."""
         if isinstance(self.last_message.content, FunctionCall):
             function_call = self.last_message.content
@@ -148,7 +158,7 @@ class Chat:
         msg = "Last message is not a function call."
         raise TypeError(msg)
 
-    async def aexec_function_call(self) -> Self:
+    async def aexec_function_call(self) -> "Chat[FunctionResultMessage[Any], OutputT]":
         """Async version of `exec_function_call`."""
         if isinstance(self.last_message.content, FunctionCall):
             function_call = self.last_message.content
