@@ -23,7 +23,7 @@ from magentic.prompt_function import BasePromptFunction
 from magentic.streaming import async_iter, azip
 
 LastMessageT = TypeVar("LastMessageT", bound=Message[Any])
-OutputT = TypeVar("OutputT", bound=type[Any], default=type[str])  # default to `str`
+OutputT = TypeVar("OutputT", bound=type[Any], default=type[str])
 MessageT = TypeVar("MessageT", bound=Message[Any])
 T = TypeVar("T")
 TypeT = TypeVar("TypeT", bound=type[Any])
