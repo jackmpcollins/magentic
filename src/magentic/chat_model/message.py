@@ -86,6 +86,7 @@ ContentT = TypeVar("ContentT", covariant=True)
 class Message(BaseModel, Generic[ContentT], ABC):
     """A message sent to or from an LLM chat model."""
 
+    role: str
     content: ContentT
 
     def __init__(self, content: ContentT, **data: Any):
@@ -106,6 +107,8 @@ class _RawMessage(Message[ContentT], Generic[ContentT]):
     The content of this message should be a dict/object that matches the format
     expected by the LLM provider's Python client.
     """
+
+    role: Literal["_raw"] = "_raw"
 
     def __init__(self, content: ContentT, **data: Any):
         super().__init__(content=content, **data)
