@@ -1,12 +1,10 @@
 from collections.abc import Callable, Iterable
 from functools import singledispatchmethod
-from typing import Any, TypeVar, overload
+from typing import Any
 
-from magentic.chat_model.base import ChatModel, ToolSchemaParseError
+from magentic.chat_model.base import ChatModel, OutputT, ToolSchemaParseError
 from magentic.chat_model.message import AssistantMessage, Message, ToolResultMessage
 from magentic.logger import logfire
-
-R = TypeVar("R")
 
 
 class RetryChatModel(ChatModel):
@@ -39,34 +37,14 @@ class RetryChatModel(ChatModel):
             ),
         ]
 
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     def complete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[str] | AssistantMessage[R]:
+    ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         with logfire.span(
             "LLM-assisted retries enabled. Max {max_retries}",
@@ -97,34 +75,14 @@ class RetryChatModel(ChatModel):
                     num_retry=num_retry,
                 )
 
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[str] | AssistantMessage[R]:
+    ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         with logfire.span(
             "LLM-assisted retries enabled. Max {max_retries}",
