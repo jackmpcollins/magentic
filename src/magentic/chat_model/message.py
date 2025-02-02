@@ -375,4 +375,10 @@ AnyMessage = Annotated[
     SystemMessage | UserMessage[Any] | AssistantMessage[Any] | ToolResultMessage[Any],
     Field(discriminator="role"),
 ]
-"""Union of all message types."""
+"""Union of all message types.
+
+This type can be used for (de)serialization of `Message` objects, or as a return type
+in prompt-functions. This allows you to create prompt-functions to do things like
+summarize a chat history into fewer messages, or even to create a set of messages that
+you can use in a chatprompt-function.
+"""
