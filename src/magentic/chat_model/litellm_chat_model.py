@@ -1,12 +1,12 @@
 from collections.abc import Callable, Iterable, Sequence
-from typing import Any, Literal, TypeVar, cast, overload
+from typing import Any, Literal, cast
 
 import openai
 from openai.lib.streaming.chat import ChatCompletionStreamState
 from openai.types.chat import ChatCompletionNamedToolChoiceParam
 
 from magentic._parsing import contains_string_type
-from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
+from magentic.chat_model.base import ChatModel, OutputT, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     get_async_function_schemas,
     get_function_schemas,
@@ -99,9 +99,6 @@ class LitellmStreamState(StreamState[ModelResponse]):
         return _RawMessage(message.model_dump())
 
 
-R = TypeVar("R")
-
-
 class LitellmChatModel(ChatModel):
     """An LLM chat model that uses the `litellm` python package."""
 
@@ -150,7 +147,7 @@ class LitellmChatModel(ChatModel):
     def _get_tool_choice(
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
-        output_types: Iterable[type[R]],
+        output_types: Iterable[type[OutputT]],
     ) -> ChatCompletionNamedToolChoiceParam | Literal["required"] | None:
         """Create the tool choice argument."""
         if contains_string_type(output_types):
@@ -159,37 +156,17 @@ class LitellmChatModel(ChatModel):
             return tool_schemas[0].as_tool_choice()
         return "required"
 
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     def complete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[str] | AssistantMessage[R]:
+    ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = cast(Iterable[type[R]], [] if functions else [str])
+            output_types = cast(Iterable[type[OutputT]], [] if functions else [str])
 
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -219,37 +196,17 @@ class LitellmChatModel(ChatModel):
         )
         return AssistantMessage(parse_stream(stream, output_types))
 
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[str] | AssistantMessage[R]:
+    ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = cast(Iterable[type[R]], [] if functions else [str])
+            output_types = cast(Iterable[type[OutputT]], [] if functions else [str])
 
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]

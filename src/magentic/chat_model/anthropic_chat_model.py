@@ -3,11 +3,13 @@ from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequenc
 from enum import Enum
 from functools import singledispatch
 from itertools import groupby
-from typing import Any, Generic, TypeVar, cast, overload
+from typing import Any, Generic, cast
+
+from typing_extensions import TypeVar
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
 from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
-from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
+from magentic.chat_model.base import ChatModel, OutputT, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
@@ -364,9 +366,6 @@ def _if_given(value: T | None) -> T | anthropic.NotGiven:
     return value if value is not None else anthropic.NOT_GIVEN
 
 
-R = TypeVar("R")
-
-
 class AnthropicChatModel(ChatModel):
     """An LLM chat model that uses the `anthropic` python package."""
 
@@ -428,37 +427,17 @@ class AnthropicChatModel(ChatModel):
             )
         return {"type": "any", "disable_parallel_tool_use": disable_parallel_tool_use}
 
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     def complete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[str] | AssistantMessage[R]:
+    ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[R]], [str])
+            output_types = [] if functions else cast(list[type[OutputT]], [str])
 
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -489,37 +468,17 @@ class AnthropicChatModel(ChatModel):
             parse_stream(stream, output_types), usage_ref=stream.usage_ref
         )
 
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[R] | AssistantMessage[str]:
+    ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[R]], [str])
+            output_types = [] if functions else cast(list[type[OutputT]], [str])
 
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
