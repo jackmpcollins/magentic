@@ -60,9 +60,12 @@ plus_1_2()
 
 ## @prompt_chain
 
-In some cases, you need the model to perform multiple function calls to reach a final answer. The `@prompt_chain` decorator will execute function calls automatically, append the result to the list of messages, and query the LLM again until a final answer is reached.
+In some cases, you need the model to perform multiple function calls to reach a final answer. The `@prompt_chain` decorator is designed for this purpose. When a function decorated with `@prompt_chain` is called, the LLM is queried, then any function calls are automatically executed and the results appended to the list of messages. Then the LLM is queried again and this repeats until a final answer is reached.
 
 In the following example, when `describe_weather` is called the LLM first calls the `get_current_weather` function, then uses the result of this to formulate its final answer which gets returned.
+
+!!! tip
+    The `@prompt_chain` decorator also accepts a sequence of `Message` objects as its first argument, similar to [`@chatprompt`](./chat-prompting.md).
 
 ```python
 from magentic import prompt_chain
@@ -71,12 +74,7 @@ from magentic import prompt_chain
 def get_current_weather(location, unit="fahrenheit"):
     """Get the current weather in a given location"""
     # Pretend to query an API
-    return {
-        "location": location,
-        "temperature": "72",
-        "unit": unit,
-        "forecast": ["sunny", "windy"],
-    }
+    return {"temperature": "72", "forecast": ["sunny", "windy"]}
 
 
 @prompt_chain(
@@ -91,6 +89,8 @@ describe_weather("Boston")
 ```
 
 LLM-powered functions created using `@prompt`, `@chatprompt` and `@prompt_chain` can be supplied as `functions` to other `@prompt`/`@prompt_chain` decorators, just like regular python functions!
+
+To create a customized version of this function-execution loop, see [Chat#Agent](./chat.md#agent).
 
 ## ParallelFunctionCall
 

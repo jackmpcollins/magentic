@@ -1,4 +1,5 @@
 from typing import Annotated
+from unittest.mock import ANY
 
 import pytest
 from inline_snapshot import snapshot
@@ -7,11 +8,14 @@ from pydantic import AfterValidator, BaseModel
 from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.chat_model.anthropic_chat_model import (
     AnthropicChatModel,
+    async_message_to_anthropic_message,
     message_to_anthropic_message,
 )
 from magentic.chat_model.base import ToolSchemaParseError
 from magentic.chat_model.message import (
+    AssistantMessage,
     DocumentBytes,
+    FunctionResultMessage,
     ImageBytes,
     Message,
     Usage,
@@ -22,7 +26,167 @@ from magentic.function_call import (
     FunctionCall,
     ParallelFunctionCall,
 )
-from magentic.streaming import AsyncStreamedStr, StreamedStr
+from magentic.streaming import AsyncStreamedStr, StreamedStr, async_iter
+
+
+def plus(a: int, b: int) -> int:
+    return a + b
+
+
+message_to_anthropic_message_test_cases = [
+    (UserMessage("Hello"), {"role": "user", "content": "Hello"}),
+    (AssistantMessage("Hello"), {"role": "assistant", "content": "Hello"}),
+    (
+        AssistantMessage(42),
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": ANY,
+                    "name": "return_int",
+                    "input": {"value": 42},
+                }
+            ],
+        },
+    ),
+    (
+        AssistantMessage(FunctionCall(plus, 1, 2)),
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": ANY,
+                    "name": "plus",
+                    "input": {"a": 1, "b": 2},
+                }
+            ],
+        },
+    ),
+    (
+        AssistantMessage(
+            ParallelFunctionCall([FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)])
+        ),
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": ANY,
+                    "name": "plus",
+                    "input": {"a": 1, "b": 2},
+                },
+                {
+                    "type": "tool_use",
+                    "id": ANY,
+                    "name": "plus",
+                    "input": {"a": 3, "b": 4},
+                },
+            ],
+        },
+    ),
+    (
+        AssistantMessage(
+            StreamedResponse([StreamedStr(["Hello"]), FunctionCall(plus, 1, 2)])
+        ),
+        {
+            "role": "assistant",
+            "content": [
+                {"type": "text", "text": "Hello"},
+                {
+                    "type": "tool_use",
+                    "id": ANY,
+                    "name": "plus",
+                    "input": {"a": 1, "b": 2},
+                },
+            ],
+        },
+    ),
+    (
+        FunctionResultMessage(3, FunctionCall(plus, 1, 2)),
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "tool_result",
+                    "tool_use_id": ANY,
+                    "content": {"value": 3},
+                }
+            ],
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_anthropic_message"), message_to_anthropic_message_test_cases
+)
+def test_message_to_anthropic_message(message, expected_anthropic_message):
+    assert message_to_anthropic_message(message) == expected_anthropic_message
+
+
+async_message_to_anthropic_message_test_cases = [
+    *message_to_anthropic_message_test_cases,
+    (
+        AssistantMessage(
+            AsyncParallelFunctionCall(
+                async_iter([FunctionCall(plus, 1, 2), FunctionCall(plus, 3, 4)])
+            )
+        ),
+        {
+            "role": "assistant",
+            "content": [
+                {
+                    "type": "tool_use",
+                    "id": ANY,
+                    "name": "plus",
+                    "input": {"a": 1, "b": 2},
+                },
+                {
+                    "type": "tool_use",
+                    "id": ANY,
+                    "name": "plus",
+                    "input": {"a": 3, "b": 4},
+                },
+            ],
+        },
+    ),
+    (
+        AssistantMessage(
+            AsyncStreamedResponse(
+                async_iter(
+                    [
+                        AsyncStreamedStr(async_iter(["Hello", " World"])),
+                        FunctionCall(plus, 1, 2),
+                    ]
+                )
+            )
+        ),
+        {
+            "role": "assistant",
+            "content": [
+                {"type": "text", "text": "Hello World"},
+                {
+                    "type": "tool_use",
+                    "id": ANY,
+                    "name": "plus",
+                    "input": {"a": 1, "b": 2},
+                },
+            ],
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("message", "expected_anthropic_message"),
+    async_message_to_anthropic_message_test_cases,
+)
+async def test_async_message_to_anthropic_message(message, expected_anthropic_message):
+    assert (
+        await async_message_to_anthropic_message(message) == expected_anthropic_message
+    )
 
 
 def test_message_to_anthropic_message_user_image_document_bytes_pdf(document_bytes_pdf):

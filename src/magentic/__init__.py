@@ -1,3 +1,4 @@
+from ._chat import Chat as Chat
 from ._pydantic import ConfigDict as ConfigDict
 from ._pydantic import with_config as with_config
 from ._streamed_response import AsyncStreamedResponse as AsyncStreamedResponse

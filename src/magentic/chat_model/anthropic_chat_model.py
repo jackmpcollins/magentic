@@ -3,14 +3,16 @@ from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequenc
 from enum import Enum
 from functools import singledispatch
 from itertools import groupby
-from typing import Any, Generic, TypeVar, cast, overload
+from typing import Any, Generic, cast
+
+from typing_extensions import TypeVar
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
-from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
+from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
+from magentic.chat_model.base import ChatModel, OutputT, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
-    FunctionSchema,
     function_schema_for_type,
     get_async_function_schemas,
     get_function_schemas,
@@ -33,7 +35,13 @@ from magentic.chat_model.stream import (
     StreamParser,
     StreamState,
 )
-from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+    _create_unique_id,
+)
+from magentic.streaming import AsyncStreamedStr, StreamedStr
 from magentic.vision import UserImageMessage
 
 try:
@@ -48,6 +56,7 @@ try:
         ToolChoiceParam,
         ToolChoiceToolParam,
         ToolParam,
+        ToolUseBlockParam,
     )
 except ImportError as error:
     msg = "To use AnthropicChatModel you must install the `anthropic` package using `pip install 'magentic[anthropic]'`."
@@ -64,6 +73,12 @@ def message_to_anthropic_message(message: Message[Any]) -> MessageParam:
     """Convert a Message to an OpenAI message."""
     # TODO: Add instructions for registering new Message type to this error message
     raise NotImplementedError(type(message))
+
+
+@singledispatch
+async def async_message_to_anthropic_message(message: Message[Any]) -> MessageParam:
+    """Async version of `message_to_anthropic_message`."""
+    return message_to_anthropic_message(message)
 
 
 @message_to_anthropic_message.register(_RawMessage)
@@ -133,6 +148,18 @@ def _(message: UserImageMessage[Any]) -> MessageParam:
     }
 
 
+def _function_call_to_tool_call_block(
+    function_call: FunctionCall[Any],
+) -> ToolUseBlockParam:
+    function_schema = FunctionCallFunctionSchema(function_call.function)
+    return {
+        "type": "tool_use",
+        "id": function_call._unique_id,
+        "name": function_schema.name,
+        "input": json.loads(function_schema.serialize_args(function_call)),
+    }
+
+
 @message_to_anthropic_message.register(AssistantMessage)
 def _(message: AssistantMessage[Any]) -> MessageParam:
     if isinstance(message.content, str):
@@ -141,43 +168,32 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
             "content": message.content,
         }
 
-    function_schema: FunctionSchema[Any]
-
     if isinstance(message.content, FunctionCall):
-        function_schema = FunctionCallFunctionSchema(message.content.function)
         return {
             "role": AnthropicMessageRole.ASSISTANT.value,
-            "content": [
-                {
-                    "type": "tool_use",
-                    "id": message.content._unique_id,
-                    "name": function_schema.name,
-                    "input": json.loads(
-                        function_schema.serialize_args(message.content)
-                    ),
-                }
-            ],
+            "content": [_function_call_to_tool_call_block(message.content)],
         }
 
     if isinstance(message.content, ParallelFunctionCall):
         return {
             "role": AnthropicMessageRole.ASSISTANT.value,
             "content": [
-                {
-                    "type": "tool_use",
-                    "id": function_call._unique_id,
-                    "name": FunctionCallFunctionSchema(function_call.function).name,
-                    "input": json.loads(
-                        FunctionCallFunctionSchema(
-                            function_call.function
-                        ).serialize_args(function_call)
-                    ),
-                }
+                _function_call_to_tool_call_block(function_call)
                 for function_call in message.content
             ],
         }
 
-    # TODO: Add support for StreamedResponse here
+    if isinstance(message.content, StreamedResponse):
+        content_blocks: list[TextBlockParam | ToolUseBlockParam] = []
+        for item in message.content:
+            if isinstance(item, StreamedStr):
+                content_blocks.append({"type": "text", "text": item.to_string()})
+            elif isinstance(item, FunctionCall):
+                content_blocks.append(_function_call_to_tool_call_block(item))
+        return {
+            "role": AnthropicMessageRole.ASSISTANT.value,
+            "content": content_blocks,
+        }
 
     function_schema = function_schema_for_type(type(message.content))
     return {
@@ -192,6 +208,31 @@ def _(message: AssistantMessage[Any]) -> MessageParam:
             }
         ],
     }
+
+
+@async_message_to_anthropic_message.register(AssistantMessage)
+async def _(message: AssistantMessage[Any]) -> MessageParam:
+    if isinstance(message.content, AsyncParallelFunctionCall):
+        return {
+            "role": AnthropicMessageRole.ASSISTANT.value,
+            "content": [
+                _function_call_to_tool_call_block(function_call)
+                async for function_call in message.content
+            ],
+        }
+
+    if isinstance(message.content, AsyncStreamedResponse):
+        content_blocks: list[TextBlockParam | ToolUseBlockParam] = []
+        async for item in message.content:
+            if isinstance(item, AsyncStreamedStr):
+                content_blocks.append({"type": "text", "text": await item.to_string()})
+            elif isinstance(item, FunctionCall):
+                content_blocks.append(_function_call_to_tool_call_block(item))
+        return {
+            "role": AnthropicMessageRole.ASSISTANT.value,
+            "content": content_blocks,
+        }
+    return message_to_anthropic_message(message)
 
 
 @message_to_anthropic_message.register(ToolResultMessage)
@@ -325,9 +366,6 @@ def _if_given(value: T | None) -> T | anthropic.NotGiven:
     return value if value is not None else anthropic.NOT_GIVEN
 
 
-R = TypeVar("R")
-
-
 class AnthropicChatModel(ChatModel):
     """An LLM chat model that uses the `anthropic` python package."""
 
@@ -389,37 +427,17 @@ class AnthropicChatModel(ChatModel):
             )
         return {"type": "any", "disable_parallel_tool_use": disable_parallel_tool_use}
 
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     def complete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[str] | AssistantMessage[R]:
+    ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[R]], [str])
+            output_types = [] if functions else cast(list[type[OutputT]], [str])
 
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -450,37 +468,17 @@ class AnthropicChatModel(ChatModel):
             parse_stream(stream, output_types), usage_ref=stream.usage_ref
         )
 
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[R] | AssistantMessage[str]:
+    ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[R]], [str])
+            output_types = [] if functions else cast(list[type[OutputT]], [str])
 
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -492,7 +490,7 @@ class AnthropicChatModel(ChatModel):
         ] = await self._async_client.messages.stream(
             model=self.model,
             messages=_combine_messages(
-                [message_to_anthropic_message(m) for m in messages]
+                [await async_message_to_anthropic_message(m) for m in messages]
             ),
             max_tokens=self.max_tokens,
             stop_sequences=_if_given(stop),

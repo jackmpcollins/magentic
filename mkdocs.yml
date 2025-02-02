@@ -83,6 +83,7 @@ nav:
   - Overview: index.md
   - structured-outputs.md
   - chat-prompting.md
+  - chat.md
   - function-calling.md
   - formatting.md
   - asyncio.md

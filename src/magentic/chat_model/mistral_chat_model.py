@@ -1,13 +1,13 @@
 import os
 from collections.abc import Callable, Iterable, Sequence
 from enum import Enum
-from typing import Any, TypeVar, overload
+from typing import Any
 
 import openai
 from openai.types.chat import ChatCompletionStreamOptionsParam
 
 from magentic._parsing import contains_string_type
-from magentic.chat_model.base import ChatModel
+from magentic.chat_model.base import ChatModel, OutputT
 from magentic.chat_model.message import AssistantMessage, Message
 from magentic.chat_model.openai_chat_model import (
     BaseFunctionToolSchema,
@@ -49,9 +49,6 @@ class _MistralOpenaiChatModel(OpenaiChatModel):
         self, *, tools_specified: bool, output_types: Iterable[type]
     ) -> bool | openai.NotGiven:
         return openai.NOT_GIVEN
-
-
-R = TypeVar("R")
 
 
 class MistralChatModel(ChatModel):
@@ -103,34 +100,14 @@ class MistralChatModel(ChatModel):
     def temperature(self) -> float | None:
         return self._mistral_openai_chat_model.temperature
 
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     def complete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[str] | AssistantMessage[R]:
+    ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         return self._mistral_openai_chat_model.complete(
             messages=messages,
@@ -139,34 +116,14 @@ class MistralChatModel(ChatModel):
             stop=stop,
         )
 
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[R] | AssistantMessage[str]:
+    ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         return await self._mistral_openai_chat_model.acomplete(
             messages=messages,

@@ -403,7 +403,8 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
         return cast(ConfigDict, self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> FunctionCall[T]:
-        args_json = "".join(chunks)
+        # Anthropic message stream returns empty string for function call with no arguments
+        args_json = "".join(chunks) or "{}"
         model = self._model.model_validate_json(args_json)
         supplied_params = [
             param
