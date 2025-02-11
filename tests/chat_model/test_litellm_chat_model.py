@@ -50,6 +50,16 @@ def litellm_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
 
 
 @pytest.mark.litellm_openai
+def test_litellm_chat_model_extra_headers(litellm_success_callback_calls):
+    """Test that provided extra_headers is passed to the litellm success callback."""
+    chat_model = LitellmChatModel("gpt-3.5-turbo", extra_headers={"x-auth-header": "123"})
+    assert chat_model.extra_headers == {"x-auth-header": "123"}
+    chat_model.complete(messages=[UserMessage("Say hello!")])
+    callback_call = litellm_success_callback_calls[0]
+    assert callback_call["kwargs"]["litellm_params"]["extra_headers"] == {"x-auth-header": "123"}
+
+
+@pytest.mark.litellm_openai
 def test_litellm_chat_model_metadata(litellm_success_callback_calls):
     """Test that provided metadata is passed to the litellm success callback."""
     chat_model = LitellmChatModel("gpt-4o", metadata={"foo": "bar"})
