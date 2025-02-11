@@ -49,14 +49,18 @@ def litellm_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
     litellm.success_callback = original_success_callback
 
 
-@pytest.mark.litellm_openai
+@pytest.mark.litellm_ollama
 def test_litellm_chat_model_extra_headers(litellm_success_callback_calls):
     """Test that provided extra_headers is passed to the litellm success callback."""
-    chat_model = LitellmChatModel("gpt-3.5-turbo", extra_headers={"x-auth-header": "123"})
-    assert chat_model.extra_headers == {"x-auth-header": "123"}
+    chat_model = LitellmChatModel(
+        "ollama/deepseek-coder-v2", 
+        api_base="https://ollama.orianna.ai",
+        extra_headers={"cf-access-token": "..."},
+    )
+    assert chat_model.extra_headers == {"cf-access-token": "..."}
     chat_model.complete(messages=[UserMessage("Say hello!")])
     callback_call = litellm_success_callback_calls[0]
-    assert callback_call["kwargs"]["litellm_params"]["extra_headers"] == {"x-auth-header": "123"}
+    assert callback_call["kwargs"]["litellm_params"]["extra_headers"] == {"cf-access-token": "..."}
 
 
 @pytest.mark.litellm_openai

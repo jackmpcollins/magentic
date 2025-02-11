@@ -1,0 +1,78 @@
+interactions:
+- request:
+    body: '{"model": "deepseek-coder-v2", "prompt": "### User:\nSay hello!\n\n", "options":
+      {}, "stream": true}'
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      cf-access-token:
+      - '...'
+      connection:
+      - keep-alive
+      content-length:
+      - '100'
+      host:
+      - ollama.orianna.ai
+      user-agent:
+      - litellm/1.60.8
+    method: POST
+    uri: https://ollama.orianna.ai/api/generate
+  response:
+    body:
+      string: '{"model":"deepseek-coder-v2","created_at":"2025-02-11T04:19:09.554571427Z","response":"
+        Hello","done":false}
+
+        {"model":"deepseek-coder-v2","created_at":"2025-02-11T04:19:09.571490903Z","response":"!","done":false}
+
+        {"model":"deepseek-coder-v2","created_at":"2025-02-11T04:19:09.587202718Z","response":"
+        How","done":false}
+
+        {"model":"deepseek-coder-v2","created_at":"2025-02-11T04:19:09.602207717Z","response":"
+        can","done":false}
+
+        {"model":"deepseek-coder-v2","created_at":"2025-02-11T04:19:09.617997682Z","response":"
+        I","done":false}
+
+        {"model":"deepseek-coder-v2","created_at":"2025-02-11T04:19:09.633654112Z","response":"
+        assist","done":false}
+
+        {"model":"deepseek-coder-v2","created_at":"2025-02-11T04:19:09.648182905Z","response":"
+        you","done":false}
+
+        {"model":"deepseek-coder-v2","created_at":"2025-02-11T04:19:09.663245681Z","response":"
+        today","done":false}
+
+        {"model":"deepseek-coder-v2","created_at":"2025-02-11T04:19:09.678022119Z","response":"?","done":false}
+
+        {"model":"deepseek-coder-v2","created_at":"2025-02-11T04:19:09.692794Z","response":"","done":true,"done_reason":"stop","context":[100000,5726,25,49757,10468,25,185,30445,39280,0,185,185,185,185,77398,25,37727,0,1724,481,304,4750,340,3571,30],"total_duration":4373170396,"load_duration":3905742418,"prompt_eval_count":17,"prompt_eval_duration":324000000,"eval_count":10,"eval_duration":142000000}
+
+        '
+    headers:
+      CF-RAY:
+      - 910189e5fc378cc0-EWR
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '1358'
+      Content-Type:
+      - application/x-ndjson
+      Date:
+      - Tue, 11 Feb 2025 04:19:10 GMT
+      NEL:
+      - '{"success_fraction":0,"report_to":"cf-nel","max_age":604800}'
+      Report-To:
+      - '{"endpoints":[{"url":"https:\/\/a.nel.cloudflare.com\/report\/v4?s=covxVw8m%2FzCV0nmwN7OuXxWrfwZ2Omrjs0RREoG%2F9PiauTFGJmK%2B0fADH4W33ONlBpYSJNJi%2FvEW%2BhRa1tw0zrvGTzBuF9R5y90sBdK7rSVCZv%2F2vwFGRo1hE23ZR%2B1KSljy9Q%3D%3D"}],"group":"cf-nel","max_age":604800}'
+      Server:
+      - cloudflare
+      alt-svc:
+      - h3=":443"; ma=86400
+      cf-cache-status:
+      - DYNAMIC
+      server-timing:
+      - cfL4;desc="?proto=TCP&rtt=16478&min_rtt=15249&rtt_var=8178&sent=6&recv=8&lost=0&retrans=0&sent_bytes=3048&recv_bytes=1812&delivery_rate=163590&cwnd=245&unsent_bytes=0&cid=e417c28095331bb0&ts=4974&x=0"
+    status:
+      code: 200
+      message: OK
+version: 1
