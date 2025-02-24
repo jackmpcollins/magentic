@@ -53,7 +53,7 @@ def litellm_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
 def test_litellm_chat_model_extra_headers():
     """Test that provided extra_headers is passed to the litellm success callback."""
     chat_model = LitellmChatModel(
-        "ollama/deepseek-coder-v2", 
+        "ollama/deepseek-coder-v2",
         api_base="https://ollama.orianna.ai",
         extra_headers={"cf-access-token": "..."},
     )

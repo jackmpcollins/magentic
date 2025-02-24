@@ -128,7 +128,7 @@ class LitellmChatModel(ChatModel):
     @property
     def api_base(self) -> str | None:
         return self._api_base
-    
+
     @property
     def extra_headers(self) -> dict[str, str] | None:
         return self._extra_headers
