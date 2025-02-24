@@ -49,6 +49,20 @@ def litellm_success_callback_calls() -> Iterator[list[dict[str, Any]]]:
     litellm.success_callback = original_success_callback
 
 
+@pytest.mark.litellm_ollama
+def test_litellm_chat_model_extra_headers(litellm_success_callback_calls):
+    """Test that provided extra_headers is passed to the litellm success callback."""
+    chat_model = LitellmChatModel("gpt-4o", extra_headers={"my-extra-header": "foo"})
+    assert chat_model.extra_headers == {"my-extra-header": "foo"}
+    chat_model.complete(messages=[UserMessage("Say hello!")])
+    # There are multiple callback calls due to streaming
+    # Take the last one because the first is occasionally from another test
+    callback_call = litellm_success_callback_calls[-1]
+    assert callback_call["kwargs"]["optional_params"]["extra_headers"] == {
+        "my-extra-header": "foo"
+    }
+
+
 @pytest.mark.litellm_openai
 def test_litellm_chat_model_metadata(litellm_success_callback_calls):
     """Test that provided metadata is passed to the litellm success callback."""
