@@ -1,0 +1,80 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Return a list of fruit"}], "model":
+      "gemini-2.0-flash", "parallel_tool_calls": false, "stream": true, "stream_options":
+      {"include_usage": true}, "tool_choice": {"type": "function", "function": {"name":
+      "return_list_of_str"}}, "tools": [{"type": "function", "function": {"name":
+      "return_list_of_str", "parameters": {"properties": {"value": {"items": {"type":
+      "string"}, "title": "Value", "type": "array"}}, "required": ["value"], "type":
+      "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '493'
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      user-agent:
+      - OpenAI/Python 1.59.3
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.59.3
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAC/0SQ3W6DMAyF7/sUk68pKh37Ka8yUOQGA1lDghJn2oTy7nM2qVVurHO++NgekbF7
+        2kEv3miK0H3sMJJlhG6H4C1BBxijiYyOoQL23iqN1v6jU3KajXeFxjCnlRyLA3sPX2gT9UL1gNtm
+        pax6uKKT91f6gG4WdcjS1uFakgJxCk5ZiVN+UpED5ArMKFbJ/tkKdM/Mg5iTcSYuKhDGMgZE9puw
+        xo30Dd0pDxVoMZmkSfPWnt4v7Wv7XMHqZU3hZ1qlw/Fcn46TxbjIX3/9JM3i6QW51n6V6UtgrZfk
+        bgKkiDOVlR+eYn8jJ6s3TQVbEJ0fUlvuxmjvyvkl58PhFwAA//9KAYd9tIu/n2ssFxcAAAD//wMA
+        CucoJooBAAA=
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/event-stream
+      Date:
+      - Sun, 02 Mar 2025 05:50:43 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=596
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+    status:
+      code: 200
+      message: OK
+version: 1

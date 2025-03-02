@@ -1,0 +1,75 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Say hello!"}], "model": "gemini-2.0-flash",
+      "stream": true, "stream_options": {"include_usage": true}}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '145'
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      user-agent:
+      - OpenAI/Python 1.59.3
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.59.3
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAC/0SOXQ6CQAyE3zmF6fNCwBB/9gTewRhTlwory5awJTEh3N0aoz7ON+3MNChoNwu4
+        jr2jBPa8QENBEKxCjkJRwMKJQmAwMHEglZiST4JqrQZ8bOgJtlwvBtxEKNSArfZ1eTjWu7oyMLAm
+        6ldLg48+3xZlfg+YOs3j24Pcu8B1KIXjYQwknmPhujn2ejAnbOmz5etdhXuKOrU0ME6K5UdqA8KC
+        4Q/WNcteAAAA//9KIc6PCiUZqUWpigoe+eUKyYl5Cp4KGak5BQqV+aUKJfkpiZX2MXk4QiAN6K3i
+        jHig34vz84CSxSX5BUoDGDCGhhghY4weMobgoAEAAAD//4IETbSLv59rLBcXAAAA//8DAB81RzwN
+        AgAA
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/event-stream
+      Date:
+      - Sun, 02 Mar 2025 05:50:41 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=361
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+    status:
+      code: 200
+      message: OK
+version: 1
