@@ -34,6 +34,26 @@ from magentic import OpenaiChatModel
 model = OpenaiChatModel("llama3.2", base_url="http://localhost:11434/v1/")
 ```
 
+### xAI Grok via OpenAI
+
+xAI provides an OpenAI-compatible API, allowing you to use their Grok models with minimal changes in your code.
+
+First, ensure you have the appropriate API key set as an environment variable `XAI_API_KEY`.
+
+Then, specify the model name, xAI `base_url`, and API key when creating the `OpenaiChatModel` instance.
+
+```python
+import os
+
+from magentic import OpenaiChatModel
+
+model = OpenaiChatModel(
+    "grok-2", base_url="https://api.x.ai/v1", api_key=os.environ["XAI_API_KEY"]
+)
+```
+
+Ensure that you handle any additional requirements specific to xAI as per their documentation.
+
 #### Other OpenAI-compatible APIs
 
 When using the `openai` backend, setting the `MAGENTIC_OPENAI_BASE_URL` environment variable or using `OpenaiChatModel(..., base_url="http://localhost:8080")` in code allows you to use `magentic` with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LiteLLM OpenAI Proxy Server](https://docs.litellm.ai/docs/proxy_server), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support tool calls then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
