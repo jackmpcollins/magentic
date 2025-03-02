@@ -16,6 +16,26 @@ from magentic import OpenaiChatModel
 model = OpenaiChatModel("gpt-4o")
 ```
 
+### Gemini via OpenAI
+
+Gemini supports an OpenAI-compatible API, allowing you to use their models through the OpenAI backend. See https://ai.google.dev/gemini-api/docs/openai
+
+First, ensure you have the appropriate API key set as an environment variable `GEMINI_API_KEY`.
+
+Then, specify the model name, Google APIs `base_url`, and API key when creating the `OpenaiChatModel` instance.
+
+```python
+import os
+
+from magentic import OpenaiChatModel
+
+model = OpenaiChatModel(
+    "gemini-2.0-flash",
+    base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+    api_key=os.environ["GEMINI_API_KEY"],
+)
+```
+
 #### Ollama via OpenAI
 
 Ollama supports an OpenAI-compatible API, which allows you to use Ollama models via the OpenAI backend.
