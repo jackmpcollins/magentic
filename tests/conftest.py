@@ -77,6 +77,7 @@ def pytest_collection_modifyitems(
         "openai",
         "openai_gemini",
         "openai_ollama",
+        "openai_xai",
     ]
     for item in items:
         # Apply vcr marker to all LLM tests

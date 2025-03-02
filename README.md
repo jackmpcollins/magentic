@@ -154,12 +154,7 @@ from magentic import prompt_chain
 def get_current_weather(location, unit="fahrenheit"):
     """Get the current weather in a given location"""
     # Pretend to query an API
-    return {
-        "location": location,
-        "temperature": "72",
-        "unit": unit,
-        "forecast": ["sunny", "windy"],
-    }
+    return {"temperature": "72", "forecast": ["sunny", "windy"]}
 
 
 @prompt_chain(

@@ -1,5 +1,7 @@
 # Chat Prompting
 
+This page covers the `@chatprompt` decorator which can be used to define an LLM query template (message templates, optional LLM, functions, and return type). To manage an ongoing conversation with an LLM, see [Chat](chat.md).
+
 ## @chatprompt
 
 The `@chatprompt` decorator works just like `@prompt` but allows you to pass chat messages as a template rather than a single text prompt. This can be used to provide a system message or for few-shot prompting where you provide example responses to guide the model's output. Format fields denoted by curly braces `{example}` will be filled in all messages (except `FunctionResultMessage`).

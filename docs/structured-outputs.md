@@ -30,7 +30,7 @@ With pydantic's `BaseModel`, you can use `Field` to provide additional informati
 
 ```python hl_lines="7-10"
 from magentic import prompt
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Superhero(BaseModel):

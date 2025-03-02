@@ -3,9 +3,10 @@ from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
 from contextvars import ContextVar
 from itertools import chain
-from typing import Any, TypeVar, cast, get_origin, overload
+from typing import Any, cast, get_origin
 
 from pydantic import ValidationError
+from typing_extensions import TypeVar
 
 from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.chat_model.message import AssistantMessage, Message
@@ -16,7 +17,7 @@ from magentic.function_call import (
 )
 from magentic.streaming import AsyncStreamedStr, StreamedStr, achain, async_iter
 
-R = TypeVar("R")
+OutputT = TypeVar("OutputT", default=str)
 
 _chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
     "chat_model", default=None
@@ -105,7 +106,9 @@ class ToolSchemaParseError(Exception):
 
 # TODO: Move this into _parsing
 # TODO: Make this a stream class with a close method and context management
-def parse_stream(stream: Iterator[Any], output_types: Iterable[type[R]]) -> R:
+def parse_stream(
+    stream: Iterator[Any], output_types: Iterable[type[OutputT]]
+) -> OutputT:
     """Parse and validate the LLM output stream against the allowed output types."""
     output_type_origins = [get_origin(type_) or type_ for type_ in output_types]
     # TODO: option to error/warn/ignore extra objects
@@ -113,122 +116,83 @@ def parse_stream(stream: Iterator[Any], output_types: Iterable[type[R]]) -> R:
     obj = next(stream)
     if isinstance(obj, StreamedStr):
         if StreamedResponse in output_type_origins:
-            return cast(R, StreamedResponse(chain([obj], stream)))
+            return cast(OutputT, StreamedResponse(chain([obj], stream)))
         if StreamedStr in output_type_origins:
-            return cast(R, obj)
+            return cast(OutputT, obj)
         if str in output_type_origins:
-            return cast(R, str(obj))
+            return cast(OutputT, str(obj))
         raise StringNotAllowedError(obj.truncate(100))
     if isinstance(obj, FunctionCall):
         if StreamedResponse in output_type_origins:
-            return cast(R, StreamedResponse(chain([obj], stream)))
+            return cast(OutputT, StreamedResponse(chain([obj], stream)))
         if ParallelFunctionCall in output_type_origins:
-            return cast(R, ParallelFunctionCall(chain([obj], stream)))
+            return cast(OutputT, ParallelFunctionCall(chain([obj], stream)))
         if FunctionCall in output_type_origins:
             # TODO: Check that FunctionCall type matches ?
-            return cast(R, obj)
+            return cast(OutputT, obj)
         raise FunctionCallNotAllowedError(obj)
     if isinstance(obj, tuple(output_type_origins)):
-        return cast(R, obj)
+        return cast(OutputT, obj)
     raise ObjectNotAllowedError(obj)
 
 
 async def aparse_stream(
-    stream: AsyncIterator[Any], output_types: Iterable[type[R]]
-) -> R:
+    stream: AsyncIterator[Any], output_types: Iterable[type[OutputT]]
+) -> OutputT:
     """Async version of `parse_stream`."""
     output_type_origins = [get_origin(type_) or type_ for type_ in output_types]
     obj = await anext(stream)
     if isinstance(obj, AsyncStreamedStr):
         if AsyncStreamedResponse in output_type_origins:
-            return cast(R, AsyncStreamedResponse(achain(async_iter([obj]), stream)))
+            return cast(
+                OutputT, AsyncStreamedResponse(achain(async_iter([obj]), stream))
+            )
         if AsyncStreamedStr in output_type_origins:
-            return cast(R, obj)
+            return cast(OutputT, obj)
         if str in output_type_origins:
-            return cast(R, await obj.to_string())
+            return cast(OutputT, await obj.to_string())
         raise StringNotAllowedError(await obj.truncate(100))
     if isinstance(obj, FunctionCall):
         if AsyncStreamedResponse in output_type_origins:
-            return cast(R, AsyncStreamedResponse(achain(async_iter([obj]), stream)))
+            return cast(
+                OutputT, AsyncStreamedResponse(achain(async_iter([obj]), stream))
+            )
         if AsyncParallelFunctionCall in output_type_origins:
-            return cast(R, AsyncParallelFunctionCall(achain(async_iter([obj]), stream)))
+            return cast(
+                OutputT, AsyncParallelFunctionCall(achain(async_iter([obj]), stream))
+            )
         if FunctionCall in output_type_origins:
-            return cast(R, obj)
+            return cast(OutputT, obj)
         raise FunctionCallNotAllowedError(obj)
     if isinstance(obj, tuple(output_type_origins)):
-        return cast(R, obj)
+        return cast(OutputT, obj)
     raise ObjectNotAllowedError(obj)
 
 
 class ChatModel(ABC):
     """An LLM chat model."""
 
-    @overload
-    @abstractmethod
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    @abstractmethod
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     @abstractmethod
     def complete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        # TODO: Set default of R to str in Python 3.13
-        output_types: Iterable[type[R | str]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[str] | AssistantMessage[R]:
+    ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         ...
 
-    @overload
-    @abstractmethod
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    @abstractmethod
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     @abstractmethod
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R | str]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[str] | AssistantMessage[R]:
+    ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         ...
 

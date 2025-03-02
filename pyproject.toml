@@ -1,13 +1,13 @@
 [project]
 name = "magentic"
-version = "0.35.0"
+version = "0.39.1"
 description = "Seamlessly integrate LLMs as Python functions"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "filetype>=1.2.0",
     "logfire-api>=0.1.0",
-    "openai>=1.40.0",
+    "openai>=1.56.0",
     "pydantic>=2.10.0",
     "pydantic-settings>=2.0.0",
     "typing-extensions>=4.5.0",
@@ -93,6 +93,7 @@ markers = [
     "openai: Tests that query the OpenAI API. Requires the OPENAI_API_KEY environment variable to be set.",
     "openai_gemini: Tests that query the Gemini API via openai. Requires the GEMINI_API_KEY environment variable to be set.",
     "openai_ollama: Tests that query Ollama via openai. Requires ollama to be installed and running on localhost:11434.",
+    "openai_xai: Tests that query xAI via openai. Requires the XAI_API_KEY environment variable to be set.",
 ]
 
 [tool.ruff]

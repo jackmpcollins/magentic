@@ -2,7 +2,7 @@ from typing import TYPE_CHECKING
 
 import pytest
 
-from magentic.chat import Chat
+from magentic._chat import Chat
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
@@ -13,24 +13,10 @@ from magentic.function_call import (
     FunctionCall,
     ParallelFunctionCall,
 )
-from magentic.prompt_function import prompt
 from magentic.streaming import async_iter
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable
-
-
-def test_chat_from_prompt():
-    """Test creating a chat from a prompt function."""
-
-    def plus(a: int, b: int) -> int:
-        return a + b
-
-    @prompt("What is {a} plus {b}?", functions=[plus])
-    def add_text_numbers(a: str, b: str) -> int: ...
-
-    chat = Chat.from_prompt(add_text_numbers, "one", "two")
-    assert chat.messages == [UserMessage(content="What is one plus two?")]
 
 
 def test_chat_add_message():

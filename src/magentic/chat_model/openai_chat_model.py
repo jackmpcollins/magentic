@@ -1,14 +1,15 @@
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequence
 from enum import Enum
 from functools import singledispatch
-from typing import Any, Generic, Literal, TypeVar, cast, overload
+from typing import Any, Generic, Literal, TypeVar, cast
 
 import openai
-from openai.lib.streaming.chat._completions import ChatCompletionStreamState
+from openai.lib.streaming.chat import ChatCompletionStreamState
 from openai.types.chat import (
     ChatCompletionChunk,
     ChatCompletionContentPartParam,
     ChatCompletionMessageParam,
+    ChatCompletionMessageToolCallParam,
     ChatCompletionNamedToolChoiceParam,
     ChatCompletionStreamOptionsParam,
     ChatCompletionToolChoiceOptionParam,
@@ -17,12 +18,11 @@ from openai.types.chat import (
 )
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
-from magentic._streamed_response import StreamedResponse
-from magentic.chat_model.base import ChatModel, aparse_stream, parse_stream
+from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
+from magentic.chat_model.base import ChatModel, OutputT, aparse_stream, parse_stream
 from magentic.chat_model.function_schema import (
     BaseFunctionSchema,
     FunctionCallFunctionSchema,
-    FunctionSchema,
     function_schema_for_type,
     get_async_function_schemas,
     get_function_schemas,
@@ -45,8 +45,13 @@ from magentic.chat_model.stream import (
     StreamParser,
     StreamState,
 )
-from magentic.function_call import FunctionCall, ParallelFunctionCall, _create_unique_id
-from magentic.streaming import StreamedStr
+from magentic.function_call import (
+    AsyncParallelFunctionCall,
+    FunctionCall,
+    ParallelFunctionCall,
+    _create_unique_id,
+)
+from magentic.streaming import AsyncStreamedStr, StreamedStr
 from magentic.vision import UserImageMessage
 
 
@@ -62,6 +67,14 @@ def message_to_openai_message(message: Message[Any]) -> ChatCompletionMessagePar
     """Convert a Message to an OpenAI message."""
     # TODO: Add instructions for registering new Message type to this error message
     raise NotImplementedError(type(message))
+
+
+@singledispatch
+async def async_message_to_openai_message(
+    message: Message[Any],
+) -> ChatCompletionMessageParam:
+    """Async version of `message_to_openai_message`."""
+    return message_to_openai_message(message)
 
 
 @message_to_openai_message.register(_RawMessage)
@@ -122,45 +135,36 @@ def _(message: UserImageMessage[Any]) -> ChatCompletionUserMessageParam:
     }
 
 
+def _function_call_to_tool_call_block(
+    function_call: FunctionCall[Any],
+) -> ChatCompletionMessageToolCallParam:
+    function_schema = FunctionCallFunctionSchema(function_call.function)
+    return {
+        "id": function_call._unique_id,
+        "type": "function",
+        "function": {
+            "name": function_schema.name,
+            "arguments": function_schema.serialize_args(function_call),
+        },
+    }
+
+
 @message_to_openai_message.register(AssistantMessage)
 def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     if isinstance(message.content, str):
         return {"role": OpenaiMessageRole.ASSISTANT.value, "content": message.content}
 
-    function_schema: FunctionSchema[Any]
-
     if isinstance(message.content, FunctionCall):
-        function_schema = FunctionCallFunctionSchema(message.content.function)
         return {
             "role": OpenaiMessageRole.ASSISTANT.value,
-            "content": None,
-            "tool_calls": [
-                {
-                    "id": message.content._unique_id,
-                    "type": "function",
-                    "function": {
-                        "name": function_schema.name,
-                        "arguments": function_schema.serialize_args(message.content),
-                    },
-                }
-            ],
+            "tool_calls": [_function_call_to_tool_call_block(message.content)],
         }
 
     if isinstance(message.content, ParallelFunctionCall):
         return {
             "role": OpenaiMessageRole.ASSISTANT.value,
-            "content": None,
             "tool_calls": [
-                {
-                    "id": function_call._unique_id,
-                    "type": "function",
-                    "function": {
-                        "name": FunctionCallFunctionSchema(function_call.function).name,
-                        "arguments": FunctionCallFunctionSchema(
-                            function_call.function
-                        ).serialize_args(function_call),
-                    },
-                }
+                _function_call_to_tool_call_block(function_call)
                 for function_call in message.content
             ],
         }
@@ -170,23 +174,14 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
         function_calls: list[FunctionCall[Any]] = []
         for item in message.content:
             if isinstance(item, StreamedStr):
-                content.append(str(item))
+                content.append(item.to_string())
             elif isinstance(item, FunctionCall):
                 function_calls.append(item)
         return {
             "role": OpenaiMessageRole.ASSISTANT.value,
             "content": " ".join(content),
             "tool_calls": [
-                {
-                    "id": function_call._unique_id,
-                    "type": "function",
-                    "function": {
-                        "name": FunctionCallFunctionSchema(function_call.function).name,
-                        "arguments": FunctionCallFunctionSchema(
-                            function_call.function
-                        ).serialize_args(function_call),
-                    },
-                }
+                _function_call_to_tool_call_block(function_call)
                 for function_call in function_calls
             ],
         }
@@ -194,7 +189,6 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
     function_schema = function_schema_for_type(type(message.content))
     return {
         "role": OpenaiMessageRole.ASSISTANT.value,
-        "content": None,
         "tool_calls": [
             {
                 # Can be random because no result will be inserted back into the chat
@@ -207,6 +201,36 @@ def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
             }
         ],
     }
+
+
+@async_message_to_openai_message.register(AssistantMessage)
+async def _(message: AssistantMessage[Any]) -> ChatCompletionMessageParam:
+    if isinstance(message.content, AsyncParallelFunctionCall):
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "tool_calls": [
+                _function_call_to_tool_call_block(function_call)
+                async for function_call in message.content
+            ],
+        }
+
+    if isinstance(message.content, AsyncStreamedResponse):
+        content: list[str] = []
+        function_calls: list[FunctionCall[Any]] = []
+        async for item in message.content:
+            if isinstance(item, AsyncStreamedStr):
+                content.append(await item.to_string())
+            elif isinstance(item, FunctionCall):
+                function_calls.append(item)
+        return {
+            "role": OpenaiMessageRole.ASSISTANT.value,
+            "content": " ".join(content),
+            "tool_calls": [
+                _function_call_to_tool_call_block(function_call)
+                for function_call in function_calls
+            ],
+        }
+    return message_to_openai_message(message)
 
 
 @message_to_openai_message.register(ToolResultMessage)
@@ -327,8 +351,8 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
         self._chat_completion_stream_state.handle_chunk(item)
         if item.usage:
             # Only keep the last usage
-            # Gemini openai-compatible API includes usage in all streamed chunks
-            # but OpenAI only includes this in the last chunk
+            # xAI Grok and Gemini openai-compatible API includes usage in all streamed chunks
+            # OpenAI only includes this in the last chunk
             self.usage_ref.clear()
             self.usage_ref.append(
                 Usage(
@@ -347,9 +371,6 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
 
 def _if_given(value: T | None) -> T | openai.NotGiven:
     return value if value is not None else openai.NOT_GIVEN
-
-
-R = TypeVar("R")
 
 
 class OpenaiChatModel(ChatModel):
@@ -447,38 +468,18 @@ class OpenaiChatModel(ChatModel):
             return openai.NOT_GIVEN
         return False
 
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    def complete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     def complete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
         # TODO: Add type hint for function call ?
-    ) -> AssistantMessage[str] | AssistantMessage[R]:
+    ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = cast(Iterable[type[R]], [] if functions else [str])
+            output_types = cast(Iterable[type[OutputT]], [] if functions else [str])
 
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -512,37 +513,17 @@ class OpenaiChatModel(ChatModel):
             parse_stream(stream, output_types), usage_ref=stream.usage_ref
         )
 
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: None = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[str]: ...
-
-    @overload
-    async def acomplete(
-        self,
-        messages: Iterable[Message[Any]],
-        functions: Any = ...,
-        output_types: Iterable[type[R]] = ...,
-        *,
-        stop: list[str] | None = ...,
-    ) -> AssistantMessage[R]: ...
-
     async def acomplete(
         self,
         messages: Iterable[Message[Any]],
         functions: Iterable[Callable[..., Any]] | None = None,
-        output_types: Iterable[type[R]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[R] | AssistantMessage[str]:
+    ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[R]], [str])
+            output_types = [] if functions else cast(list[type[OutputT]], [str])
 
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -552,7 +533,7 @@ class OpenaiChatModel(ChatModel):
         ] = await self._async_client.chat.completions.create(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
-                [message_to_openai_message(m) for m in messages]
+                [await async_message_to_openai_message(m) for m in messages]
             ),
             max_tokens=_if_given(self.max_tokens),
             seed=_if_given(self.seed),
