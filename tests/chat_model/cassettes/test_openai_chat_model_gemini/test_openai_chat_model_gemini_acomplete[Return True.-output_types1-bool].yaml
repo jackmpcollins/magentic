@@ -1,0 +1,78 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Return True."}], "model": "gemini-2.0-flash",
+      "parallel_tool_calls": false, "stream": true, "stream_options": {"include_usage":
+      true}, "tool_choice": {"type": "function", "function": {"name": "return_bool"}},
+      "tools": [{"type": "function", "function": {"name": "return_bool", "parameters":
+      {"properties": {"value": {"title": "Value", "type": "boolean"}}, "required":
+      ["value"], "type": "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '442'
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      user-agent:
+      - AsyncOpenAI/Python 1.59.3
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - async:asyncio
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.59.3
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAC/0SQ3WrDMAxG7/sUQ9dpSEvYOr/KWoLqKIlX/wRbHi3B7z6ZQXb7nU9HSCMyqrcN
+        9BKMpgTqa4ORLCOoDWKwBAowJZMYPUMDHIIdNFr7V52y12yCr22Mc3bkWQhsV/hBm+kKimOmIpMe
+        XZVF4hz9cBcPlAbMKFn1vtZKd1+5CZyMN2kZImGqKyBxWKVr/EhPUF25NaAFMonk9NF3l8/+ve8b
+        cEFOkP5MTgzHc9sdJ4tpkdlw/ybNwvSC3OrgVkt1YauX7B9SyAlnquf8s4HDg7ycJeo1Ssx7cqkf
+        YbR7cDqXcjj8AgAA//9KAYdqtIu/n2ssFxcAAAD//wMAxiRLqWQBAAA=
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/event-stream
+      Date:
+      - Sun, 02 Mar 2025 05:50:44 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=507
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+    status:
+      code: 200
+      message: OK
+version: 1

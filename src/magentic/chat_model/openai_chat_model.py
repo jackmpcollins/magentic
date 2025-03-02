@@ -350,7 +350,10 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
                 tool_call_chunk.index = self._current_tool_call_index
         self._chat_completion_stream_state.handle_chunk(item)
         if item.usage:
-            # xAI Grok provides usage on every chunk, so cannot assert usage is None here
+            # Only keep the last usage
+            # xAI Grok and Gemini openai-compatible API includes usage in all streamed chunks
+            # OpenAI only includes this in the last chunk
+            self.usage_ref.clear()
             self.usage_ref.append(
                 Usage(
                     input_tokens=item.usage.prompt_tokens,

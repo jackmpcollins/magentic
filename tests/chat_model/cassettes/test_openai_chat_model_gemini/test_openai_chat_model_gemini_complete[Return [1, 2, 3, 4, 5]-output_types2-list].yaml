@@ -1,0 +1,79 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Return [1, 2, 3, 4, 5]"}], "model":
+      "gemini-2.0-flash", "parallel_tool_calls": false, "stream": true, "stream_options":
+      {"include_usage": true}, "tool_choice": {"type": "function", "function": {"name":
+      "return_list_of_int"}}, "tools": [{"type": "function", "function": {"name":
+      "return_list_of_int", "parameters": {"properties": {"value": {"items": {"type":
+      "integer"}, "title": "Value", "type": "array"}}, "required": ["value"], "type":
+      "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '494'
+      content-type:
+      - application/json
+      host:
+      - generativelanguage.googleapis.com
+      user-agent:
+      - OpenAI/Python 1.59.3
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.59.3
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAC/0SQQW6DMBBF9zlFNWsHESBtwlUaZE3NAG6MjfBQtUK+e8eqRLf/P7+vcY+M7csO
+        ZgrWUIT2fYeeHCO0O6zBEbSAMdrI6BkUcAhOG3TuDx02b9gGn2lcx20mz9LA/oAvdBs9hLqoStWq
+        UdcuicDjnJ0r8bZ67USsw6CtyJMC20uVV36WDB321Ek5WG/jpFfCmAchcliEtb6nb2jL1CkwUjKJ
+        5PLWlLd789pUCuYgBwk/0iyGc1WU58FhnORt+Pgkw9KZCbkwYV4c5cHCTJt/CrBFHCkf999pDk/y
+        cuRNwbJKzEdSXfMHMbojqeuUTqdfAAAA//9KAQdytIu/n2ssFxcAAAD//wMAGKMmGHMBAAA=
+    headers:
+      Alt-Svc:
+      - h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+      Content-Encoding:
+      - gzip
+      Content-Type:
+      - text/event-stream
+      Date:
+      - Sun, 02 Mar 2025 05:50:42 GMT
+      Server:
+      - scaffolding on HTTPServer2
+      Server-Timing:
+      - gfet4t7; dur=577
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      - X-Origin
+      - Referer
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-XSS-Protection:
+      - '0'
+    status:
+      code: 200
+      message: OK
+version: 1
