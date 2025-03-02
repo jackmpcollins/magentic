@@ -560,7 +560,8 @@
     </span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="OpenAI">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#gemini-via-openai" class="md-nav__link">
@@ -569,8 +570,7 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Gemini via OpenAI">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#ollama-via-openai" class="md-nav__link">
@@ -581,11 +581,6 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-        
           <li class="md-nav__item">
   <a href="#xai-grok-via-openai" class="md-nav__link">
     <span class="md-ellipsis">
@@ -593,8 +588,7 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="xAI Grok via OpenAI">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#other-openai-compatible-apis" class="md-nav__link">
@@ -852,7 +846,8 @@
     </span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="OpenAI">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#gemini-via-openai" class="md-nav__link">
@@ -861,8 +856,7 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Gemini via OpenAI">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#ollama-via-openai" class="md-nav__link">
@@ -873,11 +867,6 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-        
           <li class="md-nav__item">
   <a href="#xai-grok-via-openai" class="md-nav__link">
     <span class="md-ellipsis">
@@ -885,8 +874,7 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="xAI Grok via OpenAI">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#other-openai-compatible-apis" class="md-nav__link">
@@ -976,7 +964,7 @@
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;gpt-4o&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h3 id="gemini-via-openai">Gemini via OpenAI<a class="headerlink" href="#gemini-via-openai" title="Permanent link">&para;</a></h3>
+<h4 id="gemini-via-openai">Gemini via OpenAI<a class="headerlink" href="#gemini-via-openai" title="Permanent link">&para;</a></h4>
 <p>Gemini supports an OpenAI-compatible API, allowing you to use their models through the OpenAI backend. See https://ai.google.dev/gemini-api/docs/openai</p>
 <p>First, ensure you have the appropriate API key set as an environment variable <code>GEMINI_API_KEY</code>.</p>
 <p>Then, specify the model name, Google APIs <code>base_url</code>, and API key when creating the <code>OpenaiChatModel</code> instance.</p>
@@ -1000,7 +988,7 @@
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;llama3.2&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="s2">&quot;http://localhost:11434/v1/&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h3 id="xai-grok-via-openai">xAI Grok via OpenAI<a class="headerlink" href="#xai-grok-via-openai" title="Permanent link">&para;</a></h3>
+<h4 id="xai-grok-via-openai">xAI Grok via OpenAI<a class="headerlink" href="#xai-grok-via-openai" title="Permanent link">&para;</a></h4>
 <p>xAI provides an OpenAI-compatible API, allowing you to use their Grok models with minimal changes in your code.</p>
 <p>First, ensure you have the appropriate API key set as an environment variable <code>XAI_API_KEY</code>.</p>
 <p>Then, specify the model name, xAI <code>base_url</code>, and API key when creating the <code>OpenaiChatModel</code> instance.</p>
