@@ -350,7 +350,7 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
                 tool_call_chunk.index = self._current_tool_call_index
         self._chat_completion_stream_state.handle_chunk(item)
         if item.usage:
-            assert not self.usage_ref
+            # xAI Grok provides usage on every chunk, so cannot assert usage is None here
             self.usage_ref.append(
                 Usage(
                     input_tokens=item.usage.prompt_tokens,
