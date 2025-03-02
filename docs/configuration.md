@@ -16,7 +16,7 @@ from magentic import OpenaiChatModel
 model = OpenaiChatModel("gpt-4o")
 ```
 
-### Gemini via OpenAI
+#### Gemini via OpenAI
 
 Gemini supports an OpenAI-compatible API, allowing you to use their models through the OpenAI backend. See https://ai.google.dev/gemini-api/docs/openai
 
@@ -54,7 +54,7 @@ from magentic import OpenaiChatModel
 model = OpenaiChatModel("llama3.2", base_url="http://localhost:11434/v1/")
 ```
 
-### xAI Grok via OpenAI
+#### xAI Grok via OpenAI
 
 xAI provides an OpenAI-compatible API, allowing you to use their Grok models with minimal changes in your code.
 
