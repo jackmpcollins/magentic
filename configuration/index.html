@@ -572,6 +572,21 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xai-grok-via-openai" class="md-nav__link">
+    <span class="md-ellipsis">
+      xAI Grok via OpenAI
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="xAI Grok via OpenAI">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#other-openai-compatible-apis" class="md-nav__link">
     <span class="md-ellipsis">
@@ -840,6 +855,21 @@
   
 </li>
         
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#xai-grok-via-openai" class="md-nav__link">
+    <span class="md-ellipsis">
+      xAI Grok via OpenAI
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="xAI Grok via OpenAI">
+      <ul class="md-nav__list">
+        
           <li class="md-nav__item">
   <a href="#other-openai-compatible-apis" class="md-nav__link">
     <span class="md-ellipsis">
@@ -938,6 +968,19 @@
 
 <span class="n">model</span> <span class="o">=</span> <span class="n">OpenaiChatModel</span><span class="p">(</span><span class="s2">&quot;llama3.2&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="s2">&quot;http://localhost:11434/v1/&quot;</span><span class="p">)</span>
 </code></pre></div>
+<h3 id="xai-grok-via-openai">xAI Grok via OpenAI<a class="headerlink" href="#xai-grok-via-openai" title="Permanent link">&para;</a></h3>
+<p>xAI provides an OpenAI-compatible API, allowing you to use their Grok models with minimal changes in your code.</p>
+<p>First, ensure you have the appropriate API key set as an environment variable <code>XAI_API_KEY</code>.</p>
+<p>Then, specify the model name, xAI <code>base_url</code>, and API key when creating the <code>OpenaiChatModel</code> instance.</p>
+<div class="language-python highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">magentic</span> <span class="kn">import</span> <span class="n">OpenaiChatModel</span>
+
+<span class="n">model</span> <span class="o">=</span> <span class="n">OpenaiChatModel</span><span class="p">(</span>
+    <span class="s2">&quot;grok-2&quot;</span><span class="p">,</span> <span class="n">base_url</span><span class="o">=</span><span class="s2">&quot;https://api.x.ai/v1&quot;</span><span class="p">,</span> <span class="n">api_key</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;XAI_API_KEY&quot;</span><span class="p">]</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Ensure that you handle any additional requirements specific to xAI as per their documentation.</p>
 <h4 id="other-openai-compatible-apis">Other OpenAI-compatible APIs<a class="headerlink" href="#other-openai-compatible-apis" title="Permanent link">&para;</a></h4>
 <p>When using the <code>openai</code> backend, setting the <code>MAGENTIC_OPENAI_BASE_URL</code> environment variable or using <code>OpenaiChatModel(..., base_url="http://localhost:8080")</code> in code allows you to use <code>magentic</code> with any OpenAI-compatible API e.g. <a href="https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&amp;pivots=programming-language-python#create-a-new-python-application">Azure OpenAI Service</a>, <a href="https://docs.litellm.ai/docs/proxy_server">LiteLLM OpenAI Proxy Server</a>, <a href="https://localai.io/howtos/easy-request-openai/">LocalAI</a>. Note that if the API does not support tool calls then you will not be able to create prompt-functions that return Python objects, but other features of <code>magentic</code> will still work.</p>
 <p>To use Azure with the openai backend you will need to set the <code>MAGENTIC_OPENAI_API_TYPE</code> environment variable to "azure" or use <code>OpenaiChatModel(..., api_type="azure")</code>, and also set the environment variables needed by the openai package to access Azure. See https://github.com/openai/openai-python#microsoft-azure-openai</p>
