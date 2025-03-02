@@ -1,0 +1,81 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Return [1, 2, 3, 4, 5]"}], "model":
+      "grok-2", "parallel_tool_calls": false, "stream": true, "stream_options": {"include_usage":
+      true}, "tool_choice": {"type": "function", "function": {"name": "return_list_of_int"}},
+      "tools": [{"type": "function", "function": {"name": "return_list_of_int", "parameters":
+      {"properties": {"value": {"items": {"type": "integer"}, "title": "Value", "type":
+      "array"}}, "required": ["value"], "type": "object"}}}]}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '484'
+      content-type:
+      - application/json
+      host:
+      - api.x.ai
+      user-agent:
+      - OpenAI/Python 1.59.3
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.59.3
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.15
+    method: POST
+    uri: https://api.x.ai/v1/chat/completions
+  response:
+    body:
+      string: 'data: {"id":"74121d40-d3db-44e7-971a-556c5420ab1d","object":"chat.completion.chunk","created":1740892512,"model":"grok-2-1212","choices":[{"index":0,"delta":{"role":"assistant","tool_calls":[{"id":"call_54325129","function":{"name":"return_list_of_int","arguments":"{\"value\":[1,2,3,4,5]}"},"index":0,"type":"function"}]},"finish_reason":"tool_calls"}],"usage":{"prompt_tokens":153,"completion_tokens":1,"total_tokens":154,"prompt_tokens_details":{"text_tokens":153,"audio_tokens":0,"image_tokens":0,"cached_tokens":0}},"system_fingerprint":"fp_5c0c5bd9d9"}
+
+
+        data: [DONE]
+
+
+        '
+    headers:
+      CF-Cache-Status:
+      - DYNAMIC
+      CF-RAY:
+      - 919e6a37fecef95b-SJC
+      Cache-Control:
+      - no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream
+      Date:
+      - Sun, 02 Mar 2025 05:15:12 GMT
+      Server:
+      - cloudflare
+      Strict-Transport-Security:
+      - max-age=31536000
+      Transfer-Encoding:
+      - chunked
+      access-control-allow-origin:
+      - '*'
+      access-control-expose-headers:
+      - '*'
+      vary:
+      - origin, access-control-request-method, access-control-request-headers
+      x-zero-data-retention:
+      - 'false'
+    status:
+      code: 200
+      message: OK
+version: 1

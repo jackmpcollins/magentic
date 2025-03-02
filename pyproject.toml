@@ -92,6 +92,7 @@ markers = [
     "mistral: Tests that query the Mistral API (via openai). Requires the MISTRAL_API_KEY environment variable to be set.",
     "openai: Tests that query the OpenAI API. Requires the OPENAI_API_KEY environment variable to be set.",
     "openai_ollama: Tests that query Ollama via openai. Requires ollama to be installed and running on localhost:11434.",
+    "openai_xai: Tests that query xAI via openai. Requires the XAI_API_KEY environment variable to be set.",
 ]
 
 [tool.ruff]
