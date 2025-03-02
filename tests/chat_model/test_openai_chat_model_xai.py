@@ -19,6 +19,7 @@ def chat_model():
         ("Say hello!", [str], str),
         ("Return True.", [bool], bool),
         ("Return [1, 2, 3, 4, 5]", [list[int]], list),
+        ("Return a list of fruit", [list[str]], list),
     ],
 )
 @pytest.mark.openai_xai
@@ -37,6 +38,7 @@ def test_openai_chat_model_xai_complete(
         ("Say hello!", [str], str),
         ("Return True.", [bool], bool),
         ("Return [1, 2, 3, 4, 5]", [list[int]], list),
+        ("Return a list of fruit", [list[str]], list),
     ],
 )
 @pytest.mark.openai_xai
