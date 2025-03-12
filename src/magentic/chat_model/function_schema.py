@@ -396,17 +396,15 @@ def parse_docstring(func: Callable[..., Any]) -> tuple[str | None, dict[str, str
         return None, {}
 
     # Pattern for Args/Parameters section
-    args_pattern = (
-        r"(\s*(?:Args|Parameters):(.*?))(?:Returns:|Raises:|Yields:|Examples:|$)"
-    )
+    args_pattern = r"(\s*(?:Args|Parameters):(.*?))(?:Returns:|Raises:|Yields:|Examples:|Example:|$)"
     args_match = re.search(args_pattern, docstring, re.DOTALL)
     main_desc = docstring
 
     param_descriptions: dict[str, str] = {}
     if args_match:
         args_section_content = args_match.group(2).strip()
-        # Pattern for each parameter (name: description)
-        param_pattern = r"^\s*([^\s:]+)\s*:\s*(.+?)(?=^\s*[^\s:]+\s*:|$)"
+        param_pattern = r"(?:^|\n)\s*([^\s:(]+)(?:\s*\([^)]+\))?\s*:\s*(.+?)(?=(?:\n\s*[^\s:(]+(?:\s*\([^)]+\))?\s*:|\Z))"
+
         param_matches = re.finditer(
             param_pattern, args_section_content, re.MULTILINE | re.DOTALL
         )
