@@ -16,7 +16,7 @@ help: # Show help for each of the Makefile recipes.
 	@pre-commit -V || echo 'Please install pre-commit: https://pre-commit.com/'
 
 .PHONY: install
-install: .uv .p  # Install the package, dependencies, and pre-commit for local developmentre-commit
+install: .uv  # Install the package, dependencies, and pre-commit for local development
 	uv sync --frozen
 	pre-commit install --install-hooks
 

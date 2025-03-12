@@ -1,4 +1,5 @@
 import inspect
+import re
 import typing
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Callable, Iterable
@@ -365,9 +366,11 @@ def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
         # **kwargs
         if param.kind is inspect.Parameter.VAR_KEYWORD:
             fields[param.name] = (
-                dict[str, param.annotation]  # type: ignore[name-defined]
-                if param.annotation != inspect._empty
-                else dict[str, Any],
+                (
+                    dict[str, param.annotation]  # type: ignore[name-defined]
+                    if param.annotation != inspect._empty
+                    else dict[str, Any]
+                ),
                 param.default if param.default != inspect._empty else {},
             )
             continue
@@ -379,12 +382,56 @@ def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
     return create_model("FuncModel", __config__=get_pydantic_config(func), **fields)
 
 
+def parse_docstring(func: Callable[..., Any]) -> tuple[str | None, dict[str, str]]:
+    """Parse a function's docstring to extract the main description and parameter descriptions.
+
+    Parameters:
+        func: The function whose docstring to parse
+
+    Returns:
+        A tuple containing (main_description, parameter_descriptions_dict)
+    """
+    docstring = inspect.getdoc(func)
+    if not docstring:
+        return None, {}
+
+    # Pattern for Args/Parameters section
+    args_pattern = (
+        r"(\s*(?:Args|Parameters):(.*?))(?:Returns:|Raises:|Yields:|Examples:|$)"
+    )
+    args_match = re.search(args_pattern, docstring, re.DOTALL)
+    main_desc = docstring
+
+    param_descriptions: dict[str, str] = {}
+    if args_match:
+        args_section_content = args_match.group(2).strip()
+        # Pattern for each parameter (name: description)
+        param_pattern = r"^\s*([^\s:]+)\s*:\s*(.+?)(?=^\s*[^\s:]+\s*:|$)"
+        param_matches = re.finditer(
+            param_pattern, args_section_content, re.MULTILINE | re.DOTALL
+        )
+
+        for match in param_matches:
+            param_name = match.group(1).strip()
+            param_desc = match.group(2).strip()
+            # Clean up any multi-line descriptions
+            param_desc = re.sub(r"\s+", " ", param_desc)
+            param_descriptions[param_name] = param_desc
+
+        # Remove the Args/Parameters section
+        args_section = args_match.group(1)
+        main_desc = main_desc.replace(args_section, "\n\n").strip()
+
+    return main_desc, param_descriptions
+
+
 class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
     """FunctionSchema for FunctionCall."""
 
     def __init__(self, func: Callable[..., T]):
         self._func = func
         self._model = create_model_from_function(func)
+        self._main_desc, self._param_descriptions = parse_docstring(func)
 
     @property
     def name(self) -> str:
@@ -392,11 +439,19 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
 
     @property
     def description(self) -> str | None:
-        return inspect.getdoc(self._func)
+        return self._main_desc
 
     @property
     def parameters(self) -> dict[str, Any]:
-        return json_schema(self._model)
+        schema = json_schema(self._model)
+
+        # Add descriptions to the properties from parsed docstring
+        if "properties" in schema and self._param_descriptions:
+            for param_name, param_desc in self._param_descriptions.items():
+                if param_name in schema["properties"]:
+                    schema["properties"][param_name]["description"] = param_desc
+
+        return schema
 
     @property
     def strict(self) -> bool | None:
