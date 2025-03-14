@@ -1,11 +1,11 @@
 import inspect
-import re
 import typing
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, Callable, Iterable
 from functools import singledispatch
 from typing import Any, Generic, TypeVar, cast, get_args, get_origin
 
+from docstring_parser import DocstringParam, parse
 from openai.types.shared_params import FunctionDefinition
 from pydantic import BaseModel, TypeAdapter, create_model
 
@@ -395,32 +395,29 @@ def parse_docstring(func: Callable[..., Any]) -> tuple[str | None, dict[str, str
     if not docstring:
         return None, {}
 
-    # Pattern for Args/Parameters section
-    args_pattern = r"(\s*(?:Args|Parameters):(.*?))(?:Returns:|Raises:|Yields:|Examples:|Example:|$)"
-    args_match = re.search(args_pattern, docstring, re.DOTALL)
-    main_desc = docstring
+    # Use docstring_parser instead of regex
+    parsed_docstring = parse(docstring)
 
-    param_descriptions: dict[str, str] = {}
-    if args_match:
-        args_section_content = args_match.group(2).strip()
-        param_pattern = r"(?:^|\n)\s*([^\s:(]+)(?:\s*\([^)]+\))?\s*:\s*(.+?)(?=(?:\n\s*[^\s:(]+(?:\s*\([^)]+\))?\s*:|\Z))"
+    # Extract the main description
+    desc_sections = [
+        parsed_docstring.short_description or "",
+        parsed_docstring.long_description or "",
+        *[
+            f"{meta.args[0].capitalize()}:\n{meta.description}"
+            for meta in parsed_docstring.meta
+            if not isinstance(meta, DocstringParam) and meta.args
+        ],
+    ]
+    description = "\n\n".join(s for s in desc_sections if s).strip()
 
-        param_matches = re.finditer(
-            param_pattern, args_section_content, re.MULTILINE | re.DOTALL
-        )
+    # Extract parameter descriptions
+    param_descriptions = {
+        param.arg_name: param.description
+        for param in parsed_docstring.params
+        if param.arg_name and param.description
+    }
 
-        for match in param_matches:
-            param_name = match.group(1).strip()
-            param_desc = match.group(2).strip()
-            # Clean up any multi-line descriptions
-            param_desc = re.sub(r"\s+", " ", param_desc)
-            param_descriptions[param_name] = param_desc
-
-        # Remove the Args/Parameters section
-        args_section = args_match.group(1)
-        main_desc = main_desc.replace(args_section, "\n\n").strip()
-
-    return main_desc, param_descriptions
+    return description, param_descriptions
 
 
 class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
@@ -444,9 +441,13 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
         schema = json_schema(self._model)
 
         # Add descriptions to the properties from parsed docstring
+        # but only if they don't already have a description
         if "properties" in schema and self._param_descriptions:
             for param_name, param_desc in self._param_descriptions.items():
-                if param_name in schema["properties"]:
+                if (
+                    param_name in schema["properties"]
+                    and "description" not in schema["properties"][param_name]
+                ):
                     schema["properties"][param_name]["description"] = param_desc
 
         return schema

@@ -5,6 +5,7 @@ description = "Seamlessly integrate LLMs as Python functions"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "docstring-parser>=0.16",
     "filetype>=1.2.0",
     "logfire-api>=0.1.0",
     "openai>=1.56.0",
