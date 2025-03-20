@@ -1,10 +1,13 @@
 import asyncio
 import collections
+import json
 import textwrap
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
 from dataclasses import dataclass, field
-from itertools import chain, dropwhile
+from itertools import chain
 from typing import Any, TypeVar
+
+from pydantic_core import from_json
 
 T = TypeVar("T")
 
@@ -175,48 +178,95 @@ def iter_streamed_json_array(chunks: Iterable[str]) -> Iterable[str]:
 
     This ignores all characters before the start of the first array i.e. the first "["
     """
-    iter_chars: Iterator[str] = chain.from_iterable(chunks)
-    parser_state = JsonArrayParserState()
+    accumulated = ""
+    yielded_items: set[str] = set()
 
-    iter_chars = dropwhile(lambda x: x != "[", iter_chars)
-    parser_state.update(next(iter_chars))
+    for chunk in chunks:
+        accumulated += chunk
 
-    item_chars: list[str] = []
-    for char in iter_chars:
-        parser_state.update(char)
-        if parser_state.is_element_separator:
-            if item_chars:
-                yield "".join(item_chars).strip()
-                item_chars = []
-        else:
-            item_chars.append(char)
+        # Ensure array starts with '['.  Remove leading garbage.
+        if accumulated and accumulated[0] != "[":
+            first_bracket_index = accumulated.find("[")
+            if first_bracket_index == -1:
+                continue  # Keep accumulating until we find the first bracket
+            else:
+                accumulated = accumulated[first_bracket_index:]
+
+        try:
+            result = from_json(accumulated, allow_partial=True)
+            items = result.get("value", result) if isinstance(result, dict) else result
+
+            if isinstance(items, list):
+                for item in items:
+                    item_str = json.dumps(item, ensure_ascii=False)
+                    if item_str not in yielded_items:
+                        yield item_str
+                        yielded_items.add(item_str)
+
+        except (ValueError, TypeError, KeyError):
+            # Character-by-character parsing
+            parser_state = JsonArrayParserState()
+            for char in accumulated:
+                parser_state.update(char)
+                if parser_state.is_element_separator and parser_state.current_item:
+                    item = "".join(parser_state.current_item).strip()
+                    if item not in yielded_items and item:
+                        yield item
+                        yielded_items.add(item)
+                    parser_state.current_item = []
+            # yield anything that is left
+            if parser_state.current_item:
+                item = "".join(parser_state.current_item).strip()
+                if item not in yielded_items:
+                    yield item
+                    yielded_items.add(item)
 
 
 async def aiter_streamed_json_array(chunks: AsyncIterable[str]) -> AsyncIterable[str]:
     """Async version of `iter_streamed_json_array`."""
+    accumulated = ""
+    yielded_items: set[str] = set()
 
-    async def chars_generator() -> AsyncIterable[str]:
-        async for chunk in chunks:
-            for char in chunk:
-                yield char
+    async for chunk in chunks:
+        accumulated += chunk
 
-    iter_chars = chars_generator()
-    parser_state = JsonArrayParserState()
+        # Ensure array starts with '['.  Remove leading garbage.
+        if accumulated and accumulated[0] != "[":
+            first_bracket_index = accumulated.find("[")
+            if first_bracket_index == -1:
+                continue  # Keep accumulating until we find the first bracket
+            else:
+                accumulated = accumulated[first_bracket_index:]
 
-    async for char in iter_chars:
-        if char == "[":
-            break
-    parser_state.update("[")
+        try:
+            result = from_json(accumulated, allow_partial=True)
+            items = result.get("value", result) if isinstance(result, dict) else result
 
-    item_chars: list[str] = []
-    async for char in iter_chars:
-        parser_state.update(char)
-        if parser_state.is_element_separator:
-            if item_chars:
-                yield "".join(item_chars).strip()
-                item_chars = []
-        else:
-            item_chars.append(char)
+            if isinstance(items, list):
+                for item in items:
+                    item_str = json.dumps(item, ensure_ascii=False)
+                    if item_str not in yielded_items:
+                        yield item_str
+                        yielded_items.add(item_str)
+
+        except (ValueError, TypeError, KeyError):
+            # Character-by-character parsing
+            parser_state = JsonArrayParserState()
+            for char in accumulated:
+                parser_state.update(char)
+                if parser_state.is_element_separator and parser_state.current_item:
+                    item = "".join(parser_state.current_item).strip()
+                    if item not in yielded_items and item:
+                        yield item
+                        yielded_items.add(item)
+                    parser_state.current_item = []
+
+            # yield anything that is left
+            if parser_state.current_item:
+                item = "".join(parser_state.current_item).strip()
+                if item not in yielded_items:
+                    yield item
+                    yielded_items.add(item)
 
 
 class CachedIterable(Iterable[T]):
