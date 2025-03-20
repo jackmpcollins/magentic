@@ -176,7 +176,22 @@ class JsonArrayParserState:
 def iter_streamed_json_array(chunks: Iterable[str]) -> Iterable[str]:
     """Convert a streamed JSON array into an iterable of JSON object strings.
 
-    This ignores all characters before the start of the first array i.e. the first "["
+    This function processes a stream of JSON chunks and yields complete array elements
+    as they become available. It uses two strategies:
+    1. Try Pydantic's from_json for efficient parsing of complete chunks
+    2. Fall back to character-by-character parsing for handling edge cases
+
+    Args:
+        chunks: An iterable of JSON string chunks that together form a JSON array
+               or an object with a "value" field containing an array.
+
+    Yields:
+        Complete JSON-encoded strings for each array element.
+
+    Example:
+        >>> chunks = ["[1, 2", ", 3]"]
+        >>> list(iter_streamed_json_array(chunks))
+        ['1', '2', '3']
     """
     accumulated = ""
     yielded_items: set[str] = set()
