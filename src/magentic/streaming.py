@@ -2,7 +2,7 @@ import asyncio
 import collections
 import textwrap
 from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import chain, dropwhile
 from typing import Any, TypeVar
 
@@ -130,18 +130,24 @@ class JsonArrayParserState:
     object_level: int = 0
     in_string: bool = False
     is_escaped: bool = False
+    current_item: list[str] = field(default_factory=list)
     is_element_separator: bool = False
 
     def update(self, char: str) -> None:
         if self.in_string:
             if char == '"' and not self.is_escaped:
                 self.in_string = False
+            self.current_item.append(char)
         elif char == '"':
             self.in_string = True
+            self.current_item.append(char)
+        elif char.isspace():
+            self.current_item.append(char)
         elif char == ",":
             if self.array_level == 1 and self.object_level == 0:
                 self.is_element_separator = True
                 return
+            self.current_item.append(char)
         elif char == "[":
             self.array_level += 1
         elif char == "]":
@@ -151,12 +157,16 @@ class JsonArrayParserState:
                 return
         elif char == "{":
             self.object_level += 1
+            self.current_item.append(char)
         elif char == "}":
             self.object_level -= 1
+            self.current_item.append(char)
         elif char == "\\":
             self.is_escaped = not self.is_escaped
+            self.current_item.append(char)
         else:
             self.is_escaped = False
+            self.current_item.append(char)
         self.is_element_separator = False
 
 
