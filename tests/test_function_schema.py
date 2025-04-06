@@ -577,7 +577,7 @@ def plus_with_default_b(a: int, b: int = 3) -> int:
     return a + b
 
 
-def plus_with_defaults(a: int = 1, b: int = 1):
+def plus_with_defaults(a: int = 1, b: int = 1) -> int:
     return a + b
 
 
