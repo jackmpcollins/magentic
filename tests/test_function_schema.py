@@ -837,13 +837,14 @@ def test_function_call_function_schema_with_default_value():
 
 
 function_call_function_schema_args_test_cases = [
-    (plus, '{"a": 1, "b": 2}', FunctionCall(plus, 1, 2)),
+    (plus, '{"a": 1, "b": 2}', FunctionCall(plus, a=1, b=2)),
     (
         plus_no_type_hints,
         '{"a": 1, "b": 2}',
-        FunctionCall(plus_no_type_hints, 1, 2),
+        FunctionCall(plus_no_type_hints, a=1, b=2),
     ),
-    (plus_with_default_b, '{"a": 1}', FunctionCall(plus_with_default_b, 1)),
+    (plus_with_default_b, '{"a": 1}', FunctionCall(plus_with_default_b, a=1)),
+    (plus_with_defaults, '{"b": 2}', FunctionCall(plus_with_defaults, b=2)),
     (plus_with_args, '{"a": 1, "args": [2, 3]}', FunctionCall(plus_with_args, 1, 2, 3)),
     (
         plus_with_args_no_type_hints,
@@ -853,27 +854,22 @@ function_call_function_schema_args_test_cases = [
     (
         plus_with_kwargs,
         '{"a": 1, "kwargs": {"b": 2, "c": 3}}',
-        FunctionCall(plus_with_kwargs, 1, b=2, c=3),
+        FunctionCall(plus_with_kwargs, a=1, b=2, c=3),
     ),
     (
         plus_with_kwargs_no_type_hints,
         '{"a": 1, "kwargs": {"b": 2, "c": 3}}',
-        FunctionCall(plus_with_kwargs_no_type_hints, 1, b=2, c=3),
-    ),
-    (
-        plus_with_defaults,
-        '{"b": 2}',
-        FunctionCall(plus_with_defaults, b=2),
+        FunctionCall(plus_with_kwargs_no_type_hints, a=1, b=2, c=3),
     ),
     (
         plus_with_annotated,
         '{"a": 1, "b": 2}',
-        FunctionCall(plus_with_annotated, 1, 2),
+        FunctionCall(plus_with_annotated, a=1, b=2),
     ),
     (
         plus_with_basemodel,
         '{"a": {"value": 1}, "b": {"value": 2}}',
-        FunctionCall(plus_with_basemodel, IntModel(value=1), IntModel(value=2)),
+        FunctionCall(plus_with_basemodel, a=IntModel(value=1), b=IntModel(value=2)),
     ),
     (
         return_constant,

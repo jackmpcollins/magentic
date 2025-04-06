@@ -411,23 +411,41 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
             for param in inspect.signature(self._func).parameters.values()
             if param.name in model.model_fields_set
         ]
+        # Prefer keyword args when possible (no *args present)
+        # so that default values are used for keyword args that are not provided
+        has_var_positional = any(
+            param.kind == param.VAR_POSITIONAL for param in supplied_params
+        )
 
         args_positional_only = [
             getattr(model, param.name)
             for param in supplied_params
             if param.kind == param.POSITIONAL_ONLY
         ]
-        args_positional_or_keyword = [
-            getattr(model, param.name)
-            for param in supplied_params
-            if param.kind == param.POSITIONAL_OR_KEYWORD
-        ]
+        args_positional_or_keyword_using_position = (
+            [
+                getattr(model, param.name)
+                for param in supplied_params
+                if param.kind == param.POSITIONAL_OR_KEYWORD
+            ]
+            if has_var_positional
+            else []
+        )
         args_var_positional = [
             arg
             for param in supplied_params
             if param.kind == param.VAR_POSITIONAL
             for arg in getattr(model, param.name)
         ]
+        args_positional_or_keyword_using_keyword = (
+            {
+                param.name: getattr(model, param.name)
+                for param in supplied_params
+                if param.kind == param.POSITIONAL_OR_KEYWORD
+            }
+            if not has_var_positional
+            else {}
+        )
         args_keyword_only = {
             param.name: getattr(model, param.name)
             for param in supplied_params
@@ -442,8 +460,9 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
         return FunctionCall(
             self._func,
             *args_positional_only,
-            *args_positional_or_keyword,
+            *args_positional_or_keyword_using_position,
             *args_var_positional,
+            **args_positional_or_keyword_using_keyword,
             **args_keyword_only,
             **args_var_keyword,
         )
