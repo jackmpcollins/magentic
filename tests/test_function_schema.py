@@ -573,7 +573,11 @@ def plus_no_type_hints(a, b):
     return a + b
 
 
-def plus_default_value(a: int, b: int = 3) -> int:
+def plus_with_default_b(a: int, b: int = 3) -> int:
+    return a + b
+
+
+def plus_with_defaults(a: int = 1, b: int = 1) -> int:
     return a + b
 
 
@@ -651,9 +655,9 @@ def plus_with_config_openai_strict(a: int, b: int) -> int:
             },
         ),
         (
-            plus_default_value,
+            plus_with_default_b,
             {
-                "name": "plus_default_value",
+                "name": "plus_with_default_b",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -826,20 +830,21 @@ def test_function_call_function_schema(function, json_schema):
 
 
 def test_function_call_function_schema_with_default_value():
-    function_schema = FunctionCallFunctionSchema(plus_default_value)
+    function_schema = FunctionCallFunctionSchema(plus_with_default_b)
     output = function_schema.parse_args('{"a": 1}')
     assert isinstance(output, FunctionCall)
     assert output() == 4
 
 
 function_call_function_schema_args_test_cases = [
-    (plus, '{"a": 1, "b": 2}', FunctionCall(plus, 1, 2)),
+    (plus, '{"a": 1, "b": 2}', FunctionCall(plus, a=1, b=2)),
     (
         plus_no_type_hints,
         '{"a": 1, "b": 2}',
-        FunctionCall(plus_no_type_hints, 1, 2),
+        FunctionCall(plus_no_type_hints, a=1, b=2),
     ),
-    (plus_default_value, '{"a": 1}', FunctionCall(plus_default_value, 1)),
+    (plus_with_default_b, '{"a": 1}', FunctionCall(plus_with_default_b, a=1)),
+    (plus_with_defaults, '{"b": 2}', FunctionCall(plus_with_defaults, b=2)),
     (plus_with_args, '{"a": 1, "args": [2, 3]}', FunctionCall(plus_with_args, 1, 2, 3)),
     (
         plus_with_args_no_type_hints,
@@ -849,22 +854,22 @@ function_call_function_schema_args_test_cases = [
     (
         plus_with_kwargs,
         '{"a": 1, "kwargs": {"b": 2, "c": 3}}',
-        FunctionCall(plus_with_kwargs, 1, b=2, c=3),
+        FunctionCall(plus_with_kwargs, a=1, b=2, c=3),
     ),
     (
         plus_with_kwargs_no_type_hints,
         '{"a": 1, "kwargs": {"b": 2, "c": 3}}',
-        FunctionCall(plus_with_kwargs_no_type_hints, 1, b=2, c=3),
+        FunctionCall(plus_with_kwargs_no_type_hints, a=1, b=2, c=3),
     ),
     (
         plus_with_annotated,
         '{"a": 1, "b": 2}',
-        FunctionCall(plus_with_annotated, 1, 2),
+        FunctionCall(plus_with_annotated, a=1, b=2),
     ),
     (
         plus_with_basemodel,
         '{"a": {"value": 1}, "b": {"value": 2}}',
-        FunctionCall(plus_with_basemodel, IntModel(value=1), IntModel(value=2)),
+        FunctionCall(plus_with_basemodel, a=IntModel(value=1), b=IntModel(value=2)),
     ),
     (
         return_constant,
