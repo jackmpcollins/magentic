@@ -29,6 +29,7 @@ from magentic.chat_model.function_schema import (
 )
 from magentic.chat_model.message import (
     AssistantMessage,
+    AudioBytes,
     ImageBytes,
     ImageUrl,
     Message,
@@ -110,6 +111,13 @@ def _(message: UserMessage[Any]) -> ChatCompletionUserMessageParam:
                 )
             elif isinstance(block, ImageUrl):
                 content.append({"type": "image_url", "image_url": {"url": block.root}})
+            elif isinstance(block, AudioBytes):
+                content.append(
+                    {
+                        "type": "input_audio",
+                        "input_audio": {"data": block.as_base64(), "format": "wav"},
+                    }
+                )
             else:
                 msg = f"Invalid block type: {type(block)}"
                 raise TypeError(msg)

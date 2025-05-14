@@ -193,6 +193,36 @@ class ImageBytes(RootModel[bytes]):
         return self
 
 
+# OpenAI supports audio inputs in WAV format
+AudioMimeType = Literal["audio/wav", "audio/x-wav"]
+_AUDIO_MIME_TYPES: tuple[AudioMimeType, ...] = get_args(AudioMimeType)
+
+
+class AudioBytes(RootModel[bytes]):
+    """Bytes representing an audio file."""
+
+    @cached_property
+    def mime_type(self) -> AudioMimeType:
+        mimetype: str | None = filetype.guess_mime(self.root)
+        assert mimetype in _AUDIO_MIME_TYPES
+        return cast(AudioMimeType, mimetype)
+
+    def as_base64(self) -> str:
+        return base64.b64encode(self.root).decode("utf-8")
+
+    def format(self, **kwargs: Any) -> Self:
+        del kwargs
+        return self
+
+    @model_validator(mode="after")
+    def _is_audio_bytes(self) -> Self:
+        mimetype: str | None = filetype.guess_mime(self.root)
+        if mimetype not in _AUDIO_MIME_TYPES:
+            msg = f"Unsupported audio MIME type: {mimetype!r}"
+            raise ValueError(msg)
+        return self
+
+
 class ImageUrl(RootModel[str]):
     """String representing a URL to an image."""
 
@@ -201,7 +231,7 @@ class ImageUrl(RootModel[str]):
         return self
 
 
-UserMessageContentBlock: TypeAlias = DocumentBytes | ImageBytes | ImageUrl
+UserMessageContentBlock: TypeAlias = DocumentBytes | ImageBytes | ImageUrl | AudioBytes
 UserMessageContentT = TypeVar(
     "UserMessageContentT",
     bound=str
