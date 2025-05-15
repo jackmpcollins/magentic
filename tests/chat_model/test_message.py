@@ -117,75 +117,76 @@ def test_user_message_format():
 
 def test_user_message_format_type_hints():
     if TYPE_CHECKING:  # Avoid runtime error for None missing `format` method
-        assert_type(cast(UserMessage[Literal["x"]], None).format(), UserMessage[str])
+        assert_type(cast("UserMessage[Literal['x']]", None).format(), UserMessage[str])
         # mypy does not convert `Literal` to `str` in these cases but pyright does
         # issue: https://github.com/python/mypy/issues/18419
         # assert_type(cast(UserMessage[Sequence[Literal["x"]]], None).format(), UserMessage[Sequence[str]])  # noqa: ERA001
         # assert_type(cast(UserMessage[Sequence[Literal["x"] | ImageBytes]], None).format(), UserMessage[Sequence[str | ImageBytes]])  # noqa: ERA001
 
-        assert_type(cast(UserMessage[str], None).format(), UserMessage[str])
+        assert_type(cast("UserMessage[str]", None).format(), UserMessage[str])
 
         assert_type(
-            cast(UserMessage[Sequence[str]], None).format(), UserMessage[Sequence[str]]
+            cast("UserMessage[Sequence[str]]", None).format(),
+            UserMessage[Sequence[str]],
         )
         assert_type(
-            cast(UserMessage[str | Sequence[str]], None).format(),
+            cast("UserMessage[str | Sequence[str]]", None).format(),
             UserMessage[str | Sequence[str]],
         )
 
         assert_type(
-            cast(UserMessage[Sequence[ImageBytes]], None).format(),
+            cast("UserMessage[Sequence[ImageBytes]]", None).format(),
             UserMessage[Sequence[ImageBytes]],
         )
         assert_type(
-            cast(UserMessage[Sequence[str | ImageBytes]], None).format(),
+            cast("UserMessage[Sequence[str | ImageBytes]]", None).format(),
             UserMessage[Sequence[str | ImageBytes]],
         )
         assert_type(
-            cast(UserMessage[str | Sequence[str | ImageBytes]], None).format(),
+            cast("UserMessage[str | Sequence[str | ImageBytes]]", None).format(),
             UserMessage[str | Sequence[str | ImageBytes]],
         )
 
         assert_type(
-            cast(UserMessage[Sequence[Placeholder[ImageUrl]]], None).format(),
+            cast("UserMessage[Sequence[Placeholder[ImageUrl]]]", None).format(),
             UserMessage[Sequence[ImageUrl]],
         )
         assert_type(
-            cast(UserMessage[Sequence[str | Placeholder[ImageUrl]]], None).format(),
+            cast("UserMessage[Sequence[str | Placeholder[ImageUrl]]]", None).format(),
             UserMessage[Sequence[str | ImageUrl]],
         )
         assert_type(
             cast(
-                UserMessage[Sequence[ImageBytes | Placeholder[ImageUrl]]], None
+                "UserMessage[Sequence[ImageBytes | Placeholder[ImageUrl]]]", None
             ).format(),
             UserMessage[Sequence[ImageBytes | ImageUrl]],
         )
         assert_type(
             cast(
-                UserMessage[Sequence[str | ImageBytes | Placeholder[ImageUrl]]], None
+                "UserMessage[Sequence[str | ImageBytes | Placeholder[ImageUrl]]]", None
             ).format(),
             UserMessage[Sequence[str | ImageBytes | ImageUrl]],
         )
 
         assert_type(
-            cast(UserMessage[str | Sequence[Placeholder[ImageUrl]]], None).format(),
+            cast("UserMessage[str | Sequence[Placeholder[ImageUrl]]]", None).format(),
             UserMessage[str | Sequence[ImageUrl]],
         )
         assert_type(
             cast(
-                UserMessage[str | Sequence[str | Placeholder[ImageUrl]]], None
+                "UserMessage[str | Sequence[str | Placeholder[ImageUrl]]]", None
             ).format(),
             UserMessage[str | Sequence[str | ImageUrl]],
         )
         assert_type(
             cast(
-                UserMessage[str | Sequence[ImageBytes | Placeholder[ImageUrl]]], None
+                "UserMessage[str | Sequence[ImageBytes | Placeholder[ImageUrl]]]", None
             ).format(),
             UserMessage[str | Sequence[ImageBytes | ImageUrl]],
         )
         assert_type(
             cast(
-                UserMessage[str | Sequence[str | ImageBytes | Placeholder[ImageUrl]]],
+                "UserMessage[str | Sequence[str | ImageBytes | Placeholder[ImageUrl]]]",
                 None,
             ).format(),
             UserMessage[str | Sequence[str | ImageBytes | ImageUrl]],
@@ -224,20 +225,20 @@ def test_assistant_message_format_placeholder():
 
 def test_assistant_message_format_type_hints():
     if TYPE_CHECKING:  # Avoid runtime error for None missing `format` method
-        assert_type(cast(AssistantMessage[str], None).format(), AssistantMessage[str])
+        assert_type(cast("AssistantMessage[str]", None).format(), AssistantMessage[str])
         assert_type(
-            cast(AssistantMessage[Literal["x"]], None).format(), AssistantMessage[str]
+            cast("AssistantMessage[Literal['x']]", None).format(), AssistantMessage[str]
         )
         assert_type(
-            cast(AssistantMessage[Placeholder[int]], None).format(),
+            cast("AssistantMessage[Placeholder[int]]", None).format(),
             AssistantMessage[int],
         )
         assert_type(
-            cast(AssistantMessage[str | Placeholder[int]], None).format(),
+            cast("AssistantMessage[str | Placeholder[int]]", None).format(),
             AssistantMessage[str | int],
         )
         assert_type(
-            cast(AssistantMessage[Literal["x"] | Placeholder[int]], None).format(),
+            cast("AssistantMessage[Literal['x'] | Placeholder[int]]", None).format(),
             AssistantMessage[str | int],
         )
         # Literal matches NotPlaceholder rather than str, so we cannot show that this will become str instead of Literal

@@ -437,7 +437,7 @@ class AnthropicChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[OutputT]], [str])
+            output_types = [] if functions else cast("list[type[OutputT]]", [str])
 
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -478,7 +478,7 @@ class AnthropicChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[OutputT]], [str])
+            output_types = [] if functions else cast("list[type[OutputT]]", [str])
 
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]

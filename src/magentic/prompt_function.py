@@ -165,8 +165,7 @@ def prompt(
                 model=model,
             )
             return cast(
-                AsyncPromptFunction[P, R],
-                update_wrapper(async_prompt_function, func),
+                "AsyncPromptFunction[P, R]", update_wrapper(async_prompt_function, func)
             )
 
         prompt_function = PromptFunction[P, R](
@@ -179,6 +178,6 @@ def prompt(
             max_retries=max_retries,
             model=model,
         )
-        return cast(PromptFunction[P, R], update_wrapper(prompt_function, func))
+        return cast("PromptFunction[P, R]", update_wrapper(prompt_function, func))
 
-    return cast(PromptDecorator, decorator)
+    return cast("PromptDecorator", decorator)

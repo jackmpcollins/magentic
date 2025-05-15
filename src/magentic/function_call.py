@@ -104,7 +104,7 @@ class AsyncParallelFunctionCall(Generic[T]):
                 if inspect.iscoroutine(result):
                     tasks_and_results.append(asyncio.create_task(result))
                 else:
-                    result = cast(T, result)
+                    result = cast("T", result)
                     tasks_and_results.append(result)
 
             tasks = [

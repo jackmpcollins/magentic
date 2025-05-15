@@ -185,11 +185,11 @@ class AnyFunctionSchema(FunctionSchema[T], Generic[T]):
 
     @property
     def strict(self) -> bool | None:
-        return cast(ConfigDict, self._model.model_config).get("openai_strict")
+        return cast("ConfigDict", self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> T:
         args_json = "".join(chunks)
-        return cast(T, self._model.model_validate_json(args_json).value)  # type: ignore[attr-defined]
+        return cast("T", self._model.model_validate_json(args_json).value)  # type: ignore[attr-defined]
 
     def serialize_args(self, value: T) -> str:
         return self._model.model_construct(value=value).model_dump_json()
@@ -211,6 +211,7 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
             "Output",
             __config__=get_pydantic_config(output_type),
             value=(output_type, ...),
+            __module__="pydantic.main",
         )
 
     @property
@@ -223,14 +224,17 @@ class IterableFunctionSchema(FunctionSchema[IterableT], Generic[IterableT]):
 
     @property
     def strict(self) -> bool | None:
-        return cast(ConfigDict, self._model.model_config).get("openai_strict")
+        return cast("ConfigDict", self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> IterableT:
         iter_items = (
             self._item_type_adapter.validate_json(item)
             for item in iter_streamed_json_array(chunks)
         )
-        return cast(IterableT, self._model.model_validate({"value": iter_items}).value)  # type: ignore[attr-defined]
+        # Use a type annotation to tell mypy what's going on
+        validated = self._model.model_validate({"value": iter_items})
+        # Pydantic model will have a value field based on how we constructed it
+        return cast("IterableT", validated.value)  # type: ignore[attr-defined]
 
     def serialize_args(self, value: IterableT) -> str:
         return self._model.model_construct(value=value).model_dump_json()
@@ -266,7 +270,7 @@ class AsyncIterableFunctionSchema(
 
     @property
     def strict(self) -> bool | None:
-        return cast(ConfigDict, self._model.model_config).get("openai_strict")
+        return cast("ConfigDict", self._model.model_config).get("openai_strict")
 
     async def aparse_args(self, chunks: AsyncIterable[str]) -> AsyncIterableT:
         aiter_items = (
@@ -277,7 +281,7 @@ class AsyncIterableFunctionSchema(
             typing.AsyncIterable,
             typing.AsyncIterator,
         ) or is_origin_abstract(self._output_type):
-            return cast(AsyncIterableT, aiter_items)
+            return cast("AsyncIterableT", aiter_items)
 
         raise NotImplementedError
 
@@ -335,7 +339,7 @@ class BaseModelFunctionSchema(FunctionSchema[BaseModelT], Generic[BaseModelT]):
 
     @property
     def strict(self) -> bool | None:
-        return cast(ConfigDict, self._model.model_config).get("openai_strict")
+        return cast("ConfigDict", self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> BaseModelT:
         args_json = "".join(chunks)
@@ -400,7 +404,7 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
 
     @property
     def strict(self) -> bool | None:
-        return cast(ConfigDict, self._model.model_config).get("openai_strict")
+        return cast("ConfigDict", self._model.model_config).get("openai_strict")
 
     def parse_args(self, chunks: Iterable[str]) -> FunctionCall[T]:
         # Anthropic message stream returns empty string for function call with no arguments

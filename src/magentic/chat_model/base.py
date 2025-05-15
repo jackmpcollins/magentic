@@ -116,23 +116,23 @@ def parse_stream(
     obj = next(stream)
     if isinstance(obj, StreamedStr):
         if StreamedResponse in output_type_origins:
-            return cast(OutputT, StreamedResponse(chain([obj], stream)))
+            return cast("OutputT", StreamedResponse(chain([obj], stream)))
         if StreamedStr in output_type_origins:
-            return cast(OutputT, obj)
+            return cast("OutputT", obj)
         if str in output_type_origins:
-            return cast(OutputT, str(obj))
+            return cast("OutputT", str(obj))
         raise StringNotAllowedError(obj.truncate(100))
     if isinstance(obj, FunctionCall):
         if StreamedResponse in output_type_origins:
-            return cast(OutputT, StreamedResponse(chain([obj], stream)))
+            return cast("OutputT", StreamedResponse(chain([obj], stream)))
         if ParallelFunctionCall in output_type_origins:
-            return cast(OutputT, ParallelFunctionCall(chain([obj], stream)))
+            return cast("OutputT", ParallelFunctionCall(chain([obj], stream)))
         if FunctionCall in output_type_origins:
             # TODO: Check that FunctionCall type matches ?
-            return cast(OutputT, obj)
+            return cast("OutputT", obj)
         raise FunctionCallNotAllowedError(obj)
     if isinstance(obj, tuple(output_type_origins)):
-        return cast(OutputT, obj)
+        return cast("OutputT", obj)
     raise ObjectNotAllowedError(obj)
 
 
@@ -145,27 +145,27 @@ async def aparse_stream(
     if isinstance(obj, AsyncStreamedStr):
         if AsyncStreamedResponse in output_type_origins:
             return cast(
-                OutputT, AsyncStreamedResponse(achain(async_iter([obj]), stream))
+                "OutputT", AsyncStreamedResponse(achain(async_iter([obj]), stream))
             )
         if AsyncStreamedStr in output_type_origins:
-            return cast(OutputT, obj)
+            return cast("OutputT", obj)
         if str in output_type_origins:
-            return cast(OutputT, await obj.to_string())
+            return cast("OutputT", await obj.to_string())
         raise StringNotAllowedError(await obj.truncate(100))
     if isinstance(obj, FunctionCall):
         if AsyncStreamedResponse in output_type_origins:
             return cast(
-                OutputT, AsyncStreamedResponse(achain(async_iter([obj]), stream))
+                "OutputT", AsyncStreamedResponse(achain(async_iter([obj]), stream))
             )
         if AsyncParallelFunctionCall in output_type_origins:
             return cast(
-                OutputT, AsyncParallelFunctionCall(achain(async_iter([obj]), stream))
+                "OutputT", AsyncParallelFunctionCall(achain(async_iter([obj]), stream))
             )
         if FunctionCall in output_type_origins:
-            return cast(OutputT, obj)
+            return cast("OutputT", obj)
         raise FunctionCallNotAllowedError(obj)
     if isinstance(obj, tuple(output_type_origins)):
-        return cast(OutputT, obj)
+        return cast("OutputT", obj)
     raise ObjectNotAllowedError(obj)
 
 
