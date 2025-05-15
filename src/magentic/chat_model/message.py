@@ -141,7 +141,7 @@ class DocumentBytes(RootModel[bytes]):
     def mime_type(self) -> DocumentMimeType:
         mimetype: str | None = filetype.guess_mime(self.root)
         assert mimetype in _DOCUMENT_MIME_TYPES
-        return cast(DocumentMimeType, mimetype)
+        return cast("DocumentMimeType", mimetype)
 
     def __init__(self, root: bytes, **data: Any):
         super().__init__(root=root, **data)
@@ -175,7 +175,7 @@ class ImageBytes(RootModel[bytes]):
     def mime_type(self) -> ImageMimeType:
         mimetype: str | None = filetype.guess_mime(self.root)
         assert mimetype in _IMAGE_MIME_TYPES
-        return cast(ImageMimeType, mimetype)
+        return cast("ImageMimeType", mimetype)
 
     def as_base64(self) -> str:
         return base64.b64encode(self.root).decode("utf-8")
@@ -205,7 +205,7 @@ class AudioBytes(RootModel[bytes]):
     def mime_type(self) -> AudioMimeType:
         mimetype: str | None = filetype.guess_mime(self.root)
         assert mimetype in _AUDIO_MIME_TYPES
-        return cast(AudioMimeType, mimetype)
+        return cast("AudioMimeType", mimetype)
 
     def as_base64(self) -> str:
         return base64.b64encode(self.root).decode("utf-8")
