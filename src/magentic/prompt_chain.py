@@ -79,7 +79,7 @@ def prompt_chain(
                         num_calls += 1
                     return chat.last_message.content
 
-            return cast(Callable[P, R], awrapper)
+            return cast("Callable[P, R]", awrapper)
 
         prompt_function = ChatPromptFunction[P, R](
             name=func.__name__,
@@ -113,7 +113,7 @@ def prompt_chain(
                         raise MaxFunctionCallsError(msg)
                     chat = chat.exec_function_call().submit()
                     num_calls += 1
-                return cast(R, chat.last_message.content)
+                return cast("R", chat.last_message.content)
 
         return wrapper
 

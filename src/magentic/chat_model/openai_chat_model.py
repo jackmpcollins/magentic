@@ -83,7 +83,7 @@ def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
     assert isinstance(message.content, dict)
     assert "role" in message.content
     assert "content" in message.content
-    return cast(ChatCompletionMessageParam, message.content)
+    return cast("ChatCompletionMessageParam", message.content)
 
 
 @message_to_openai_message.register
@@ -487,7 +487,7 @@ class OpenaiChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = cast(Iterable[type[OutputT]], [] if functions else [str])
+            output_types = cast("Iterable[type[OutputT]]", [] if functions else [str])
 
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -531,7 +531,7 @@ class OpenaiChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[OutputT]], [str])
+            output_types = [] if functions else cast("list[type[OutputT]]", [str])
 
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
