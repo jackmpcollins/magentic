@@ -1,0 +1,89 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Say hello!"}], "model": "deepseek/deepseek-chat-v3-0324",
+      "stream": true, "stream_options": {"include_usage": true}, "provider": {"require_parameters":
+      true}}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '201'
+      content-type:
+      - application/json
+      host:
+      - openrouter.ai
+      user-agent:
+      - OpenAI/Python 1.59.3
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.59.3
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.17
+    method: POST
+    uri: https://openrouter.ai/api/v1/chat/completions
+  response:
+    body:
+      string: ": OPENROUTER PROCESSING\n\n: OPENROUTER PROCESSING\n\n: OPENROUTER
+        PROCESSING\n\ndata: {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Hello!\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        \U0001F44B\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        How\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        are\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        you\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        today\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"?\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        \U0001F60A\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\",\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748325716-jFD27m2Om8dNebqAcdQB\",\"provider\":\"Fireworks\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748325717,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"usage\":{\"prompt_tokens\":6,\"completion_tokens\":12,\"total_tokens\":18,\"cost\":0.0000162,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}\n\ndata:
+        [DONE]\n\n"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-RAY:
+      - 94634cf13cfe0e32-AMS
+      Cache-Control:
+      - no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream
+      Date:
+      - Tue, 27 May 2025 06:01:58 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      x-clerk-auth-message:
+      - Invalid JWT form. A JWT consists of three parts separated by dots. (reason=token-invalid,
+        token-carrier=header)
+      x-clerk-auth-reason:
+      - token-invalid
+      x-clerk-auth-status:
+      - signed-out
+    status:
+      code: 200
+      message: OK
+version: 1
