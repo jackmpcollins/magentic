@@ -23,7 +23,7 @@ from magentic.chat_model.openai_chat_model import (
 class OpenRouterStreamState(OpenaiStreamState):
     """State for OpenRouter stream parsing."""
 
-    reasoning: str = ""
+    reasoning: str | None = ""
 
     def update(self, chunk: ChatCompletionChunk) -> None:
         super().update(chunk)
@@ -65,10 +65,22 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         max_tokens: int | None = None,
         seed: int | None = None,
         temperature: float | None = None,
+        # Routing options
         route: Literal["fallback"] | None = None,
         models: list[str] | None = None,
-        require_parameters: bool = True,
-        reasoning: dict[str, Any] | None = None,
+        # Reasoner model options
+        reasoning_effort: Literal["low", "medium", "high"] | None = None,
+        reasoning_exclude: bool | None = None,
+        # Provider options
+        require_parameters: bool | None = None,
+        provider_order: list[str] | None = None,
+        allow_fallbacks: bool | None = None,
+        data_collection: Literal["allow", "deny"] | None = None,
+        provider_only: list[str] | None = None,
+        provider_ignore: list[str] | None = None,
+        quantizations: list[str] | None = None,
+        provider_sort: Literal["price", "throughput"] | None = None,
+        max_price: dict[str, float] | None = None,
     ):
         super().__init__(
             model,
@@ -80,8 +92,18 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         )
         self._route = route
         self._models = models
+        self._reasoning_effort = reasoning_effort
+        self._reasoning_exclude = reasoning_exclude
+        # Provider options
         self._require_parameters = require_parameters
-        self._reasoning = reasoning
+        self._provider_order = provider_order
+        self._allow_fallbacks = allow_fallbacks
+        self._data_collection = data_collection
+        self._provider_only = provider_only
+        self._provider_ignore = provider_ignore
+        self._quantizations = quantizations
+        self._provider_sort = provider_sort
+        self._max_price = max_price
 
     def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
         return {"include_usage": True}
@@ -114,10 +136,40 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
             extra_body["route"] = self._route
         if self._models:
             extra_body["models"] = self._models
+
+        # Build provider object
+        provider = {}
         if self._require_parameters:
-            extra_body.setdefault("provider", {})["require_parameters"] = True
-        if self._reasoning:
-            extra_body["reasoning"] = self._reasoning
+            provider["require_parameters"] = True
+        if self._provider_order:
+            provider["order"] = self._provider_order
+        if self._allow_fallbacks:
+            provider["allow_fallbacks"] = True
+        if self._data_collection:
+            provider["data_collection"] = self._data_collection
+        if self._provider_only:
+            provider["only"] = self._provider_only
+        if self._provider_ignore:
+            provider["ignore"] = self._provider_ignore
+        if self._quantizations:
+            provider["quantizations"] = self._quantizations
+        if self._provider_sort:
+            provider["sort"] = self._provider_sort
+        if self._max_price:
+            provider["max_price"] = self._max_price
+
+        if provider:
+            extra_body["provider"] = provider
+
+        # Build reasoning object
+        reasoning = {}
+        if self._reasoning_effort:
+            reasoning["effort"] = self._reasoning_effort
+        if self._reasoning_exclude is not None:
+            reasoning["exclude"] = self._reasoning_exclude
+        if reasoning:
+            extra_body["reasoning"] = reasoning
+
         return extra_body if extra_body else None
 
     def complete(
@@ -237,10 +289,22 @@ class OpenRouterChatModel(ChatModel):
         max_tokens: int | None = None,
         seed: int | None = None,
         temperature: float | None = None,
+        # Routing options
         route: Literal["fallback"] | None = None,
         models: list[str] | None = None,
-        require_parameters: bool = True,
-        reasoning: dict[str, Any] | None = None,
+        # Reasoner model options
+        reasoning_effort: Literal["low", "medium", "high"] | None = None,
+        reasoning_exclude: bool | None = None,
+        # Provider options
+        require_parameters: bool | None = None,
+        provider_order: list[str] | None = None,
+        allow_fallbacks: bool | None = None,
+        data_collection: Literal["allow", "deny"] | None = None,
+        provider_only: list[str] | None = None,
+        provider_ignore: list[str] | None = None,
+        quantizations: list[str] | None = None,
+        provider_sort: Literal["price", "throughput"] | None = None,
+        max_price: dict[str, float] | None = None,
     ):
         if not (api_key or os.getenv("OPENROUTER_API_KEY")):
             exception_string = "OPENROUTER_API_KEY variable or api_key required."
@@ -254,8 +318,17 @@ class OpenRouterChatModel(ChatModel):
             temperature=temperature,
             route=route,
             models=models,
+            reasoning_effort=reasoning_effort,
+            reasoning_exclude=reasoning_exclude,
             require_parameters=require_parameters,
-            reasoning=reasoning,
+            provider_order=provider_order,
+            allow_fallbacks=allow_fallbacks,
+            data_collection=data_collection,
+            provider_only=provider_only,
+            provider_ignore=provider_ignore,
+            quantizations=quantizations,
+            provider_sort=provider_sort,
+            max_price=max_price,
         )
 
     def _get_extra_body(self) -> dict[str, Any] | None:
@@ -300,7 +373,10 @@ class OpenRouterChatModel(ChatModel):
 
     @property
     def reasoning(self) -> dict[str, Any] | None:
-        return self._openrouter_openai_chat_model._reasoning
+        return {
+            "effort": self._openrouter_openai_chat_model._reasoning_effort,
+            "exclude": self._openrouter_openai_chat_model._reasoning_exclude,
+        }
 
     def complete(
         self,

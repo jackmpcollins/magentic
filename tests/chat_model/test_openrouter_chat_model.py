@@ -241,13 +241,15 @@ def test_openrouter_chat_model_extra_body():
         route="fallback",
         models=["anthropic/claude-3-opus"],
         require_parameters=True,
-        reasoning={"effort": "high"},
+        reasoning_effort="low",
+        reasoning_exclude=False,
+        provider_only=["Novita"],
     )
     assert chat_model._get_extra_body() == {
         "route": "fallback",
         "models": ["anthropic/claude-3-opus"],
-        "provider": {"require_parameters": True},
-        "reasoning": {"effort": "high"},
+        "provider": {"require_parameters": True, "only": ["Novita"]},
+        "reasoning": {"effort": "low", "exclude": False},
     }
 
 
@@ -256,7 +258,8 @@ def test_openrouter_chat_model_reasoning_tokens():
     chat_model = OpenRouterChatModel(
         "deepseek/deepseek-r1",
         require_parameters=True,
-        reasoning={"effort": "medium", "exclude": False},
+        reasoning_effort="low",
+        reasoning_exclude=False,
     )
     message = chat_model.complete(
         messages=[UserMessage("Tell me a joke. Make it catchy.")],
