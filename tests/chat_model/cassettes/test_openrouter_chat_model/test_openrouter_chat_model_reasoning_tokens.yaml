@@ -1,0 +1,280 @@
+interactions:
+- request:
+    body: '{"messages": [{"role": "user", "content": "Tell me a joke. Make it catchy."}],
+      "model": "deepseek/deepseek-r1", "stream": true, "stream_options": {"include_usage":
+      true}, "provider": {"require_parameters": true}, "reasoning": {"effort": "medium",
+      "exclude": false}}'
+    headers:
+      accept:
+      - application/json
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      content-length:
+      - '265'
+      content-type:
+      - application/json
+      host:
+      - openrouter.ai
+      user-agent:
+      - OpenAI/Python 1.59.3
+      x-stainless-arch:
+      - arm64
+      x-stainless-async:
+      - 'false'
+      x-stainless-lang:
+      - python
+      x-stainless-os:
+      - MacOS
+      x-stainless-package-version:
+      - 1.59.3
+      x-stainless-retry-count:
+      - '0'
+      x-stainless-runtime:
+      - CPython
+      x-stainless-runtime-version:
+      - 3.10.17
+    method: POST
+    uri: https://openrouter.ai/api/v1/chat/completions
+  response:
+    body:
+      string: ": OPENROUTER PROCESSING\n\n: OPENROUTER PROCESSING\n\ndata: {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"Okay\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\",
+        the\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        user wants a\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        joke that\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"'s
+        catchy.\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        Let me think\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"...\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        Catch\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"y
+        jokes\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        usually have pun\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"s
+        or word\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"play.
+        Maybe\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        something with\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        a common\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        phrase\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        turned\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        into a joke\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\".
+        Animals\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        are\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        always a safe\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        bet.\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        Let\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"'s
+        see\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"...\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        What's\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        a playful\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        animal?\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        A squirrel\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\".\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        They store\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        nuts.\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        Play\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        on words\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        with\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        nuts\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"...\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        almond\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        joy\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        and\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        pay\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"day...\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        Candy\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        bars!\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        That sounds\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        good\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\".
+        Wait\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\",
+        do\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        almond\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        joy and pay\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"day
+        go\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        together? Maybe\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\".
+        Let me structure\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        it: \\\"Why\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        did the\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        squirrel open\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        a bakery\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"?\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"...\\\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        because\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        squirrels\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        love nuts and\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        those\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        candies have\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        nuts. Punch\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"line
+        ties\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        them\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        together. Check\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        if it flows\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\".\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        Maybe\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        twe\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"ak
+        the\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        setup\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        for\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        clarity. Y\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"ep,
+        that\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"
+        should work!\\n\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Sure!
+        Here\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"'s
+        a\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        bite\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"-sized
+        joke with\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        a nut\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"ty
+        twist:  \\n\\n\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"**\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Why
+        did the squirrel\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        open a bakery\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"?**
+        \ \\n*\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Because
+        he kne\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"aded
+        dough\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\u2026\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        worth\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        every\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        *\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"alm\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"ond*
+        to\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        finally\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        cash\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        in on\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        his\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        *Payday*\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"!*\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        \ \\n\\n(C\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"atchy
+        *\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"and*
+        carb\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"-loaded\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        with\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        pun\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"s!
+        \",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\U0001F950\U0001F43F\uFE0F\",\"reasoning\":null},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\")\",\"reasoning\":null},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\",\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1748368450-GSxIrp0DqErAFWe5scGn\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-r1\",\"object\":\"chat.completion.chunk\",\"created\":1748368450,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"usage\":{\"prompt_tokens\":15,\"completion_tokens\":219,\"total_tokens\":234,\"cost\":0.00112425,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":155}}}\n\ndata:
+        [DONE]\n\n"
+    headers:
+      Access-Control-Allow-Origin:
+      - '*'
+      CF-RAY:
+      - 9467603db8b01489-AMS
+      Cache-Control:
+      - no-cache
+      Connection:
+      - keep-alive
+      Content-Type:
+      - text/event-stream
+      Date:
+      - Tue, 27 May 2025 17:54:11 GMT
+      Server:
+      - cloudflare
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Accept-Encoding
+      x-clerk-auth-message:
+      - Invalid JWT form. A JWT consists of three parts separated by dots. (reason=token-invalid,
+        token-carrier=header)
+      x-clerk-auth-reason:
+      - token-invalid
+      x-clerk-auth-status:
+      - signed-out
+    status:
+      code: 200
+      message: OK
+version: 1

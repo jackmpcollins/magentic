@@ -7,7 +7,7 @@ from openai.types.chat import ChatCompletionChunk, ChatCompletionStreamOptionsPa
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
 from magentic.chat_model.base import ChatModel, OutputT
-from magentic.chat_model.message import AssistantMessage, Message
+from magentic.chat_model.message import AssistantMessage, ContentT, Message, Usage
 from magentic.chat_model.openai_chat_model import (
     BaseFunctionToolSchema,
     OpenaiChatModel,
@@ -18,6 +18,39 @@ from magentic.chat_model.openai_chat_model import (
     async_message_to_openai_message,
     message_to_openai_message,
 )
+
+
+class OpenRouterStreamState(OpenaiStreamState):
+    """State for OpenRouter stream parsing."""
+
+    reasoning: str = ""
+
+    def update(self, chunk: ChatCompletionChunk) -> None:
+        super().update(chunk)
+        if (
+            hasattr(chunk.choices[0].delta, "reasoning")
+            and chunk.choices[0].delta.reasoning
+        ):
+            self.reasoning += chunk.choices[0].delta.reasoning
+
+
+class OpenRouterAssistantMessage(AssistantMessage):
+    """An assistant message from OpenRouter that includes reasoning tokens."""
+
+    reasoning: str | None = None
+
+    def __init__(self, content: ContentT, reasoning: str | None = None, **data: Any):
+        super().__init__(content=content, **data)
+        self.reasoning = reasoning
+
+    @classmethod
+    def _with_usage(
+        cls, content: ContentT, usage_ref: list[Usage], reasoning: str | None = None
+    ) -> "OpenRouterAssistantMessage":
+        """Create a message with usage statistics."""
+        message = cls(content=content, reasoning=reasoning)
+        message._usage_ref = usage_ref
+        return message
 
 
 class _OpenRouterOpenaiChatModel(OpenaiChatModel):
@@ -94,7 +127,7 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[OutputT]:
+    ) -> OpenRouterAssistantMessage[OutputT]:
         """Request an LLM message."""
         from magentic.chat_model.base import parse_stream
         from magentic.chat_model.function_schema import get_function_schemas
@@ -130,10 +163,12 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
             response,
             function_schemas=function_schemas,
             parser=OpenaiStreamParser(),
-            state=OpenaiStreamState(),
+            state=OpenRouterStreamState(),
         )
-        return AssistantMessage._with_usage(
-            parse_stream(stream, output_types), usage_ref=stream.usage_ref
+        return OpenRouterAssistantMessage._with_usage(
+            parse_stream(stream, output_types),
+            usage_ref=stream.usage_ref,
+            reasoning=stream._state.reasoning if stream._state.reasoning else None,
         )
 
     async def acomplete(
@@ -143,7 +178,7 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[OutputT]:
+    ) -> OpenRouterAssistantMessage[OutputT]:
         """Async version of `complete`."""
         from magentic.chat_model.base import aparse_stream
         from magentic.chat_model.function_schema import get_async_function_schemas
@@ -181,10 +216,12 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
             response,
             function_schemas=function_schemas,
             parser=OpenaiStreamParser(),
-            state=OpenaiStreamState(),
+            state=OpenRouterStreamState(),
         )
-        return AssistantMessage._with_usage(
-            await aparse_stream(stream, output_types), usage_ref=stream.usage_ref
+        return OpenRouterAssistantMessage._with_usage(
+            await aparse_stream(stream, output_types),
+            usage_ref=stream.usage_ref,
+            reasoning=stream._state.reasoning if stream._state.reasoning else None,
         )
 
 

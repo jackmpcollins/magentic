@@ -249,3 +249,31 @@ def test_openrouter_chat_model_extra_body():
         "provider": {"require_parameters": True},
         "reasoning": {"effort": "high"},
     }
+
+
+@pytest.mark.openrouter
+def test_openrouter_chat_model_reasoning_tokens():
+    chat_model = OpenRouterChatModel(
+        "deepseek/deepseek-r1",
+        require_parameters=True,
+        reasoning={"effort": "medium", "exclude": False},
+    )
+    message = chat_model.complete(
+        messages=[UserMessage("Tell me a joke. Make it catchy.")],
+        output_types=[str],
+    )
+
+    # Verify response content
+    assert isinstance(message.content, str)
+    assert len(message.content) > 0
+
+    # Verify reasoning tokens are present in the response
+    assert hasattr(message, "reasoning")
+    assert message.reasoning is not None
+    assert isinstance(message.reasoning, str)
+    assert len(message.reasoning) > 0
+
+    # Verify usage stats are present
+    assert isinstance(message.usage, Usage)
+    assert message.usage.input_tokens > 0
+    assert message.usage.output_tokens > 0
