@@ -3,7 +3,11 @@ from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequenc
 from typing import Any, Literal, cast
 
 import openai
-from openai.types.chat import ChatCompletionChunk, ChatCompletionStreamOptionsParam
+from openai.types.chat import (
+    ChatCompletionChunk,
+    ChatCompletionNamedToolChoiceParam,
+    ChatCompletionStreamOptionsParam,
+)
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
 from magentic.chat_model.base import ChatModel, OutputT
@@ -23,30 +27,37 @@ from magentic.chat_model.openai_chat_model import (
 class OpenRouterStreamState(OpenaiStreamState):
     """State for OpenRouter stream parsing."""
 
-    reasoning: str | None = ""
+    reasoning: str
 
-    def update(self, chunk: ChatCompletionChunk) -> None:
-        super().update(chunk)
+    def __init__(self) -> None:
+        super().__init__()
+        self.reasoning = ""
+
+    def update(self, item: ChatCompletionChunk) -> None:
+        super().update(item)
         if (
-            hasattr(chunk.choices[0].delta, "reasoning")
-            and chunk.choices[0].delta.reasoning
+            hasattr(item.choices[0].delta, "reasoning")
+            and item.choices[0].delta.reasoning
         ):
-            self.reasoning += chunk.choices[0].delta.reasoning
+            self.reasoning += item.choices[0].delta.reasoning
 
 
-class OpenRouterAssistantMessage(AssistantMessage):
+class OpenRouterAssistantMessage(AssistantMessage[ContentT]):
     """An assistant message from OpenRouter that includes reasoning tokens."""
 
-    reasoning: str | None = None
+    reasoning: str = ""
 
-    def __init__(self, content: ContentT, reasoning: str | None = None, **data: Any):
+    def __init__(self, content: ContentT, reasoning: str = "", **data: Any):
         super().__init__(content=content, **data)
         self.reasoning = reasoning
 
     @classmethod
     def _with_usage(
-        cls, content: ContentT, usage_ref: list[Usage], reasoning: str | None = None
-    ) -> "OpenRouterAssistantMessage":
+        cls,
+        content: ContentT,
+        usage_ref: list[Usage],
+        reasoning: str = "",  # type: ignore[misc]
+    ) -> "OpenRouterAssistantMessage[ContentT]":
         """Create a message with usage statistics."""
         message = cls(content=content, reasoning=reasoning)
         message._usage_ref = usage_ref
@@ -113,7 +124,11 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
         output_types: Iterable[type],
-    ) -> str | openai.NotGiven:
+    ) -> (
+        Literal["none", "auto", "required"]
+        | openai.NotGiven
+        | ChatCompletionNamedToolChoiceParam
+    ):
         if contains_string_type(output_types):
             return openai.NOT_GIVEN
         if len(tool_schemas) == 1:
@@ -131,14 +146,14 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
 
     def _get_extra_body(self) -> dict[str, Any] | None:
         """Get extra body parameters for OpenRouter API."""
-        extra_body = {}
+        extra_body: dict[str, Any] = {}
         if self._route:
             extra_body["route"] = self._route
         if self._models:
             extra_body["models"] = self._models
 
         # Build provider object
-        provider = {}
+        provider: dict[str, Any] = {}
         if self._require_parameters:
             provider["require_parameters"] = True
         if self._provider_order:
@@ -162,7 +177,7 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
             extra_body["provider"] = provider
 
         # Build reasoning object
-        reasoning = {}
+        reasoning: dict[str, Any] = {}
         if self._reasoning_effort:
             reasoning["effort"] = self._reasoning_effort
         if self._reasoning_exclude is not None:
@@ -220,7 +235,7 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         return OpenRouterAssistantMessage._with_usage(
             parse_stream(stream, output_types),
             usage_ref=stream.usage_ref,
-            reasoning=stream._state.reasoning if stream._state.reasoning else None,
+            reasoning=stream._state.reasoning if stream._state.reasoning else "",  # type: ignore[attr-defined]
         )
 
     async def acomplete(
@@ -273,7 +288,7 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         return OpenRouterAssistantMessage._with_usage(
             await aparse_stream(stream, output_types),
             usage_ref=stream.usage_ref,
-            reasoning=stream._state.reasoning if stream._state.reasoning else None,
+            reasoning=stream._state.reasoning if stream._state.reasoning else "",  # type: ignore[attr-defined]
         )
 
 
@@ -368,7 +383,7 @@ class OpenRouterChatModel(ChatModel):
         return self._openrouter_openai_chat_model._models
 
     @property
-    def require_parameters(self) -> bool:
+    def require_parameters(self) -> bool | None:
         return self._openrouter_openai_chat_model._require_parameters
 
     @property
@@ -385,7 +400,7 @@ class OpenRouterChatModel(ChatModel):
         output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[OutputT]:
+    ) -> OpenRouterAssistantMessage[OutputT]:
         """Request an LLM message."""
         return self._openrouter_openai_chat_model.complete(
             messages=messages,
@@ -401,7 +416,7 @@ class OpenRouterChatModel(ChatModel):
         output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
-    ) -> AssistantMessage[OutputT]:
+    ) -> OpenRouterAssistantMessage[OutputT]:
         """Async version of `complete`."""
         return await self._openrouter_openai_chat_model.acomplete(
             messages=messages,
