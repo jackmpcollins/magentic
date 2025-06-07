@@ -59,9 +59,9 @@ class OpenRouterAssistantMessage(AssistantMessage[ContentT]):
     @classmethod
     def _with_usage(
         cls,
-        content: ContentT,
+        content: ContentT,  # type: ignore[misc]
         usage_ref: list[Usage],
-        reasoning: str = "",  # type: ignore[misc]
+        reasoning: str = "",
     ) -> "OpenRouterAssistantMessage[ContentT]":
         """Create a message with usage statistics."""
         message = cls(content=content, reasoning=reasoning)
