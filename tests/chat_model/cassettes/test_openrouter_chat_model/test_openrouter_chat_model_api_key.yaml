@@ -38,55 +38,48 @@ interactions:
   response:
     body:
       string: ": OPENROUTER PROCESSING\n\n: OPENROUTER PROCESSING\n\n: OPENROUTER
-        PROCESSING\n\ndata: {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Hello\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"!
-        \U0001F60A How\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        are you today\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"?
-        Let\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        me know how\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        I can help\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\u2014I'm\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        here\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        for anything you\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        need! \"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\U0001F680\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\u2728\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\",\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453687-brogr7rEFNQn1Ey6jH9B\",\"provider\":\"Parasail\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453687,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"usage\":{\"prompt_tokens\":6,\"completion_tokens\":30,\"total_tokens\":36,\"cost\":0.00004944,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}\n\ndata:
+        PROCESSING\n\n: OPENROUTER PROCESSING\n\ndata: {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Hello\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"system_fingerprint\":\"\"}\n\ndata:
+        {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"!\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"system_fingerprint\":\"\"}\n\ndata:
+        {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"system_fingerprint\":\"\"}\n\ndata:
+        {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        \U0001F60A\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"system_fingerprint\":\"\"}\n\ndata:
+        {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        How\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"system_fingerprint\":\"\"}\n\ndata:
+        {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        are\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"system_fingerprint\":\"\"}\n\ndata:
+        {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        you\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"system_fingerprint\":\"\"}\n\ndata:
+        {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        today\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"system_fingerprint\":\"\"}\n\ndata:
+        {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"?\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"system_fingerprint\":\"\"}\n\ndata:
+        {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\",\"logprobs\":null}],\"system_fingerprint\":\"\"}\n\ndata:
+        {\"id\":\"gen-1749325063-3YhlsQSpXsHLmNL07XVc\",\"provider\":\"Novita\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325063,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"usage\":{\"prompt_tokens\":6,\"completion_tokens\":9,\"total_tokens\":15,\"cost\":0.00001368,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}\n\ndata:
         [DONE]\n\n"
     headers:
       Access-Control-Allow-Origin:
       - '*'
-      CF-RAY:
-      - 946f8136e8b29fae-AMS
       Cache-Control:
       - no-cache
+      Cf-Ray:
+      - 94c29b0f5d64f5ea-AMS
       Connection:
       - keep-alive
       Content-Type:
       - text/event-stream
       Date:
-      - Wed, 28 May 2025 17:34:48 GMT
+      - Sat, 07 Jun 2025 19:37:45 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
       - chunked
       Vary:
       - Accept-Encoding
-      x-clerk-auth-message:
+      X-Clerk-Auth-Message:
       - Invalid JWT form. A JWT consists of three parts separated by dots. (reason=token-invalid,
         token-carrier=header)
-      x-clerk-auth-reason:
+      X-Clerk-Auth-Reason:
       - token-invalid
-      x-clerk-auth-status:
+      X-Clerk-Auth-Status:
       - signed-out
     status:
       code: 200

@@ -37,77 +37,44 @@ interactions:
     uri: https://openrouter.ai/api/v1/chat/completions
   response:
     body:
-      string: ": OPENROUTER PROCESSING\n\ndata: {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Hello\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"!\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        \U0001F60A\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        How\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"'s\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        your\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        day\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        going\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"?\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        Let\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        me\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        know\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        if\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        there\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\n:
-        OPENROUTER PROCESSING\n\ndata: {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"'s\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        anything\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        I\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        can\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        help\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        you\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        with\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"!\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        \U0001F499\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\",\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1748453723-Z4c2cnTY5zJyFNC1nbwB\",\"provider\":\"Nebius\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1748453723,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"usage\":{\"prompt_tokens\":6,\"completion_tokens\":26,\"total_tokens\":32,\"cost\":0.000042,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}\n\ndata:
+      string: ": OPENROUTER PROCESSING\n\ndata: {\"id\":\"gen-1749325092-FlrJKs4eZ3Z64hHC9cLV\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325092,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1749325092-FlrJKs4eZ3Z64hHC9cLV\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325092,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Hello\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1749325092-FlrJKs4eZ3Z64hHC9cLV\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325092,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"!
+        \U0001F60A How\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1749325092-FlrJKs4eZ3Z64hHC9cLV\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325092,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        can I\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1749325092-FlrJKs4eZ3Z64hHC9cLV\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325092,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        assist you\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1749325092-FlrJKs4eZ3Z64hHC9cLV\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325092,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
+        today?\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1749325092-FlrJKs4eZ3Z64hHC9cLV\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325092,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\",\"logprobs\":null}]}\n\ndata:
+        {\"id\":\"gen-1749325092-FlrJKs4eZ3Z64hHC9cLV\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325092,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"usage\":{\"prompt_tokens\":6,\"completion_tokens\":12,\"total_tokens\":18,\"cost\":0.00001236,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}\n\ndata:
         [DONE]\n\n"
     headers:
       Access-Control-Allow-Origin:
       - '*'
-      CF-RAY:
-      - 946f821acf3db97b-AMS
       Cache-Control:
       - no-cache
+      Cf-Ray:
+      - 94c29bc1cf194e47-AMS
       Connection:
       - keep-alive
       Content-Type:
       - text/event-stream
       Date:
-      - Wed, 28 May 2025 17:35:24 GMT
+      - Sat, 07 Jun 2025 19:38:12 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
       - chunked
       Vary:
       - Accept-Encoding
-      x-clerk-auth-message:
+      X-Clerk-Auth-Message:
       - Invalid JWT form. A JWT consists of three parts separated by dots. (reason=token-invalid,
         token-carrier=header)
-      x-clerk-auth-reason:
+      X-Clerk-Auth-Reason:
       - token-invalid
-      x-clerk-auth-status:
+      X-Clerk-Auth-Status:
       - signed-out
     status:
       code: 200

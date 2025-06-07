@@ -54,58 +54,13 @@ interactions:
         : OPENROUTER PROCESSING
 
 
-        : OPENROUTER PROCESSING
+        data: {"id":"gen-1749325086-1zQAWZppJaNVrZeZgOjc","provider":"Nineteen","model":"opengvlab/internvl3-14b:free","object":"chat.completion.chunk","created":1749325086,"choices":[{"index":0,"delta":{"role":"assistant","content":"Python"},"finish_reason":null,"native_finish_reason":null,"logprobs":{"content":[{"token":"Python","bytes":[80,121,116,104,111,110],"logprob":-0.10655718296766281,"top_logprobs":[]}],"refusal":null}}]}
 
 
-        : OPENROUTER PROCESSING
+        data: {"id":"gen-1749325086-1zQAWZppJaNVrZeZgOjc","provider":"Nineteen","model":"opengvlab/internvl3-14b:free","object":"chat.completion.chunk","created":1749325086,"choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"stop","native_finish_reason":"stop","logprobs":{"content":[{"token":"<|im_end|>","bytes":[60,124,105,109,95,101,110,100,124,62],"logprob":-0.2887578010559082,"top_logprobs":[]}],"refusal":null}}]}
 
 
-        : OPENROUTER PROCESSING
-
-
-        : OPENROUTER PROCESSING
-
-
-        : OPENROUTER PROCESSING
-
-
-        : OPENROUTER PROCESSING
-
-
-        : OPENROUTER PROCESSING
-
-
-        : OPENROUTER PROCESSING
-
-
-        : OPENROUTER PROCESSING
-
-
-        : OPENROUTER PROCESSING
-
-
-        : OPENROUTER PROCESSING
-
-
-        : OPENROUTER PROCESSING
-
-
-        : OPENROUTER PROCESSING
-
-
-        data: {"id":"gen-1748453710-kSWBXXg4TXKx3ShLvYtv","provider":"Nineteen","model":"opengvlab/internvl3-14b:free","object":"chat.completion.chunk","created":1748453710,"choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null,"native_finish_reason":null,"logprobs":null}]}
-
-
-        data: {"id":"gen-1748453710-kSWBXXg4TXKx3ShLvYtv","provider":"Nineteen","model":"opengvlab/internvl3-14b:free","object":"chat.completion.chunk","created":1748453710,"choices":[{"index":0,"delta":{"role":"assistant","content":"Python"},"finish_reason":null,"native_finish_reason":null,"logprobs":{"content":[{"token":"Python","bytes":[80,121,116,104,111,110],"logprob":-0.1106971949338913,"top_logprobs":[{"token":"Python","bytes":[80,121,116,104,111,110],"logprob":-0.1106971949338913}]}],"refusal":null}}]}
-
-
-        data: {"id":"gen-1748453710-kSWBXXg4TXKx3ShLvYtv","provider":"Nineteen","model":"opengvlab/internvl3-14b:free","object":"chat.completion.chunk","created":1748453710,"choices":[{"index":0,"delta":{"role":"assistant","content":"."},"finish_reason":null,"native_finish_reason":null,"logprobs":{"content":[{"token":".","bytes":[46],"logprob":-1.4136905670166016,"top_logprobs":[{"token":".","bytes":[46],"logprob":-1.4136905670166016}]}],"refusal":null}}]}
-
-
-        data: {"id":"gen-1748453710-kSWBXXg4TXKx3ShLvYtv","provider":"Nineteen","model":"opengvlab/internvl3-14b:free","object":"chat.completion.chunk","created":1748453710,"choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":"stop","native_finish_reason":"stop","logprobs":{"content":[{"token":"<|im_end|>","bytes":[60,124,105,109,95,101,110,100,124,62],"logprob":-0.0000423184028477408,"top_logprobs":[{"token":"<|im_end|>","bytes":[60,124,105,109,95,101,110,100,124,62],"logprob":-0.0000423184028477408}]}],"refusal":null}}]}
-
-
-        data: {"id":"gen-1748453710-kSWBXXg4TXKx3ShLvYtv","provider":"Nineteen","model":"opengvlab/internvl3-14b:free","object":"chat.completion.chunk","created":1748453710,"choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null,"native_finish_reason":null,"logprobs":null}],"usage":{"prompt_tokens":4812,"completion_tokens":3,"total_tokens":4815,"cost":0,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":0}}}
+        data: {"id":"gen-1749325086-1zQAWZppJaNVrZeZgOjc","provider":"Nineteen","model":"opengvlab/internvl3-14b:free","object":"chat.completion.chunk","created":1749325086,"choices":[{"index":0,"delta":{"role":"assistant","content":""},"finish_reason":null,"native_finish_reason":null,"logprobs":null}],"usage":{"prompt_tokens":1453,"completion_tokens":2,"total_tokens":1455,"cost":0,"is_byok":false,"prompt_tokens_details":{"cached_tokens":0},"completion_tokens_details":{"reasoning_tokens":0}}}
 
 
         data: [DONE]
@@ -115,28 +70,28 @@ interactions:
     headers:
       Access-Control-Allow-Origin:
       - '*'
-      CF-RAY:
-      - 946f81cb9abb665e-AMS
       Cache-Control:
       - no-cache
+      Cf-Ray:
+      - 94c29b9ebceca4bf-AMS
       Connection:
       - keep-alive
       Content-Type:
       - text/event-stream
       Date:
-      - Wed, 28 May 2025 17:35:18 GMT
+      - Sat, 07 Jun 2025 19:38:08 GMT
       Server:
       - cloudflare
       Transfer-Encoding:
       - chunked
       Vary:
       - Accept-Encoding
-      x-clerk-auth-message:
+      X-Clerk-Auth-Message:
       - Invalid JWT form. A JWT consists of three parts separated by dots. (reason=token-invalid,
         token-carrier=header)
-      x-clerk-auth-reason:
+      X-Clerk-Auth-Reason:
       - token-invalid
-      x-clerk-auth-status:
+      X-Clerk-Auth-Status:
       - signed-out
     status:
       code: 200
