@@ -10,7 +10,11 @@ from openai.types.chat import (
 )
 
 from magentic._parsing import contains_parallel_function_call_type, contains_string_type
-from magentic.chat_model.base import ChatModel, OutputT
+from magentic.chat_model.base import ChatModel, OutputT, aparse_stream, parse_stream
+from magentic.chat_model.function_schema import (
+    get_async_function_schemas,
+    get_function_schemas,
+)
 from magentic.chat_model.message import AssistantMessage, ContentT, Message, Usage
 from magentic.chat_model.openai_chat_model import (
     BaseFunctionToolSchema,
@@ -22,6 +26,7 @@ from magentic.chat_model.openai_chat_model import (
     async_message_to_openai_message,
     message_to_openai_message,
 )
+from magentic.chat_model.stream import AsyncOutputStream, OutputStream
 
 
 class OpenRouterStreamState(OpenaiStreamState):
@@ -196,10 +201,6 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         stop: list[str] | None = None,
     ) -> OpenRouterAssistantMessage[OutputT]:
         """Request an LLM message."""
-        from magentic.chat_model.base import parse_stream
-        from magentic.chat_model.function_schema import get_function_schemas
-        from magentic.chat_model.stream import OutputStream
-
         if output_types is None:
             output_types = cast("Iterable[type[OutputT]]", [] if functions else [str])
 
@@ -247,10 +248,6 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         stop: list[str] | None = None,
     ) -> OpenRouterAssistantMessage[OutputT]:
         """Async version of `complete`."""
-        from magentic.chat_model.base import aparse_stream
-        from magentic.chat_model.function_schema import get_async_function_schemas
-        from magentic.chat_model.stream import AsyncOutputStream
-
         if output_types is None:
             output_types = [] if functions else cast("list[type[OutputT]]", [str])
 
