@@ -95,7 +95,7 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         provider_only: list[str] | None = None,
         provider_ignore: list[str] | None = None,
         quantizations: list[str] | None = None,
-        provider_sort: Literal["price", "throughput"] | None = None,
+        provider_sort: Literal["price", "throughput", "latency"] | None = None,
         max_price: dict[str, float] | None = None,
     ):
         super().__init__(
@@ -315,7 +315,7 @@ class OpenRouterChatModel(ChatModel):
         provider_only: list[str] | None = None,
         provider_ignore: list[str] | None = None,
         quantizations: list[str] | None = None,
-        provider_sort: Literal["price", "throughput"] | None = None,
+        provider_sort: Literal["price", "throughput", "latency"] | None = None,
         max_price: dict[str, float] | None = None,
     ):
         if not (api_key or os.getenv("OPENROUTER_API_KEY")):
