@@ -94,6 +94,7 @@ markers = [
     "openai_gemini: Tests that query the Gemini API via openai. Requires the GEMINI_API_KEY environment variable to be set.",
     "openai_ollama: Tests that query Ollama via openai. Requires ollama to be installed and running on localhost:11434.",
     "openai_xai: Tests that query xAI via openai. Requires the XAI_API_KEY environment variable to be set.",
+    "openrouter: Tests that query the OpenRouter API. Requires the OPENROUTER_API_KEY environment variable to be set.",
 ]
 
 [tool.ruff]
