@@ -281,6 +281,13 @@ def test_openai_chat_model_complete_seed():
 
 
 @pytest.mark.openai
+def test_openai_chat_model_reasoning_effort():
+    chat_model = OpenaiChatModel("o3-mini", reasoning_effort="low")
+    message = chat_model.complete(messages=[UserMessage("Sum 1 + 2")])
+    assert isinstance(message.content, str)
+
+
+@pytest.mark.openai
 def test_openai_chat_model_complete_streamed_response():
     def get_weather(location: str) -> None:
         """Get the weather for a location."""
