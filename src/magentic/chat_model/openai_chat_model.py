@@ -386,6 +386,7 @@ class OpenaiChatModel(ChatModel):
         max_tokens: int | None = None,
         seed: int | None = None,
         temperature: float | None = None,
+        reasoning_effort: Literal["low", "medium", "high"] | None = None,
     ):
         self._model = model
         self._api_key = api_key
@@ -394,6 +395,7 @@ class OpenaiChatModel(ChatModel):
         self._max_tokens = max_tokens
         self._seed = seed
         self._temperature = temperature
+        self._reasoning_effort = reasoning_effort
 
         match api_type:
             case "openai":
@@ -438,6 +440,10 @@ class OpenaiChatModel(ChatModel):
     @property
     def temperature(self) -> float | None:
         return self._temperature
+
+    @property
+    def reasoning_effort(self) -> Literal["low", "medium", "high"] | None:
+        return self._reasoning_effort
 
     def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
         if self.api_type == "azure":
@@ -495,6 +501,7 @@ class OpenaiChatModel(ChatModel):
             stream=True,
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
+            reasoning_effort=_if_given(self.reasoning_effort),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, output_types=output_types
@@ -541,6 +548,7 @@ class OpenaiChatModel(ChatModel):
             stream=True,
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
+            reasoning_effort=_if_given(self.reasoning_effort),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, output_types=output_types
