@@ -191,7 +191,7 @@ def chatprompt(
                 model=model,
             )
             return cast(
-                AsyncChatPromptFunction[P, R],
+                "AsyncChatPromptFunction[P, R]",
                 update_wrapper(async_prompt_function, func),
             )
 
@@ -205,6 +205,6 @@ def chatprompt(
             max_retries=max_retries,
             model=model,
         )
-        return cast(ChatPromptFunction[P, R], update_wrapper(prompt_function, func))
+        return cast("ChatPromptFunction[P, R]", update_wrapper(prompt_function, func))
 
-    return cast(ChatPromptDecorator, decorator)
+    return cast("ChatPromptDecorator", decorator)

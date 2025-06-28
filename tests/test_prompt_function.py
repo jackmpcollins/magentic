@@ -29,7 +29,7 @@ def test_promptfunction_format():
 
 def test_promptfunction_format_custom_type():
     class CustomType:
-        def __format__(self, __format_spec: str) -> str:
+        def __format__(self, __format_spec: str, /) -> str:
             return "custom"
 
     @prompt("Test {param}.")

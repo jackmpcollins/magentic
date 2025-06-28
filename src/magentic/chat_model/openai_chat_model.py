@@ -29,6 +29,7 @@ from magentic.chat_model.function_schema import (
 )
 from magentic.chat_model.message import (
     AssistantMessage,
+    AudioBytes,
     ImageBytes,
     ImageUrl,
     Message,
@@ -82,7 +83,7 @@ def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
     assert isinstance(message.content, dict)
     assert "role" in message.content
     assert "content" in message.content
-    return cast(ChatCompletionMessageParam, message.content)
+    return cast("ChatCompletionMessageParam", message.content)
 
 
 @message_to_openai_message.register
@@ -110,6 +111,13 @@ def _(message: UserMessage[Any]) -> ChatCompletionUserMessageParam:
                 )
             elif isinstance(block, ImageUrl):
                 content.append({"type": "image_url", "image_url": {"url": block.root}})
+            elif isinstance(block, AudioBytes):
+                content.append(
+                    {
+                        "type": "input_audio",
+                        "input_audio": {"data": block.as_base64(), "format": "wav"},
+                    }
+                )
             else:
                 msg = f"Invalid block type: {type(block)}"
                 raise TypeError(msg)
@@ -485,7 +493,7 @@ class OpenaiChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = cast(Iterable[type[OutputT]], [] if functions else [str])
+            output_types = cast("Iterable[type[OutputT]]", [] if functions else [str])
 
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -530,7 +538,7 @@ class OpenaiChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[OutputT]], [str])
+            output_types = [] if functions else cast("list[type[OutputT]]", [str])
 
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
