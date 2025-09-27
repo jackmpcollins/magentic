@@ -288,6 +288,13 @@ def test_openai_chat_model_reasoning_effort():
 
 
 @pytest.mark.openai
+def test_openai_chat_model_verbosity():
+    chat_model = OpenaiChatModel("gpt-5-nano", verbosity="low")
+    message = chat_model.complete(messages=[UserMessage("Sum 1 + 2")])
+    assert isinstance(message.content, str)
+
+
+@pytest.mark.openai
 def test_openai_chat_model_complete_streamed_response():
     def get_weather(location: str) -> None:
         """Get the weather for a location."""

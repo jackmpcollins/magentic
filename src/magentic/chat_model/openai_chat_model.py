@@ -387,6 +387,7 @@ class OpenaiChatModel(ChatModel):
         seed: int | None = None,
         temperature: float | None = None,
         reasoning_effort: Literal["low", "medium", "high"] | None = None,
+        verbosity: Literal["low", "medium", "high"] | None = None,
     ):
         self._model = model
         self._api_key = api_key
@@ -396,6 +397,7 @@ class OpenaiChatModel(ChatModel):
         self._seed = seed
         self._temperature = temperature
         self._reasoning_effort = reasoning_effort
+        self._verbosity = verbosity
 
         match api_type:
             case "openai":
@@ -444,6 +446,10 @@ class OpenaiChatModel(ChatModel):
     @property
     def reasoning_effort(self) -> Literal["low", "medium", "high"] | None:
         return self._reasoning_effort
+
+    @property
+    def verbosity(self) -> Literal["low", "medium", "high"] | None:
+        return self._verbosity
 
     def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
         if self.api_type == "azure":
@@ -502,6 +508,7 @@ class OpenaiChatModel(ChatModel):
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
             reasoning_effort=_if_given(self.reasoning_effort),
+            verbosity=_if_given(self.verbosity),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, output_types=output_types
@@ -530,7 +537,7 @@ class OpenaiChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[OutputT]], [str])
+            output_types = [] if functions else cast("list[type[OutputT]]", [str])
 
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -549,6 +556,7 @@ class OpenaiChatModel(ChatModel):
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
             reasoning_effort=_if_given(self.reasoning_effort),
+            verbosity=_if_given(self.verbosity),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, output_types=output_types
