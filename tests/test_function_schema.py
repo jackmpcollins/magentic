@@ -383,7 +383,6 @@ class User(BaseModel):
             {
                 "name": "return_dict",
                 "parameters": {
-                    "additionalProperties": True,
                     "properties": {},
                     "type": "object",
                 },
@@ -394,7 +393,6 @@ class User(BaseModel):
             {
                 "name": "return_dict_of_str_to_any",
                 "parameters": {
-                    "additionalProperties": True,
                     "properties": {},
                     "type": "object",
                 },
@@ -744,7 +742,6 @@ def plus_with_config_openai_strict(a: int, b: int) -> int:
                     "properties": {
                         "a": {"title": "A"},
                         "kwargs": {
-                            "additionalProperties": True,
                             "default": {},
                             "title": "Kwargs",
                             "type": "object",
