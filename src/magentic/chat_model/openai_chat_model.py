@@ -384,6 +384,7 @@ class OpenaiChatModel(ChatModel):
         api_type: Literal["openai", "azure"] = "openai",
         base_url: str | None = None,
         max_tokens: int | None = None,
+        max_completion_tokens: int | None = None,
         seed: int | None = None,
         temperature: float | None = None,
         reasoning_effort: Literal["low", "medium", "high"] | None = None,
@@ -394,6 +395,7 @@ class OpenaiChatModel(ChatModel):
         self._api_type = api_type
         self._base_url = base_url
         self._max_tokens = max_tokens
+        self._max_completion_tokens = max_completion_tokens
         self._seed = seed
         self._temperature = temperature
         self._reasoning_effort = reasoning_effort
@@ -434,6 +436,10 @@ class OpenaiChatModel(ChatModel):
     @property
     def max_tokens(self) -> int | None:
         return self._max_tokens
+
+    @property
+    def max_completion_tokens(self) -> int | None:
+        return self._max_completion_tokens
 
     @property
     def seed(self) -> int | None:
@@ -502,6 +508,7 @@ class OpenaiChatModel(ChatModel):
                 [message_to_openai_message(m) for m in messages]
             ),
             max_tokens=_if_given(self.max_tokens),
+            max_completion_tokens=_if_given(self.max_completion_tokens),
             seed=_if_given(self.seed),
             stop=_if_given(stop),
             stream=True,
@@ -550,6 +557,7 @@ class OpenaiChatModel(ChatModel):
                 [await async_message_to_openai_message(m) for m in messages]
             ),
             max_tokens=_if_given(self.max_tokens),
+            max_completion_tokens=_if_given(self.max_completion_tokens),
             seed=_if_given(self.seed),
             stop=_if_given(stop),
             stream=True,

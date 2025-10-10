@@ -273,6 +273,18 @@ def test_openai_chat_model_complete_base_url():
 
 
 @pytest.mark.openai
+def test_openai_chat_model_complete_max_completion_tokens():
+    chat_model = OpenaiChatModel("gpt-4o", max_completion_tokens=10)
+    message = chat_model.complete(messages=[UserMessage("Say hello!")])
+    assert isinstance(message.content, str)
+
+
+def test_openai_chat_model_max_completion_tokens_property():
+    chat_model = OpenaiChatModel("gpt-4o", max_completion_tokens=100)
+    assert chat_model.max_completion_tokens == 100
+
+
+@pytest.mark.openai
 def test_openai_chat_model_complete_seed():
     chat_model = OpenaiChatModel("gpt-4o", seed=42)
     message1 = chat_model.complete(messages=[UserMessage("Say hello!")])
