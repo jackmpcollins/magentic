@@ -82,7 +82,7 @@ def _(message: _RawMessage[Any]) -> ChatCompletionMessageParam:
     assert isinstance(message.content, dict)
     assert "role" in message.content
     assert "content" in message.content
-    return cast(ChatCompletionMessageParam, message.content)
+    return cast("ChatCompletionMessageParam", message.content)
 
 
 @message_to_openai_message.register
@@ -327,8 +327,8 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
 
     def __init__(self) -> None:
         self._chat_completion_stream_state = ChatCompletionStreamState(
-            input_tools=openai.NOT_GIVEN,
-            response_format=openai.NOT_GIVEN,
+            input_tools=openai.omit,
+            response_format=openai.omit,
         )
         self.usage_ref: list[Usage] = []
 
@@ -369,8 +369,8 @@ class OpenaiStreamState(StreamState[ChatCompletionChunk]):
         return _RawMessage(message.model_dump())
 
 
-def _if_given(value: T | None) -> T | openai.NotGiven:
-    return value if value is not None else openai.NOT_GIVEN
+def _if_given(value: T | None) -> T | openai.Omit:
+    return value if value is not None else openai.omit
 
 
 class OpenaiChatModel(ChatModel):
@@ -384,18 +384,22 @@ class OpenaiChatModel(ChatModel):
         api_type: Literal["openai", "azure"] = "openai",
         base_url: str | None = None,
         max_tokens: int | None = None,
+        max_completion_tokens: int | None = None,
         seed: int | None = None,
         temperature: float | None = None,
         reasoning_effort: Literal["low", "medium", "high"] | None = None,
+        verbosity: Literal["low", "medium", "high"] | None = None,
     ):
         self._model = model
         self._api_key = api_key
         self._api_type = api_type
         self._base_url = base_url
         self._max_tokens = max_tokens
+        self._max_completion_tokens = max_completion_tokens
         self._seed = seed
         self._temperature = temperature
         self._reasoning_effort = reasoning_effort
+        self._verbosity = verbosity
 
         match api_type:
             case "openai":
@@ -434,6 +438,10 @@ class OpenaiChatModel(ChatModel):
         return self._max_tokens
 
     @property
+    def max_completion_tokens(self) -> int | None:
+        return self._max_completion_tokens
+
+    @property
     def seed(self) -> int | None:
         return self._seed
 
@@ -445,9 +453,13 @@ class OpenaiChatModel(ChatModel):
     def reasoning_effort(self) -> Literal["low", "medium", "high"] | None:
         return self._reasoning_effort
 
-    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+    @property
+    def verbosity(self) -> Literal["low", "medium", "high"] | None:
+        return self._verbosity
+
+    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.Omit:
         if self.api_type == "azure":
-            return openai.NOT_GIVEN
+            return openai.omit
         return {"include_usage": True}
 
     @staticmethod
@@ -455,23 +467,23 @@ class OpenaiChatModel(ChatModel):
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
         output_types: Iterable[type],
-    ) -> ChatCompletionToolChoiceOptionParam | openai.NotGiven:
+    ) -> ChatCompletionToolChoiceOptionParam | openai.Omit:
         """Create the tool choice argument."""
         if contains_string_type(output_types):
-            return openai.NOT_GIVEN
+            return openai.omit
         if len(tool_schemas) == 1:
             return tool_schemas[0].as_tool_choice()
         return "required"
 
     def _get_parallel_tool_calls(
         self, *, tools_specified: bool, output_types: Iterable[type]
-    ) -> bool | openai.NotGiven:
+    ) -> bool | openai.Omit:
         if not tools_specified:  # Enforced by OpenAI API
-            return openai.NOT_GIVEN
+            return openai.omit
         if self.api_type == "azure":
-            return openai.NOT_GIVEN
+            return openai.omit
         if contains_parallel_function_call_type(output_types):
-            return openai.NOT_GIVEN
+            return openai.omit
         return False
 
     def complete(
@@ -485,7 +497,7 @@ class OpenaiChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = cast(Iterable[type[OutputT]], [] if functions else [str])
+            output_types = cast("Iterable[type[OutputT]]", [] if functions else [str])
 
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -496,13 +508,15 @@ class OpenaiChatModel(ChatModel):
                 [message_to_openai_message(m) for m in messages]
             ),
             max_tokens=_if_given(self.max_tokens),
+            max_completion_tokens=_if_given(self.max_completion_tokens),
             seed=_if_given(self.seed),
             stop=_if_given(stop),
             stream=True,
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
             reasoning_effort=_if_given(self.reasoning_effort),
-            tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
+            verbosity=_if_given(self.verbosity),
+            tools=[schema.to_dict() for schema in tool_schemas] or openai.omit,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, output_types=output_types
             ),
@@ -530,7 +544,7 @@ class OpenaiChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = [] if functions else cast(list[type[OutputT]], [str])
+            output_types = [] if functions else cast("list[type[OutputT]]", [str])
 
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -543,13 +557,15 @@ class OpenaiChatModel(ChatModel):
                 [await async_message_to_openai_message(m) for m in messages]
             ),
             max_tokens=_if_given(self.max_tokens),
+            max_completion_tokens=_if_given(self.max_completion_tokens),
             seed=_if_given(self.seed),
             stop=_if_given(stop),
             stream=True,
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
             reasoning_effort=_if_given(self.reasoning_effort),
-            tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
+            verbosity=_if_given(self.verbosity),
+            tools=[schema.to_dict() for schema in tool_schemas] or openai.omit,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, output_types=output_types
             ),

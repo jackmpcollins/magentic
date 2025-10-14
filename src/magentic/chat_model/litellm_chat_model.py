@@ -64,8 +64,8 @@ class LitellmStreamParser(StreamParser[ModelResponse]):
 class LitellmStreamState(StreamState[ModelResponse]):
     def __init__(self) -> None:
         self._chat_completion_stream_state = ChatCompletionStreamState(
-            input_tools=openai.NOT_GIVEN,
-            response_format=openai.NOT_GIVEN,
+            input_tools=openai.omit,
+            response_format=openai.omit,
         )
         self.usage_ref: list[Usage] = []
 
@@ -78,7 +78,7 @@ class LitellmStreamState(StreamState[ModelResponse]):
             assert isinstance(item.choices[0], StreamingChoices)
             item.choices[0].delta.refusal = None  # type: ignore[attr-defined]
         self._chat_completion_stream_state.handle_chunk(item)  # type: ignore[arg-type]
-        usage = cast(litellm.Usage, item.usage)  # type: ignore[attr-defined,name-defined]
+        usage = cast("litellm.Usage", item.usage)  # type: ignore[attr-defined,name-defined]
         # Ignore usages with 0 tokens
         if usage and usage.prompt_tokens and usage.completion_tokens:
             assert not self.usage_ref
@@ -172,7 +172,7 @@ class LitellmChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         if output_types is None:
-            output_types = cast(Iterable[type[OutputT]], [] if functions else [str])
+            output_types = cast("Iterable[type[OutputT]]", [] if functions else [str])
 
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
@@ -213,7 +213,7 @@ class LitellmChatModel(ChatModel):
     ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
-            output_types = cast(Iterable[type[OutputT]], [] if functions else [str])
+            output_types = cast("Iterable[type[OutputT]]", [] if functions else [str])
 
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]

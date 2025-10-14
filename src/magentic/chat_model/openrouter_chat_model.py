@@ -121,7 +121,7 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         self._provider_sort = provider_sort
         self._max_price = max_price
 
-    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
+    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.Omit:
         return {"include_usage": True}
 
     @staticmethod
@@ -131,22 +131,22 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         output_types: Iterable[type],
     ) -> (
         Literal["none", "auto", "required"]
-        | openai.NotGiven
+        | openai.Omit
         | ChatCompletionNamedToolChoiceParam
     ):
         if contains_string_type(output_types):
-            return openai.NOT_GIVEN
+            return openai.omit
         if len(tool_schemas) == 1:
             return tool_schemas[0].as_tool_choice()
         return "required"
 
     def _get_parallel_tool_calls(
         self, *, tools_specified: bool, output_types: Iterable[type]
-    ) -> bool | openai.NotGiven:
+    ) -> bool | openai.Omit:
         if not tools_specified:
-            return openai.NOT_GIVEN
+            return openai.omit
         if contains_parallel_function_call_type(output_types):
-            return openai.NOT_GIVEN
+            return openai.omit
         return False
 
     def _get_extra_body(self) -> dict[str, Any] | None:
@@ -218,7 +218,7 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
             stream=True,
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
-            tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
+            tools=[schema.to_dict() for schema in tool_schemas] or openai.omit,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, output_types=output_types
             ),
@@ -267,7 +267,7 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
             stream=True,
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
-            tools=[schema.to_dict() for schema in tool_schemas] or openai.NOT_GIVEN,
+            tools=[schema.to_dict() for schema in tool_schemas] or openai.omit,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, output_types=output_types
             ),

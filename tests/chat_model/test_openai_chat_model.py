@@ -273,6 +273,18 @@ def test_openai_chat_model_complete_base_url():
 
 
 @pytest.mark.openai
+def test_openai_chat_model_complete_max_completion_tokens():
+    chat_model = OpenaiChatModel("gpt-4o", max_completion_tokens=10)
+    message = chat_model.complete(messages=[UserMessage("Say hello!")])
+    assert isinstance(message.content, str)
+
+
+def test_openai_chat_model_max_completion_tokens_property():
+    chat_model = OpenaiChatModel("gpt-4o", max_completion_tokens=100)
+    assert chat_model.max_completion_tokens == 100
+
+
+@pytest.mark.openai
 def test_openai_chat_model_complete_seed():
     chat_model = OpenaiChatModel("gpt-4o", seed=42)
     message1 = chat_model.complete(messages=[UserMessage("Say hello!")])
@@ -283,6 +295,13 @@ def test_openai_chat_model_complete_seed():
 @pytest.mark.openai
 def test_openai_chat_model_reasoning_effort():
     chat_model = OpenaiChatModel("o3-mini", reasoning_effort="low")
+    message = chat_model.complete(messages=[UserMessage("Sum 1 + 2")])
+    assert isinstance(message.content, str)
+
+
+@pytest.mark.openai
+def test_openai_chat_model_verbosity():
+    chat_model = OpenaiChatModel("gpt-5-nano", verbosity="low")
     message = chat_model.complete(messages=[UserMessage("Sum 1 + 2")])
     assert isinstance(message.content, str)
 
@@ -469,4 +488,4 @@ def test_openai_chat_model_azure_omits_stream_options(monkeypatch):
     monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "test")
     monkeypatch.setenv("OPENAI_API_VERSION", "test")
     chat_model = OpenaiChatModel("gpt-4o", api_type="azure")
-    assert chat_model._get_stream_options() == openai.NOT_GIVEN
+    assert chat_model._get_stream_options() == openai.omit

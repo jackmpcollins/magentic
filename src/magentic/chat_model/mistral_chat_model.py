@@ -27,28 +27,28 @@ class _MistralToolChoice(Enum):
 class _MistralOpenaiChatModel(OpenaiChatModel):
     """Modified OpenaiChatModel to be compatible with Mistral API."""
 
-    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.NotGiven:
-        return openai.NOT_GIVEN
+    def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.Omit:
+        return openai.omit
 
     @staticmethod
     def _get_tool_choice(  # type: ignore[override]
         *,
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
         output_types: Iterable[type],
-    ) -> str | openai.NotGiven:
+    ) -> str | openai.Omit:
         """Create the tool choice argument.
 
         Mistral API has different options than the OpenAI API for `tool_choice`.
         See https://docs.mistral.ai/capabilities/function_calling/#tool_choice
         """
         if contains_string_type(output_types):
-            return openai.NOT_GIVEN
+            return openai.omit
         return _MistralToolChoice.ANY.value
 
     def _get_parallel_tool_calls(
         self, *, tools_specified: bool, output_types: Iterable[type]
-    ) -> bool | openai.NotGiven:
-        return openai.NOT_GIVEN
+    ) -> bool | openai.Omit:
+        return openai.omit
 
 
 class MistralChatModel(ChatModel):

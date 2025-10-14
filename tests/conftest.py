@@ -44,6 +44,7 @@ def vcr_config():
     def before_record_response(response: dict[str, Any]) -> dict[str, Any]:
         filter_response_headers = [
             "openai-organization",
+            "openai-project",
             "Set-Cookie",
         ]
         for response_header in filter_response_headers:
@@ -56,6 +57,7 @@ def vcr_config():
             # openai
             "authorization",
             "openai-organization",
+            "openai-project",
             # anthropic
             "x-api-key",
             # litellm_openai
