@@ -86,6 +86,7 @@ ContentT = TypeVar("ContentT", covariant=True)
 class Message(BaseModel, Generic[ContentT], ABC):
     """A message sent to or from an LLM chat model."""
 
+    role: str
     content: ContentT
 
     def __init__(self, content: ContentT, **data: Any):
@@ -106,6 +107,8 @@ class _RawMessage(Message[ContentT], Generic[ContentT]):
     The content of this message should be a dict/object that matches the format
     expected by the LLM provider's Python client.
     """
+
+    role: Literal["_raw"] = "_raw"
 
     def __init__(self, content: ContentT, **data: Any):
         super().__init__(content=content, **data)
@@ -375,4 +378,10 @@ AnyMessage = Annotated[
     SystemMessage | UserMessage[Any] | AssistantMessage[Any] | ToolResultMessage[Any],
     Field(discriminator="role"),
 ]
-"""Union of all message types."""
+"""Union of all message types.
+
+This type can be used for (de)serialization of `Message` objects, or as a return type
+in prompt-functions. This allows you to create prompt-functions to do things like
+summarize a chat history into fewer messages, or even to create a set of messages that
+you can use in a chatprompt-function.
+"""
