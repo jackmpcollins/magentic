@@ -13,7 +13,7 @@ jobs:
     permissions:
       id-token: write # Required for trusted publishing to PyPI
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up Python
         uses: actions/setup-python@v6
       - name: Set up uv
