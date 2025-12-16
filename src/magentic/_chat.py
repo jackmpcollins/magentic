@@ -26,8 +26,7 @@ P = ParamSpec("P")
 
 
 class Chat:
-    """A chat with an LLM chat model.
-
+    """
     Examples
     --------
     >>> chat = Chat().add_user_message("Hello")
@@ -83,7 +82,9 @@ class Chat:
         return self._model or get_chat_model()
 
     def add_message(self, message: Message[Any]) -> Self:
-        """Add a message to the chat."""
+        """
+        Add a message to the chat.
+        """
         return type(self)(
             messages=[*self._messages, message],
             functions=self._functions,
@@ -92,7 +93,9 @@ class Chat:
         )
 
     def add_system_message(self, content: str) -> Self:
-        """Add a system message to the chat."""
+        """
+        Add a system message to the chat.
+        """
         return self.add_message(SystemMessage(content=content))
 
     def add_user_message(
@@ -107,7 +110,9 @@ class Chat:
 
     # TODO: Allow restricting functions and/or output types here
     def submit(self) -> Self:
-        """Request an LLM message to be added to the chat."""
+        """
+        Request an LLM message to be added to the chat.
+        """
         output_message: AssistantMessage[Any] = self.model.complete(
             messages=self._messages,
             functions=self._functions,
@@ -125,46 +130,38 @@ class Chat:
         return self.add_message(output_message)
 
     # TODO: Add optional error handling to this method, with param to toggle
-    def exec_function_call(self) -> Self:
-        """If the last message is a function call, execute it and add the result."""
-        if isinstance(self.last_message.content, FunctionCall):
-            function_call = self.last_message.content
-            result = function_call()
-            return self.add_message(
-                FunctionResultMessage(content=result, function_call=function_call)
-            )
-
-        if isinstance(self.last_message.content, ParallelFunctionCall):
-            parallel_function_call = self.last_message.content
+    def exec_function_call(self, function_calls) -> Self:
+        """If the last message is a function call, execute it and add the result."""      
+        if isinstance(function_calls, FunctionCall):
+            result = function_calls() 
+        elif isinstance(function_calls, ParallelFunctionCall):
             chat = self
             for result, function_call in zip(
-                parallel_function_call(), parallel_function_call, strict=True
-            ):
-                chat = chat.add_message(
-                    FunctionResultMessage(content=result, function_call=function_call)
-                )
+                        function_calls(), function_calls, strict=True
+                    ):
+                        chat = chat.add_message(
+                            FunctionResultMessage(content=result, function_call=function_call)
+                        )
             return chat
+        return self.add_message(
+            FunctionResultMessage(content=result, function_call=function_calls)
+        )
 
-        msg = "Last message is not a function call."
-        raise TypeError(msg)
-
-    async def aexec_function_call(self) -> Self:
+    async def aexec_function_call(self, function_calls) -> Self:
         """Async version of `exec_function_call`."""
-        if isinstance(self.last_message.content, FunctionCall):
-            function_call = self.last_message.content
-            result = function_call()
+        if isinstance(function_calls, FunctionCall):
+            result = function_calls()
             if inspect.isawaitable(result):
                 result = await result
             return self.add_message(
-                FunctionResultMessage(content=result, function_call=function_call)
+                FunctionResultMessage(content=result, function_call=function_calls)
             )
 
-        if isinstance(self.last_message.content, AsyncParallelFunctionCall):
-            async_parallel_function_call = self.last_message.content
+        if isinstance(function_calls, AsyncParallelFunctionCall):
             chat = self
             async for result, function_call in azip(
-                async_iter(await async_parallel_function_call()),
-                async_parallel_function_call,
+                async_iter(await function_calls()),
+                function_calls,
             ):
                 chat = chat.add_message(
                     FunctionResultMessage(content=result, function_call=function_call)
