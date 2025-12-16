@@ -86,7 +86,7 @@ def prompt_chain(
                             num_calls += len(function_calls)
                         if is_break:
                             break
-                    return chat.last_message.content, chat.messages
+                    return chat.last_message.content
 
             return cast(Callable[P, R], awrapper)
         prompt_function = ChatPromptFunction[P, R](
