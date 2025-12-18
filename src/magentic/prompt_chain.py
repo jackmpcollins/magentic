@@ -64,11 +64,11 @@ def prompt_chain(
             @wraps(func)
             async def awrapper(*args: P.args, **kwargs: P.kwargs) -> Any:
                 """
-                The changes are intended to ensure that the model can still correctly execute functions and respond again under certain circumstances. 
-                For example, if the model's response first returns a StreamedStr object, 
-                the model will not execute the function corresponding to FunctionCall and will directly return the text corresponding to the previous StreamedStr. 
-                Alternatively, if the model does indeed return a FunctionCall object on the first response, 
-                and then provides text descriptions, subsequent FunctionCall processing will also be skipped.
+                The changes are intended to ensure that the model can still correctly execute functions and respond again under certain circumstances For 
+                example, if the model's response first returns a StreamedStr object, the model will not execute the function corresponding to FunctionCall 
+                and will directly return the text corresponding to the previous StreamedStr. 
+                Alternatively, if the model does indeed return a FunctionCall object on the first response, and then 
+                provides text descriptions, subsequent FunctionCall processing will also be skipped.
                 
                 """
                 with logfire.span(
@@ -83,11 +83,12 @@ def prompt_chain(
                     ).asubmit()
                     num_calls = 0
                     while isinstance(chat.last_message.content, AsyncStreamedResponse):
-                        # Wrap all responses into a StreamedResponse (or asynchronous version) object, and mix StreamedStr and FunctionCall objects.
+                        # Wrap all responses into a StreamedResponse or asynchronous version object,
+                        # and mix StreamedStr and FunctionCall objects.
                         function_calls = []
                         is_break = True
-                        # Fully iterate through the StreamedResponse to ensure that all FunctionCall objects are accepted, 
-                        # and the caching mechanism guarantees that no information from the current StreamedResponse will be lost when adding information to the model.
+                        # Fully iterate through the StreamedResponse to ensure that all FunctionCall objects are accepted.
+                        # and the caching mechanism guarantees that no information from the current StreamedResponse will be lost when adding information to the model..
                         async for item in chat.last_message.content:
                             if isinstance(item, FunctionCall):
                                 function_calls.append(item)
@@ -99,7 +100,7 @@ def prompt_chain(
                             )
                             raise MaxFunctionCallsError(msg)
                         if len(function_calls) == 1:
-                            # Change aexec_function_call to accept a FunctionCall/ParallelFunctionCall object
+                            # # Change aexec_function_call in prompt_chain to accept a FunctionCall/ParallelFunctionCall object
                             chat = await chat.aexec_function_call(function_calls[0])
                             chat = await chat.asubmit()
                             num_calls += 1
@@ -114,7 +115,7 @@ def prompt_chain(
                     return chat.last_message.content
 
             return cast(Callable[P, R], awrapper)
-
+            
         prompt_function = ChatPromptFunction[P, R](
             name=func.__name__,
             parameters=list(func_signature.parameters.values()),

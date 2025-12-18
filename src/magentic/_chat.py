@@ -37,6 +37,7 @@ class Chat:
     >>> chat.messages
     [UserMessage('Hello'), AssistantMessage('Hello! How can I assist you today?')]
     """
+
     def __init__(
         self,
         messages: Sequence[Message[Any]] | None = None,
@@ -82,9 +83,7 @@ class Chat:
         return self._model or get_chat_model()
 
     def add_message(self, message: Message[Any]) -> Self:
-        """
-        Add a message to the chat.
-        """
+        """Add a system message to the chat."""
         return type(self)(
             messages=[*self._messages, message],
             functions=self._functions,
@@ -128,10 +127,11 @@ class Chat:
     # TODO: Add optional error handling to this method, with param to toggle
     def exec_function_call(self, function_calls) -> Self:
         """
-        If the last message is a function call, execute it and add the result.
+        
         The `function_calls` parameter here is the `FunctionCall` object for a specific response of the model.
-        If there are multiple `FunctionCall` objects, then instantiate a `ParallelFunctionCall` object and pass it in.
-        """      
+        If there are multiple `FunctionCall` objects, then instantiate a `ParallelFunctionCall` object and pass it in..
+        
+        """       
         if isinstance(function_calls, FunctionCall):
             result = function_calls() 
         elif isinstance(function_calls, ParallelFunctionCall):
