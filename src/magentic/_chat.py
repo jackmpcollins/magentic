@@ -26,7 +26,8 @@ P = ParamSpec("P")
 
 
 class Chat:
-    """
+    """A chat with an LLM chat model.
+
     Examples
     --------
     >>> chat = Chat().add_user_message("Hello")
@@ -36,7 +37,6 @@ class Chat:
     >>> chat.messages
     [UserMessage('Hello'), AssistantMessage('Hello! How can I assist you today?')]
     """
-
     def __init__(
         self,
         messages: Sequence[Message[Any]] | None = None,
@@ -93,9 +93,7 @@ class Chat:
         )
 
     def add_system_message(self, content: str) -> Self:
-        """
-        Add a system message to the chat.
-        """
+        """Add a system message to the chat."""
         return self.add_message(SystemMessage(content=content))
 
     def add_user_message(
@@ -110,9 +108,7 @@ class Chat:
 
     # TODO: Allow restricting functions and/or output types here
     def submit(self) -> Self:
-        """
-        Request an LLM message to be added to the chat.
-        """
+        """Request an LLM message to be added to the chat."""
         output_message: AssistantMessage[Any] = self.model.complete(
             messages=self._messages,
             functions=self._functions,
@@ -131,7 +127,11 @@ class Chat:
 
     # TODO: Add optional error handling to this method, with param to toggle
     def exec_function_call(self, function_calls) -> Self:
-        """If the last message is a function call, execute it and add the result."""      
+        """
+        If the last message is a function call, execute it and add the result.
+        The `function_calls` parameter here is the `FunctionCall` object for a specific response of the model.
+        If there are multiple `FunctionCall` objects, then instantiate a `ParallelFunctionCall` object and pass it in.
+        """      
         if isinstance(function_calls, FunctionCall):
             result = function_calls() 
         elif isinstance(function_calls, ParallelFunctionCall):
