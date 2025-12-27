@@ -1,9 +1,11 @@
 import inspect
 from collections.abc import Callable, Iterable, Sequence
+from operator import mul
 from typing import Any, ParamSpec
 
 from typing_extensions import Self, deprecated
 
+from magentic import AsyncStreamedResponse
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import (
@@ -20,9 +22,15 @@ from magentic.function_call import (
     ParallelFunctionCall,
 )
 from magentic.prompt_function import BasePromptFunction
+from magentic._streamed_response import StreamedResponse
 from magentic.streaming import async_iter, azip
 
 P = ParamSpec("P")
+
+
+async def list_to_async_iter(list):
+    for item in list:
+        yield item
 
 
 class Chat:
@@ -37,7 +45,6 @@ class Chat:
     >>> chat.messages
     [UserMessage('Hello'), AssistantMessage('Hello! How can I assist you today?')]
     """
-
     def __init__(
         self,
         messages: Sequence[Message[Any]] | None = None,
@@ -83,7 +90,9 @@ class Chat:
         return self._model or get_chat_model()
 
     def add_message(self, message: Message[Any]) -> Self:
-        """Add a system message to the chat."""
+        """
+        Add a message to the chat.
+        """
         return type(self)(
             messages=[*self._messages, message],
             functions=self._functions,
@@ -125,46 +134,65 @@ class Chat:
         return self.add_message(output_message)
 
     # TODO: Add optional error handling to this method, with param to toggle
-    def exec_function_call(self, function_calls) -> Self:
-        """
-        
-        The `function_calls` parameter here is the `FunctionCall` object for a specific response of the model.
-        If there are multiple `FunctionCall` objects, then instantiate a `ParallelFunctionCall` object and pass it in..
-        
-        """       
-        if isinstance(function_calls, FunctionCall):
-            result = function_calls() 
-        elif isinstance(function_calls, ParallelFunctionCall):
-            chat = self
-            for result, function_call in zip(
-                        function_calls(), function_calls, strict=True
-                    ):
-                        chat = chat.add_message(
-                            FunctionResultMessage(content=result, function_call=function_call)
-                        )
-            return chat
-        return self.add_message(
-            FunctionResultMessage(content=result, function_call=function_calls)
-        )
+    def exec_function_call(self) -> Self:
+        """If the last message is a function call, execute it and add the result."""      
+        if isinstance(self.last_message.content, StreamedResponse):
+            function_calls = []
+            for item in self.last_message.content:
+                if isinstance(item, FunctionCall):
+                    function_calls.append(item)
+            if len(function_calls) == 1:
+                function_call = function_calls[0]
+                result = function_call()
+                return self.add_message(
+                FunctionResultMessage(content=result, function_call=function_call)
+            )
+            elif len(function_calls) > 1:
+                multi_functions = ParallelFunctionCall(function_calls)
+                chat = self
+                for result, function_call in zip(
+                multi_functions(), multi_functions, strict=True
+            ):
+                    chat = chat.add_message(
+                    FunctionResultMessage(content=result, function_call=function_call)
+                )
+                return chat
+        msg = "Last message is not a function call."
+        raise TypeError(msg)
 
-    async def aexec_function_call(self, function_calls) -> Self:
+    async def aexec_function_call(self) -> Self:
         """Async version of `exec_function_call`."""
-        if isinstance(function_calls, FunctionCall):
+        if isinstance(self.last_message.content, AsyncStreamedResponse):
+            function_calls = []
+            async for item in chat.last_message.content:
+                if isinstance(item, FunctionCall):
+                    function_calls.append(item)
+            if len(function_calls) == 1:
+                function_call = function_calls[0]
+                result = function_call()
+                if inspect.isawaitable(result):
+                    result = await result
+                return self.add_message(
+                FunctionResultMessage(content=result, function_call=function_call)
+                )
+             
             result = function_calls()
             if inspect.isawaitable(result):
                 result = await result
-            return self.add_message(
+                return self.add_message(
                 FunctionResultMessage(content=result, function_call=function_calls)
             )
 
-        if isinstance(function_calls, AsyncParallelFunctionCall):
-            chat = self
-            async for result, function_call in azip(
+            elif len(function_calls) > 1:
+                function_calls = list_to_async_iter(function_calls)
+                function_calls = AsyncParallelFunctionCall(function_calls)
+                chat = self
+                async for result, function_call in azip(
                 async_iter(await function_calls()),
                 function_calls,
             ):
-                chat = chat.add_message(
-                    FunctionResultMessage(content=result, function_call=function_call)
+                    chat = chat.add_message(
+                        FunctionResultMessage(content=result, function_call=function_call)
                 )
             return chat
 
