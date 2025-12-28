@@ -37,7 +37,7 @@ def prompt_chain(
             async_prompt_function = AsyncChatPromptFunction[P, Any](
                 name=func.__name__,
                 parameters=list(func_signature.parameters.values()),
-                return_type=func_signature.return_annotation | FunctionCall,  # type: ignore[arg-type,unused-ignore]
+                return_type=func_signature.return_annotation | AsyncStreamedResponse,  # type: ignore[arg-type,unused-ignore]
                 messages=messages,
                 functions=functions,
                 model=model,
@@ -78,7 +78,7 @@ def prompt_chain(
         prompt_function = ChatPromptFunction[P, R](
             name=func.__name__,
             parameters=list(func_signature.parameters.values()),
-            return_type=func_signature.return_annotation | FunctionCall,  # type: ignore[arg-type,unused-ignore]
+            return_type=func_signature.return_annotation | StreamedResponse,  # type: ignore[arg-type,unused-ignore]
             messages=messages,
             functions=functions,
             model=model,
