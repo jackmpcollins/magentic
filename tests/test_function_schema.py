@@ -919,3 +919,102 @@ def test_function_call_function_schema_serialize_invalid_args(
     """Invalid function arguments should serialize so LLM errors can be resubmitted."""
     serialized_args = FunctionCallFunctionSchema(function).serialize_args(args)
     assert json.loads(serialized_args) == json.loads(expected_args_str)
+
+
+def func_with_google_docstring(a: int, b: str) -> int:
+    """Calculate something.
+
+    This is a longer description that explains
+    what the function does.
+
+    Args:
+        a: The first number to process
+        b: The second parameter as a string
+
+    Returns:
+        The result of the calculation
+    """
+    return a
+
+
+def func_with_numpy_docstring(x: int, y: str) -> int:
+    """Calculate something.
+
+    Parameters
+    ----------
+    x : int
+        The first number to process
+    y : str
+        The second parameter as a string
+
+    Returns
+    -------
+    int
+        The result of the calculation
+    """
+    return x
+
+
+def func_with_field_override(
+    a: Annotated[int, Field(description="Field description takes priority")],
+    b: str,
+) -> int:
+    """Function with Field override.
+
+    Args:
+        a: This should be ignored because Field has description
+        b: This description should be used
+    """
+    return a
+
+
+def test_function_call_schema_google_docstring_params():
+    """Test that Google-style docstring parameter descriptions are parsed."""
+    schema = FunctionCallFunctionSchema(func_with_google_docstring)
+    params = schema.parameters
+
+    assert params["properties"]["a"].get("description") == "The first number to process"
+    assert (
+        params["properties"]["b"].get("description")
+        == "The second parameter as a string"
+    )
+
+
+def test_function_call_schema_numpy_docstring_params():
+    """Test that NumPy-style docstring parameter descriptions are parsed."""
+    schema = FunctionCallFunctionSchema(func_with_numpy_docstring)
+    params = schema.parameters
+
+    assert params["properties"]["x"].get("description") == "The first number to process"
+    assert (
+        params["properties"]["y"].get("description")
+        == "The second parameter as a string"
+    )
+
+
+def test_function_call_schema_field_description_takes_priority():
+    """Test that Field description takes priority over docstring."""
+    schema = FunctionCallFunctionSchema(func_with_field_override)
+    params = schema.parameters
+
+    assert (
+        params["properties"]["a"].get("description")
+        == "Field description takes priority"
+    )
+    assert (
+        params["properties"]["b"].get("description")
+        == "This description should be used"
+    )
+
+
+def test_function_call_schema_description_excludes_params():
+    """Test that function description excludes param section from docstring."""
+    schema = FunctionCallFunctionSchema(func_with_google_docstring)
+    description = schema.description
+
+    assert description is not None
+    assert "Calculate something" in description
+    assert "This is a longer description" in description
+    assert "Returns:\n    The result of the calculation" in description
+    assert "Args:" not in description
+    assert "The first number to process" not in description

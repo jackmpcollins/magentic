@@ -5,8 +5,10 @@ from collections.abc import AsyncIterable, Callable, Iterable
 from functools import singledispatch
 from typing import Any, Generic, TypeVar, cast, get_args, get_origin
 
+from docstring_parser import parse as parse_docstring
 from openai.types.shared_params import FunctionDefinition
 from pydantic import BaseModel, TypeAdapter, create_model
+from pydantic.fields import FieldInfo
 
 from magentic._pydantic import ConfigDict, get_pydantic_config, json_schema
 from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
@@ -345,9 +347,34 @@ class BaseModelFunctionSchema(FunctionSchema[BaseModelT], Generic[BaseModelT]):
         return value.model_dump_json()
 
 
+def _get_param_descriptions(func: Callable[..., Any]) -> dict[str, str]:
+    """Extract parameter descriptions from function docstring."""
+    docstring = inspect.getdoc(func)
+    if not docstring:
+        return {}
+
+    parsed = parse_docstring(docstring)
+    return {
+        param.arg_name: param.description
+        for param in parsed.params
+        if param.description
+    }
+
+
+def _has_field_description(annotation: Any) -> bool:
+    """Check if the annotation already has a Field with description."""
+    if get_origin(annotation) is not typing.Annotated:
+        return False
+    for arg in get_args(annotation):
+        if isinstance(arg, FieldInfo) and arg.description is not None:
+            return True
+    return False
+
+
 def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
     """Create a Pydantic model from a function signature."""
     # https://github.com/pydantic/pydantic/issues/3585#issuecomment-1002745763
+    param_descriptions = _get_param_descriptions(func)
     fields: dict[str, Any] = {}
     for param in inspect.signature(func).parameters.values():
         # *args
@@ -372,11 +399,43 @@ def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
             )
             continue
 
-        fields[param.name] = (
-            (param.annotation if param.annotation != inspect._empty else Any),
-            (param.default if param.default != inspect._empty else ...),
-        )
+        annotation = param.annotation if param.annotation != inspect._empty else Any
+        default = param.default if param.default != inspect._empty else ...
+
+        # Add description from docstring if not already specified via Field
+        if param.name in param_descriptions and not _has_field_description(annotation):
+            from pydantic import Field
+
+            fields[param.name] = (
+                annotation,
+                Field(default=default, description=param_descriptions[param.name]),
+            )
+        else:
+            fields[param.name] = (annotation, default)
+
     return create_model("FuncModel", __config__=get_pydantic_config(func), **fields)
+
+
+def _get_function_description(func: Callable[..., Any]) -> str | None:
+    """Get function description from docstring, excluding parameter descriptions."""
+    docstring = inspect.getdoc(func)
+    if not docstring:
+        return None
+
+    parsed = parse_docstring(docstring)
+
+    # Build description from short and long description only
+    parts = []
+    if parsed.short_description:
+        parts.append(parsed.short_description)
+    if parsed.long_description:
+        parts.append(parsed.long_description)
+
+    # Include returns section if present
+    if parsed.returns and parsed.returns.description:
+        parts.append(f"Returns:\n    {parsed.returns.description}")
+
+    return "\n\n".join(parts) if parts else None
 
 
 class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
@@ -392,7 +451,7 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
 
     @property
     def description(self) -> str | None:
-        return inspect.getdoc(self._func)
+        return _get_function_description(self._func)
 
     @property
     def parameters(self) -> dict[str, Any]:
