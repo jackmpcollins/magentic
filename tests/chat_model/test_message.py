@@ -283,3 +283,62 @@ def test_any_message():
         AssistantMessage("Hello"),
         ToolResultMessage(3, "unique_id"),
     ]
+
+
+def test_system_message_dedent():
+    """Test that SystemMessage dedents text content by default."""
+    message = SystemMessage("""\
+        A very long prompt
+        that is indented to be more readable.""")
+    assert (
+        message.content == "A very long prompt\nthat is indented to be more readable."
+    )
+
+
+def test_system_message_dedent_disabled():
+    """Test that SystemMessage preserves indentation when dedent=False."""
+    content = """\
+        A very long prompt
+        that is indented to be more readable."""
+    message = SystemMessage(content, dedent=False)
+    assert message.content == content
+
+
+def test_user_message_dedent():
+    """Test that UserMessage dedents text content by default."""
+    message = UserMessage("""\
+        A very long prompt
+        that is indented to be more readable.""")
+    assert (
+        message.content == "A very long prompt\nthat is indented to be more readable."
+    )
+
+
+def test_user_message_dedent_disabled():
+    """Test that UserMessage preserves indentation when dedent=False."""
+    content = """\
+        A very long prompt
+        that is indented to be more readable."""
+    message = UserMessage(content, dedent=False)
+    assert message.content == content
+
+
+def test_user_message_dedent_non_string_content():
+    """Test that UserMessage with non-string content is not affected by dedent."""
+    image_url = ImageUrl("https://example.com/image.png")
+    message = UserMessage([image_url])
+    assert message.content == [image_url]
+
+
+def test_system_message_format_preserves_no_dedent():
+    """Test that format() on SystemMessage does not re-dedent content."""
+    message = SystemMessage("Hello {x}")
+    formatted = message.format(x="world")
+    assert formatted.content == "Hello world"
+
+
+def test_user_message_format_preserves_no_dedent():
+    """Test that format() on UserMessage does not re-dedent content."""
+    message = UserMessage("Hello {x}")
+    formatted = message.format(x="world")
+    assert formatted.content == "Hello world"
