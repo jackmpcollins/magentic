@@ -626,6 +626,15 @@ wheels = [
 ]
 
 [[package]]
+name = "docstring-parser"
+version = "0.17.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/b2/9d/c3b43da9515bd270df0f80548d9944e389870713cc1fe2b8fb35fe2bcefd/docstring_parser-0.17.0.tar.gz", hash = "sha256:583de4a309722b3315439bb31d64ba3eebada841f2e2cee23b99df001434c912", size = 27442, upload-time = "2025-07-21T07:35:01.868Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/55/e2/2537ebcff11c1ee1ff17d8d0b6f4db75873e3b0fb32c2d4a2ee31ecb310a/docstring_parser-0.17.0-py3-none-any.whl", hash = "sha256:cf2569abd23dce8099b300f9b4fa8191e9582dda731fd533daf54c4551658708", size = 36896, upload-time = "2025-07-21T07:35:00.684Z" },
+]
+
+[[package]]
 name = "exceptiongroup"
 version = "1.2.2"
 source = { registry = "https://pypi.org/simple" }
@@ -1393,6 +1402,7 @@ name = "magentic"
 version = "0.41.1"
 source = { editable = "." }
 dependencies = [
+    { name = "docstring-parser" },
     { name = "filetype" },
     { name = "logfire-api" },
     { name = "openai" },
@@ -1444,6 +1454,7 @@ examples = [
 [package.metadata]
 requires-dist = [
     { name = "anthropic", marker = "extra == 'anthropic'", specifier = ">=0.41.0" },
+    { name = "docstring-parser", specifier = ">=0.15" },
     { name = "filetype", specifier = ">=1.2.0" },
     { name = "litellm", marker = "extra == 'litellm'", specifier = ">=1.41.12" },
     { name = "logfire-api", specifier = ">=0.1.0" },
