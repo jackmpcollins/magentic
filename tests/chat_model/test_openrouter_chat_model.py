@@ -156,7 +156,7 @@ def test_openrouter_chat_model_complete_raises_tool_schema_parse_error():
 
 @pytest.mark.openrouter
 def test_openrouter_chat_model_complete_image_bytes(image_bytes_jpg):
-    chat_model = OpenRouterChatModel("opengvlab/internvl3-14b:free")
+    chat_model = OpenRouterChatModel("qwen/qwen3-vl-8b-instruct")
     message = chat_model.complete(
         messages=[
             UserMessage(
