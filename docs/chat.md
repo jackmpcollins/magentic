@@ -28,6 +28,28 @@ print(chat.last_message.content)
 
 Note that all methods of `Chat` return a new `Chat` instance with the updated messages. This allows branching the conversation and keeping track of multiple conversation paths.
 
+## Forking
+
+Since `Chat` methods return new instances, you can easily fork a conversation to explore multiple paths in parallel. This is useful for comparing different responses or running multiple queries from the same starting point.
+
+```python
+import asyncio
+
+from magentic import Chat, OpenaiChatModel, UserMessage
+
+chat = Chat(
+    messages=[UserMessage("Say hello")],
+    model=OpenaiChatModel("gpt-4o"),
+)
+
+# Fork the chat into multiple branches and run them concurrently
+chats = await asyncio.gather(
+    *(chat.add_user_message(f"{n} times").asubmit() for n in range(3))
+)
+print([chat.last_message.content for chat in chats])
+# ['Hello!', 'Hello!\nHello!', 'Hello!\nHello!\nHello!']
+```
+
 The following methods are available to manually add messages to the chat by providing just the content of the message:
 
 - `add_system_message`: Adds a system message to the chat.
