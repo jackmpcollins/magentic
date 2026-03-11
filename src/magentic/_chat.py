@@ -1,9 +1,11 @@
 import inspect
 from collections.abc import Callable, Iterable, Sequence
+from operator import mul
 from typing import Any, ParamSpec
 
 from typing_extensions import Self, deprecated
 
+from magentic._streamed_response import AsyncStreamedResponse
 from magentic.backend import get_chat_model
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import (
@@ -20,10 +22,10 @@ from magentic.function_call import (
     ParallelFunctionCall,
 )
 from magentic.prompt_function import BasePromptFunction
+from magentic._streamed_response import StreamedResponse
 from magentic.streaming import async_iter, azip
 
 P = ParamSpec("P")
-
 
 class Chat:
     """A chat with an LLM chat model.
@@ -37,7 +39,6 @@ class Chat:
     >>> chat.messages
     [UserMessage('Hello'), AssistantMessage('Hello! How can I assist you today?')]
     """
-
     def __init__(
         self,
         messages: Sequence[Message[Any]] | None = None,
@@ -126,7 +127,22 @@ class Chat:
 
     # TODO: Add optional error handling to this method, with param to toggle
     def exec_function_call(self) -> Self:
-        """If the last message is a function call, execute it and add the result."""
+        """If the last message is a function call, execute it and add the result."""      
+        if isinstance(self.last_message.content, StreamedResponse):
+            parallel_function_call = ParallelFunctionCall(
+                    item
+                    for item in self.last_message.content
+                    if isinstance(item, FunctionCall)
+                )
+            chat = self
+            for result, function_call in zip(
+                parallel_function_call(), parallel_function_call, strict=True
+            ):
+                    chat = chat.add_message(
+                    FunctionResultMessage(content=result, function_call=function_call)
+                )
+            return chat
+
         if isinstance(self.last_message.content, FunctionCall):
             function_call = self.last_message.content
             result = function_call()
@@ -150,6 +166,22 @@ class Chat:
 
     async def aexec_function_call(self) -> Self:
         """Async version of `exec_function_call`."""
+        if isinstance(self.last_message.content, AsyncStreamedResponse):
+            parallel_function_call = AsyncParallelFunctionCall(
+                    item
+                    async for item in self.last_message.content
+                    if isinstance(item, FunctionCall)
+                )
+            chat = self
+            async for result, function_call in azip(
+                async_iter(await parallel_function_call()),
+                parallel_function_call,
+            ):
+                chat = chat.add_message(
+                    FunctionResultMessage(content=result, function_call=function_call)
+                )
+            return chat
+
         if isinstance(self.last_message.content, FunctionCall):
             function_call = self.last_message.content
             result = function_call()
@@ -170,6 +202,6 @@ class Chat:
                     FunctionResultMessage(content=result, function_call=function_call)
                 )
             return chat
-
+            
         msg = "Last message is not a function call."
         raise TypeError(msg)

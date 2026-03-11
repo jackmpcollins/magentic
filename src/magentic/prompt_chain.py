@@ -3,11 +3,12 @@ from collections.abc import Callable, Sequence
 from functools import wraps
 from typing import Any, ParamSpec, TypeVar, cast
 
+from magentic._streamed_response import StreamedResponse, AsyncStreamedResponse
 from magentic._chat import Chat
 from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import Message, UserMessage
 from magentic.chatprompt import AsyncChatPromptFunction, ChatPromptFunction
-from magentic.function_call import FunctionCall
+from magentic.function_call import FunctionCall, AsyncParallelFunctionCall
 from magentic.logger import logfire
 
 P = ParamSpec("P")
@@ -48,7 +49,7 @@ def prompt_chain(
                 name=func.__name__,
                 parameters=list(func_signature.parameters.values()),
                 # TODO: Also allow ParallelFunctionCall. Support this more neatly
-                return_type=func_signature.return_annotation | FunctionCall,  # type: ignore[arg-type,unused-ignore]
+                return_type=func_signature.return_annotation | AsyncStreamedResponse,  # type: ignore[arg-type,unused-ignore]
                 messages=messages,
                 functions=functions,
                 model=model,
@@ -67,7 +68,13 @@ def prompt_chain(
                         model=async_prompt_function._model,  # Keep `None` value if unset
                     ).asubmit()
                     num_calls = 0
-                    while isinstance(chat.last_message.content, FunctionCall):
+                    while isinstance(chat.last_message.content, AsyncStreamedResponse):
+                        is_break = True
+                        async for item in chat.last_message.content:
+                            if isinstance(item, FunctionCall):
+                                is_break = False
+                        if is_break:
+                            break
                         if max_calls is not None and num_calls >= max_calls:
                             msg = (
                                 f"Function {func.__name__} reached limit of"
@@ -80,12 +87,11 @@ def prompt_chain(
                     return chat.last_message.content
 
             return cast(Callable[P, R], awrapper)
-
+            
         prompt_function = ChatPromptFunction[P, R](
             name=func.__name__,
             parameters=list(func_signature.parameters.values()),
-            # TODO: Also allow ParallelFunctionCall. Support this more neatly
-            return_type=func_signature.return_annotation | FunctionCall,  # type: ignore[arg-type,unused-ignore]
+            return_type=func_signature.return_annotation | StreamedResponse,  # type: ignore[arg-type,unused-ignore]
             messages=messages,
             functions=functions,
             model=model,
@@ -104,7 +110,13 @@ def prompt_chain(
                     model=prompt_function._model,  # Keep `None` value if unset
                 ).submit()
                 num_calls = 0
-                while isinstance(chat.last_message.content, FunctionCall):
+                while isinstance(chat.last_message.content, StreamedResponse):
+                    is_break = True
+                    for item in chat.last_message.content:
+                        if isinstance(item, FunctionCall):
+                            is_break = False
+                    if is_break:
+                        break
                     if max_calls is not None and num_calls >= max_calls:
                         msg = (
                             f"Function {func.__name__} reached limit of"
