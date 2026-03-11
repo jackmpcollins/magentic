@@ -41,7 +41,8 @@ class OpenRouterStreamState(OpenaiStreamState):
     def update(self, item: ChatCompletionChunk) -> None:
         super().update(item)
         if (
-            hasattr(item.choices[0].delta, "reasoning")
+            item.choices
+            and hasattr(item.choices[0].delta, "reasoning")
             and item.choices[0].delta.reasoning
         ):
             self.reasoning += item.choices[0].delta.reasoning
