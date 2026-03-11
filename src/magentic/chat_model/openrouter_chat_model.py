@@ -41,7 +41,8 @@ class OpenRouterStreamState(OpenaiStreamState):
     def update(self, item: ChatCompletionChunk) -> None:
         super().update(item)
         if (
-            hasattr(item.choices[0].delta, "reasoning")
+            item.choices
+            and hasattr(item.choices[0].delta, "reasoning")
             and item.choices[0].delta.reasoning
         ):
             self.reasoning += item.choices[0].delta.reasoning
@@ -88,7 +89,6 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         reasoning_effort: Literal["low", "medium", "high"] | None = None,
         reasoning_exclude: bool | None = None,
         # Provider options
-        require_parameters: bool | None = None,
         provider_order: list[str] | None = None,
         allow_fallbacks: bool | None = None,
         data_collection: Literal["allow", "deny"] | None = None,
@@ -111,7 +111,6 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         self._reasoning_effort = reasoning_effort
         self._reasoning_exclude = reasoning_exclude
         # Provider options
-        self._require_parameters = require_parameters
         self._provider_order = provider_order
         self._allow_fallbacks = allow_fallbacks
         self._data_collection = data_collection
@@ -159,8 +158,6 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
 
         # Build provider object
         provider: dict[str, Any] = {}
-        if self._require_parameters:
-            provider["require_parameters"] = True
         if self._provider_order:
             provider["order"] = self._provider_order
         if self._allow_fallbacks:
@@ -308,7 +305,6 @@ class OpenRouterChatModel(ChatModel):
         reasoning_effort: Literal["low", "medium", "high"] | None = None,
         reasoning_exclude: bool | None = None,
         # Provider options
-        require_parameters: bool | None = None,
         provider_order: list[str] | None = None,
         allow_fallbacks: bool | None = None,
         data_collection: Literal["allow", "deny"] | None = None,
@@ -332,7 +328,6 @@ class OpenRouterChatModel(ChatModel):
             models=models,
             reasoning_effort=reasoning_effort,
             reasoning_exclude=reasoning_exclude,
-            require_parameters=require_parameters,
             provider_order=provider_order,
             allow_fallbacks=allow_fallbacks,
             data_collection=data_collection,
@@ -378,10 +373,6 @@ class OpenRouterChatModel(ChatModel):
     @property
     def models(self) -> list[str] | None:
         return self._openrouter_openai_chat_model._models
-
-    @property
-    def require_parameters(self) -> bool | None:
-        return self._openrouter_openai_chat_model._require_parameters
 
     @property
     def reasoning(self) -> dict[str, Any] | None:

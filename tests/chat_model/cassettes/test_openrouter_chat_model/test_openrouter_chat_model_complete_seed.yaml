@@ -16,7 +16,7 @@ interactions:
       host:
       - openrouter.ai
       user-agent:
-      - OpenAI/Python 1.59.3
+      - OpenAI/Python 1.109.1
       x-stainless-arch:
       - arm64
       x-stainless-async:
@@ -26,7 +26,9 @@ interactions:
       x-stainless-os:
       - MacOS
       x-stainless-package-version:
-      - 1.59.3
+      - 1.109.1
+      x-stainless-read-timeout:
+      - '600'
       x-stainless-retry-count:
       - '0'
       x-stainless-runtime:
@@ -37,45 +39,36 @@ interactions:
     uri: https://openrouter.ai/api/v1/chat/completions
   response:
     body:
-      string: ": OPENROUTER PROCESSING\n\ndata: {\"id\":\"gen-1749325068-FBMjlpUjx4WRSMVglw0l\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325068,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325068-FBMjlpUjx4WRSMVglw0l\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325068,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Hello\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325068-FBMjlpUjx4WRSMVglw0l\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325068,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"!
-        \U0001F60A How\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325068-FBMjlpUjx4WRSMVglw0l\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325068,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        can I\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325068-FBMjlpUjx4WRSMVglw0l\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325068,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        assist you\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325068-FBMjlpUjx4WRSMVglw0l\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325068,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        today?\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325068-FBMjlpUjx4WRSMVglw0l\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325068,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\",\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325068-FBMjlpUjx4WRSMVglw0l\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325068,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"usage\":{\"prompt_tokens\":6,\"completion_tokens\":12,\"total_tokens\":18,\"cost\":0.00001236,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}\n\ndata:
+      string: ": OPENROUTER PROCESSING\n\ndata: {\"id\":\"gen-1773221828-FMDFLUcNIKCGZnT6rAj7\",\"object\":\"chat.completion.chunk\",\"created\":1773221828,\"model\":\"deepseek/deepseek-chat-v3-0324\",\"provider\":\"SambaNova\",\"system_fingerprint\":\"fastcoe\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hello\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}\n\ndata:
+        {\"id\":\"gen-1773221828-FMDFLUcNIKCGZnT6rAj7\",\"object\":\"chat.completion.chunk\",\"created\":1773221828,\"model\":\"deepseek/deepseek-chat-v3-0324\",\"provider\":\"SambaNova\",\"system_fingerprint\":\"fastcoe\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"!
+        \U0001F44B How can I assist you today? \U0001F60A\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}\n\ndata:
+        {\"id\":\"gen-1773221828-FMDFLUcNIKCGZnT6rAj7\",\"object\":\"chat.completion.chunk\",\"created\":1773221828,\"model\":\"deepseek/deepseek-chat-v3-0324\",\"provider\":\"SambaNova\",\"system_fingerprint\":\"fastcoe\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\"}]}\n\ndata:
+        {\"id\":\"gen-1773221828-FMDFLUcNIKCGZnT6rAj7\",\"object\":\"chat.completion.chunk\",\"created\":1773221828,\"model\":\"deepseek/deepseek-chat-v3-0324\",\"provider\":\"SambaNova\",\"system_fingerprint\":\"fastcoe\",\"choices\":[],\"usage\":{\"prompt_tokens\":6,\"completion_tokens\":13,\"total_tokens\":19,\"cost\":0.0000765,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.0000765,\"upstream_inference_prompt_cost\":0.000018,\"upstream_inference_completions_cost\":0.0000585},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}\n\ndata:
         [DONE]\n\n"
     headers:
       Access-Control-Allow-Origin:
       - '*'
+      CF-RAY:
+      - 9da9942cd82866f3-AMS
       Cache-Control:
       - no-cache
-      Cf-Ray:
-      - 94c29b2d0bc4fe97-AMS
       Connection:
       - keep-alive
       Content-Type:
       - text/event-stream
       Date:
-      - Sat, 07 Jun 2025 19:37:48 GMT
+      - Wed, 11 Mar 2026 09:37:09 GMT
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
       Server:
       - cloudflare
       Transfer-Encoding:
       - chunked
-      Vary:
-      - Accept-Encoding
-      X-Clerk-Auth-Message:
-      - Invalid JWT form. A JWT consists of three parts separated by dots. (reason=token-invalid,
-        token-carrier=header)
-      X-Clerk-Auth-Reason:
-      - token-invalid
-      X-Clerk-Auth-Status:
-      - signed-out
+      X-Content-Type-Options:
+      - nosniff
     status:
       code: 200
       message: OK
@@ -96,7 +89,7 @@ interactions:
       host:
       - openrouter.ai
       user-agent:
-      - OpenAI/Python 1.59.3
+      - OpenAI/Python 1.109.1
       x-stainless-arch:
       - arm64
       x-stainless-async:
@@ -106,7 +99,9 @@ interactions:
       x-stainless-os:
       - MacOS
       x-stainless-package-version:
-      - 1.59.3
+      - 1.109.1
+      x-stainless-read-timeout:
+      - '600'
       x-stainless-retry-count:
       - '0'
       x-stainless-runtime:
@@ -117,46 +112,36 @@ interactions:
     uri: https://openrouter.ai/api/v1/chat/completions
   response:
     body:
-      string: ": OPENROUTER PROCESSING\n\n: OPENROUTER PROCESSING\n\ndata: {\"id\":\"gen-1749325069-uZVG9phZzTgt6CfQhcQO\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325069,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325069-uZVG9phZzTgt6CfQhcQO\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325069,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"Hello\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325069-uZVG9phZzTgt6CfQhcQO\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325069,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"!
-        \U0001F44B How\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325069-uZVG9phZzTgt6CfQhcQO\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325069,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        can\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325069-uZVG9phZzTgt6CfQhcQO\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325069,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        I assist\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325069-uZVG9phZzTgt6CfQhcQO\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325069,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"
-        you today\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325069-uZVG9phZzTgt6CfQhcQO\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325069,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"?
-        \U0001F60A\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\",\"logprobs\":null}]}\n\ndata:
-        {\"id\":\"gen-1749325069-uZVG9phZzTgt6CfQhcQO\",\"provider\":\"DeepInfra\",\"model\":\"deepseek/deepseek-chat-v3-0324\",\"object\":\"chat.completion.chunk\",\"created\":1749325069,\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\"},\"finish_reason\":null,\"native_finish_reason\":null,\"logprobs\":null}],\"usage\":{\"prompt_tokens\":6,\"completion_tokens\":14,\"total_tokens\":20,\"cost\":0.00001412,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0}}}\n\ndata:
+      string: ": OPENROUTER PROCESSING\n\n: OPENROUTER PROCESSING\n\ndata: {\"id\":\"gen-1773221829-cJ84Hp2R2kXG6wXtQbhZ\",\"object\":\"chat.completion.chunk\",\"created\":1773221829,\"model\":\"deepseek/deepseek-chat-v3-0324\",\"provider\":\"SambaNova\",\"system_fingerprint\":\"fastcoe\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hello\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}\n\ndata:
+        {\"id\":\"gen-1773221829-cJ84Hp2R2kXG6wXtQbhZ\",\"object\":\"chat.completion.chunk\",\"created\":1773221829,\"model\":\"deepseek/deepseek-chat-v3-0324\",\"provider\":\"SambaNova\",\"system_fingerprint\":\"fastcoe\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"!
+        \U0001F60A How can I help you today?\",\"role\":\"assistant\"},\"finish_reason\":null,\"native_finish_reason\":null}]}\n\ndata:
+        {\"id\":\"gen-1773221829-cJ84Hp2R2kXG6wXtQbhZ\",\"object\":\"chat.completion.chunk\",\"created\":1773221829,\"model\":\"deepseek/deepseek-chat-v3-0324\",\"provider\":\"SambaNova\",\"system_fingerprint\":\"fastcoe\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"\",\"role\":\"assistant\"},\"finish_reason\":\"stop\",\"native_finish_reason\":\"stop\"}]}\n\ndata:
+        {\"id\":\"gen-1773221829-cJ84Hp2R2kXG6wXtQbhZ\",\"object\":\"chat.completion.chunk\",\"created\":1773221829,\"model\":\"deepseek/deepseek-chat-v3-0324\",\"provider\":\"SambaNova\",\"system_fingerprint\":\"fastcoe\",\"choices\":[],\"usage\":{\"prompt_tokens\":6,\"completion_tokens\":11,\"total_tokens\":17,\"cost\":0.0000675,\"is_byok\":false,\"prompt_tokens_details\":{\"cached_tokens\":0,\"cache_write_tokens\":0,\"audio_tokens\":0,\"video_tokens\":0},\"cost_details\":{\"upstream_inference_cost\":0.0000675,\"upstream_inference_prompt_cost\":0.000018,\"upstream_inference_completions_cost\":0.0000495},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"image_tokens\":0,\"audio_tokens\":0}}}\n\ndata:
         [DONE]\n\n"
     headers:
       Access-Control-Allow-Origin:
       - '*'
+      CF-RAY:
+      - 9da994334fc366f3-AMS
       Cache-Control:
       - no-cache
-      Cf-Ray:
-      - 94c29b32f8aefe97-AMS
       Connection:
       - keep-alive
       Content-Type:
       - text/event-stream
       Date:
-      - Sat, 07 Jun 2025 19:37:49 GMT
+      - Wed, 11 Mar 2026 09:37:10 GMT
+      Permissions-Policy:
+      - payment=(self "https://checkout.stripe.com" "https://connect-js.stripe.com"
+        "https://js.stripe.com" "https://*.js.stripe.com" "https://hooks.stripe.com")
+      Referrer-Policy:
+      - no-referrer, strict-origin-when-cross-origin
       Server:
       - cloudflare
       Transfer-Encoding:
       - chunked
-      Vary:
-      - Accept-Encoding
-      X-Clerk-Auth-Message:
-      - Invalid JWT form. A JWT consists of three parts separated by dots. (reason=token-invalid,
-        token-carrier=header)
-      X-Clerk-Auth-Reason:
-      - token-invalid
-      X-Clerk-Auth-Status:
-      - signed-out
+      X-Content-Type-Options:
+      - nosniff
     status:
       code: 200
       message: OK
