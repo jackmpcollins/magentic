@@ -1,4 +1,5 @@
 import base64
+import textwrap
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Iterable, Sequence
 from functools import cached_property
@@ -122,11 +123,13 @@ class SystemMessage(Message[str]):
 
     role: Literal["system"] = "system"
 
-    def __init__(self, content: str, **data: Any):
+    def __init__(self, content: str, *, dedent: bool = True, **data: Any):
+        if dedent:
+            content = textwrap.dedent(content)
         super().__init__(content=content, **data)
 
     def format(self, **kwargs: Any) -> "SystemMessage":
-        return SystemMessage(self.content.format(**kwargs))
+        return SystemMessage(self.content.format(**kwargs), dedent=False)
 
 
 # Anthropic supports PDF: https://docs.anthropic.com/en/docs/build-with-claude/pdf-support
@@ -224,7 +227,11 @@ class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
 
     role: Literal["user"] = "user"
 
-    def __init__(self, content: UserMessageContentT, **data: Any):
+    def __init__(
+        self, content: UserMessageContentT, *, dedent: bool = True, **data: Any
+    ):
+        if dedent and isinstance(content, str):
+            content = cast(UserMessageContentT, textwrap.dedent(content))
         super().__init__(content=content, **data)
 
     @overload
@@ -241,9 +248,12 @@ class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
         **kwargs: Any,
     ) -> "UserMessage[StrT | Sequence[StrT2 | UserMessageContentBlockT | UserMessageContentBlockT2]]":
         if isinstance(self.content, str):
-            return UserMessage(self.content.format(**kwargs))
+            return UserMessage(self.content.format(**kwargs), dedent=False)
         if isinstance(self.content, Iterable):
-            return UserMessage([block.format(**kwargs) for block in self.content])  # type: ignore[misc]
+            return UserMessage(
+                [block.format(**kwargs) for block in self.content],  # type: ignore[misc]
+                dedent=False,
+            )
         msg = f"Unsupported content type: {type(self.content)}"
         raise ValueError(msg)
 
