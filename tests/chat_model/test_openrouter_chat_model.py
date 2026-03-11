@@ -118,9 +118,7 @@ def test_openrouter_chat_model_complete_usage():
 
 @pytest.mark.openrouter
 def test_openrouter_chat_model_complete_usage_structured_output():
-    chat_model = OpenRouterChatModel(
-        "deepseek/deepseek-chat-v3-0324", require_parameters=True
-    )
+    chat_model = OpenRouterChatModel("deepseek/deepseek-chat-v3-0324")
     message = chat_model.complete(
         messages=[UserMessage("Count to 5. Tool call please.")],
         output_types=[list[int]],
@@ -132,10 +130,7 @@ def test_openrouter_chat_model_complete_usage_structured_output():
 
 @pytest.mark.openrouter
 def test_openrouter_chat_model_complete_no_structured_output_error():
-    chat_model = OpenRouterChatModel(
-        "deepseek/deepseek-chat-v3-0324",
-        require_parameters=True,  # This will force tool calls
-    )
+    chat_model = OpenRouterChatModel("deepseek/deepseek-chat-v3-0324")
     message: Message[int | bool] = chat_model.complete(
         messages=[UserMessage("What is 2+2? Integer please.")],
         output_types=[int, bool],
@@ -161,9 +156,7 @@ def test_openrouter_chat_model_complete_raises_tool_schema_parse_error():
 
 @pytest.mark.openrouter
 def test_openrouter_chat_model_complete_image_bytes(image_bytes_jpg):
-    chat_model = OpenRouterChatModel(
-        "opengvlab/internvl3-14b:free", require_parameters=True
-    )
+    chat_model = OpenRouterChatModel("opengvlab/internvl3-14b:free")
     message = chat_model.complete(
         messages=[
             UserMessage(
@@ -240,7 +233,6 @@ def test_openrouter_chat_model_extra_body():
         "deepseek/deepseek-chat-v3-0324",
         route="fallback",
         models=["anthropic/claude-3-opus"],
-        require_parameters=True,
         reasoning_effort="low",
         reasoning_exclude=False,
         provider_only=["Novita"],
@@ -248,7 +240,7 @@ def test_openrouter_chat_model_extra_body():
     assert chat_model._get_extra_body() == {
         "route": "fallback",
         "models": ["anthropic/claude-3-opus"],
-        "provider": {"require_parameters": True, "only": ["Novita"]},
+        "provider": {"only": ["Novita"]},
         "reasoning": {"effort": "low", "exclude": False},
     }
 
@@ -257,7 +249,6 @@ def test_openrouter_chat_model_extra_body():
 def test_openrouter_chat_model_reasoning_tokens():
     chat_model = OpenRouterChatModel(
         "deepseek/deepseek-r1",
-        require_parameters=True,
         reasoning_effort="low",
         reasoning_exclude=False,
     )
