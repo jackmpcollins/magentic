@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Backend(Enum):
     ANTHROPIC = "anthropic"
     LITELLM = "litellm"
+    MINIMAX = "minimax"
     MISTRAL = "mistral"
     OPENAI = "openai"
 
@@ -26,6 +27,13 @@ class Settings(BaseSettings):
     litellm_api_base: str | None = None
     litellm_max_tokens: int | None = None
     litellm_temperature: float | None = None
+
+    minimax_model: str = "MiniMax-M2.7"
+    minimax_api_key: str | None = None
+    minimax_base_url: str | None = None
+    minimax_max_tokens: int | None = None
+    minimax_seed: int | None = None
+    minimax_temperature: float | None = None
 
     mistral_model: str = "mistral-large-latest"
     mistral_api_key: str | None = None
