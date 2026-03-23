@@ -30,10 +30,56 @@ from magentic.chat_model.stream import AsyncOutputStream, OutputStream
 
 _THINK_TAG_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL)
 
+# MiniMax ignores tool_choice (named/required/auto all behave the same).
+# A system message is required to force the model to call tools.
+_TOOL_USE_SYSTEM_MSG = {
+    "role": "system",
+    "content": (
+        "You MUST use the available tools to respond."
+        " Do NOT answer with plain text. Always call a tool."
+    ),
+}
+
 
 def _strip_think_tags(text: str) -> str:
     """Strip MiniMax thinking tags from model output."""
     return _THINK_TAG_RE.sub("", text)
+
+
+def _filter_content_chunks(
+    stream: Iterator[ChatCompletionChunk],
+) -> Iterator[ChatCompletionChunk]:
+    """Skip content-only chunks so ``OutputStream`` sees tool calls first.
+
+    MiniMax M2.7 always emits ``<think>...</think>`` reasoning and sometimes
+    explanatory text before producing tool-call deltas.  The base
+    ``OutputStream.__stream__`` exits its main loop when the first chunk is
+    neither ``is_content`` nor ``is_tool_call``.  By stripping content-only
+    chunks here we guarantee the first chunk reaching ``OutputStream``
+    carries a tool-call delta.
+    """
+    for chunk in stream:
+        if (
+            chunk.choices
+            and chunk.choices[0].delta.content
+            and not chunk.choices[0].delta.tool_calls
+        ):
+            continue
+        yield chunk
+
+
+async def _afilter_content_chunks(
+    stream: AsyncIterator[ChatCompletionChunk],
+) -> AsyncIterator[ChatCompletionChunk]:
+    """Async version of :func:`_filter_content_chunks`."""
+    async for chunk in stream:
+        if (
+            chunk.choices
+            and chunk.choices[0].delta.content
+            and not chunk.choices[0].delta.tool_calls
+        ):
+            continue
+        yield chunk
 
 
 class MiniMaxStreamParser(OpenaiStreamParser):
@@ -43,23 +89,14 @@ class MiniMaxStreamParser(OpenaiStreamParser):
     response.  These must be hidden from both ``is_content`` (so the
     ``OutputStream`` does not create a ``StreamedStr`` for them) and
     ``get_content`` (so think-tag text never leaks into the output).
-
-    When *tools_expected* is True, all content is skipped so that only
-    tool-call chunks are processed.  MiniMax often emits explanatory text
-    before calling tools, and that text must not be treated as content.
     """
 
-    def __init__(self, *, tools_expected: bool = False) -> None:
+    def __init__(self) -> None:
         super().__init__()
         self._in_think_block: bool = False
-        self._tools_expected: bool = tools_expected
 
     def is_content(self, item: ChatCompletionChunk) -> bool:
         if not (item.choices and item.choices[0].delta.content):
-            return False
-        # When tools are expected, skip all text content – it is just
-        # pre-tool-call commentary produced by the model.
-        if self._tools_expected:
             return False
         content = item.choices[0].delta.content
         if "<think>" in content:
@@ -119,12 +156,18 @@ class _MiniMaxOpenaiChatModel(OpenaiChatModel):
         tool_schemas: Sequence[BaseFunctionToolSchema[Any]],
         output_types: Iterable[type],
     ) -> str | openai.Omit:
-        """Create the tool choice argument."""
+        """Create the tool choice argument.
+
+        MiniMax ignores named tool choice and ``"required"``, so we always
+        use ``"auto"`` (when tools are present and string output is not
+        expected) and rely on a system-message prompt to steer the model
+        toward calling a tool.
+        """
         if contains_string_type(output_types):
             return openai.omit
-        if len(tool_schemas) == 1:
-            return tool_schemas[0].as_tool_choice()
-        return "required"
+        if tool_schemas:
+            return "auto"
+        return openai.omit
 
     def _get_parallel_tool_calls(
         self, *, tools_specified: bool, output_types: Iterable[type]
@@ -146,11 +189,17 @@ class _MiniMaxOpenaiChatModel(OpenaiChatModel):
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
+        openai_messages = _add_missing_tool_calls_responses(
+            [message_to_openai_message(m) for m in messages]
+        )
+        # MiniMax ignores tool_choice; inject a system prompt to force tool use
+        tools_only = bool(tool_schemas) and not contains_string_type(output_types)
+        if tools_only:
+            openai_messages = [_TOOL_USE_SYSTEM_MSG, *openai_messages]
+
         response: Iterator[ChatCompletionChunk] = self._client.chat.completions.create(
             model=self.model,
-            messages=_add_missing_tool_calls_responses(
-                [message_to_openai_message(m) for m in messages]
-            ),
+            messages=openai_messages,
             max_tokens=_if_given(self.max_tokens),
             seed=_if_given(self.seed),
             stop=_if_given(stop),
@@ -165,10 +214,13 @@ class _MiniMaxOpenaiChatModel(OpenaiChatModel):
                 tools_specified=bool(tool_schemas), output_types=output_types
             ),
         )
+        # Strip pre-tool content so OutputStream sees tool-call chunks first
+        if tools_only:
+            response = _filter_content_chunks(response)
         stream = OutputStream(
             response,
             function_schemas=function_schemas,
-            parser=MiniMaxStreamParser(tools_expected=bool(tool_schemas)),
+            parser=MiniMaxStreamParser(),
             state=OpenaiStreamState(),
         )
         return AssistantMessage._with_usage(
@@ -190,13 +242,18 @@ class _MiniMaxOpenaiChatModel(OpenaiChatModel):
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
+        openai_messages = _add_missing_tool_calls_responses(
+            [await async_message_to_openai_message(m) for m in messages]
+        )
+        tools_only = bool(tool_schemas) and not contains_string_type(output_types)
+        if tools_only:
+            openai_messages = [_TOOL_USE_SYSTEM_MSG, *openai_messages]
+
         response: AsyncIterator[
             ChatCompletionChunk
         ] = await self._async_client.chat.completions.create(
             model=self.model,
-            messages=_add_missing_tool_calls_responses(
-                [await async_message_to_openai_message(m) for m in messages]
-            ),
+            messages=openai_messages,
             max_tokens=_if_given(self.max_tokens),
             seed=_if_given(self.seed),
             stop=_if_given(stop),
@@ -211,10 +268,12 @@ class _MiniMaxOpenaiChatModel(OpenaiChatModel):
                 tools_specified=bool(tool_schemas), output_types=output_types
             ),
         )
+        if tools_only:
+            response = _afilter_content_chunks(response)
         stream = AsyncOutputStream(
             response,
             function_schemas=function_schemas,
-            parser=MiniMaxStreamParser(tools_expected=bool(tool_schemas)),
+            parser=MiniMaxStreamParser(),
             state=OpenaiStreamState(),
         )
         return AssistantMessage._with_usage(

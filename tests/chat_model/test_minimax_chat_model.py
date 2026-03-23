@@ -14,6 +14,7 @@ from magentic.chat_model.minimax_chat_model import (
     MiniMaxChatModel,
     MiniMaxStreamParser,
     _MiniMaxOpenaiChatModel,
+    _filter_content_chunks,
     _strip_think_tags,
 )
 from magentic.function_call import FunctionCall
@@ -80,15 +81,28 @@ def test_minimax_stream_parser_empty_choices():
     assert result is None
 
 
-def test_minimax_stream_parser_tools_expected_skips_content():
-    """MiniMaxStreamParser skips content when tools_expected=True."""
+def test_filter_content_chunks():
+    """_filter_content_chunks drops content-only chunks."""
     from unittest.mock import MagicMock
 
-    parser = MiniMaxStreamParser(tools_expected=True)
-    chunk = MagicMock()
-    chunk.choices = [MagicMock()]
-    chunk.choices[0].delta.content = "I'll use the tool"
-    assert parser.is_content(chunk) is False
+    def make_chunk(content=None, tool_calls=None):
+        chunk = MagicMock()
+        chunk.choices = [MagicMock()]
+        chunk.choices[0].delta.content = content
+        chunk.choices[0].delta.tool_calls = tool_calls
+        return chunk
+
+    chunks = [
+        make_chunk(content="<think>reasoning</think>"),
+        make_chunk(content="some text"),
+        make_chunk(tool_calls=[MagicMock()]),
+        make_chunk(content=None),
+    ]
+    result = list(_filter_content_chunks(iter(chunks)))
+    # Only tool-call chunk and no-content chunk should remain
+    assert len(result) == 2
+    assert result[0].choices[0].delta.tool_calls is not None
+    assert result[1].choices[0].delta.content is None
 
 
 def test_minimax_stream_parser_think_tags_skipped():
