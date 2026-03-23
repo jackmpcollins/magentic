@@ -89,6 +89,7 @@ markers = [
     "litellm_anthropic: Tests that query the Anthropic API via litellm. Requires the ANTHROPIC_API_KEY environment variable to be set.",
     "litellm_ollama: Tests that query Ollama via litellm. Requires ollama to be installed and running on localhost:11434.",
     "litellm_openai: Tests that query the OpenAI API via litellm. Requires the OPENAI_API_KEY environment variable to be set.",
+    "minimax: Tests that query the MiniMax API (via openai). Requires the MINIMAX_API_KEY environment variable to be set.",
     "mistral: Tests that query the Mistral API (via openai). Requires the MISTRAL_API_KEY environment variable to be set.",
     "openai: Tests that query the OpenAI API. Requires the OPENAI_API_KEY environment variable to be set.",
     "openai_gemini: Tests that query the Gemini API via openai. Requires the GEMINI_API_KEY environment variable to be set.",

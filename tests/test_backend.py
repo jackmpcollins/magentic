@@ -4,6 +4,7 @@ from magentic.backend import get_chat_model
 from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
 from magentic.chat_model.litellm_chat_model import LitellmChatModel
 from magentic.chat_model.message import AssistantMessage, UserMessage
+from magentic.chat_model.minimax_chat_model import MiniMaxChatModel
 from magentic.chat_model.mistral_chat_model import MistralChatModel
 from magentic.chat_model.openai_chat_model import OpenaiChatModel
 
@@ -22,6 +23,24 @@ def test_backend_anthropic_chat_model(monkeypatch):
     assert chat_model.base_url == "http://localhost:8080"
     assert chat_model.max_tokens == 10
     assert chat_model.temperature == 2
+
+
+def test_backend_minimax_chat_model(monkeypatch):
+    monkeypatch.setenv("MAGENTIC_BACKEND", "minimax")
+    monkeypatch.setenv("MAGENTIC_MINIMAX_MODEL", "MiniMax-M2.7")
+    monkeypatch.setenv("MAGENTIC_MINIMAX_API_KEY", "sk-1234567890")
+    monkeypatch.setenv("MAGENTIC_MINIMAX_BASE_URL", "http://localhost:8080")
+    monkeypatch.setenv("MAGENTIC_MINIMAX_MAX_TOKENS", "1024")
+    monkeypatch.setenv("MAGENTIC_MINIMAX_SEED", "42")
+    monkeypatch.setenv("MAGENTIC_MINIMAX_TEMPERATURE", "0.5")
+    chat_model = get_chat_model()
+    assert isinstance(chat_model, MiniMaxChatModel)
+    assert chat_model.model == "MiniMax-M2.7"
+    assert chat_model.api_key == "sk-1234567890"
+    assert chat_model.base_url == "http://localhost:8080"
+    assert chat_model.max_tokens == 1024
+    assert chat_model.seed == 42
+    assert chat_model.temperature == 0.5
 
 
 def test_backend_mistral_chat_model(monkeypatch):

@@ -19,6 +19,17 @@ def get_chat_model() -> ChatModel:
                 max_tokens=settings.anthropic_max_tokens,
                 temperature=settings.anthropic_temperature,
             )
+        case Backend.MINIMAX:
+            from magentic.chat_model.minimax_chat_model import MiniMaxChatModel
+
+            return MiniMaxChatModel(
+                model=settings.minimax_model,
+                api_key=settings.minimax_api_key,
+                base_url=settings.minimax_base_url,
+                max_tokens=settings.minimax_max_tokens,
+                seed=settings.minimax_seed,
+                temperature=settings.minimax_temperature,
+            )
         case Backend.LITELLM:
             from magentic.chat_model.litellm_chat_model import LitellmChatModel
 

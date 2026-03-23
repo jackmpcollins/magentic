@@ -75,6 +75,7 @@ def pytest_collection_modifyitems(
         "litellm_anthropic",
         "litellm_ollama",
         "litellm_openai",
+        "minimax",
         "mistral",
         "openai",
         "openai_gemini",

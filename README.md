@@ -9,7 +9,7 @@ Seamlessly integrate Large Language Models into Python code. Use the `@prompt` a
 - [LLM-Assisted Retries] to improve LLM adherence to complex output schemas.
 - [Observability] using OpenTelemetry, with native [Pydantic Logfire integration].
 - [Type Annotations] to work nicely with linters and IDEs.
-- [Configuration] options for multiple LLM providers including OpenAI, Anthropic, and Ollama.
+- [Configuration] options for multiple LLM providers including OpenAI, Anthropic, MiniMax, and Ollama.
 - Many more features: [Chat Prompting], [Parallel Function Calling], [Vision], [Formatting], [Asyncio]...
 
 ## Installation
@@ -402,6 +402,18 @@ from magentic.chat_model.litellm_chat_model import LitellmChatModel
 model = LitellmChatModel("gpt-4o")
 ```
 
+### MiniMax
+
+This uses the `openai` Python package to query MiniMax models via their OpenAI-compatible API at `https://api.minimax.io/v1`. Available models include `MiniMax-M2.7` (latest, 1M context), `MiniMax-M2.5`, and `MiniMax-M2.5-highspeed` (204K context). Temperature values are automatically clamped to MiniMax's accepted range of (0, 1], and thinking tags from reasoning models are stripped from the output.
+
+No additional installation is required. Set the `MINIMAX_API_KEY` environment variable, then import the `MiniMaxChatModel` class.
+
+```python
+from magentic.chat_model.minimax_chat_model import MiniMaxChatModel
+
+model = MiniMaxChatModel("MiniMax-M2.7")
+```
+
 ### Mistral
 
 This uses the `openai` Python package with some small modifications to make the API queries compatible with the Mistral API. It supports all features of magentic. However tool calls (including structured outputs) are not streamed so are received all at once.
@@ -453,7 +465,7 @@ The following environment variables can be set.
 
 | Environment Variable           | Description                              | Example                      |
 | ------------------------------ | ---------------------------------------- | ---------------------------- |
-| MAGENTIC_BACKEND               | The package to use as the LLM backend    | anthropic / openai / litellm |
+| MAGENTIC_BACKEND               | The package to use as the LLM backend    | anthropic / minimax / openai |
 | MAGENTIC_ANTHROPIC_MODEL       | Anthropic model                          | claude-3-haiku-20240307      |
 | MAGENTIC_ANTHROPIC_API_KEY     | Anthropic API key to be used by magentic | sk-...                       |
 | MAGENTIC_ANTHROPIC_BASE_URL    | Base URL for an Anthropic-compatible API | http://localhost:8080        |
@@ -463,6 +475,12 @@ The following environment variables can be set.
 | MAGENTIC_LITELLM_API_BASE      | The base url to query                    | http://localhost:11434       |
 | MAGENTIC_LITELLM_MAX_TOKENS    | LiteLLM max number of generated tokens   | 1024                         |
 | MAGENTIC_LITELLM_TEMPERATURE   | LiteLLM temperature                      | 0.5                          |
+| MAGENTIC_MINIMAX_MODEL         | MiniMax model                            | MiniMax-M2.7                 |
+| MAGENTIC_MINIMAX_API_KEY       | MiniMax API key to be used by magentic   | eyJ...                       |
+| MAGENTIC_MINIMAX_BASE_URL      | Base URL for MiniMax API                 | https://api.minimax.io/v1    |
+| MAGENTIC_MINIMAX_MAX_TOKENS    | Max number of generated tokens           | 1024                         |
+| MAGENTIC_MINIMAX_SEED          | Seed for deterministic sampling          | 42                           |
+| MAGENTIC_MINIMAX_TEMPERATURE   | Temperature (clamped to 0-1)             | 0.5                          |
 | MAGENTIC_MISTRAL_MODEL         | Mistral model                            | mistral-large-latest         |
 | MAGENTIC_MISTRAL_API_KEY       | Mistral API key to be used by magentic   | XEG...                       |
 | MAGENTIC_MISTRAL_BASE_URL      | Base URL for an Mistral-compatible API   | http://localhost:8080        |
