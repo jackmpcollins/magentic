@@ -389,6 +389,8 @@ class OpenaiChatModel(ChatModel):
         temperature: float | None = None,
         reasoning_effort: Literal["low", "medium", "high"] | None = None,
         verbosity: Literal["low", "medium", "high"] | None = None,
+        store: bool | None = None,
+        metadata: dict[str, str] | None = None,
     ):
         self._model = model
         self._api_key = api_key
@@ -400,6 +402,8 @@ class OpenaiChatModel(ChatModel):
         self._temperature = temperature
         self._reasoning_effort = reasoning_effort
         self._verbosity = verbosity
+        self._store = store
+        self._metadata = metadata
 
         match api_type:
             case "openai":
@@ -456,6 +460,14 @@ class OpenaiChatModel(ChatModel):
     @property
     def verbosity(self) -> Literal["low", "medium", "high"] | None:
         return self._verbosity
+
+    @property
+    def store(self) -> bool | None:
+        return self._store
+
+    @property
+    def metadata(self) -> dict[str, str] | None:
+        return self._metadata
 
     def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.Omit:
         if self.api_type == "azure":
@@ -514,6 +526,8 @@ class OpenaiChatModel(ChatModel):
             stream=True,
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
+            store=_if_given(self.store),
+            metadata=_if_given(self.metadata),
             reasoning_effort=_if_given(self.reasoning_effort),
             verbosity=_if_given(self.verbosity),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.omit,
@@ -565,6 +579,8 @@ class OpenaiChatModel(ChatModel):
             temperature=_if_given(self.temperature),
             reasoning_effort=_if_given(self.reasoning_effort),
             verbosity=_if_given(self.verbosity),
+            store=_if_given(self.store),
+            metadata=_if_given(self.metadata),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.omit,
             tool_choice=self._get_tool_choice(
                 tool_schemas=tool_schemas, output_types=output_types

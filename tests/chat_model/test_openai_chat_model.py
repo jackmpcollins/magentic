@@ -284,6 +284,16 @@ def test_openai_chat_model_max_completion_tokens_property():
     assert chat_model.max_completion_tokens == 100
 
 
+def test_openai_chat_model_store_property():
+    chat_model = OpenaiChatModel("gpt-4o", store=True)
+    assert chat_model.store is True
+
+
+def test_openai_chat_model_metadata_property():
+    chat_model = OpenaiChatModel("gpt-4o", metadata={"source": "test"})
+    assert chat_model.metadata == {"source": "test"}
+
+
 @pytest.mark.openai
 def test_openai_chat_model_complete_seed():
     chat_model = OpenaiChatModel("gpt-4o", seed=42)
