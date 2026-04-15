@@ -124,12 +124,16 @@ class Chat:
         )
         return self.add_message(output_message)
 
-    # TODO: Add optional error handling to this method, with param to toggle
-    def exec_function_call(self) -> Self:
+    def exec_function_call(self, *, catch_exceptions: bool = False) -> Self:
         """If the last message is a function call, execute it and add the result."""
         if isinstance(self.last_message.content, FunctionCall):
             function_call = self.last_message.content
-            result = function_call()
+            try:
+                result = function_call()
+            except Exception as exc:
+                if not catch_exceptions:
+                    raise
+                result = f"{type(exc).__name__}: {exc}"
             return self.add_message(
                 FunctionResultMessage(content=result, function_call=function_call)
             )
@@ -137,9 +141,13 @@ class Chat:
         if isinstance(self.last_message.content, ParallelFunctionCall):
             parallel_function_call = self.last_message.content
             chat = self
-            for result, function_call in zip(
-                parallel_function_call(), parallel_function_call, strict=True
-            ):
+            for function_call in parallel_function_call:
+                try:
+                    result = function_call()
+                except Exception as exc:
+                    if not catch_exceptions:
+                        raise
+                    result = f"{type(exc).__name__}: {exc}"
                 chat = chat.add_message(
                     FunctionResultMessage(content=result, function_call=function_call)
                 )

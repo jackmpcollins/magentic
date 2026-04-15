@@ -101,6 +101,41 @@ def test_exec_function_call_raises():
         chat = chat.exec_function_call()
 
 
+def test_exec_function_call_catches_exceptions():
+    def fail() -> str:
+        raise ValueError("bad input")
+
+    fail_call = FunctionCall(fail)
+    chat = Chat(
+        messages=[
+            UserMessage(content="Run the tool"),
+            AssistantMessage(content=fail_call),
+        ],
+        functions=[fail],
+    )
+    chat = chat.exec_function_call(catch_exceptions=True)
+    assert len(chat.messages) == 3
+    assert chat.messages[2] == FunctionResultMessage(
+        "ValueError: bad input", fail_call
+    )
+
+
+def test_exec_function_call_function_exception_raises_by_default():
+    def fail() -> str:
+        raise ValueError("bad input")
+
+    fail_call = FunctionCall(fail)
+    chat = Chat(
+        messages=[
+            UserMessage(content="Run the tool"),
+            AssistantMessage(content=fail_call),
+        ],
+        functions=[fail],
+    )
+    with pytest.raises(ValueError, match="bad input"):
+        chat.exec_function_call()
+
+
 async def test_aexec_function_call_async_function():
     async def aplus(a: int, b: int) -> int:
         return a + b
