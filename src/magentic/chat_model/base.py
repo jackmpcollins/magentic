@@ -105,8 +105,31 @@ class ToolSchemaParseError(Exception):
 
 
 # TODO: Move this into _parsing
-# TODO: Make this a stream class with a close method and context management
 def parse_stream(
+    stream: Iterator[Any], output_types: Iterable[type[OutputT]]
+) -> OutputT:
+    """Parse and validate the LLM output stream against the allowed output types."""
+    try:
+        return _parse_stream(stream, output_types)
+    except BaseException:
+        if close := getattr(stream, "close", None):
+            close()
+        raise
+
+
+async def aparse_stream(
+    stream: AsyncIterator[Any], output_types: Iterable[type[OutputT]]
+) -> OutputT:
+    """Async version of `parse_stream`."""
+    try:
+        return await _aparse_stream(stream, output_types)
+    except BaseException:
+        if close := getattr(stream, "aclose", None):
+            await close()
+        raise
+
+
+def _parse_stream(
     stream: Iterator[Any], output_types: Iterable[type[OutputT]]
 ) -> OutputT:
     """Parse and validate the LLM output stream against the allowed output types."""
@@ -116,7 +139,12 @@ def parse_stream(
     obj = next(stream)
     if isinstance(obj, StreamedStr):
         if StreamedResponse in output_type_origins:
-            return cast(OutputT, StreamedResponse(chain([obj], stream)))
+            return cast(
+                OutputT,
+                StreamedResponse(
+                    chain([obj], stream), on_close=getattr(stream, "close", None)
+                ),
+            )
         if StreamedStr in output_type_origins:
             return cast(OutputT, obj)
         if str in output_type_origins:
@@ -124,7 +152,12 @@ def parse_stream(
         raise StringNotAllowedError(obj.truncate(100))
     if isinstance(obj, FunctionCall):
         if StreamedResponse in output_type_origins:
-            return cast(OutputT, StreamedResponse(chain([obj], stream)))
+            return cast(
+                OutputT,
+                StreamedResponse(
+                    chain([obj], stream), on_close=getattr(stream, "close", None)
+                ),
+            )
         if ParallelFunctionCall in output_type_origins:
             return cast(OutputT, ParallelFunctionCall(chain([obj], stream)))
         if FunctionCall in output_type_origins:
@@ -136,7 +169,7 @@ def parse_stream(
     raise ObjectNotAllowedError(obj)
 
 
-async def aparse_stream(
+async def _aparse_stream(
     stream: AsyncIterator[Any], output_types: Iterable[type[OutputT]]
 ) -> OutputT:
     """Async version of `parse_stream`."""
@@ -145,7 +178,11 @@ async def aparse_stream(
     if isinstance(obj, AsyncStreamedStr):
         if AsyncStreamedResponse in output_type_origins:
             return cast(
-                OutputT, AsyncStreamedResponse(achain(async_iter([obj]), stream))
+                OutputT,
+                AsyncStreamedResponse(
+                    achain(async_iter([obj]), stream),
+                    on_close=getattr(stream, "aclose", None),
+                ),
             )
         if AsyncStreamedStr in output_type_origins:
             return cast(OutputT, obj)
@@ -155,11 +192,16 @@ async def aparse_stream(
     if isinstance(obj, FunctionCall):
         if AsyncStreamedResponse in output_type_origins:
             return cast(
-                OutputT, AsyncStreamedResponse(achain(async_iter([obj]), stream))
+                OutputT,
+                AsyncStreamedResponse(
+                    achain(async_iter([obj]), stream),
+                    on_close=getattr(stream, "aclose", None),
+                ),
             )
         if AsyncParallelFunctionCall in output_type_origins:
             return cast(
-                OutputT, AsyncParallelFunctionCall(achain(async_iter([obj]), stream))
+                OutputT,
+                AsyncParallelFunctionCall(achain(async_iter([obj]), stream)),
             )
         if FunctionCall in output_type_origins:
             return cast(OutputT, obj)

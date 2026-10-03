@@ -48,6 +48,21 @@ for country, streamed_str in zip(countries, streamed_strs):
 # 24.67s : Chile - 2186 chars
 ```
 
+## Closing streams early
+
+Use a context manager when you might stop reading before the response finishes. Exiting the context closes the underlying provider response, including when the loop exits early or raises an exception.
+
+```python
+with describe_country("Brazil") as response:
+    for chunk in response:
+        print(chunk, end="")
+        break
+```
+
+For an `AsyncStreamedStr`, use `async with` and `async for`. `StreamedResponse` and `AsyncStreamedResponse` support the same context manager patterns. You can also call `close()` or `await aclose()` explicitly; repeated calls are safe.
+
+Closing stops further upstream reads. Chunks and objects already cached remain available for replay, but the response is incomplete and final usage information may not have arrived. Fully consuming a provider response also closes it automatically.
+
 ## Object Streaming
 
 Structured outputs can also be streamed from the LLM by using the return type annotation `Iterable` (or `AsyncIterable`). This allows each item to be processed while the next one is being generated.

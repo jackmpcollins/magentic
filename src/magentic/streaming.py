@@ -1,10 +1,19 @@
 import asyncio
 import collections
 import textwrap
-from collections.abc import AsyncIterable, AsyncIterator, Callable, Iterable, Iterator
+from collections.abc import (
+    AsyncIterable,
+    AsyncIterator,
+    Awaitable,
+    Callable,
+    Iterable,
+    Iterator,
+)
 from dataclasses import dataclass
 from itertools import chain, dropwhile
 from typing import Any, TypeVar
+
+from typing_extensions import Self
 
 T = TypeVar("T")
 
@@ -215,12 +224,21 @@ class CachedIterable(Iterable[T]):
     def __init__(self, iterable: Iterable[T]):
         self._iterator = iter(iterable)
         self._cached_items: list[T] = []
+        self._closed = False
 
     def __iter__(self) -> Iterator[T]:
         yield from self._cached_items
+        if self._closed:
+            return
         for item in self._iterator:
             self._cached_items.append(item)
             yield item
+
+    def close(self) -> None:
+        if not self._closed:
+            self._closed = True
+            if close := getattr(self._iterator, "close", None):
+                close()
 
 
 class CachedAsyncIterable(AsyncIterable[T]):
@@ -229,25 +247,56 @@ class CachedAsyncIterable(AsyncIterable[T]):
     def __init__(self, aiterable: AsyncIterable[T]):
         self._aiterator = aiter(aiterable)
         self._cached_items: list[T] = []
+        self._closed = False
 
     async def __aiter__(self) -> AsyncIterator[T]:
         for item in self._cached_items:
             yield item
+        if self._closed:
+            return
         async for item in self._aiterator:
             self._cached_items.append(item)
             yield item
 
+    async def aclose(self) -> None:
+        if not self._closed:
+            self._closed = True
+            if close := getattr(self._aiterator, "aclose", None):
+                await close()
 
-# TODO: Add close method to close the underlying stream if chunks is a stream
-# TODO: Make it a context manager to automatically close
+
 class StreamedStr(Iterable[str]):
     """A string that is generated in chunks."""
 
-    def __init__(self, chunks: Iterable[str]):
+    def __init__(
+        self, chunks: Iterable[str], *, on_close: Callable[[], None] | None = None
+    ):
         self._chunks = CachedIterable(chunks)
+        self._on_close = on_close
+        self._closed = False
+
+    def close(self) -> None:
+        """关闭底层流并保留已缓存的片段"""
+        if not self._closed:
+            self._closed = True
+            try:
+                self._chunks.close()
+            finally:
+                if self._on_close:
+                    self._on_close()
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        self.close()
 
     def __iter__(self) -> Iterator[str]:
-        yield from self._chunks
+        try:
+            yield from self._chunks
+        except Exception:
+            self.close()
+            raise
 
     def __str__(self) -> str:
         return "".join(self)
@@ -271,12 +320,40 @@ class StreamedStr(Iterable[str]):
 class AsyncStreamedStr(AsyncIterable[str]):
     """Async version of `StreamedStr`."""
 
-    def __init__(self, chunks: AsyncIterable[str]):
+    def __init__(
+        self,
+        chunks: AsyncIterable[str],
+        *,
+        on_close: Callable[[], Awaitable[None]] | None = None,
+    ):
         self._chunks = CachedAsyncIterable(chunks)
+        self._on_close = on_close
+        self._closed = False
+
+    async def aclose(self) -> None:
+        """关闭底层流并保留已缓存的片段"""
+        if not self._closed:
+            self._closed = True
+            try:
+                await self._chunks.aclose()
+            finally:
+                if self._on_close:
+                    await self._on_close()
+
+    async def __aenter__(self) -> Self:
+        return self
+
+    async def __aexit__(self, *args: object) -> None:
+        await self.aclose()
 
     async def __aiter__(self) -> AsyncIterator[str]:
-        async for chunk in self._chunks:
-            yield chunk
+        try:
+            async for chunk in self._chunks:
+                yield chunk
+        except BaseException as exc:
+            if not isinstance(exc, GeneratorExit):
+                await self.aclose()
+            raise
 
     async def to_string(self) -> str:
         """Convert the streamed string to a string."""
