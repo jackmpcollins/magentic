@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterable, AsyncIterator, Iterable, Iterator
+from inspect import isawaitable
 from itertools import chain
 from typing import Any, Generic, NamedTuple, TypeVar
 
@@ -82,12 +83,42 @@ class OutputStream(Generic[ItemT, OutputT]):
 
         self._iterator = self.__stream__()
         self._exhausted: bool = False
+        self._closed = False
+
+    def close(self) -> None:
+        if not self._closed:
+            self._closed = True
+            if close := getattr(self._stream, "close", None):
+                close()
 
     def __next__(self) -> StreamedStr | OutputT:
-        return self._iterator.__next__()
+        if self._closed:
+            raise StopIteration
+        try:
+            return self._iterator.__next__()
+        except BaseException:
+            self.close()
+            raise
+
+    def __enter__(self) -> "OutputStream[ItemT, OutputT]":
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        self.close()
 
     def __iter__(self) -> Iterator[StreamedStr | OutputT]:
-        yield from self._iterator
+        return self
+
+    def _iter_stream(self) -> Iterator[ItemT]:
+        try:
+            while not self._closed:
+                try:
+                    item = next(self._stream)
+                except StopIteration:
+                    return
+                yield item
+        finally:
+            self.close()
 
     def _streamed_str(
         self, stream: Iterator[ItemT], current_item_ref: list[ItemT]
@@ -122,13 +153,15 @@ class OutputStream(Generic[ItemT, OutputT]):
 
     def __stream__(self) -> Iterator[StreamedStr | OutputT]:
         # This works similarly to `itertools.groupby`
-        stream = apply(self._state.update, self._stream)
+        stream = apply(self._state.update, self._iter_stream())
         current_item_ref = [next(stream)]
         while current_item_ref:
             current_item = current_item_ref.pop()
             if self._parser.is_content(current_item):
                 stream = chain([current_item], stream)
-                streamed_str = StreamedStr(self._streamed_str(stream, current_item_ref))
+                streamed_str = StreamedStr(
+                    self._streamed_str(stream, current_item_ref), on_close=self.close
+                )
                 yield streamed_str
                 if not current_item_ref and not self._exhausted:
                     # Finish the group to allow advancing to the next one
@@ -205,13 +238,46 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
 
         self._iterator = self.__stream__()
         self._exhausted: bool = False
+        self._closed = False
+
+    async def aclose(self) -> None:
+        if not self._closed:
+            self._closed = True
+            if close := getattr(self._stream, "aclose", None):
+                await close()
+            elif close := getattr(self._stream, "close", None):
+                result = close()
+                if isawaitable(result):
+                    await result
 
     async def __anext__(self) -> AsyncStreamedStr | OutputT:
-        return await self._iterator.__anext__()
+        if self._closed:
+            raise StopAsyncIteration
+        try:
+            return await self._iterator.__anext__()
+        except BaseException:
+            await self.aclose()
+            raise
 
-    async def __aiter__(self) -> AsyncIterator[AsyncStreamedStr | OutputT]:
-        async for item in self._iterator:
-            yield item
+    async def __aenter__(self) -> "AsyncOutputStream[ItemT, OutputT]":
+        return self
+
+    async def __aexit__(self, *args: object) -> None:
+        await self.aclose()
+
+    def __aiter__(self) -> AsyncIterator[AsyncStreamedStr | OutputT]:
+        return self
+
+    async def _aiter_stream(self) -> AsyncIterator[ItemT]:
+        try:
+            while not self._closed:
+                try:
+                    item = await anext(self._stream)
+                except StopAsyncIteration:
+                    return
+                yield item
+        finally:
+            await self.aclose()
 
     async def _streamed_str(
         self, stream: AsyncIterator[ItemT], current_item_ref: list[ItemT]
@@ -243,14 +309,14 @@ class AsyncOutputStream(Generic[ItemT, OutputT]):
         self._exhausted = True
 
     async def __stream__(self) -> AsyncIterator[AsyncStreamedStr | OutputT]:
-        stream = aapply(self._state.update, self._stream)
+        stream = aapply(self._state.update, self._aiter_stream())
         current_item_ref = [await anext(stream)]
         while current_item_ref:
             current_item = current_item_ref.pop()
             if self._parser.is_content(current_item):
                 stream = achain(async_iter([current_item]), stream)
                 streamed_str = AsyncStreamedStr(
-                    self._streamed_str(stream, current_item_ref)
+                    self._streamed_str(stream, current_item_ref), on_close=self.aclose
                 )
                 yield streamed_str
                 if not current_item_ref and not self._exhausted:
