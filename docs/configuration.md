@@ -76,7 +76,33 @@ Ensure that you handle any additional requirements specific to xAI as per their 
 
 #### Other OpenAI-compatible APIs
 
-When using the `openai` backend, setting the `MAGENTIC_OPENAI_BASE_URL` environment variable or using `OpenaiChatModel(..., base_url="http://localhost:8080")` in code allows you to use `magentic` with any OpenAI-compatible API e.g. [Azure OpenAI Service](https://learn.microsoft.com/en-us/azure/ai-services/openai/quickstart?tabs=command-line&pivots=programming-language-python#create-a-new-python-application), [LiteLLM OpenAI Proxy Server](https://docs.litellm.ai/docs/proxy_server), [LocalAI](https://localai.io/howtos/easy-request-openai/). Note that if the API does not support tool calls then you will not be able to create prompt-functions that return Python objects, but other features of `magentic` will still work.
+Use `OpenaiChatModel` with `api_type="openai"` to connect to an OpenAI-compatible Chat Completions server, such as a local inference server or [LiteLLM OpenAI Proxy Server](https://docs.litellm.ai/docs/proxy_server). Set `base_url` to the API root advertised by the server (often ending in `/v1`), not the full `/chat/completions` endpoint; the OpenAI client appends that path.
+
+Set `LOCAL_MODEL_NAME` to the model ID served by your server. Use the ID exactly as advertised, without adding the `openai/` prefix used by LiteLLM. For a server that requires authentication, also set `LOCAL_MODEL_API_KEY` to its API key. The `"local"` placeholder below is only for servers that do not require authentication; the OpenAI client still requires a non-empty key.
+
+```python
+import os
+
+from magentic import OpenaiChatModel, prompt
+
+model = OpenaiChatModel(
+    os.environ["LOCAL_MODEL_NAME"],
+    api_type="openai",
+    base_url="http://localhost:8000/v1",
+    api_key=os.environ.get("LOCAL_MODEL_API_KEY", "local"),
+)
+
+
+@prompt("Summarize this text in one sentence: {text}", model=model)
+def summarize(text: str) -> str: ...
+
+
+summarize("Magentic integrates LLMs as Python functions.")
+```
+
+For environment-based configuration, set `MAGENTIC_OPENAI_MODEL`, `MAGENTIC_OPENAI_BASE_URL`, `MAGENTIC_OPENAI_API_KEY`, and `MAGENTIC_OPENAI_API_TYPE="openai"` instead of passing these arguments in code.
+
+The server must support streaming Chat Completions, which `OpenaiChatModel` uses even for a `str` return value. If it does not support tool calls, prompt-functions returning Python objects will not work. Only send image messages to models that support vision.
 
 To use Azure with the openai backend you will need to set the `MAGENTIC_OPENAI_API_TYPE` environment variable to "azure" or use `OpenaiChatModel(..., api_type="azure")`, and also set the environment variables needed by the openai package to access Azure. See https://github.com/openai/openai-python#microsoft-azure-openai
 
