@@ -1,5 +1,6 @@
+import asyncio
 import inspect
-from typing import TYPE_CHECKING
+from collections.abc import Awaitable
 
 import pytest
 from typing_extensions import assert_type
@@ -10,9 +11,6 @@ from magentic.function_call import (
     ParallelFunctionCall,
 )
 from magentic.streaming import async_iter
-
-if TYPE_CHECKING:
-    from collections.abc import Awaitable
 
 
 def plus(a: int, b: int) -> int:
@@ -119,3 +117,116 @@ async def test_async_parallel_function_call_aiter():
     async_parallel_function_call = AsyncParallelFunctionCall(async_iter(function_calls))
     assert [x async for x in async_parallel_function_call] == function_calls
     assert [x async for x in async_parallel_function_call] == function_calls
+
+
+class CustomAwaitable:
+    def __init__(self, future: asyncio.Future[int]):
+        self.future = future
+
+    def __await__(self):
+        return self.future.__await__()
+
+
+async def test_async_parallel_function_call_awaitables_preserve_order():
+    loop = asyncio.get_running_loop()
+    future: asyncio.Future[int] = loop.create_future()
+    custom_future: asyncio.Future[int] = loop.create_future()
+    completed: list[int] = []
+
+    async def coroutine() -> int:
+        custom_future.set_result(4)
+        completed.append(4)
+        future.set_result(2)
+        completed.append(2)
+        return 3
+
+    def return_future() -> asyncio.Future[int]:
+        return future
+
+    def return_custom_awaitable() -> CustomAwaitable:
+        return CustomAwaitable(custom_future)
+
+    def return_task() -> asyncio.Task[int]:
+        return asyncio.create_task(async_plus(2, 3))
+
+    function_calls: list[FunctionCall[Awaitable[int] | int]] = [
+        FunctionCall(plus, 0, 1),
+        FunctionCall(return_future),
+        FunctionCall(coroutine),
+        FunctionCall(return_custom_awaitable),
+        FunctionCall(return_task),
+    ]
+    result = await AsyncParallelFunctionCall(async_iter(function_calls))()
+    assert result == (1, 2, 3, 4, 5)
+    assert completed == [4, 2]
+
+
+@pytest.mark.parametrize("custom", [False, True])
+async def test_async_parallel_function_call_awaitable_exception(custom):
+    def function() -> Awaitable[int]:
+        future: asyncio.Future[int] = asyncio.get_running_loop().create_future()
+        future.set_exception(ValueError("tool failed"))
+        return CustomAwaitable(future) if custom else future
+
+    call = AsyncParallelFunctionCall[int](async_iter([FunctionCall(function)]))
+    with pytest.raises(ValueError, match="tool failed"):
+        await call()
+
+
+@pytest.mark.parametrize("custom", [False, True])
+async def test_async_parallel_function_call_awaitable_cancellation(custom):
+    def function() -> Awaitable[int]:
+        future: asyncio.Future[int] = asyncio.get_running_loop().create_future()
+        future.cancel()
+        return CustomAwaitable(future) if custom else future
+
+    call = AsyncParallelFunctionCall[int](async_iter([FunctionCall(function)]))
+    with pytest.raises(asyncio.CancelledError):
+        await call()
+
+
+async def test_async_parallel_function_call_empty():
+    call: AsyncParallelFunctionCall[int] = AsyncParallelFunctionCall(async_iter([]))
+    assert await call() == ()
+
+
+def test_async_parallel_function_call_future_uses_current_loop():
+    def function() -> asyncio.Future[int]:
+        loop = asyncio.get_running_loop()
+        future: asyncio.Future[int] = loop.create_future()
+        loop.call_soon(future.set_result, 7)
+        return future
+
+    call = AsyncParallelFunctionCall[int](async_iter([FunctionCall(function)]))
+    assert asyncio.run(call()) == (7,)
+    assert asyncio.run(call()) == (7,)
+
+
+async def test_async_parallel_function_call_sync_results():
+    sentinel = object()
+
+    def function() -> object:
+        return sentinel
+
+    call = AsyncParallelFunctionCall[object](async_iter([FunctionCall(function)]))
+    assert await call() == (sentinel,)
+
+
+async def test_async_parallel_function_call_coroutine_exception():
+    async def function() -> int:
+        msg = "tool failed"
+        raise ValueError(msg)
+
+    call = AsyncParallelFunctionCall[int](async_iter([FunctionCall(function)]))
+    with pytest.raises(ValueError, match="tool failed"):
+        await call()
+
+
+async def test_async_parallel_function_call_sync_exception():
+    def function() -> int:
+        msg = "tool failed"
+        raise ValueError(msg)
+
+    call = AsyncParallelFunctionCall[int](async_iter([FunctionCall(function)]))
+    with pytest.raises(ValueError, match="tool failed"):
+        await call()
