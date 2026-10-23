@@ -919,3 +919,82 @@ def test_function_call_function_schema_serialize_invalid_args(
     """Invalid function arguments should serialize so LLM errors can be resubmitted."""
     serialized_args = FunctionCallFunctionSchema(function).serialize_args(args)
     assert json.loads(serialized_args) == json.loads(expected_args_str)
+
+
+@pytest.mark.parametrize(
+    ("args_json", "expected_arguments", "expected_result"),
+    [
+        ("{}", {}, (1, 2, (), 3, {})),
+        ('{"b": 9}', {"a": 1, "b": 9}, (1, 9, (), 3, {})),
+        ('{"a": 8}', {"a": 8}, (8, 2, (), 3, {})),
+        ('{"args": [7, 8]}', {"a": 1, "b": 2, "args": (7, 8)}, (1, 2, (7, 8), 3, {})),
+        ('{"b": 9, "args": [7]}', {"a": 1, "b": 9, "args": (7,)}, (1, 9, (7,), 3, {})),
+        ('{"b": 9, "args": []}', {"a": 1, "b": 9}, (1, 9, (), 3, {})),
+        (
+            '{"b": 9, "c": 4, "kwargs": {"d": 5}}',
+            {"a": 1, "b": 9, "c": 4, "kwargs": {"d": 5}},
+            (1, 9, (), 4, {"d": 5}),
+        ),
+    ],
+)
+def test_function_call_function_schema_positional_defaults(
+    args_json, expected_arguments, expected_result
+):
+    def function(
+        a: int = 1, b: int = 2, /, *args: int, c: int = 3, **kwargs: int
+    ) -> tuple[int, int, tuple[int, ...], int, dict[str, int]]:
+        return a, b, args, c, kwargs
+
+    schema = FunctionCallFunctionSchema(function)
+    call = schema.parse_args(args_json)
+    assert call.arguments == expected_arguments
+    assert call() == expected_result
+    assert schema.parse_args(schema.serialize_args(call))() == expected_result
+
+
+@pytest.mark.parametrize(
+    ("args_json", "expected_arguments", "expected_result"),
+    [
+        ('{"b": 9}', {"b": 9}, (1, 9, ())),
+        ('{"args": [7]}', {"a": 1, "b": 2, "args": (7,)}, (1, 2, (7,))),
+        ('{"b": 9, "args": [7]}', {"a": 1, "b": 9, "args": (7,)}, (1, 9, (7,))),
+        ('{"b": 9, "args": []}', {"a": 1, "b": 9}, (1, 9, ())),
+    ],
+)
+async def test_function_call_function_schema_default_args_before_varargs(
+    args_json, expected_arguments, expected_result
+):
+    def function(
+        a: int = 1, b: int = 2, *args: int
+    ) -> tuple[int, int, tuple[int, ...]]:
+        return a, b, args
+
+    schema = FunctionCallFunctionSchema(function)
+    call = await schema.aparse_args(async_iter(args_json))
+    assert call.arguments == expected_arguments
+    assert call() == expected_result
+
+
+def test_function_call_function_schema_mixed_positional_and_keyword_defaults():
+    def function(
+        a: int = 1, /, b: int = 2, *args: int
+    ) -> tuple[int, int, tuple[int, ...]]:
+        return a, b, args
+
+    schema = FunctionCallFunctionSchema(function)
+    call = schema.parse_args('{"b": 9}')
+    assert call == FunctionCall(function, b=9)
+    assert call() == (1, 9, ())
+    assert schema.parse_args('{"args": [7]}')() == (1, 2, (7,))
+
+
+def test_function_call_function_schema_preserves_positional_default_identity():
+    default: list[int] = []
+
+    def function(a: list[int] = default, b: int = 2, /) -> tuple[list[int], int]:
+        return a, b
+
+    call = FunctionCallFunctionSchema(function).parse_args('{"b": 9}')
+    result = call()
+    assert result[0] is default
+    assert result[1] == 9

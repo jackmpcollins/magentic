@@ -406,10 +406,9 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
         # Anthropic message stream returns empty string for function call with no arguments
         args_json = "".join(chunks) or "{}"
         model = self._model.model_validate_json(args_json)
+        params = list(inspect.signature(self._func).parameters.values())
         supplied_params = [
-            param
-            for param in inspect.signature(self._func).parameters.values()
-            if param.name in model.model_fields_set
+            param for param in params if param.name in model.model_fields_set
         ]
         # Prefer keyword args when possible (no *args present)
         # so that default values are used for keyword args that are not provided
@@ -417,20 +416,27 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
             param.kind == param.VAR_POSITIONAL for param in supplied_params
         )
 
-        args_positional_only = [
-            getattr(model, param.name)
-            for param in supplied_params
+        positional_params = [
+            param
+            for param in params
             if param.kind == param.POSITIONAL_ONLY
+            or (has_var_positional and param.kind == param.POSITIONAL_OR_KEYWORD)
         ]
-        args_positional_or_keyword_using_position = (
-            [
-                getattr(model, param.name)
-                for param in supplied_params
-                if param.kind == param.POSITIONAL_OR_KEYWORD
-            ]
-            if has_var_positional
-            else []
-        )
+        # Fill gaps with defaults so supplied values keep their positional slots.
+        # With *args, every preceding positional slot must be filled. Otherwise,
+        # leave trailing defaults omitted, just as for keyword arguments.
+        if not has_var_positional:
+            while (
+                positional_params
+                and positional_params[-1].name not in model.model_fields_set
+            ):
+                positional_params.pop()
+        args_positional = [
+            getattr(model, param.name)
+            if param.name in model.model_fields_set
+            else param.default
+            for param in positional_params
+        ]
         args_var_positional = [
             arg
             for param in supplied_params
@@ -459,8 +465,7 @@ class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):
         }
         return FunctionCall(
             self._func,
-            *args_positional_only,
-            *args_positional_or_keyword_using_position,
+            *args_positional,
             *args_var_positional,
             **args_positional_or_keyword_using_keyword,
             **args_keyword_only,
