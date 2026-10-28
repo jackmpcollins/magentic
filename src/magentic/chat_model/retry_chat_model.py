@@ -51,6 +51,8 @@ class RetryChatModel(ChatModel):
             max_retries=self._max_retries,
         ):
             messages = list(messages)
+            functions = list(functions) if functions is not None else None
+            output_types = list(output_types) if output_types is not None else None
             num_retry = 0
             while True:
                 try:
@@ -89,6 +91,8 @@ class RetryChatModel(ChatModel):
             max_retries=self._max_retries,
         ):
             messages = list(messages)
+            functions = list(functions) if functions is not None else None
+            output_types = list(output_types) if output_types is not None else None
             num_retry = 0
             while True:
                 try:
