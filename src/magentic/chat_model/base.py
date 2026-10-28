@@ -1,7 +1,7 @@
 import types
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator, Callable, Iterable, Iterator
-from contextvars import ContextVar
+from contextvars import ContextVar, Token
 from itertools import chain
 from typing import Any, cast, get_origin
 
@@ -21,6 +21,10 @@ OutputT = TypeVar("OutputT", default=str)
 
 _chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
     "chat_model", default=None
+)
+# Keep reset tokens local to each context, including when a model is reused.
+_chat_model_context_tokens: ContextVar[tuple[Token["ChatModel | None"], ...]] = (
+    ContextVar("chat_model_tokens", default=())
 )
 
 
@@ -197,7 +201,8 @@ class ChatModel(ABC):
         ...
 
     def __enter__(self) -> None:
-        self.__token = _chat_model_context.set(self)
+        token = _chat_model_context.set(self)
+        _chat_model_context_tokens.set((*_chat_model_context_tokens.get(), token))
 
     def __exit__(
         self,
@@ -205,4 +210,6 @@ class ChatModel(ABC):
         exc_value: BaseException | None,
         traceback: types.TracebackType | None,
     ) -> None:
-        _chat_model_context.reset(self.__token)
+        tokens = _chat_model_context_tokens.get()
+        _chat_model_context.reset(tokens[-1])
+        _chat_model_context_tokens.set(tokens[:-1])
