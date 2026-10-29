@@ -10,6 +10,7 @@ from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
     ImageBytes,
+    ImageUrl,
     Placeholder,
     SystemMessage,
     ToolResultMessage,
@@ -203,3 +204,35 @@ def test_chatprompt_with_image_bytes(image_bytes_jpg):
 
     output = describe_image()
     assert isinstance(output, str)
+
+
+@pytest.mark.parametrize(
+    "urls",
+    [
+        [],
+        ["https://example.com/one.png"],
+        ["https://example.com/one.png", "https://example.com/two.png"],
+    ],
+)
+def test_chatprompt_dynamic_image_list(urls):
+    model = Mock()
+    model.complete.return_value = AssistantMessage("Images described")
+
+    @chatprompt(UserMessage(Placeholder(list[ImageUrl], "images")), model=model)
+    def describe_images(images: list[ImageUrl]) -> str: ...
+
+    images = [ImageUrl(url) for url in urls]
+    assert describe_images(images) == "Images described"
+    assert model.complete.call_args.kwargs["messages"] == [UserMessage(images)]
+
+
+async def test_async_chatprompt_dynamic_image_list():
+    model = AsyncMock()
+    model.acomplete.return_value = AssistantMessage("Images described")
+
+    @chatprompt(UserMessage(Placeholder(list[ImageUrl], "images")), model=model)
+    async def describe_images(images: list[ImageUrl]) -> str: ...
+
+    images = [ImageUrl("https://example.com/one.png")]
+    assert await describe_images(images) == "Images described"
+    assert model.acomplete.call_args.kwargs["messages"] == [UserMessage(images)]

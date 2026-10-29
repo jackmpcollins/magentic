@@ -2,6 +2,7 @@ import base64
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Iterable, Sequence
 from functools import cached_property
+from types import GenericAlias
 from typing import (
     TYPE_CHECKING,
     Annotated,
@@ -21,6 +22,7 @@ import filetype
 from pydantic import (
     BaseModel,
     Field,
+    InstanceOf,
     PrivateAttr,
     RootModel,
     TypeAdapter,
@@ -48,7 +50,7 @@ class Placeholder(BaseModel, Generic[PlaceholderTypeT]):
 
     # TODO: Change to `type[PlaceholderT]` when pydantic supports it
     # issue: https://github.com/pydantic/pydantic/issues/9099
-    type_: type
+    type_: type | InstanceOf[GenericAlias]
     name: str
 
     def __init__(self, type_: type[PlaceholderTypeT], name: str, **data: Any):
@@ -205,7 +207,8 @@ UserMessageContentBlock: TypeAlias = DocumentBytes | ImageBytes | ImageUrl
 UserMessageContentT = TypeVar(
     "UserMessageContentT",
     bound=str
-    | Sequence[str | UserMessageContentBlock | Placeholder[UserMessageContentBlock]],
+    | Sequence[str | UserMessageContentBlock | Placeholder[UserMessageContentBlock]]
+    | Placeholder[Sequence[str | UserMessageContentBlock]],
     covariant=True,
 )
 UserMessageContentBlockT = TypeVar(
@@ -217,6 +220,9 @@ UserMessageContentBlockT2 = TypeVar(
 # These allow type hinting that a `str` _might_ be part of the union
 StrT = TypeVar("StrT", str, str)
 StrT2 = TypeVar("StrT2", str, str)
+UserMessageSequenceT = TypeVar(
+    "UserMessageSequenceT", bound=Sequence[str | UserMessageContentBlock]
+)
 
 
 class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
@@ -228,6 +234,11 @@ class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
         super().__init__(content=content, **data)
 
     @overload
+    def format(
+        self: "UserMessage[Placeholder[UserMessageSequenceT]]", **kwargs: Any
+    ) -> "UserMessage[UserMessageSequenceT]": ...
+
+    @overload
     def format(self: "UserMessage[str]", **kwargs: Any) -> "UserMessage[str]": ...
 
     @overload
@@ -236,14 +247,13 @@ class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
         **kwargs: Any,
     ) -> "UserMessage[StrT | Sequence[StrT2 | UserMessageContentBlockT | UserMessageContentBlockT2]]": ...
 
-    def format(
-        self: "UserMessage[StrT | NonStringSequence[StrT2 | UserMessageContentBlockT | Placeholder[UserMessageContentBlockT2]]]",
-        **kwargs: Any,
-    ) -> "UserMessage[StrT | Sequence[StrT2 | UserMessageContentBlockT | UserMessageContentBlockT2]]":
+    def format(self, **kwargs: Any) -> "UserMessage[Any]":
+        if isinstance(self.content, Placeholder):
+            return UserMessage(self.content.format(**kwargs))
         if isinstance(self.content, str):
             return UserMessage(self.content.format(**kwargs))
         if isinstance(self.content, Iterable):
-            return UserMessage([block.format(**kwargs) for block in self.content])  # type: ignore[misc]
+            return UserMessage([block.format(**kwargs) for block in self.content])
         msg = f"Unsupported content type: {type(self.content)}"
         raise ValueError(msg)
 

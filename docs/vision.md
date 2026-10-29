@@ -78,6 +78,23 @@ describe_image(IMAGE_URL_WOODEN_BOARDWALK)
 # 'A wooden boardwalk meanders through lush green wetlands under a partly cloudy blue sky.'
 ```
 
+### A dynamic number of images
+
+Use a placeholder for the whole message content to pass a list of images. The
+list can contain any number of images, including none. Text instructions can
+be supplied in a separate message.
+
+```python
+from magentic import chatprompt, ImageUrl, Placeholder, UserMessage
+
+
+@chatprompt(
+    UserMessage("Describe these images."),
+    UserMessage(Placeholder(list[ImageUrl], "images")),
+)
+def describe_images(images: list[ImageUrl]) -> str: ...
+```
+
 ## ImageBytes
 
 `UserMessage` can also accept `ImageBytes` as a content block. Like `ImageUrl`, this can be passed directly or via `Placeholder`.

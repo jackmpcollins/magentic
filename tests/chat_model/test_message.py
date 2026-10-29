@@ -283,3 +283,60 @@ def test_any_message():
         AssistantMessage("Hello"),
         ToolResultMessage(3, "unique_id"),
     ]
+
+
+@pytest.mark.parametrize(
+    "urls",
+    [
+        [],
+        ["https://example.com/one.png"],
+        ["https://example.com/one.png", "https://example.com/two.png"],
+    ],
+)
+def test_user_message_format_image_list_placeholder(urls):
+    message = UserMessage(Placeholder(list[ImageUrl], "images"))
+    formatted = message.format(images=urls)
+    assert_type(formatted, UserMessage[list[ImageUrl]])
+    assert formatted == UserMessage([ImageUrl(url) for url in urls])
+    assert isinstance(message.content, Placeholder)
+
+
+def test_user_message_format_image_list_placeholder_errors():
+    message = UserMessage(Placeholder(list[ImageUrl], "images"))
+    with pytest.raises(ValueError, match="required by placeholder is missing"):
+        message.format()
+    with pytest.raises(ValueError, match="must match placeholder type"):
+        message.format(images=[42])
+
+
+def test_user_message_format_static_list_control():
+    image = ImageUrl("https://example.com/one.png")
+    content: list[str | ImageUrl | Placeholder[ImageUrl]] = [
+        "Describe {name}",
+        image,
+        Placeholder(ImageUrl, "other"),
+    ]
+    message = UserMessage(content)
+    expected: list[str | ImageUrl] = [
+        "Describe both",
+        image,
+        ImageUrl("https://example.com/two.png"),
+    ]
+    assert message.format(
+        name="both", other="https://example.com/two.png"
+    ) == UserMessage(expected)
+
+
+def test_user_message_format_image_list_placeholder_reused():
+    message = UserMessage(Placeholder(list[ImageUrl], "images"))
+    first = [ImageUrl("https://example.com/one.png")]
+    second = [ImageUrl("https://example.com/two.png")]
+    assert message.format(images=first) == UserMessage(first)
+    assert message.format(images=second) == UserMessage(second)
+    assert message.format(images=[]) == UserMessage([])
+    assert isinstance(message.content, Placeholder)
+
+
+def test_placeholder_invalid_type():
+    with pytest.raises(ValidationError):
+        Placeholder("not a type", "value")  # type: ignore[arg-type]
