@@ -1,4 +1,4 @@
-from collections.abc import AsyncIterator, Callable, Iterable, Iterator, Sequence
+from collections.abc import Callable, Iterable, Iterator, Sequence
 from enum import Enum
 from functools import singledispatch
 from typing import Any, Generic, Literal, TypeVar, cast
@@ -6,6 +6,7 @@ from typing import Any, Generic, Literal, TypeVar, cast
 import openai
 from openai.lib.streaming.chat import ChatCompletionStreamState
 from openai.types.chat import (
+    ChatCompletion,
     ChatCompletionChunk,
     ChatCompletionContentPartParam,
     ChatCompletionMessageParam,
@@ -51,7 +52,7 @@ from magentic.function_call import (
     ParallelFunctionCall,
     _create_unique_id,
 )
-from magentic.streaming import AsyncStreamedStr, StreamedStr
+from magentic.streaming import AsyncStreamedStr, StreamedStr, async_iter
 from magentic.vision import UserImageMessage
 
 
@@ -373,6 +374,53 @@ def _if_given(value: T | None) -> T | openai.Omit:
     return value if value is not None else openai.omit
 
 
+def _completion_to_chunks(response: ChatCompletion) -> Iterator[ChatCompletionChunk]:
+    def chunk(
+        delta: dict[str, Any], finish_reason: str | None = None, *, usage: bool = False
+    ) -> ChatCompletionChunk:
+        return ChatCompletionChunk.model_validate(
+            {
+                "id": response.id,
+                "created": response.created,
+                "model": response.model,
+                "object": "chat.completion.chunk",
+                "choices": [
+                    {
+                        "index": response.choices[0].index,
+                        "delta": delta,
+                        "finish_reason": finish_reason,
+                    }
+                ]
+                if response.choices
+                else [],
+                "usage": response.usage if usage else None,
+            }
+        )
+
+    for choice in response.choices[:1]:
+        message = choice.message
+        if message.content or message.refusal:
+            yield chunk(
+                {
+                    "role": message.role,
+                    "content": message.content,
+                    "refusal": message.refusal,
+                }
+            )
+        if message.tool_calls:
+            yield chunk(
+                {
+                    "tool_calls": [
+                        {"index": index, **tool.model_dump()}
+                        for index, tool in enumerate(message.tool_calls)
+                    ]
+                }
+            )
+        yield chunk({}, choice.finish_reason, usage=True)
+    if not response.choices:
+        yield chunk({}, usage=True)
+
+
 class OpenaiChatModel(ChatModel):
     """An LLM chat model that uses the `openai` python package."""
 
@@ -389,6 +437,7 @@ class OpenaiChatModel(ChatModel):
         temperature: float | None = None,
         reasoning_effort: Literal["low", "medium", "high"] | None = None,
         verbosity: Literal["low", "medium", "high"] | None = None,
+        stream: bool = True,
     ):
         self._model = model
         self._api_key = api_key
@@ -400,6 +449,7 @@ class OpenaiChatModel(ChatModel):
         self._temperature = temperature
         self._reasoning_effort = reasoning_effort
         self._verbosity = verbosity
+        self._stream = stream
 
         match api_type:
             case "openai":
@@ -457,8 +507,12 @@ class OpenaiChatModel(ChatModel):
     def verbosity(self) -> Literal["low", "medium", "high"] | None:
         return self._verbosity
 
+    @property
+    def stream(self) -> bool:
+        return self._stream
+
     def _get_stream_options(self) -> ChatCompletionStreamOptionsParam | openai.Omit:
-        if self.api_type == "azure":
+        if not self.stream or self.api_type == "azure":
             return openai.omit
         return {"include_usage": True}
 
@@ -502,7 +556,7 @@ class OpenaiChatModel(ChatModel):
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        response: Iterator[ChatCompletionChunk] = self._client.chat.completions.create(
+        response = self._client.chat.completions.create(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
                 [message_to_openai_message(m) for m in messages]
@@ -511,7 +565,7 @@ class OpenaiChatModel(ChatModel):
             max_completion_tokens=_if_given(self.max_completion_tokens),
             seed=_if_given(self.seed),
             stop=_if_given(stop),
-            stream=True,
+            stream=self.stream,
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
             reasoning_effort=_if_given(self.reasoning_effort),
@@ -524,8 +578,13 @@ class OpenaiChatModel(ChatModel):
                 tools_specified=bool(tool_schemas), output_types=output_types
             ),
         )
+        response_stream = (
+            _completion_to_chunks(response)
+            if isinstance(response, ChatCompletion)
+            else response
+        )
         stream = OutputStream(
-            response,
+            response_stream,
             function_schemas=function_schemas,
             parser=OpenaiStreamParser(),
             state=OpenaiStreamState(),
@@ -549,9 +608,7 @@ class OpenaiChatModel(ChatModel):
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
 
-        response: AsyncIterator[
-            ChatCompletionChunk
-        ] = await self._async_client.chat.completions.create(
+        response = await self._async_client.chat.completions.create(
             model=self.model,
             messages=_add_missing_tool_calls_responses(
                 [await async_message_to_openai_message(m) for m in messages]
@@ -560,7 +617,7 @@ class OpenaiChatModel(ChatModel):
             max_completion_tokens=_if_given(self.max_completion_tokens),
             seed=_if_given(self.seed),
             stop=_if_given(stop),
-            stream=True,
+            stream=self.stream,
             stream_options=self._get_stream_options(),
             temperature=_if_given(self.temperature),
             reasoning_effort=_if_given(self.reasoning_effort),
@@ -573,8 +630,13 @@ class OpenaiChatModel(ChatModel):
                 tools_specified=bool(tool_schemas), output_types=output_types
             ),
         )
+        response_stream = (
+            async_iter(_completion_to_chunks(response))
+            if isinstance(response, ChatCompletion)
+            else response
+        )
         stream = AsyncOutputStream(
-            response,
+            response_stream,
             function_schemas=function_schemas,
             parser=OpenaiStreamParser(),
             state=OpenaiStreamState(),

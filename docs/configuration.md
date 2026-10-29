@@ -16,6 +16,17 @@ from magentic import OpenaiChatModel
 model = OpenaiChatModel("gpt-4o")
 ```
 
+For an OpenAI-compatible endpoint that does not support streaming, set
+`stream=False` on `OpenaiChatModel`. Streaming remains enabled by default.
+Non-streamed responses use the same text and tool-call parsing as streamed
+responses. Returning a streamed output type still works, but does not provide
+incremental network delivery when `stream=False`.
+
+```python
+model = OpenaiChatModel("compatible-model", stream=False)
+```
+
+
 #### Gemini via OpenAI
 
 Gemini supports an OpenAI-compatible API, allowing you to use their models through the OpenAI backend. See https://ai.google.dev/gemini-api/docs/openai
