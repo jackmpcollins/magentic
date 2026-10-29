@@ -92,6 +92,7 @@ nav:
   - retrying.md
   - logging-and-tracing.md
   - configuration.md
+  - testing.md
   - type-checking.md
   - Examples:
       - examples/rag_github.ipynb
