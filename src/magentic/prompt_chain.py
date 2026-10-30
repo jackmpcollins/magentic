@@ -21,7 +21,7 @@ class MaxFunctionCallsError(Exception):
 def prompt_chain(
     template: str | Sequence[Message[Any]],
     functions: list[Callable[..., Any]] | None = None,
-    model: ChatModel | None = None,
+    model: ChatModel | str | None = None,
     max_calls: int | None = None,
 ) -> Callable[[Callable[P, R]], Callable[P, R]]:
     """Convert a Python function to an LLM query, auto-resolving function calls.

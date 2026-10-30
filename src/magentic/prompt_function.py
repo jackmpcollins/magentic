@@ -9,6 +9,7 @@ from magentic.chat_model.base import ChatModel
 from magentic.chat_model.message import UserMessage
 from magentic.chat_model.retry_chat_model import RetryChatModel
 from magentic.logger import logfire
+from magentic.model import model as create_model
 from magentic.typing import split_union_type
 
 P = ParamSpec("P")
@@ -31,7 +32,7 @@ class BasePromptFunction(Generic[P, R]):
         functions: list[Callable[..., Any]] | None = None,
         stop: list[str] | None = None,
         max_retries: int = 0,
-        model: ChatModel | None = None,
+        model: ChatModel | str | None = None,
     ):
         self._name = name
         self._signature = inspect.Signature(
@@ -58,10 +59,16 @@ class BasePromptFunction(Generic[P, R]):
     def model(self) -> ChatModel:
         if self._max_retries:
             return RetryChatModel(
-                chat_model=self._model or get_chat_model(),
+                chat_model=create_model(self._model)
+                if isinstance(self._model, str)
+                else self._model or get_chat_model(),
                 max_retries=self._max_retries,
             )
-        return self._model or get_chat_model()
+        return (
+            create_model(self._model)
+            if isinstance(self._model, str)
+            else self._model or get_chat_model()
+        )
 
     @property
     def return_types(self) -> list[type[R]]:
@@ -130,7 +137,7 @@ def prompt(
     functions: list[Callable[..., Any]] | None = None,
     stop: list[str] | None = None,
     max_retries: int = 0,
-    model: ChatModel | None = None,
+    model: ChatModel | str | None = None,
 ) -> PromptDecorator:
     """Convert a function into an LLM prompt template.
 

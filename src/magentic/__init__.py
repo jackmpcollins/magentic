@@ -18,6 +18,8 @@ from .chatprompt import chatprompt as chatprompt
 from .function_call import AsyncParallelFunctionCall as AsyncParallelFunctionCall
 from .function_call import FunctionCall as FunctionCall
 from .function_call import ParallelFunctionCall as ParallelFunctionCall
+from .model import model as model
+from .model import register_chat_model as register_chat_model
 from .prompt_chain import prompt_chain as prompt_chain
 from .prompt_function import prompt as prompt
 from .streaming import AsyncStreamedStr as AsyncStreamedStr

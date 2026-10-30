@@ -1,5 +1,92 @@
 # LLM Configuration
 
+## Select a model by name
+
+Use `model("provider:model-name", **options)` to create a `ChatModel` without importing its
+adapter class:
+
+```python
+from magentic import model, prompt
+
+
+@prompt(
+    "Say hello",
+    model=model("anthropic:claude-3-5-sonnet-latest", temperature=0.5),
+)
+def hello_anthropic() -> str: ...
+
+
+@prompt("Say hello", model="openai:gpt-4o-mini")
+def hello_openai() -> str: ...
+
+
+@prompt("Say hello")
+def hello_default() -> str: ...
+
+
+with model("openai:gpt-4o-mini", temperature=1):
+    hello_default()  # Uses the current context.
+    hello_anthropic()  # Keeps its explicitly configured model.
+```
+
+Providers are `openai`, `anthropic`, `litellm`, `mistral`, and `openrouter`. The first colon
+separates the provider from the model name; remaining colons belong to the model name.
+Provider names are case-sensitive. Unknown providers and empty parts raise `ValueError`.
+
+The factory imports only the selected adapter, so optional dependencies are not loaded when
+registering or selecting other providers. Install the matching extra, such as
+`pip install "magentic[anthropic]"`, before using that adapter. Missing optional dependencies
+keep the adapter's installation guidance. Creating a model does not send a completion request,
+but the selected SDK may require credentials when its client is constructed.
+
+`Chat`, `@prompt`, `@chatprompt`, and `@prompt_chain` also accept a model-name string directly.
+Strings are resolved when the model is used; factory calls create the instance immediately.
+A string uses the adapter's constructor defaults, not the `MAGENTIC_*` settings. For options,
+pass an instance made with `model(...)`. Explicit instances and strings take precedence over
+a current model context. Without an explicit model or context, the existing environment-variable
+settings and defaults are unchanged and use the same factory. The existing environment backend
+choices are unchanged; this does not add a new OpenRouter environment configuration.
+
+### Unsupported arguments
+
+By default, an unknown constructor keyword raises `TypeError` before construction. Set
+`unsupported_args="warn"` to warn and discard unknown keywords, or `unsupported_args="ignore"`
+to discard them silently. For example:
+
+```python
+from magentic import model
+
+chat_model = model("openai:gpt-4o-mini", unsupported_args="warn", unknown_option=True)
+```
+
+Only constructor keyword names are checked. Supported arguments with invalid values, missing
+required arguments, duplicate model arguments, and errors inside a constructor still fail.
+A custom constructor accepting `**kwargs` receives every option and owns its validation.
+Warnings list argument names, never their values. `name` and `unsupported_args` are factory
+parameters and are not forwarded as provider options.
+
+### Register a custom adapter
+
+```python
+from magentic import model, register_chat_model
+from magentic.chat_model.openai_chat_model import OpenaiChatModel
+
+
+class LocalChatModel(OpenaiChatModel):
+    pass
+
+
+register_chat_model("local", LocalChatModel)
+chat_model = model("local:my-model", api_key="test", base_url="http://localhost:8080/v1")
+```
+
+Register a `ChatModel` subclass that accepts the model name as its first positional argument.
+Other options are passed by keyword. Registration is process-local and does not import a class
+from a string, modify environment settings, or replace an existing registration. Names must be
+nonempty and contain no whitespace or colons. Reusing a registered or built-in provider name
+raises `ValueError`. Existing custom model instances do not need to register or change their
+completion methods.
+
 ## Backends
 
 Magentic supports multiple LLM providers or "backends". This roughly refers to which Python package is used to interact with the LLM API. The following backends are supported.

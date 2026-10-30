@@ -19,6 +19,7 @@ from magentic.function_call import (
     FunctionCall,
     ParallelFunctionCall,
 )
+from magentic.model import model as create_model
 from magentic.prompt_function import BasePromptFunction
 from magentic.streaming import async_iter, azip
 
@@ -44,7 +45,7 @@ class Chat:
         *,
         functions: Iterable[Callable[..., Any]] | None = None,
         output_types: Iterable[type[Any]] | None = None,
-        model: ChatModel | None = None,
+        model: ChatModel | str | None = None,
     ):
         self._messages = list(messages) if messages else []
         self._functions = list(functions) if functions else []
@@ -80,7 +81,11 @@ class Chat:
 
     @property
     def model(self) -> ChatModel:
-        return self._model or get_chat_model()
+        return (
+            create_model(self._model)
+            if isinstance(self._model, str)
+            else self._model or get_chat_model()
+        )
 
     def add_message(self, message: Message[Any]) -> Self:
         """Add a message to the chat."""
