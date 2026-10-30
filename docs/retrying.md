@@ -72,3 +72,48 @@ def get_country() -> Country: ...
 
 get_country()
 ```
+
+### Registering completion-error handlers
+
+Use `register_handler` to add or replace a handler on one `RetryChatModel` instance:
+
+```python
+from collections.abc import Sequence
+from typing import Any
+
+from magentic import OpenaiChatModel, ToolResultMessage
+from magentic.chat_model.message import Message
+from magentic.chat_model.retry_chat_model import RetryChatModel
+from magentic.exceptions import UnknownToolError
+
+retry_model = RetryChatModel(OpenaiChatModel("gpt-4o-mini"), max_retries=3)
+
+
+@retry_model.register_handler(UnknownToolError)
+def handle_unknown_tool(
+    model: RetryChatModel, error: UnknownToolError
+) -> Sequence[Message[Any]]:
+    return [
+        error.output_message,
+        ToolResultMessage(str(error), tool_call_id=error.tool_call_id),
+    ]
+```
+
+The synchronous handler receives the retry model instance and the exception. It returns messages to append to the conversation before another completion attempt. The same handler works for `complete` and `acomplete`; it does not return a new `Chat` or awaitable. Registration does not affect other model instances. A handler for a parent exception type handles its subclasses, with the most specific registered type taking priority. Registering the same type again replaces its handler.
+
+`ToolSchemaParseError` keeps its default handler unless you replace it explicitly. Other exceptions propagate unchanged unless you register a matching handler. `max_retries` is the number of additional completion attempts; when that budget is exhausted the final error propagates without calling its handler. Errors from handlers propagate immediately. Cancellation and other `BaseException` subclasses are not handled, and cannot be registered.
+
+Handlers apply only to exceptions raised during the wrapped completion call. They do not execute functions or retry tool execution, and they do not catch errors raised later while consuming a returned lazy stream. Provider transport and rate-limit retries should still use the separate methods described above. Register handlers before starting completions; do not change registrations during an active request.
+
+### Exceptions
+
+The following classes can be imported from `magentic.exceptions`. These exports are aliases, so existing import paths and exception identity are preserved.
+
+| Exception | Meaning and available context |
+| --- | --- |
+| `StringNotAllowedError` | The model returned text when text was not allowed. `output_message` contains that text. |
+| `FunctionCallNotAllowedError` | The model returned an unrequested function call. `output_message` contains the call. |
+| `ObjectNotAllowedError` | The model returned an object of an unrequested type. `output_message` contains the object. |
+| `UnknownToolError` | The model named an unknown tool. Has `output_message` and `tool_call_id`; it does not have a `validation_error` attribute. |
+| `ToolSchemaParseError` | Parsing or validation of a tool result failed. Has `output_message`, `tool_call_id` and `validation_error`. This is the only type retried by default. |
+| `MaxFunctionCallsError` | A prompt chain reached its function-call limit. This is raised outside the wrapped completion call and is not caught by `RetryChatModel`. |

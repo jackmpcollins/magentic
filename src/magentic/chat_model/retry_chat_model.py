@@ -1,10 +1,12 @@
-from collections.abc import Callable, Iterable
-from functools import singledispatchmethod
-from typing import Any
+from collections.abc import Callable, Iterable, Sequence
+from functools import partial, singledispatch, singledispatchmethod
+from typing import Any, TypeVar
 
 from magentic.chat_model.base import ChatModel, OutputT, ToolSchemaParseError
 from magentic.chat_model.message import AssistantMessage, Message, ToolResultMessage
 from magentic.logger import logfire
+
+ExceptionT = TypeVar("ExceptionT", bound=Exception)
 
 
 class RetryChatModel(ChatModel):
@@ -18,10 +20,47 @@ class RetryChatModel(ChatModel):
     ):
         self._chat_model = chat_model
         self._max_retries = max_retries
+        # A separate dispatcher per instance prevents registrations leaking.
+        self._exception_handlers = singledispatch(
+            lambda error: self._make_retry_messages(error)
+        )
+        self._exception_handlers.register(
+            ToolSchemaParseError, self._make_retry_messages
+        )
 
-    # TODO: Make this public to allow modifying error handling behavior
-    # User should be able to add handlers to instance using decorator
-    # e.g. `@my_retry_chat_model.exception_handler(exc_type)`
+    def register_handler(
+        self, exception_type: type[ExceptionT]
+    ) -> Callable[
+        [Callable[["RetryChatModel", ExceptionT], Sequence[Message[Any]]]],
+        Callable[["RetryChatModel", ExceptionT], Sequence[Message[Any]]],
+    ]:
+        """Register a synchronous completion-error handler on this instance.
+
+        The handler receives this model and the error, and returns messages to
+        append before retrying. Subclasses use the most specific registration.
+        Registering the same type again replaces its handler on this instance.
+        """
+        if not isinstance(exception_type, type) or not issubclass(
+            exception_type, Exception
+        ):
+            msg = "Handlers must target an Exception subclass, not BaseException."
+            raise TypeError(msg)
+
+        def decorator(
+            handler: Callable[["RetryChatModel", ExceptionT], Sequence[Message[Any]]],
+        ) -> Callable[["RetryChatModel", ExceptionT], Sequence[Message[Any]]]:
+            self._exception_handlers.register(exception_type, partial(handler, self))
+            return handler
+
+        return decorator
+
+    def _retry_exception_types(self) -> tuple[type[Exception], ...]:
+        return tuple(
+            exception_type
+            for exception_type in self._exception_handlers.registry
+            if issubclass(exception_type, Exception)
+        )
+
     # TODO: Add exception base class for those with output_message attribute
     @singledispatchmethod
     def _make_retry_messages(self, error: Exception) -> list[Message[Any]]:
@@ -60,11 +99,10 @@ class RetryChatModel(ChatModel):
                         output_types=output_types,
                         stop=stop,
                     )
-                # TODO: Get list of caught exceptions from _make_retry_messages registered types
-                except ToolSchemaParseError as e:
+                except self._retry_exception_types() as e:
                     if num_retry >= self._max_retries:
                         raise
-                    messages += self._make_retry_messages(e)
+                    messages += self._exception_handlers(e)
                 else:
                     return message
 
@@ -98,10 +136,10 @@ class RetryChatModel(ChatModel):
                         output_types=output_types,
                         stop=stop,
                     )
-                except ToolSchemaParseError as e:
+                except self._retry_exception_types() as e:
                     if num_retry >= self._max_retries:
                         raise
-                    messages += self._make_retry_messages(e)
+                    messages += self._exception_handlers(e)
                 else:
                     return message
 
