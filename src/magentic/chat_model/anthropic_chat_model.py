@@ -49,6 +49,7 @@ try:
     from anthropic.lib.streaming import MessageStreamEvent
     from anthropic.lib.streaming._messages import accumulate_event
     from anthropic.types import (
+        CacheControlEphemeralParam,
         DocumentBlockParam,
         ImageBlockParam,
         MessageParam,
@@ -349,17 +350,47 @@ class AnthropicStreamState(StreamState[MessageStreamEvent]):
         return _RawMessage(self._current_message_snapshot.model_dump())
 
 
+class AnthropicSystemMessage(SystemMessage):
+    """A system text block with an optional Anthropic prompt-cache breakpoint.
+
+    Import from this module; the Anthropic SDK is an optional dependency.
+    """
+
+    cache_control: CacheControlEphemeralParam | None = None
+
+    def __init__(self, content: str, **data: Any):
+        super().__init__(content=content, **data)
+
+    def format(self, **kwargs: Any) -> "AnthropicSystemMessage":
+        return self.model_copy(update={"content": self.content.format(**kwargs)})
+
+
 def _extract_system_message(
     messages: Iterable[Message[Any]],
-) -> tuple[str | anthropic.NotGiven, list[Message[Any]]]:
-    system_messages = [m for m in messages if isinstance(m, SystemMessage)]
-    if len(system_messages) > 1:
-        msg = "Only one system message is allowed per request."
-        raise ValueError(msg)
-    return (
-        system_messages[0].content if system_messages else anthropic.NOT_GIVEN,
-        [m for m in messages if not isinstance(m, SystemMessage)],
-    )
+) -> tuple[str | list[TextBlockParam] | anthropic.NotGiven, list[Message[Any]]]:
+    system_messages: list[SystemMessage] = []
+    other_messages: list[Message[Any]] = []
+    for message in messages:
+        if isinstance(message, SystemMessage):
+            system_messages.append(message)
+        else:
+            other_messages.append(message)
+    if not system_messages:
+        return anthropic.NOT_GIVEN, other_messages
+    if len(system_messages) == 1 and not isinstance(
+        system_messages[0], AnthropicSystemMessage
+    ):
+        return system_messages[0].content, other_messages
+    blocks: list[TextBlockParam] = []
+    for message in system_messages:
+        block = TextBlockParam(type="text", text=message.content)
+        if (
+            isinstance(message, AnthropicSystemMessage)
+            and message.cache_control is not None
+        ):
+            block["cache_control"] = message.cache_control
+        blocks.append(block)
+    return blocks, other_messages
 
 
 def _if_given(value: T | None) -> T | anthropic.NotGiven:

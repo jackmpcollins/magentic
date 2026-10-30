@@ -130,6 +130,43 @@ from magentic.chat_model.mistral_chat_model import MistralChatModel
 model = MistralChatModel("mistral-large-latest")
 ```
 
+### Anthropic system prompt caching
+
+Use `AnthropicSystemMessage` to mark a system text block with an explicit cache
+breakpoint. Import it from the Anthropic module, which requires the optional
+`anthropic` dependency.
+
+```python
+from magentic import Chat, SystemMessage, UserMessage
+from magentic.chat_model.anthropic_chat_model import (
+    AnthropicChatModel,
+    AnthropicSystemMessage,
+)
+
+chat = Chat(
+    [
+        AnthropicSystemMessage(
+            "Stable instructions and reference material...",
+            cache_control={"type": "ephemeral"},
+        ),
+        SystemMessage("Instructions that change for this request."),
+        UserMessage("My question"),
+    ],
+    model=AnthropicChatModel("claude-3-5-sonnet-latest"),
+)
+```
+
+Multiple system messages become ordered Anthropic text blocks. Only blocks you
+mark receive `cache_control`; no breakpoint is added automatically. A single
+ordinary `SystemMessage` keeps its existing string payload. Formatting an
+`AnthropicSystemMessage` preserves its cache settings.
+
+This supports the ephemeral cache-control shape in the supported SDK, not TTL
+selection or automatic caching. It does not add cache controls to user messages,
+tool definitions or other providers. Anthropic decides whether a request meets
+its model and prompt-length requirements for caching; this option does not
+promise a cache hit or a cost reduction.
+
 ## Configure a Backend
 
 The default `ChatModel` used by `magentic` (in `@prompt`, `@chatprompt`, etc.) can be configured in several ways. When a prompt-function or chatprompt-function is called, the `ChatModel` to use follows this order of preference
