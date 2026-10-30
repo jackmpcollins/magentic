@@ -37,6 +37,63 @@ output()
 # '<twitter results>'
 ```
 
+## Choosing a specific tool
+
+Set `tool_choice` to the name of one advertised tool while keeping other tools available:
+
+```python
+from magentic import Chat, FunctionCall, UserMessage, prompt
+
+
+def search_web(query: str) -> str:
+    return "web results"
+
+
+def search_notes(query: str) -> str:
+    return "note results"
+
+
+@prompt(
+    "Find information about {topic}",
+    functions=[search_web, search_notes],
+    tool_choice="search_notes",
+)
+def search(topic: str) -> FunctionCall[str]: ...
+
+
+chat = Chat(
+    [UserMessage("Find information about magentic")],
+    functions=[search_web, search_notes],
+    output_types=[FunctionCall],
+)
+chat = chat.submit(tool_choice="search_notes")
+```
+
+`@chatprompt` accepts the same option. Use `await chat.asubmit(tool_choice="search_notes")`
+for async submission. The choice applies only to that submission; it is not stored on the returned
+`Chat`. Decorated prompts retain their configured choice, including retries.
+
+The selected name must match exactly one advertised tool. Function tools use their Python function
+name. Structured-output tools use their generated schema name, such as `return_int` for `int`.
+Unknown names and duplicate names, including a function/output-schema name collision, raise
+`ValueError` before a request is sent. Selecting a function also requires an output type that allows
+function calls. `Chat` defaults to `str`, so configure `output_types=[FunctionCall]` explicitly as above.
+The choice does not change the output types, remove other tools, execute a function, or guarantee
+that a remote model follows the request.
+
+`ChatModel.complete` and `ChatModel.acomplete` keep their existing signatures. Direct model calls
+use the additive `complete_with_tool_choice` and `acomplete_with_tool_choice` methods with a required
+`tool_choice` name. Without the option, existing selection behavior is unchanged. Named selection
+is implemented by the OpenAI, Anthropic, LiteLLM and OpenRouter adapters; the remote model/provider
+must support it. The current Mistral adapter raises `NotImplementedError` for named selection.
+
+Custom models opt in by implementing the new capability methods. Existing custom completion
+overrides remain in use for ordinary requests. Inherited provider capabilities conservatively raise
+`NotImplementedError` if a custom `complete` or `acomplete` override exists, even for a logging-only
+wrapper. This avoids bypassing custom completion behavior. Such subclasses must explicitly implement
+the corresponding capability if they want named selection. `@prompt_chain` does not accept this
+option because forcing the same function on every turn can prevent the chain from finishing.
+
 ## FunctionCall
 
 A `FunctionCall` combines a function with a set of arguments, ready to be called with no additional inputs required. In magentic, each time the LLM chooses to invoke a function a `FunctionCall` instance is returned. This allows the chosen function and supplied arguments to be validated or logged before the function is executed.

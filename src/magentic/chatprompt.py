@@ -4,7 +4,11 @@ from functools import update_wrapper
 from typing import Any, Generic, ParamSpec, Protocol, TypeVar, cast, overload
 
 from magentic.backend import get_chat_model
-from magentic.chat_model.base import ChatModel
+from magentic.chat_model.base import (
+    ChatModel,
+    _acomplete_with_tool_choice,
+    _complete_with_tool_choice,
+)
 from magentic.chat_model.message import Message
 from magentic.chat_model.retry_chat_model import RetryChatModel
 from magentic.logger import logfire
@@ -40,6 +44,7 @@ class BaseChatPromptFunction(Generic[P, R]):
         stop: list[str] | None = None,
         max_retries: int = 0,
         model: ChatModel | None = None,
+        tool_choice: str | None = None,
     ):
         self._name = name
         self._signature = inspect.Signature(
@@ -51,6 +56,7 @@ class BaseChatPromptFunction(Generic[P, R]):
         self._stop = stop
         self._max_retries = max_retries
         self._model = model
+        self._tool_choice = tool_choice
 
         self._return_types = list(split_union_type(return_type))
 
@@ -90,11 +96,13 @@ class ChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
             f"Calling chatprompt-function {self._name}",
             **self._signature.bind(*args, **kwargs).arguments,
         ):
-            message = self.model.complete(
+            message = _complete_with_tool_choice(
+                self.model,
                 messages=self.format(*args, **kwargs),
                 functions=self._functions,
                 output_types=self._return_types,
                 stop=self._stop,
+                tool_choice=self._tool_choice,
             )
             return message.content
 
@@ -108,11 +116,13 @@ class AsyncChatPromptFunction(BaseChatPromptFunction[P, R], Generic[P, R]):
             f"Calling async chatprompt-function {self._name}",
             **self._signature.bind(*args, **kwargs).arguments,
         ):
-            message = await self.model.acomplete(
+            message = await _acomplete_with_tool_choice(
+                self.model,
                 messages=self.format(*args, **kwargs),
                 functions=self._functions,
                 output_types=self._return_types,
                 stop=self._stop,
+                tool_choice=self._tool_choice,
             )
             return message.content
 
@@ -139,6 +149,7 @@ def chatprompt(
     stop: list[str] | None = None,
     max_retries: int = 0,
     model: ChatModel | None = None,
+    tool_choice: str | None = None,
 ) -> ChatPromptDecorator:
     """Convert a function into an LLM chat prompt template.
 
@@ -189,6 +200,7 @@ def chatprompt(
                 stop=stop,
                 max_retries=max_retries,
                 model=model,
+                tool_choice=tool_choice,
             )
             return cast(
                 AsyncChatPromptFunction[P, R],
@@ -204,6 +216,7 @@ def chatprompt(
             stop=stop,
             max_retries=max_retries,
             model=model,
+            tool_choice=tool_choice,
         )
         return cast(ChatPromptFunction[P, R], update_wrapper(prompt_function, func))
 

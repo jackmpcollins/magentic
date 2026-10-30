@@ -5,7 +5,11 @@ from typing import Any, ParamSpec
 from typing_extensions import Self, deprecated
 
 from magentic.backend import get_chat_model
-from magentic.chat_model.base import ChatModel
+from magentic.chat_model.base import (
+    ChatModel,
+    _acomplete_with_tool_choice,
+    _complete_with_tool_choice,
+)
 from magentic.chat_model.message import (
     AssistantMessage,
     FunctionResultMessage,
@@ -106,21 +110,25 @@ class Chat:
         return self.add_message(AssistantMessage(content=content))
 
     # TODO: Allow restricting functions and/or output types here
-    def submit(self) -> Self:
+    def submit(self, *, tool_choice: str | None = None) -> Self:
         """Request an LLM message to be added to the chat."""
-        output_message: AssistantMessage[Any] = self.model.complete(
+        output_message: AssistantMessage[Any] = _complete_with_tool_choice(
+            self.model,
             messages=self._messages,
             functions=self._functions,
             output_types=self._output_types,
+            tool_choice=tool_choice,
         )
         return self.add_message(output_message)
 
-    async def asubmit(self) -> Self:
+    async def asubmit(self, *, tool_choice: str | None = None) -> Self:
         """Async version of `submit`."""
-        output_message: AssistantMessage[Any] = await self.model.acomplete(
+        output_message: AssistantMessage[Any] = await _acomplete_with_tool_choice(
+            self.model,
             messages=self._messages,
             functions=self._functions,
             output_types=self._output_types,
+            tool_choice=tool_choice,
         )
         return self.add_message(output_message)
 

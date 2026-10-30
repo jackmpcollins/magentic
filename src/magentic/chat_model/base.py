@@ -19,6 +19,7 @@ from magentic.streaming import AsyncStreamedStr, StreamedStr, achain, async_iter
 
 OutputT = TypeVar("OutputT", default=str)
 
+
 _chat_model_context: ContextVar["ChatModel | None"] = ContextVar(
     "chat_model", default=None
 )
@@ -196,6 +197,32 @@ class ChatModel(ABC):
         """Async version of `complete`."""
         ...
 
+    def complete_with_tool_choice(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str,
+    ) -> AssistantMessage[OutputT]:
+        """An additive capability; old subclasses need not implement it."""
+        msg = "This ChatModel does not support named tool_choice."
+        raise NotImplementedError(msg)
+
+    async def acomplete_with_tool_choice(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str,
+    ) -> AssistantMessage[OutputT]:
+        """Async additive capability."""
+        msg = "This ChatModel does not support named tool_choice."
+        raise NotImplementedError(msg)
+
     def __enter__(self) -> None:
         self.__token = _chat_model_context.set(self)
 
@@ -206,3 +233,39 @@ class ChatModel(ABC):
         traceback: types.TracebackType | None,
     ) -> None:
         _chat_model_context.reset(self.__token)
+
+
+def _complete_with_tool_choice(
+    model: ChatModel,
+    messages: Iterable[Message[Any]],
+    functions: Iterable[Callable[..., Any]] | None = None,
+    output_types: Iterable[type[OutputT]] | None = None,
+    *,
+    stop: list[str] | None = None,
+    tool_choice: str | None = None,
+) -> AssistantMessage[OutputT]:
+    if tool_choice is not None:
+        return model.complete_with_tool_choice(
+            messages, functions, output_types, stop=stop, tool_choice=tool_choice
+        )
+    return model.complete(
+        messages=messages, functions=functions, output_types=output_types, stop=stop
+    )
+
+
+async def _acomplete_with_tool_choice(
+    model: ChatModel,
+    messages: Iterable[Message[Any]],
+    functions: Iterable[Callable[..., Any]] | None = None,
+    output_types: Iterable[type[OutputT]] | None = None,
+    *,
+    stop: list[str] | None = None,
+    tool_choice: str | None = None,
+) -> AssistantMessage[OutputT]:
+    if tool_choice is not None:
+        return await model.acomplete_with_tool_choice(
+            messages, functions, output_types, stop=stop, tool_choice=tool_choice
+        )
+    return await model.acomplete(
+        messages=messages, functions=functions, output_types=output_types, stop=stop
+    )

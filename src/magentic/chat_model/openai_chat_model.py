@@ -26,6 +26,7 @@ from magentic.chat_model.function_schema import (
     function_schema_for_type,
     get_async_function_schemas,
     get_function_schemas,
+    select_tool_choice,
 )
 from magentic.chat_model.message import (
     AssistantMessage,
@@ -493,14 +494,56 @@ class OpenaiChatModel(ChatModel):
         output_types: Iterable[type[OutputT]] | None = None,
         *,
         stop: list[str] | None = None,
+    ) -> AssistantMessage[OutputT]:
+        return OpenaiChatModel._complete(
+            self, messages, functions, output_types, stop=stop
+        )
+
+    def complete_with_tool_choice(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str,
+        # TODO: Add type hint for function call ?
+    ) -> AssistantMessage[OutputT]:
+        if getattr(self.complete, "__func__", None) is not OpenaiChatModel.complete:
+            msg = "A custom complete override must explicitly implement named tool choice."
+            raise NotImplementedError(msg)
+        return OpenaiChatModel._complete(
+            self, messages, functions, output_types, stop=stop, tool_choice=tool_choice
+        )
+
+    def _complete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str | None = None,
         # TODO: Add type hint for function call ?
     ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         if output_types is None:
             output_types = cast("Iterable[type[OutputT]]", [] if functions else [str])
 
+        if tool_choice is not None:
+            output_types = list(output_types)
+
         function_schemas = get_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
+        selected_tool = (
+            BaseFunctionToolSchema(
+                select_tool_choice(
+                    function_schemas, tool_choice, output_types, async_=False
+                )
+            )
+            if tool_choice is not None
+            else None
+        )
 
         response: Iterator[ChatCompletionChunk] = self._client.chat.completions.create(
             model=self.model,
@@ -517,8 +560,12 @@ class OpenaiChatModel(ChatModel):
             reasoning_effort=_if_given(self.reasoning_effort),
             verbosity=_if_given(self.verbosity),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.omit,
-            tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, output_types=output_types
+            tool_choice=(
+                selected_tool.as_tool_choice()
+                if selected_tool is not None
+                else self._get_tool_choice(
+                    tool_schemas=tool_schemas, output_types=output_types
+                )
             ),
             parallel_tool_calls=self._get_parallel_tool_calls(
                 tools_specified=bool(tool_schemas), output_types=output_types
@@ -542,12 +589,53 @@ class OpenaiChatModel(ChatModel):
         *,
         stop: list[str] | None = None,
     ) -> AssistantMessage[OutputT]:
+        return await OpenaiChatModel._acomplete(
+            self, messages, functions, output_types, stop=stop
+        )
+
+    async def acomplete_with_tool_choice(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str,
+    ) -> AssistantMessage[OutputT]:
+        if getattr(self.acomplete, "__func__", None) is not OpenaiChatModel.acomplete:
+            msg = "A custom acomplete override must explicitly implement named tool choice."
+            raise NotImplementedError(msg)
+        return await OpenaiChatModel._acomplete(
+            self, messages, functions, output_types, stop=stop, tool_choice=tool_choice
+        )
+
+    async def _acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str | None = None,
+    ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         if output_types is None:
             output_types = [] if functions else cast("list[type[OutputT]]", [str])
 
+        if tool_choice is not None:
+            output_types = list(output_types)
+
         function_schemas = get_async_function_schemas(functions, output_types)
         tool_schemas = [BaseFunctionToolSchema(schema) for schema in function_schemas]
+        selected_tool = (
+            BaseFunctionToolSchema(
+                select_tool_choice(
+                    function_schemas, tool_choice, output_types, async_=True
+                )
+            )
+            if tool_choice is not None
+            else None
+        )
 
         response: AsyncIterator[
             ChatCompletionChunk
@@ -566,8 +654,12 @@ class OpenaiChatModel(ChatModel):
             reasoning_effort=_if_given(self.reasoning_effort),
             verbosity=_if_given(self.verbosity),
             tools=[schema.to_dict() for schema in tool_schemas] or openai.omit,
-            tool_choice=self._get_tool_choice(
-                tool_schemas=tool_schemas, output_types=output_types
+            tool_choice=(
+                selected_tool.as_tool_choice()
+                if selected_tool is not None
+                else self._get_tool_choice(
+                    tool_schemas=tool_schemas, output_types=output_types
+                )
             ),
             parallel_tool_calls=self._get_parallel_tool_calls(
                 tools_specified=bool(tool_schemas), output_types=output_types

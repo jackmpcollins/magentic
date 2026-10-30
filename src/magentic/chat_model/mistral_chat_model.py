@@ -131,3 +131,27 @@ class MistralChatModel(ChatModel):
             output_types=output_types,
             stop=stop,
         )
+
+    def complete_with_tool_choice(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str,
+    ) -> AssistantMessage[OutputT]:
+        msg = "Named tool_choice is not supported by the current MistralChatModel adapter."
+        raise NotImplementedError(msg)
+
+    async def acomplete_with_tool_choice(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str,
+    ) -> AssistantMessage[OutputT]:
+        msg = "Named tool_choice is not supported by the current MistralChatModel adapter."
+        raise NotImplementedError(msg)

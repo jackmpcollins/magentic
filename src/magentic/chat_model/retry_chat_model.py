@@ -2,7 +2,13 @@ from collections.abc import Callable, Iterable
 from functools import singledispatchmethod
 from typing import Any
 
-from magentic.chat_model.base import ChatModel, OutputT, ToolSchemaParseError
+from magentic.chat_model.base import (
+    ChatModel,
+    OutputT,
+    ToolSchemaParseError,
+    _acomplete_with_tool_choice,
+    _complete_with_tool_choice,
+)
 from magentic.chat_model.message import AssistantMessage, Message, ToolResultMessage
 from magentic.logger import logfire
 
@@ -45,6 +51,35 @@ class RetryChatModel(ChatModel):
         *,
         stop: list[str] | None = None,
     ) -> AssistantMessage[OutputT]:
+        return RetryChatModel._complete(
+            self, messages, functions, output_types, stop=stop
+        )
+
+    def complete_with_tool_choice(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str,
+    ) -> AssistantMessage[OutputT]:
+        if getattr(self.complete, "__func__", None) is not RetryChatModel.complete:
+            msg = "A custom complete override must explicitly implement named tool choice."
+            raise NotImplementedError(msg)
+        return RetryChatModel._complete(
+            self, messages, functions, output_types, stop=stop, tool_choice=tool_choice
+        )
+
+    def _complete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str | None = None,
+    ) -> AssistantMessage[OutputT]:
         """Request an LLM message."""
         with logfire.span(
             "LLM-assisted retries enabled. Max {max_retries}",
@@ -54,11 +89,13 @@ class RetryChatModel(ChatModel):
             num_retry = 0
             while True:
                 try:
-                    message = self._chat_model.complete(
+                    message = _complete_with_tool_choice(
+                        self._chat_model,
                         messages=messages,
                         functions=functions,
                         output_types=output_types,
                         stop=stop,
+                        tool_choice=tool_choice,
                     )
                 # TODO: Get list of caught exceptions from _make_retry_messages registered types
                 except ToolSchemaParseError as e:
@@ -83,6 +120,35 @@ class RetryChatModel(ChatModel):
         *,
         stop: list[str] | None = None,
     ) -> AssistantMessage[OutputT]:
+        return await RetryChatModel._acomplete(
+            self, messages, functions, output_types, stop=stop
+        )
+
+    async def acomplete_with_tool_choice(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str,
+    ) -> AssistantMessage[OutputT]:
+        if getattr(self.acomplete, "__func__", None) is not RetryChatModel.acomplete:
+            msg = "A custom acomplete override must explicitly implement named tool choice."
+            raise NotImplementedError(msg)
+        return await RetryChatModel._acomplete(
+            self, messages, functions, output_types, stop=stop, tool_choice=tool_choice
+        )
+
+    async def _acomplete(
+        self,
+        messages: Iterable[Message[Any]],
+        functions: Iterable[Callable[..., Any]] | None = None,
+        output_types: Iterable[type[OutputT]] | None = None,
+        *,
+        stop: list[str] | None = None,
+        tool_choice: str | None = None,
+    ) -> AssistantMessage[OutputT]:
         """Async version of `complete`."""
         with logfire.span(
             "LLM-assisted retries enabled. Max {max_retries}",
@@ -92,11 +158,13 @@ class RetryChatModel(ChatModel):
             num_retry = 0
             while True:
                 try:
-                    message = await self._chat_model.acomplete(
+                    message = await _acomplete_with_tool_choice(
+                        self._chat_model,
                         messages=messages,
                         functions=functions,
                         output_types=output_types,
                         stop=stop,
+                        tool_choice=tool_choice,
                     )
                 except ToolSchemaParseError as e:
                     if num_retry >= self._max_retries:

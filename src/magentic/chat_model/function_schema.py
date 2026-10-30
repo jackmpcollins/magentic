@@ -487,6 +487,30 @@ _NON_FUNCTION_CALL_TYPES = (
 )
 
 
+def select_tool_choice(
+    function_schemas: Iterable[BaseFunctionSchema[Any]],
+    name: str,
+    output_types: Iterable[type],
+    *,
+    async_: bool = False,
+) -> BaseFunctionSchema[Any]:
+    """Resolve an explicit tool name without silently selecting an absent/ambiguous tool."""
+    matches = [schema for schema in function_schemas if schema.name == name]
+    if len(matches) != 1:
+        msg = f"tool_choice {name!r} must name exactly one advertised tool."
+        raise ValueError(msg)
+    if isinstance(matches[0], FunctionCallFunctionSchema):
+        allowed = (
+            (FunctionCall, AsyncParallelFunctionCall, AsyncStreamedResponse)
+            if async_
+            else (FunctionCall, ParallelFunctionCall, StreamedResponse)
+        )
+        if not any((get_origin(t) or t) in allowed for t in output_types):
+            msg = "tool_choice selects a function but output_types does not allow function calls."
+            raise ValueError(msg)
+    return matches[0]
+
+
 def get_function_schemas(
     functions: Iterable[Callable[..., R]] | None,
     output_types: Iterable[type[T]],
