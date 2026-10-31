@@ -376,7 +376,12 @@ def create_model_from_function(func: Callable[..., Any]) -> type[BaseModel]:
             (param.annotation if param.annotation != inspect._empty else Any),
             (param.default if param.default != inspect._empty else ...),
         )
-    return create_model("FuncModel", __config__=get_pydantic_config(func), **fields)
+    return create_model(
+        "FuncModel",
+        __config__=get_pydantic_config(func),
+        __module__=func.__module__,
+        **fields,
+    )
 
 
 class FunctionCallFunctionSchema(FunctionSchema[FunctionCall[T]], Generic[T]):

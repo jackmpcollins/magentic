@@ -1,7 +1,9 @@
 import collections.abc
 import json
+import sys
 import typing
 from collections import OrderedDict
+from types import ModuleType
 from typing import Annotated, Any, Generic, TypeVar, get_origin
 
 import pytest
@@ -919,3 +921,44 @@ def test_function_call_function_schema_serialize_invalid_args(
     """Invalid function arguments should serialize so LLM errors can be resubmitted."""
     serialized_args = FunctionCallFunctionSchema(function).serialize_args(args)
     assert json.loads(serialized_args) == json.loads(expected_args_str)
+
+
+@pytest.mark.parametrize(
+    ("postponed", "annotation"),
+    [
+        (False, "Delivery"),
+        (False, '"Delivery"'),
+        (True, "Delivery"),
+        (True, "Annotated[Delivery, Field(description='Delivery destination')]"),
+    ],
+)
+def test_function_schema_resolves_annotations_in_function_module(
+    monkeypatch, postponed, annotation
+):
+    module = ModuleType("magentic_test_tool_annotations")
+    monkeypatch.setitem(sys.modules, module.__name__, module)
+    source = "from __future__ import annotations\n" if postponed else ""
+    source += f"""
+from typing import Annotated
+from pydantic import BaseModel, Field
+
+class Delivery(BaseModel):
+    city: str
+
+def deliver(delivery: {annotation}) -> str:
+    return delivery.city
+"""
+    exec(source, module.__dict__)
+
+    schema = FunctionCallFunctionSchema(module.deliver)
+    assert (
+        schema.parameters["$defs"]["Delivery"]["properties"]["city"]["type"] == "string"
+    )
+    if "Annotated" in annotation:
+        assert (
+            schema.parameters["properties"]["delivery"]["description"]
+            == "Delivery destination"
+        )
+    call = schema.parse_args(['{"delivery": {"city": "Madrid"}}'])
+    assert isinstance(call.arguments["delivery"], module.Delivery)
+    assert call() == "Madrid"
