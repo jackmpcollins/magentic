@@ -1,4 +1,5 @@
 import base64
+import textwrap
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Iterable, Sequence
 from functools import cached_property
@@ -84,11 +85,17 @@ ContentT = TypeVar("ContentT", covariant=True)
 
 
 class Message(BaseModel, Generic[ContentT], ABC):
-    """A message sent to or from an LLM chat model."""
+    """A message sent to or from an LLM chat model.
+
+    If the content is text (a string), it is unindented using `textwrap.dedent`
+    on creation. Pass `dedent=False` to preserve the original indentation.
+    """
 
     content: ContentT
 
-    def __init__(self, content: ContentT, **data: Any):
+    def __init__(self, content: ContentT, *, dedent: bool = True, **data: Any):
+        if dedent and isinstance(content, str):
+            content = cast(ContentT, textwrap.dedent(content))
         super().__init__(content=content, **data)
 
     def __repr__(self) -> str:
@@ -107,14 +114,14 @@ class _RawMessage(Message[ContentT], Generic[ContentT]):
     expected by the LLM provider's Python client.
     """
 
-    def __init__(self, content: ContentT, **data: Any):
-        super().__init__(content=content, **data)
+    def __init__(self, content: ContentT, *, dedent: bool = True, **data: Any):
+        super().__init__(content=content, dedent=dedent, **data)
 
     # TODO: Add Usage to _RawMessage
 
     def format(self, **kwargs: Any) -> "_RawMessage[ContentT]":
         del kwargs
-        return _RawMessage(self.content)
+        return _RawMessage(self.content, dedent=False)
 
 
 class SystemMessage(Message[str]):
@@ -122,11 +129,12 @@ class SystemMessage(Message[str]):
 
     role: Literal["system"] = "system"
 
-    def __init__(self, content: str, **data: Any):
-        super().__init__(content=content, **data)
+    def __init__(self, content: str, *, dedent: bool = True, **data: Any):
+        super().__init__(content=content, dedent=dedent, **data)
 
     def format(self, **kwargs: Any) -> "SystemMessage":
-        return SystemMessage(self.content.format(**kwargs))
+        # Content is already dedented; do not dedent interpolated values
+        return SystemMessage(self.content.format(**kwargs), dedent=False)
 
 
 # Anthropic supports PDF: https://docs.anthropic.com/en/docs/build-with-claude/pdf-support
@@ -224,8 +232,10 @@ class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
 
     role: Literal["user"] = "user"
 
-    def __init__(self, content: UserMessageContentT, **data: Any):
-        super().__init__(content=content, **data)
+    def __init__(
+        self, content: UserMessageContentT, *, dedent: bool = True, **data: Any
+    ):
+        super().__init__(content=content, dedent=dedent, **data)
 
     @overload
     def format(self: "UserMessage[str]", **kwargs: Any) -> "UserMessage[str]": ...
@@ -241,9 +251,13 @@ class UserMessage(Message[UserMessageContentT], Generic[UserMessageContentT]):
         **kwargs: Any,
     ) -> "UserMessage[StrT | Sequence[StrT2 | UserMessageContentBlockT | UserMessageContentBlockT2]]":
         if isinstance(self.content, str):
-            return UserMessage(self.content.format(**kwargs))
+            # Content is already dedented; do not dedent interpolated values
+            return UserMessage(self.content.format(**kwargs), dedent=False)
         if isinstance(self.content, Iterable):
-            return UserMessage([block.format(**kwargs) for block in self.content])  # type: ignore[misc]
+            return UserMessage(
+                [block.format(**kwargs) for block in self.content],  # type: ignore[misc]
+                dedent=False,
+            )
         msg = f"Unsupported content type: {type(self.content)}"
         raise ValueError(msg)
 
@@ -265,12 +279,13 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
     role: Literal["assistant"] = "assistant"
     _usage_ref: list[Usage] | None = PrivateAttr(None)
 
-    def __init__(self, content: ContentT, **data: Any):
-        super().__init__(content=content, **data)
+    def __init__(self, content: ContentT, *, dedent: bool = True, **data: Any):
+        super().__init__(content=content, dedent=dedent, **data)
 
     @classmethod
     def _with_usage(cls, content: ContentT, usage_ref: list[Usage]) -> Self:  # type: ignore[misc]
-        message = cls(content)
+        # Preserve LLM output content exactly
+        message = cls(content, dedent=False)
         message._usage_ref = usage_ref
         return message
 
@@ -306,10 +321,11 @@ class AssistantMessage(Message[ContentT], Generic[ContentT]):
         self: "AssistantMessage[str | NotPlaceholderT | Placeholder[T]]", **kwargs: Any
     ) -> "AssistantMessage[str | NotPlaceholderT | T]":
         if isinstance(self.content, str):
-            return AssistantMessage(self.content.format(**kwargs))
+            # Content is already dedented; do not dedent interpolated values
+            return AssistantMessage(self.content.format(**kwargs), dedent=False)
         if isinstance(self.content, Placeholder):
-            return AssistantMessage(self.content.format(**kwargs))
-        return AssistantMessage(self.content)
+            return AssistantMessage(self.content.format(**kwargs), dedent=False)
+        return AssistantMessage(self.content, dedent=False)
 
 
 class ToolResultMessage(Message[ContentT], Generic[ContentT]):
@@ -318,15 +334,19 @@ class ToolResultMessage(Message[ContentT], Generic[ContentT]):
     role: Literal["tool"] = "tool"
     tool_call_id: str
 
-    def __init__(self, content: ContentT, tool_call_id: str, **data: Any):
-        super().__init__(content=content, tool_call_id=tool_call_id, **data)
+    def __init__(
+        self, content: ContentT, tool_call_id: str, *, dedent: bool = True, **data: Any
+    ):
+        super().__init__(
+            content=content, tool_call_id=tool_call_id, dedent=dedent, **data
+        )
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.content!r}, {self.tool_call_id=!r})"
 
     def format(self, **kwargs: Any) -> "ToolResultMessage[ContentT]":
         del kwargs
-        return ToolResultMessage(self.content, self.tool_call_id)
+        return ToolResultMessage(self.content, self.tool_call_id, dedent=False)
 
 
 class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
@@ -339,21 +359,35 @@ class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
         self,
         content: ContentT,
         function_call: FunctionCall[Awaitable[ContentT]],
+        *,
+        dedent: bool = True,
         **data: Any,
     ): ...
 
     @overload
     def __init__(
-        self, content: ContentT, function_call: FunctionCall[ContentT], **data: Any
+        self,
+        content: ContentT,
+        function_call: FunctionCall[ContentT],
+        *,
+        dedent: bool = True,
+        **data: Any,
     ): ...
 
     def __init__(
         self,
         content: ContentT,
         function_call: FunctionCall[Awaitable[ContentT]] | FunctionCall[ContentT],
+        *,
+        dedent: bool = True,
         **data: Any,
     ):
-        super().__init__(content=content, tool_call_id=function_call._unique_id, **data)
+        super().__init__(
+            content=content,
+            tool_call_id=function_call._unique_id,
+            dedent=dedent,
+            **data,
+        )
         self._function_call = function_call
 
     def __repr__(self) -> str:
@@ -367,7 +401,7 @@ class FunctionResultMessage(ToolResultMessage[ContentT], Generic[ContentT]):
 
     def format(self, **kwargs: Any) -> "FunctionResultMessage[ContentT]":
         del kwargs
-        return FunctionResultMessage(self.content, self._function_call)
+        return FunctionResultMessage(self.content, self._function_call, dedent=False)
 
 
 AnyMessage = Annotated[
