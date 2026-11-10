@@ -48,6 +48,26 @@ escaped_string.format(example="test")
 # 'Curly braces {example} will be filled in!'
 ```
 
+## Message Content Indentation
+
+On creation, a `Message` with text content is unindented using [`textwrap.dedent`](https://docs.python.org/3/library/textwrap.html#textwrap.dedent), which removes any common leading whitespace from every line. This allows messages to be defined with strings indented to match the surrounding code without that indentation reaching the model. Pass `dedent=False` to preserve the original indentation.
+
+```python
+from magentic import UserMessage
+
+message = UserMessage("    line1\n    line2")
+message.content
+# 'line1\nline2'
+
+message = UserMessage("    line1\n    line2", dedent=False)
+message.content
+# '    line1\n    line2'
+```
+
+Values interpolated by `format` are never unindented; only the message content itself, at creation.
+
+Note that prompt templates passed to `@prompt` are not modified. To unindent an `@prompt` template, apply `textwrap.dedent` to the template string yourself.
+
 ## Placeholder
 
 The `Placeholder` class enables templating of message content within the `@chatprompt` decorator. This allows dynamic changing of the messages used to prompt the model based on the arguments provided when the function is called.
