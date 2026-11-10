@@ -33,7 +33,9 @@ class RetryChatModel(ChatModel):
         return [
             error.output_message,
             ToolResultMessage(
-                content=str(error.validation_error), tool_call_id=error.tool_call_id
+                content=str(error.validation_error),
+                tool_call_id=error.tool_call_id,
+                dedent=False,
             ),
         ]
 

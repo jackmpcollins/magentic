@@ -201,7 +201,8 @@ class LitellmChatModel(ChatModel):
             parser=LitellmStreamParser(),
             state=LitellmStreamState(),
         )
-        return AssistantMessage(parse_stream(stream, output_types))
+        # Preserve LLM output content exactly
+        return AssistantMessage(parse_stream(stream, output_types), dedent=False)
 
     async def acomplete(
         self,
@@ -242,4 +243,5 @@ class LitellmChatModel(ChatModel):
             parser=LitellmStreamParser(),
             state=LitellmStreamState(),
         )
-        return AssistantMessage(await aparse_stream(stream, output_types))
+        # Preserve LLM output content exactly
+        return AssistantMessage(await aparse_stream(stream, output_types), dedent=False)

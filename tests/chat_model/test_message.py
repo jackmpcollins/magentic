@@ -283,3 +283,105 @@ def test_any_message():
         AssistantMessage("Hello"),
         ToolResultMessage(3, "unique_id"),
     ]
+
+
+def test_message_dedent_default():
+    """Text content is unindented by default on creation of any Message type."""
+    assert SystemMessage("  line1\n  line2").content == "line1\nline2"
+    assert UserMessage("  line1\n  line2").content == "line1\nline2"
+    assert AssistantMessage("  line1\n  line2").content == "line1\nline2"
+    assert ToolResultMessage("  line1\n  line2", "unique_id").content == "line1\nline2"
+    function_call = FunctionCall(MagicMock(), 1, 2)
+    message = FunctionResultMessage("  line1\n  line2", function_call)
+    assert message.content == "line1\nline2"
+
+
+def test_message_dedent_disabled():
+    """Passing dedent=False preserves the original content exactly."""
+    assert SystemMessage("  line1\n  line2", dedent=False).content == "  line1\n  line2"
+    assert UserMessage("  line1\n  line2", dedent=False).content == "  line1\n  line2"
+    assert (
+        AssistantMessage("  line1\n  line2", dedent=False).content == "  line1\n  line2"
+    )
+    assert (
+        ToolResultMessage("  line1\n  line2", "unique_id", dedent=False).content
+        == "  line1\n  line2"
+    )
+    function_call = FunctionCall(MagicMock(), 1, 2)
+    message = FunctionResultMessage("  line1\n  line2", function_call, dedent=False)
+    assert message.content == "  line1\n  line2"
+
+
+def test_message_dedent_is_keyword_only():
+    with pytest.raises(TypeError):
+        SystemMessage("  line1\n  line2", True)  # type: ignore[misc]  # noqa: FBT003
+
+
+def test_message_dedent_tabs_and_blank_lines():
+    """Matches textwrap.dedent semantics for tabs and whitespace-only lines."""
+    assert SystemMessage("\tline1\n\n\tline2").content == "line1\n\nline2"
+
+
+def test_message_dedent_non_str_content_untouched():
+    """Only text content is unindented; other content is left exactly as-is."""
+    assert AssistantMessage(42).content == 42
+    function_call = FunctionCall(MagicMock(), 1, 2)
+    assert AssistantMessage(function_call).content is function_call
+    blocks: list[str | ImageUrl] = [
+        "  line1\n  line2",
+        ImageUrl("https://example.com/image.png"),
+    ]
+    message = UserMessage(blocks)
+    assert message.content[0] == "  line1\n  line2"
+    assert isinstance(message.content[1], ImageUrl)
+
+
+@pytest.mark.parametrize("message_type", [SystemMessage, UserMessage, AssistantMessage])
+def test_message_format_does_not_dedent_interpolated_values(message_type):
+    """Formatting must not unindent newly interpolated values."""
+    message = message_type("{value}")
+    formatted = message.format(value="  line1\n  line2")
+    assert formatted.content == "  line1\n  line2"
+
+
+def test_message_dedent_applied_before_format():
+    """The message is unindented at creation, before placeholder substitution."""
+    message = UserMessage("  line1\n  line2 {x}")
+    assert message.content == "line1\nline2 {x}"
+    assert message.format(x="!").content == "line1\nline2 !"
+
+
+def test_message_format_preserves_unindented_content():
+    """Repeated formatting of unindented content is stable."""
+    message = SystemMessage("line1\nline2 {x}")
+    assert message.format(x="!").content == "line1\nline2 !"
+    assert message.format(x="?").content == "line1\nline2 ?"
+
+
+def test_assistant_message_with_usage_preserves_content():
+    """LLM output content is preserved exactly, including indentation."""
+    usage_ref = [Usage(input_tokens=1, output_tokens=2)]
+    message = AssistantMessage._with_usage("  model output\n  preserved", usage_ref)
+    assert message.content == "  model output\n  preserved"
+    assert message.usage == Usage(input_tokens=1, output_tokens=2)
+
+
+def test_assistant_message_format_preserves_content():
+    message = AssistantMessage("  model output\n  preserved", dedent=False)
+    assert message.format().content == "  model output\n  preserved"
+
+
+def test_tool_result_message_format_preserves_content_and_id():
+    message = ToolResultMessage("  result\n  text", "unique_id", dedent=False)
+    formatted = message.format()
+    assert formatted.content == "  result\n  text"
+    assert formatted.tool_call_id == "unique_id"
+
+
+def test_function_result_message_format_preserves_content_and_function_call():
+    function_call = FunctionCall(MagicMock(), 1, 2)
+    message = FunctionResultMessage("  result\n  text", function_call, dedent=False)
+    formatted = message.format()
+    assert formatted.content == "  result\n  text"
+    assert formatted.function_call is function_call
+    assert formatted.tool_call_id == message.tool_call_id

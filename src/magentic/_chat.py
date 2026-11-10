@@ -64,7 +64,9 @@ class Chat:
     ) -> Self:
         """Create a chat from a prompt function."""
         return cls(
-            messages=[UserMessage(content=prompt.format(*args, **kwargs))],
+            messages=[
+                UserMessage(content=prompt.format(*args, **kwargs), dedent=False)
+            ],
             functions=prompt.functions,
             output_types=prompt.return_types,
             model=prompt._model,  # Keep `None` value if unset
@@ -131,7 +133,9 @@ class Chat:
             function_call = self.last_message.content
             result = function_call()
             return self.add_message(
-                FunctionResultMessage(content=result, function_call=function_call)
+                FunctionResultMessage(
+                    content=result, function_call=function_call, dedent=False
+                )
             )
 
         if isinstance(self.last_message.content, ParallelFunctionCall):
@@ -141,7 +145,9 @@ class Chat:
                 parallel_function_call(), parallel_function_call, strict=True
             ):
                 chat = chat.add_message(
-                    FunctionResultMessage(content=result, function_call=function_call)
+                    FunctionResultMessage(
+                        content=result, function_call=function_call, dedent=False
+                    )
                 )
             return chat
 
@@ -156,7 +162,9 @@ class Chat:
             if inspect.isawaitable(result):
                 result = await result
             return self.add_message(
-                FunctionResultMessage(content=result, function_call=function_call)
+                FunctionResultMessage(
+                    content=result, function_call=function_call, dedent=False
+                )
             )
 
         if isinstance(self.last_message.content, AsyncParallelFunctionCall):
@@ -167,7 +175,9 @@ class Chat:
                 async_parallel_function_call,
             ):
                 chat = chat.add_message(
-                    FunctionResultMessage(content=result, function_call=function_call)
+                    FunctionResultMessage(
+                        content=result, function_call=function_call, dedent=False
+                    )
                 )
             return chat
 

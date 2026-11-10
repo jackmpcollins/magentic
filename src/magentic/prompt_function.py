@@ -84,7 +84,10 @@ class PromptFunction(BasePromptFunction[P, R], Generic[P, R]):
             **self._signature.bind(*args, **kwargs).arguments,
         ):
             message = self.model.complete(
-                messages=[UserMessage(content=self.format(*args, **kwargs))],
+                # Preserve the prompt template and interpolated values exactly
+                messages=[
+                    UserMessage(content=self.format(*args, **kwargs), dedent=False)
+                ],
                 functions=self._functions,
                 output_types=self._return_types,
                 stop=self._stop,
@@ -102,7 +105,10 @@ class AsyncPromptFunction(BasePromptFunction[P, R], Generic[P, R]):
             **self._signature.bind(*args, **kwargs).arguments,
         ):
             message = await self.model.acomplete(
-                messages=[UserMessage(content=self.format(*args, **kwargs))],
+                # Preserve the prompt template and interpolated values exactly
+                messages=[
+                    UserMessage(content=self.format(*args, **kwargs), dedent=False)
+                ],
                 functions=self._functions,
                 output_types=self._return_types,
                 stop=self._stop,

@@ -32,5 +32,6 @@ class UserImageMessage(Message[ImageContentT], Generic[ImageContentT]):
     ) -> "UserImageMessage[T]":
         """Format the message using the provided substitutions."""
         if isinstance(self.content, Placeholder):
-            return UserImageMessage(self.content.format(**kwargs))
-        return UserImageMessage(self.content)
+            # Content is already dedented; do not dedent interpolated values
+            return UserImageMessage(self.content.format(**kwargs), dedent=False)
+        return UserImageMessage(self.content, dedent=False)

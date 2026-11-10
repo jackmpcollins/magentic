@@ -37,7 +37,8 @@ class StringNotAllowedError(Exception):
 
     def __init__(self, model_output: str):
         super().__init__(self._MESSAGE.format(model_output=model_output))
-        self.output_message = AssistantMessage(model_output)
+        # Preserve LLM output content exactly
+        self.output_message = AssistantMessage(model_output, dedent=False)
 
 
 class FunctionCallNotAllowedError(Exception):
@@ -51,7 +52,7 @@ class FunctionCallNotAllowedError(Exception):
 
     def __init__(self, function_call: FunctionCall[Any]):
         super().__init__(self._MESSAGE.format(function_call=function_call))
-        self.output_message = AssistantMessage(function_call)
+        self.output_message = AssistantMessage(function_call, dedent=False)
 
 
 class ObjectNotAllowedError(Exception):
@@ -65,7 +66,7 @@ class ObjectNotAllowedError(Exception):
 
     def __init__(self, obj: Any):
         super().__init__(self._MESSAGE.format(obj=obj))
-        self.output_message = AssistantMessage(obj)
+        self.output_message = AssistantMessage(obj, dedent=False)
 
 
 class UnknownToolError(Exception):
