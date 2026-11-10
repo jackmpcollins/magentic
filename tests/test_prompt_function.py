@@ -321,3 +321,27 @@ def test_decorator_with_context_manager(monkeypatch):
     with OpenaiChatModel("gpt-4o"):
         assert say_hello.model.model == "gpt-4o"  # type: ignore[attr-defined]
         assert say_hello_gpt4.model.model == "gpt-4"  # type: ignore[attr-defined]
+
+
+def test_prompt_template_indentation_preserved():
+    """@prompt templates are not modified; dedent applies only at Message creation,
+    and @prompt has no dedent opt-out, so its behavior must remain unchanged."""
+
+    @prompt(
+        """
+        line1
+        line2 {x}
+        """
+    )
+    def func(x: str) -> str: ...
+
+    assert func.format(x="!") == "\n        line1\n        line2 !\n        "
+
+
+def test_prompt_template_preserves_indented_arguments():
+    """Formatting a prompt template must not alter interpolated argument values."""
+
+    @prompt("{text}")
+    def func(text: str) -> str: ...
+
+    assert func.format(text="  line1\n  line2") == "  line1\n  line2"
