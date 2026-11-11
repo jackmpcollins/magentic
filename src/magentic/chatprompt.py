@@ -177,7 +177,7 @@ def chatprompt(
     def decorator(
         func: Callable[P, Awaitable[R]] | Callable[P, R],
     ) -> AsyncChatPromptFunction[P, R] | ChatPromptFunction[P, R]:
-        func_signature = inspect.signature(func)
+        func_signature = inspect.signature(func, eval_str=True)
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncChatPromptFunction[P, R](

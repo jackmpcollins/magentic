@@ -41,7 +41,7 @@ def prompt_chain(
     )
 
     def decorator(func: Callable[P, R]) -> Callable[P, R]:
-        func_signature = inspect.signature(func)
+        func_signature = inspect.signature(func, eval_str=True)
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncChatPromptFunction[P, Any](
