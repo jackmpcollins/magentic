@@ -43,12 +43,20 @@ async def test_aapply():
 @pytest.mark.parametrize(
     ("aiterable", "expected"),
     [
+        (azip(async_iter([])), []),
+        (azip(async_iter([]), async_iter([1])), []),
+        (azip(async_iter([1, 2]), async_iter([3])), [(1, 3)]),
         (azip(async_iter([1, 2, 3])), [(1,), (2,), (3,)]),
         (azip(async_iter([1, 2, 3]), async_iter([4, 5, 6])), [(1, 4), (2, 5), (3, 6)]),
     ],
 )
 async def test_azip(aiterable, expected):
     assert [x async for x in aiterable] == expected
+
+
+async def test_azip_without_inputs():
+    with pytest.raises(StopAsyncIteration):
+        await anext(azip())
 
 
 @pytest.mark.parametrize(
@@ -104,6 +112,7 @@ async def test_atakewhile(predicate, input, expected):
 @pytest.mark.parametrize(
     ("aiterable", "key", "expected"),
     [
+        (async_iter([]), lambda x: x, []),
         (async_iter([1, 1]), lambda x: x, [(1, [1, 1])]),
         (async_iter([1, 1, 2]), lambda x: x, [(1, [1, 1]), (2, [2])]),
     ],
