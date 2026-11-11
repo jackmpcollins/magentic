@@ -33,6 +33,8 @@ async def aapply(
 
 async def azip(*aiterables: AsyncIterable[T]) -> AsyncIterator[tuple[T, ...]]:
     """Async version of `zip`."""
+    if not aiterables:
+        return
     aiterators = [aiter(aiterable) for aiterable in aiterables]
     try:
         while True:
@@ -101,7 +103,10 @@ async def agroupby(
 ) -> AsyncIterator[tuple[object, AsyncIterator[T]]]:
     """Async version of `itertools.groupby`."""
     aiterator = aiter(aiterable)
-    transition = [await anext(aiterator)]
+    try:
+        transition = [await anext(aiterator)]
+    except StopAsyncIteration:
+        return
 
     async def agroup(
         aiterator: AsyncIterator[T], group_key: object
