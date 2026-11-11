@@ -151,7 +151,7 @@ def prompt(
     def decorator(
         func: Callable[P, Awaitable[R]] | Callable[P, R],
     ) -> AsyncPromptFunction[P, R] | PromptFunction[P, R]:
-        func_signature = inspect.signature(func)
+        func_signature = inspect.signature(func, eval_str=True)
 
         if inspect.iscoroutinefunction(func):
             async_prompt_function = AsyncPromptFunction[P, R](
