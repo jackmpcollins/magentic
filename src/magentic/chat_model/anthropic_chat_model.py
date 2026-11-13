@@ -26,6 +26,7 @@ from magentic.chat_model.message import (
     ToolResultMessage,
     Usage,
     UserMessage,
+    UserMessageContentT,
     _RawMessage,
 )
 from magentic.chat_model.stream import (
@@ -49,6 +50,7 @@ try:
     from anthropic.lib.streaming import MessageStreamEvent
     from anthropic.lib.streaming._messages import accumulate_event
     from anthropic.types import (
+        CacheControlEphemeralParam,
         DocumentBlockParam,
         ImageBlockParam,
         MessageParam,
@@ -66,6 +68,61 @@ except ImportError as error:
 class AnthropicMessageRole(Enum):
     ASSISTANT = "assistant"
     USER = "user"
+
+
+class AnthropicSystemMessage(SystemMessage):
+    """A `SystemMessage` with Anthropic-specific options.
+
+    Set `cache_control` to mark the end of a cacheable prompt prefix. See
+    https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+    """
+
+    cache_control: CacheControlEphemeralParam | None = None
+
+    def __init__(
+        self,
+        content: str,
+        *,
+        cache_control: CacheControlEphemeralParam | None = None,
+        **data: Any,
+    ):
+        super().__init__(content=content, cache_control=cache_control, **data)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.content!r}, cache_control={self.cache_control!r})"
+
+    def format(self, **kwargs: Any) -> "AnthropicSystemMessage":
+        return AnthropicSystemMessage(
+            self.content.format(**kwargs), cache_control=self.cache_control
+        )
+
+
+class AnthropicUserMessage(
+    UserMessage[UserMessageContentT], Generic[UserMessageContentT]
+):
+    """A `UserMessage` with Anthropic-specific options.
+
+    Set `cache_control` to mark the end of a cacheable prompt prefix. See
+    https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching
+    """
+
+    cache_control: CacheControlEphemeralParam | None = None
+
+    def __init__(
+        self,
+        content: UserMessageContentT,
+        *,
+        cache_control: CacheControlEphemeralParam | None = None,
+        **data: Any,
+    ):
+        super().__init__(content=content, cache_control=cache_control, **data)
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({self.content!r}, cache_control={self.cache_control!r})"
+
+    def format(self, **kwargs: Any) -> "AnthropicUserMessage[Any]":
+        formatted = super().format(**kwargs)
+        return AnthropicUserMessage(formatted.content, cache_control=self.cache_control)
 
 
 @singledispatch
@@ -124,6 +181,21 @@ def _(message: UserMessage[Any]) -> MessageParam:
         return {"role": AnthropicMessageRole.USER.value, "content": content}
     msg = f"Invalid content type for UserMessage: {type(message.content)}"
     raise TypeError(msg)
+
+
+@message_to_anthropic_message.register(AnthropicUserMessage)
+def _(message: AnthropicUserMessage[Any]) -> MessageParam:
+    message_param = message_to_anthropic_message.dispatch(UserMessage)(message)
+    if message.cache_control is None:
+        return message_param
+    content = message_param["content"]
+    blocks: list[dict[str, Any]] = (
+        [{"type": "text", "text": content}]
+        if isinstance(content, str)
+        else [dict(cast(dict[str, Any], block)) for block in content]
+    )
+    blocks[-1]["cache_control"] = message.cache_control
+    return cast(MessageParam, {"role": message_param["role"], "content": blocks})
 
 
 @message_to_anthropic_message.register(UserImageMessage)
@@ -339,6 +411,8 @@ class AnthropicStreamState(StreamState[MessageStreamEvent]):
                 Usage(
                     input_tokens=item.message.usage.input_tokens,
                     output_tokens=item.message.usage.output_tokens,
+                    cache_creation_input_tokens=item.message.usage.cache_creation_input_tokens,
+                    cache_read_input_tokens=item.message.usage.cache_read_input_tokens,
                 )
             )
 
@@ -349,17 +423,30 @@ class AnthropicStreamState(StreamState[MessageStreamEvent]):
         return _RawMessage(self._current_message_snapshot.model_dump())
 
 
+def _system_message_to_text_block(message: SystemMessage) -> TextBlockParam:
+    block: TextBlockParam = {"type": "text", "text": message.content}
+    if isinstance(message, AnthropicSystemMessage) and message.cache_control:
+        block["cache_control"] = message.cache_control
+    return block
+
+
 def _extract_system_message(
     messages: Iterable[Message[Any]],
-) -> tuple[str | anthropic.NotGiven, list[Message[Any]]]:
+) -> tuple[str | list[TextBlockParam] | anthropic.NotGiven, list[Message[Any]]]:
+    """Separate system messages into the format of the Anthropic `system` param.
+
+    A single plain `SystemMessage` is sent as a string. Multiple system messages, or
+    any using `cache_control`, are sent as a list of text blocks.
+    """
+    messages = list(messages)
     system_messages = [m for m in messages if isinstance(m, SystemMessage)]
-    if len(system_messages) > 1:
-        msg = "Only one system message is allowed per request."
-        raise ValueError(msg)
-    return (
-        system_messages[0].content if system_messages else anthropic.NOT_GIVEN,
-        [m for m in messages if not isinstance(m, SystemMessage)],
-    )
+    other_messages = [m for m in messages if not isinstance(m, SystemMessage)]
+    if not system_messages:
+        return anthropic.NOT_GIVEN, other_messages
+    system_blocks = [_system_message_to_text_block(m) for m in system_messages]
+    if len(system_blocks) == 1 and "cache_control" not in system_blocks[0]:
+        return system_blocks[0]["text"], other_messages
+    return system_blocks, other_messages
 
 
 def _if_given(value: T | None) -> T | anthropic.NotGiven:

@@ -1,6 +1,9 @@
-from typing import Annotated
+import json
+from typing import Annotated, Any
 from unittest.mock import ANY
 
+import anthropic
+import httpx
 import pytest
 from inline_snapshot import snapshot
 from pydantic import AfterValidator, BaseModel
@@ -8,6 +11,9 @@ from pydantic import AfterValidator, BaseModel
 from magentic._streamed_response import AsyncStreamedResponse, StreamedResponse
 from magentic.chat_model.anthropic_chat_model import (
     AnthropicChatModel,
+    AnthropicSystemMessage,
+    AnthropicUserMessage,
+    _extract_system_message,
     async_message_to_anthropic_message,
     message_to_anthropic_message,
 )
@@ -18,6 +24,8 @@ from magentic.chat_model.message import (
     FunctionResultMessage,
     ImageBytes,
     Message,
+    Placeholder,
+    SystemMessage,
     Usage,
     UserMessage,
 )
@@ -116,6 +124,34 @@ message_to_anthropic_message_test_cases = [
             ],
         },
     ),
+    (AnthropicUserMessage("Hello"), {"role": "user", "content": "Hello"}),
+    (
+        AnthropicUserMessage("Hello", cache_control={"type": "ephemeral"}),
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "text",
+                    "text": "Hello",
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
+        },
+    ),
+    (
+        AnthropicUserMessage(["Hello", "World"], cache_control={"type": "ephemeral"}),
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Hello"},
+                {
+                    "type": "text",
+                    "text": "World",
+                    "cache_control": {"type": "ephemeral"},
+                },
+            ],
+        },
+    ),
 ]
 
 
@@ -187,6 +223,107 @@ async def test_async_message_to_anthropic_message(message, expected_anthropic_me
     assert (
         await async_message_to_anthropic_message(message) == expected_anthropic_message
     )
+
+
+def test_message_to_anthropic_message_anthropic_user_message_document_bytes(
+    document_bytes_pdf,
+):
+    content: list[str | DocumentBytes] = [
+        "Summarize this.",
+        DocumentBytes(document_bytes_pdf),
+    ]
+    message = AnthropicUserMessage(content, cache_control={"type": "ephemeral"})
+    assert message_to_anthropic_message(message) == {
+        "role": "user",
+        "content": [
+            {"type": "text", "text": "Summarize this."},
+            {
+                "type": "document",
+                "source": {
+                    "type": "base64",
+                    "media_type": "application/pdf",
+                    "data": ANY,
+                },
+                "cache_control": {"type": "ephemeral"},
+            },
+        ],
+    }
+
+
+def test_anthropic_system_message_format():
+    message = AnthropicSystemMessage(
+        "You are {name}.", cache_control={"type": "ephemeral"}
+    )
+    assert message.format(name="Claude") == AnthropicSystemMessage(
+        "You are Claude.", cache_control={"type": "ephemeral"}
+    )
+
+
+def test_anthropic_user_message_format(image_bytes_png):
+    content: list[str | Placeholder[ImageBytes]] = [
+        "Hello {name}.",
+        Placeholder(ImageBytes, "image"),
+    ]
+    message = AnthropicUserMessage(content, cache_control={"type": "ephemeral"})
+    image_bytes = ImageBytes(image_bytes_png)
+    expected_content: list[str | ImageBytes] = ["Hello Claude.", image_bytes]
+    assert message.format(name="Claude", image=image_bytes) == AnthropicUserMessage(
+        expected_content, cache_control={"type": "ephemeral"}
+    )
+
+
+@pytest.mark.parametrize(
+    ("messages", "expected_system", "expected_messages"),
+    [
+        ([UserMessage("Hi")], anthropic.NOT_GIVEN, [UserMessage("Hi")]),
+        (
+            [SystemMessage("Be nice."), UserMessage("Hi")],
+            "Be nice.",
+            [UserMessage("Hi")],
+        ),
+        (
+            [AnthropicSystemMessage("Be nice."), UserMessage("Hi")],
+            "Be nice.",
+            [UserMessage("Hi")],
+        ),
+        (
+            [
+                AnthropicSystemMessage("Be nice.", cache_control={"type": "ephemeral"}),
+                UserMessage("Hi"),
+            ],
+            [
+                {
+                    "type": "text",
+                    "text": "Be nice.",
+                    "cache_control": {"type": "ephemeral"},
+                }
+            ],
+            [UserMessage("Hi")],
+        ),
+        (
+            [
+                AnthropicSystemMessage(
+                    "Long static context.", cache_control={"type": "ephemeral"}
+                ),
+                SystemMessage("Dynamic instructions."),
+                UserMessage("Hi"),
+            ],
+            [
+                {
+                    "type": "text",
+                    "text": "Long static context.",
+                    "cache_control": {"type": "ephemeral"},
+                },
+                {"type": "text", "text": "Dynamic instructions."},
+            ],
+            [UserMessage("Hi")],
+        ),
+    ],
+)
+def test_extract_system_message(messages, expected_system, expected_messages):
+    system, other_messages = _extract_system_message(iter(messages))
+    assert system == expected_system
+    assert other_messages == expected_messages
 
 
 def test_message_to_anthropic_message_user_image_document_bytes_pdf(document_bytes_pdf):
@@ -519,3 +656,136 @@ async def test_anthropic_chat_model_acomplete_async_streamed_response():
     assert len(await streamed_str.to_string()) > 1  # Check AsyncStreamedStr was cached
     assert isinstance(function_call, FunctionCall)
     assert function_call() is None  # Check FunctionCall is successfully called
+
+
+def _prompt_caching_sse_response(
+    cache_creation_input_tokens: int, cache_read_input_tokens: int
+) -> str:
+    events: list[dict[str, Any]] = [
+        {
+            "type": "message_start",
+            "message": {
+                "id": "msg_01",
+                "type": "message",
+                "role": "assistant",
+                "model": "claude-haiku-4-5",
+                "content": [],
+                "stop_reason": None,
+                "stop_sequence": None,
+                "usage": {
+                    "input_tokens": 20,
+                    "output_tokens": 1,
+                    "cache_creation_input_tokens": cache_creation_input_tokens,
+                    "cache_read_input_tokens": cache_read_input_tokens,
+                },
+            },
+        },
+        {
+            "type": "content_block_start",
+            "index": 0,
+            "content_block": {"type": "text", "text": ""},
+        },
+        {
+            "type": "content_block_delta",
+            "index": 0,
+            "delta": {"type": "text_delta", "text": "49"},
+        },
+        {"type": "content_block_stop", "index": 0},
+        {
+            "type": "message_delta",
+            "delta": {"stop_reason": "end_turn", "stop_sequence": None},
+            "usage": {"output_tokens": 5},
+        },
+        {"type": "message_stop"},
+    ]
+    return "".join(
+        f"event: {event['type']}\ndata: {json.dumps(event)}\n\n" for event in events
+    )
+
+
+PROMPT_CACHING_MESSAGES = [
+    AnthropicSystemMessage("Long static context.", cache_control={"type": "ephemeral"}),
+    SystemMessage("Dynamic instructions."),
+    AnthropicUserMessage("What is 7 squared?", cache_control={"type": "ephemeral"}),
+]
+PROMPT_CACHING_EXPECTED_SYSTEM = [
+    {
+        "type": "text",
+        "text": "Long static context.",
+        "cache_control": {"type": "ephemeral"},
+    },
+    {"type": "text", "text": "Dynamic instructions."},
+]
+PROMPT_CACHING_EXPECTED_MESSAGES = [
+    {
+        "role": "user",
+        "content": [
+            {
+                "type": "text",
+                "text": "What is 7 squared?",
+                "cache_control": {"type": "ephemeral"},
+            }
+        ],
+    }
+]
+
+
+def test_anthropic_chat_model_complete_prompt_caching():
+    request_bodies: list[dict[str, Any]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        request_bodies.append(json.loads(request.content))
+        return httpx.Response(
+            200,
+            headers={"content-type": "text/event-stream"},
+            text=_prompt_caching_sse_response(
+                cache_creation_input_tokens=2048, cache_read_input_tokens=0
+            ),
+        )
+
+    chat_model = AnthropicChatModel("claude-haiku-4-5")
+    chat_model._client = anthropic.Anthropic(
+        api_key="test", http_client=httpx.Client(transport=httpx.MockTransport(handler))
+    )
+    message = chat_model.complete(messages=PROMPT_CACHING_MESSAGES)
+
+    assert message.content == "49"
+    assert request_bodies[0]["system"] == PROMPT_CACHING_EXPECTED_SYSTEM
+    assert request_bodies[0]["messages"] == PROMPT_CACHING_EXPECTED_MESSAGES
+    assert message.usage == Usage(
+        input_tokens=20,
+        output_tokens=5,
+        cache_creation_input_tokens=2048,
+        cache_read_input_tokens=0,
+    )
+
+
+async def test_anthropic_chat_model_acomplete_prompt_caching():
+    request_bodies: list[dict[str, Any]] = []
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        request_bodies.append(json.loads(request.content))
+        return httpx.Response(
+            200,
+            headers={"content-type": "text/event-stream"},
+            text=_prompt_caching_sse_response(
+                cache_creation_input_tokens=0, cache_read_input_tokens=2048
+            ),
+        )
+
+    chat_model = AnthropicChatModel("claude-haiku-4-5")
+    chat_model._async_client = anthropic.AsyncAnthropic(
+        api_key="test",
+        http_client=httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+    )
+    message = await chat_model.acomplete(messages=PROMPT_CACHING_MESSAGES)
+
+    assert message.content == "49"
+    assert request_bodies[0]["system"] == PROMPT_CACHING_EXPECTED_SYSTEM
+    assert request_bodies[0]["messages"] == PROMPT_CACHING_EXPECTED_MESSAGES
+    assert message.usage == Usage(
+        input_tokens=20,
+        output_tokens=5,
+        cache_creation_input_tokens=0,
+        cache_read_input_tokens=2048,
+    )

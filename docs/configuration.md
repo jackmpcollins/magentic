@@ -98,6 +98,47 @@ from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
 model = AnthropicChatModel("claude-3-5-sonnet-latest")
 ```
 
+#### Prompt caching
+
+Anthropic supports [prompt caching](https://docs.anthropic.com/en/docs/build-with-claude/prompt-caching) to reduce the cost and latency of requests that reuse a long prompt prefix. Use `AnthropicSystemMessage` or `AnthropicUserMessage` with the `cache_control` argument to mark the end of the prefix to cache. Everything before and including that message (tools, system messages, and earlier chat messages) is cached. Multiple system messages are allowed, so a cached static system message can be followed by a dynamic one.
+
+```python
+from magentic import UserMessage, chatprompt
+from magentic.chat_model.anthropic_chat_model import (
+    AnthropicChatModel,
+    AnthropicSystemMessage,
+)
+
+LONG_DOCUMENT = "..."  # Must exceed the model's minimum cacheable length
+
+
+@chatprompt(
+    AnthropicSystemMessage(
+        f"Answer questions about this document:\n{LONG_DOCUMENT}",
+        cache_control={"type": "ephemeral"},
+    ),
+    UserMessage("{question}"),
+    model=AnthropicChatModel("claude-haiku-4-5"),
+)
+def ask_document(question: str) -> str: ...
+```
+
+Cache usage is reported in the `cache_creation_input_tokens` and `cache_read_input_tokens` fields of `AssistantMessage.usage`. Note that Anthropic's `input_tokens` excludes these cached tokens.
+
+```python
+from magentic import Chat
+
+chat = Chat(
+    messages=[
+        AnthropicSystemMessage(LONG_DOCUMENT, cache_control={"type": "ephemeral"}),
+        UserMessage("Summarize the document."),
+    ],
+    model=AnthropicChatModel("claude-haiku-4-5"),
+).submit()
+print(chat.last_message.usage)
+# e.g. Usage(input_tokens=12, output_tokens=85, cache_creation_input_tokens=4127, cache_read_input_tokens=0)
+```
+
 ### LiteLLM
 
 This uses the `litellm` Python package to enable querying LLMs from [many different providers](https://docs.litellm.ai/docs/providers). Note: some models may not support all features of `magentic` e.g. function calling/structured output and streaming.
