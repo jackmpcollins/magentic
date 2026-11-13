@@ -7,10 +7,35 @@ version: 2
 updates:
   - package-ecosystem: "github-actions"
     directory: "/"
-    reviewers:
-      - "jackmpcollins"
     schedule:
       interval: "weekly"
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-patch"]
+  - package-ecosystem: "uv"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    # Keep existing lower bounds in pyproject.toml; only update uv.lock unless
+    # a new version falls outside the allowed range.
+    versioning-strategy: "increase-if-necessary"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+    groups:
+      python-minor:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+      python-security:
+        applies-to: "security-updates"
+        patterns: ["*"]
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-patch"]
+    groups:
+      pre-commit-hooks:
+        patterns: ["*"]
