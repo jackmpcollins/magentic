@@ -76,9 +76,9 @@ class LitellmStreamState(StreamState[ModelResponse]):
             item.usage = litellm.Usage()  # type: ignore[attr-defined]
         if not hasattr(item, "refusal"):
             assert isinstance(item.choices[0], StreamingChoices)
-            item.choices[0].delta.refusal = None  # type: ignore[attr-defined]
+            item.choices[0].delta.refusal = None
         self._chat_completion_stream_state.handle_chunk(item)  # type: ignore[arg-type]
-        usage = cast("litellm.Usage", item.usage)  # type: ignore[attr-defined,name-defined]
+        usage = cast("litellm.Usage", item.usage)  # type: ignore[attr-defined]
         # Ignore usages with 0 tokens
         if usage and usage.prompt_tokens and usage.completion_tokens:
             assert not self.usage_ref
