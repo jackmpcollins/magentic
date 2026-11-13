@@ -151,3 +151,8 @@ split-on-trailing-comma = false
 
 [tool.uv]
 default-groups = ["dev", "docs"]
+constraint-dependencies = [
+    # tornado 6.6 requires Python 3.11+
+    "tornado>=6.5.8; python_full_version < '3.11'",
+    "tornado>=6.6; python_full_version >= '3.11'",
+]
