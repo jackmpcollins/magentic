@@ -160,8 +160,8 @@ class _OpenRouterOpenaiChatModel(OpenaiChatModel):
         provider: dict[str, Any] = {}
         if self._provider_order:
             provider["order"] = self._provider_order
-        if self._allow_fallbacks:
-            provider["allow_fallbacks"] = True
+        if self._allow_fallbacks is not None:
+            provider["allow_fallbacks"] = self._allow_fallbacks
         if self._data_collection:
             provider["data_collection"] = self._data_collection
         if self._provider_only:

@@ -246,6 +246,15 @@ def test_openrouter_chat_model_extra_body():
 
 
 @pytest.mark.openrouter
+def test_openrouter_chat_model_extra_body_allow_fallbacks_false():
+    chat_model = OpenRouterChatModel(
+        "deepseek/deepseek-chat-v3-0324",
+        allow_fallbacks=False,
+    )
+    assert chat_model._get_extra_body() == {"provider": {"allow_fallbacks": False}}
+
+
+@pytest.mark.openrouter
 def test_openrouter_chat_model_reasoning_tokens():
     chat_model = OpenRouterChatModel(
         "deepseek/deepseek-r1",
