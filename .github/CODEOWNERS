@@ -1,0 +1,6 @@
+# Request review from the maintainer on dependency update PRs (replaces
+# the removed `reviewers` option in dependabot.yml).
+/.github/ @jackmpcollins
+/pyproject.toml @jackmpcollins
+/uv.lock @jackmpcollins
+/.pre-commit-config.yaml @jackmpcollins
