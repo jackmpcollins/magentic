@@ -210,17 +210,22 @@ async def aiter_streamed_json_array(chunks: AsyncIterable[str]) -> AsyncIterable
 
 
 class CachedIterable(Iterable[T]):
-    """Wraps an Iterable and caches the items after the first iteration."""
+    """Wraps an Iterable and caches the items for independent consumers."""
 
     def __init__(self, iterable: Iterable[T]):
         self._iterator = iter(iterable)
         self._cached_items: list[T] = []
 
     def __iter__(self) -> Iterator[T]:
-        yield from self._cached_items
-        for item in self._iterator:
-            self._cached_items.append(item)
-            yield item
+        index = 0
+        while True:
+            if index == len(self._cached_items):
+                try:
+                    self._cached_items.append(next(self._iterator))
+                except StopIteration:
+                    return
+            yield self._cached_items[index]
+            index += 1
 
 
 class CachedAsyncIterable(AsyncIterable[T]):
@@ -231,11 +236,15 @@ class CachedAsyncIterable(AsyncIterable[T]):
         self._cached_items: list[T] = []
 
     async def __aiter__(self) -> AsyncIterator[T]:
-        for item in self._cached_items:
-            yield item
-        async for item in self._aiterator:
-            self._cached_items.append(item)
-            yield item
+        index = 0
+        while True:
+            if index == len(self._cached_items):
+                try:
+                    self._cached_items.append(await anext(self._aiterator))
+                except StopAsyncIteration:
+                    return
+            yield self._cached_items[index]
+            index += 1
 
 
 # TODO: Add close method to close the underlying stream if chunks is a stream
