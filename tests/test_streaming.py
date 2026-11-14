@@ -182,6 +182,14 @@ def test_streamed_str_str():
     assert str(streamed_str) == "Hello World"
 
 
+def test_streamed_str_resumes_after_another_consumer_reads_ahead() -> None:
+    streamed_str = StreamedStr(["Hello", " ", "World"])
+    chunks = iter(streamed_str)
+    assert next(chunks) == "Hello"
+    assert str(streamed_str) == "Hello World"
+    assert list(chunks) == [" ", "World"]
+
+
 def test_streamed_str_truncate():
     streamed_str = StreamedStr(["First", " Second", " Third"])
     assert streamed_str.truncate(length=12) == "First [...]"
@@ -199,6 +207,14 @@ async def test_async_streamed_str_iter():
 async def test_async_streamed_str_to_string():
     async_streamed_str = AsyncStreamedStr(async_iter(["Hello", " World"]))
     assert await async_streamed_str.to_string() == "Hello World"
+
+
+async def test_async_streamed_str_resumes_after_another_consumer_reads_ahead() -> None:
+    streamed_str = AsyncStreamedStr(async_iter(["Hello", " ", "World"]))
+    chunks = aiter(streamed_str)
+    assert await anext(chunks) == "Hello"
+    assert await streamed_str.to_string() == "Hello World"
+    assert [chunk async for chunk in chunks] == [" ", "World"]
 
 
 async def test_async_streamed_str_truncate():
