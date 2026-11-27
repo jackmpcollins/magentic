@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     backend: Backend = Backend.OPENAI
 
-    anthropic_model: str = "claude-3-opus-20240229"
+    anthropic_model: str = "claude-sonnet-4-6"
     anthropic_api_key: str | None = None
     anthropic_base_url: str | None = None
     anthropic_max_tokens: int = 1024

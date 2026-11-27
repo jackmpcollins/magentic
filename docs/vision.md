@@ -134,7 +134,7 @@ from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
             Placeholder(DocumentBytes, "document_bytes"),
         ]
     ),
-    model=AnthropicChatModel("claude-3-5-sonnet-20241022"),
+    model=AnthropicChatModel("claude-sonnet-4-6"),
 )
 def read_document(document_bytes: bytes) -> str: ...
 

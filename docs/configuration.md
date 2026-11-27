@@ -95,7 +95,7 @@ Then import the `AnthropicChatModel` class.
 ```python
 from magentic.chat_model.anthropic_chat_model import AnthropicChatModel
 
-model = AnthropicChatModel("claude-3-5-sonnet-latest")
+model = AnthropicChatModel("claude-sonnet-4-6")
 ```
 
 ### LiteLLM
@@ -151,7 +151,7 @@ def say_hello() -> str: ...
 
 @prompt(
     "Say hello",
-    model=AnthropicChatModel("claude-3-5-sonnet-latest"),
+    model=AnthropicChatModel("claude-sonnet-4-6"),
 )
 def say_hello_anthropic() -> str: ...
 
@@ -160,7 +160,7 @@ say_hello()  # Uses env vars or default settings
 
 with OpenaiChatModel("gpt-4o-mini", temperature=1):
     say_hello()  # Uses openai with gpt-4o-mini and temperature=1 due to context manager
-    say_hello_anthropic()  # Uses Anthropic claude-3-5-sonnet-latest because explicitly configured
+    say_hello_anthropic()  # Uses Anthropic claude-sonnet-4-6 because explicitly configured
 ```
 
 The following environment variables can be set.
@@ -168,7 +168,7 @@ The following environment variables can be set.
 | Environment Variable           | Description                              | Example                      |
 | ------------------------------ | ---------------------------------------- | ---------------------------- |
 | MAGENTIC_BACKEND               | The package to use as the LLM backend    | anthropic / openai / litellm |
-| MAGENTIC_ANTHROPIC_MODEL       | Anthropic model                          | claude-3-haiku-20240307      |
+| MAGENTIC_ANTHROPIC_MODEL       | Anthropic model                          | claude-sonnet-4-6            |
 | MAGENTIC_ANTHROPIC_API_KEY     | Anthropic API key to be used by magentic | sk-...                       |
 | MAGENTIC_ANTHROPIC_BASE_URL    | Base URL for an Anthropic-compatible API | http://localhost:8080        |
 | MAGENTIC_ANTHROPIC_MAX_TOKENS  | Max number of generated tokens           | 1024                         |
